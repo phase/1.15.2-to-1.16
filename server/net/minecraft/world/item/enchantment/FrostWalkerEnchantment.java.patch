@@ -1,0 +1,15 @@
+--- net/minecraft/world/item/enchantment/FrostWalkerEnchantment.java
++++ net/minecraft/world/item/enchantment/FrostWalkerEnchantment.java
+@@ -32,11 +32,11 @@
+    public int getMaxLevel() {
+       return 2;
+    }
+ 
+    public static void onEntityMoved(LivingEntity var0, Level var1, BlockPos var2, int var3) {
+-      if (var0.onGround) {
++      if (var0.isOnGround()) {
+          BlockState var4 = Blocks.FROSTED_ICE.defaultBlockState();
+          float var5 = (float)Math.min(16, 2 + var3);
+          BlockPos.MutableBlockPos var6 = new BlockPos.MutableBlockPos();
+          Iterator var7 = BlockPos.betweenClosed(var2.offset((double)(-var5), -1.0D, (double)(-var5)), var2.offset((double)var5, -1.0D, (double)var5)).iterator();
+ 

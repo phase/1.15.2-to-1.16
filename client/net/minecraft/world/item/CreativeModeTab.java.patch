@@ -1,0 +1,21 @@
+--- net/minecraft/world/item/CreativeModeTab.java
++++ net/minecraft/world/item/CreativeModeTab.java
+@@ -176,16 +176,16 @@
+    static {
+       TAB_TOOLS = (new CreativeModeTab(8, "tools") {
+          public ItemStack makeIcon() {
+             return new ItemStack(Items.IRON_AXE);
+          }
+-      }).setEnchantmentCategories(new EnchantmentCategory[]{EnchantmentCategory.ALL, EnchantmentCategory.DIGGER, EnchantmentCategory.FISHING_ROD, EnchantmentCategory.BREAKABLE});
++      }).setEnchantmentCategories(new EnchantmentCategory[]{EnchantmentCategory.VANISHABLE, EnchantmentCategory.DIGGER, EnchantmentCategory.FISHING_ROD, EnchantmentCategory.BREAKABLE});
+       TAB_COMBAT = (new CreativeModeTab(9, "combat") {
+          public ItemStack makeIcon() {
+             return new ItemStack(Items.GOLDEN_SWORD);
+          }
+-      }).setEnchantmentCategories(new EnchantmentCategory[]{EnchantmentCategory.ALL, EnchantmentCategory.ARMOR, EnchantmentCategory.ARMOR_FEET, EnchantmentCategory.ARMOR_HEAD, EnchantmentCategory.ARMOR_LEGS, EnchantmentCategory.ARMOR_CHEST, EnchantmentCategory.BOW, EnchantmentCategory.WEAPON, EnchantmentCategory.WEARABLE, EnchantmentCategory.BREAKABLE, EnchantmentCategory.TRIDENT, EnchantmentCategory.CROSSBOW});
++      }).setEnchantmentCategories(new EnchantmentCategory[]{EnchantmentCategory.VANISHABLE, EnchantmentCategory.ARMOR, EnchantmentCategory.ARMOR_FEET, EnchantmentCategory.ARMOR_HEAD, EnchantmentCategory.ARMOR_LEGS, EnchantmentCategory.ARMOR_CHEST, EnchantmentCategory.BOW, EnchantmentCategory.WEAPON, EnchantmentCategory.WEARABLE, EnchantmentCategory.BREAKABLE, EnchantmentCategory.TRIDENT, EnchantmentCategory.CROSSBOW});
+       TAB_BREWING = new CreativeModeTab(10, "brewing") {
+          public ItemStack makeIcon() {
+             return PotionUtils.setPotion(new ItemStack(Items.POTION), Potions.WATER);
+          }
+       };

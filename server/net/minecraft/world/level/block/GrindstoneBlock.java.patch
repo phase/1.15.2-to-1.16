@@ -1,0 +1,50 @@
+--- net/minecraft/world/level/block/GrindstoneBlock.java
++++ net/minecraft/world/level/block/GrindstoneBlock.java
+@@ -12,10 +12,11 @@
+ import net.minecraft.world.inventory.ContainerLevelAccess;
+ import net.minecraft.world.inventory.GrindstoneMenu;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.AttachFace;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+ import net.minecraft.world.phys.BlockHitResult;
+@@ -88,11 +89,11 @@
+    public static final VoxelShape CEILING_EAST_WEST_RIGHT_LEG;
+    public static final VoxelShape CEILING_EAST_WEST_ALL_LEGS;
+    public static final VoxelShape CEILING_EAST_WEST_GRINDSTONE;
+    private static final TranslatableComponent CONTAINER_TITLE;
+ 
+-   protected GrindstoneBlock(Block.Properties var1) {
++   protected GrindstoneBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(FACE, AttachFace.WALL));
+    }
+ 
+    public RenderShape getRenderShape(BlockState var1) {
+@@ -147,11 +148,11 @@
+       if (var2.isClientSide) {
+          return InteractionResult.SUCCESS;
+       } else {
+          var4.openMenu(var1.getMenuProvider(var2, var3));
+          var4.awardStat(Stats.INTERACT_WITH_GRINDSTONE);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    public MenuProvider getMenuProvider(BlockState var1, Level var2, BlockPos var3) {
+       return new SimpleMenuProvider((var2x, var3x, var4) -> {
+@@ -234,8 +235,8 @@
+       CEILING_EAST_WEST_RIGHT_PIVOT = Block.box(5.0D, 3.0D, 12.0D, 11.0D, 9.0D, 14.0D);
+       CEILING_EAST_WEST_LEFT_LEG = Shapes.or(CEILING_EAST_WEST_LEFT_POST, CEILING_EAST_WEST_LEFT_PIVOT);
+       CEILING_EAST_WEST_RIGHT_LEG = Shapes.or(CEILING_EAST_WEST_RIGHT_POST, CEILING_EAST_WEST_RIGHT_PIVOT);
+       CEILING_EAST_WEST_ALL_LEGS = Shapes.or(CEILING_EAST_WEST_LEFT_LEG, CEILING_EAST_WEST_RIGHT_LEG);
+       CEILING_EAST_WEST_GRINDSTONE = Shapes.or(CEILING_EAST_WEST_ALL_LEGS, Block.box(2.0D, 0.0D, 4.0D, 14.0D, 12.0D, 12.0D));
+-      CONTAINER_TITLE = new TranslatableComponent("container.grindstone_title", new Object[0]);
++      CONTAINER_TITLE = new TranslatableComponent("container.grindstone_title");
+    }
+ }

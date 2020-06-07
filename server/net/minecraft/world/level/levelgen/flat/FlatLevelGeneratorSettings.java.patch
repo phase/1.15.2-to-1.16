@@ -1,0 +1,441 @@
+--- net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
++++ net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
+@@ -1,311 +1,201 @@
+ package net.minecraft.world.level.levelgen.flat;
+ 
++import com.google.common.collect.ImmutableMap;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.util.Pair;
++import com.mojang.datafixers.util.Function3;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
++import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.List;
+-import java.util.Locale;
+ import java.util.Map;
++import java.util.Optional;
+ import java.util.Map.Entry;
+-import java.util.stream.Collectors;
+-import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.core.Registry;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.biome.BiomeDefaultFeatures;
+ import net.minecraft.world.level.biome.Biomes;
+-import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+-import net.minecraft.world.level.chunk.ChunkGeneratorType;
+-import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
+ import net.minecraft.world.level.levelgen.GenerationStep;
++import net.minecraft.world.level.levelgen.Heightmap;
++import net.minecraft.world.level.levelgen.StructureSettings;
+ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
++import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
+ import net.minecraft.world.level.levelgen.feature.Feature;
+-import net.minecraft.world.level.levelgen.feature.MineshaftFeature;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.level.levelgen.feature.configurations.BlockStateConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.MineshaftConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.OceanRuinConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.ShipwreckConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.VillageConfiguration;
++import net.minecraft.world.level.levelgen.feature.configurations.LayerConfiguration;
+ import net.minecraft.world.level.levelgen.placement.ChanceDecoratorConfiguration;
+ import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
+-import net.minecraft.world.level.levelgen.structure.OceanRuinFeature;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+-public class FlatLevelGeneratorSettings extends ChunkGeneratorSettings {
++public class FlatLevelGeneratorSettings {
+    private static final Logger LOGGER = LogManager.getLogger();
+-   private static final ConfiguredFeature<?, ?> MINESHAFT_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> VILLAGE_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> STRONGHOLD_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> SWAMPHUT_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> DESERT_PYRAMID_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> JUNGLE_PYRAMID_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> IGLOO_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> SHIPWRECK_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> OCEAN_MONUMENT_COMPOSITE_FEATURE;
++   public static final Codec<FlatLevelGeneratorSettings> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(StructureSettings.CODEC.fieldOf("structures").forGetter(FlatLevelGeneratorSettings::structureSettings), FlatLayerInfo.CODEC.listOf().fieldOf("layers").forGetter(FlatLevelGeneratorSettings::getLayersInfo), Registry.BIOME.fieldOf("biome").withDefault(() -> {
++         LOGGER.error("Unknown biome, defaulting to plains");
++         return Biomes.PLAINS;
++      }).forGetter((var0x) -> {
++         return var0x.biome;
++      })).apply(var0, (Function3)(FlatLevelGeneratorSettings::new));
++   }).stable();
+    private static final ConfiguredFeature<?, ?> WATER_LAKE_COMPOSITE_FEATURE;
+    private static final ConfiguredFeature<?, ?> LAVA_LAKE_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> ENDCITY_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> WOOLAND_MANSION_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> FORTRESS_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> OCEAN_RUIN_COMPOSITE_FEATURE;
+-   private static final ConfiguredFeature<?, ?> PILLAGER_OUTPOST_COMPOSITE_FEATURE;
+-   public static final Map<ConfiguredFeature<?, ?>, GenerationStep.Decoration> STRUCTURE_FEATURES_STEP;
+-   public static final Map<String, ConfiguredFeature<?, ?>[]> STRUCTURE_FEATURES;
+-   public static final Map<ConfiguredFeature<?, ?>, FeatureConfiguration> STRUCTURE_FEATURES_DEFAULT;
+-   private final List<FlatLayerInfo> layersInfo = Lists.newArrayList();
+-   private final Map<String, Map<String, String>> structuresOptions = Maps.newHashMap();
++   private static final Map<StructureFeature<?>, ConfiguredStructureFeature<?, ?>> STRUCTURE_FEATURES;
++   private final StructureSettings structureSettings;
++   private final List<FlatLayerInfo> layersInfo;
+    private Biome biome;
+-   private final BlockState[] layers = new BlockState[256];
++   private final BlockState[] layers;
+    private boolean voidGen;
+-   private int seaLevel;
++   private boolean decoration;
++   private boolean addLakes;
+ 
+-   public FlatLevelGeneratorSettings() {
++   public FlatLevelGeneratorSettings(StructureSettings var1, List<FlatLayerInfo> var2, Biome var3) {
++      this(var1);
++      this.layersInfo.addAll(var2);
++      this.updateLayers();
++      this.biome = var3;
+    }
+ 
+-   @Nullable
+-   public static Block byString(String var0) {
+-      try {
+-         ResourceLocation var1 = new ResourceLocation(var0);
+-         return (Block)Registry.BLOCK.getOptional(var1).orElse((Object)null);
+-      } catch (IllegalArgumentException var2) {
+-         LOGGER.warn((String)"Invalid blockstate: {}", (Object)var0, (Object)var2);
+-         return null;
++   public FlatLevelGeneratorSettings(StructureSettings var1) {
++      this.layersInfo = Lists.newArrayList();
++      this.layers = new BlockState[256];
++      this.decoration = false;
++      this.addLakes = false;
++      this.structureSettings = var1;
++   }
++
++   public Biome getBiomeFromSettings() {
++      Biome var1 = this.getBiome();
++      Biome var2 = new Biome((new Biome.BiomeBuilder()).surfaceBuilder(var1.getSurfaceBuilder()).precipitation(var1.getPrecipitation()).biomeCategory(var1.getBiomeCategory()).depth(var1.getDepth()).scale(var1.getScale()).temperature(var1.getTemperature()).downfall(var1.getDownfall()).specialEffects(var1.getSpecialEffects()).parent(var1.getParent())) {
++      };
++      if (this.addLakes) {
++         var2.addFeature(GenerationStep.Decoration.LAKES, WATER_LAKE_COMPOSITE_FEATURE);
++         var2.addFeature(GenerationStep.Decoration.LAKES, LAVA_LAKE_COMPOSITE_FEATURE);
+       }
++
++      Iterator var3 = this.structureSettings.structureConfig().entrySet().iterator();
++
++      while(var3.hasNext()) {
++         Entry var4 = (Entry)var3.next();
++         var2.addStructureStart(var1.withBiomeConfig((ConfiguredStructureFeature)STRUCTURE_FEATURES.get(var4.getKey())));
++      }
++
++      boolean var11 = (!this.voidGen || var1 == Biomes.THE_VOID) && this.decoration;
++      if (var11) {
++         ArrayList var12 = Lists.newArrayList();
++         var12.add(GenerationStep.Decoration.UNDERGROUND_STRUCTURES);
++         var12.add(GenerationStep.Decoration.SURFACE_STRUCTURES);
++         GenerationStep.Decoration[] var5 = GenerationStep.Decoration.values();
++         int var6 = var5.length;
++
++         for(int var7 = 0; var7 < var6; ++var7) {
++            GenerationStep.Decoration var8 = var5[var7];
++            if (!var12.contains(var8)) {
++               Iterator var9 = var1.getFeaturesForStep(var8).iterator();
++
++               while(var9.hasNext()) {
++                  ConfiguredFeature var10 = (ConfiguredFeature)var9.next();
++                  var2.addFeature(var8, var10);
++               }
++            }
++         }
++      }
++
++      BlockState[] var13 = this.getLayers();
++
++      for(int var14 = 0; var14 < var13.length; ++var14) {
++         BlockState var15 = var13[var14];
++         if (var15 != null && !Heightmap.Types.MOTION_BLOCKING.isOpaque().test(var15)) {
++            this.layers[var14] = null;
++            var2.addFeature(GenerationStep.Decoration.TOP_LAYER_MODIFICATION, Feature.FILL_LAYER.configured(new LayerConfiguration(var14, var15)));
++         }
++      }
++
++      return var2;
+    }
+ 
++   public StructureSettings structureSettings() {
++      return this.structureSettings;
++   }
++
+    public Biome getBiome() {
+       return this.biome;
+    }
+ 
+    public void setBiome(Biome var1) {
+       this.biome = var1;
+    }
+ 
+-   public Map<String, Map<String, String>> getStructuresOptions() {
+-      return this.structuresOptions;
+-   }
+-
+    public List<FlatLayerInfo> getLayersInfo() {
+       return this.layersInfo;
+    }
+ 
++   public BlockState[] getLayers() {
++      return this.layers;
++   }
++
+    public void updateLayers() {
+       int var1 = 0;
+ 
+-      Iterator var2;
+       FlatLayerInfo var3;
+-      for(var2 = this.layersInfo.iterator(); var2.hasNext(); var1 += var3.getHeight()) {
++      for(Iterator var2 = this.layersInfo.iterator(); var2.hasNext(); var1 += var3.getHeight()) {
+          var3 = (FlatLayerInfo)var2.next();
+          var3.setStart(var1);
+       }
+ 
+-      this.seaLevel = 0;
+       this.voidGen = true;
+-      var1 = 0;
+-      var2 = this.layersInfo.iterator();
++      Iterator var5 = this.layersInfo.iterator();
+ 
+-      while(var2.hasNext()) {
+-         var3 = (FlatLayerInfo)var2.next();
++      while(var5.hasNext()) {
++         FlatLayerInfo var6 = (FlatLayerInfo)var5.next();
+ 
+-         for(int var4 = var3.getStart(); var4 < var3.getStart() + var3.getHeight(); ++var4) {
+-            BlockState var5 = var3.getBlockState();
+-            if (var5.getBlock() != Blocks.AIR) {
++         for(int var7 = var6.getStart(); var7 < var6.getStart() + var6.getHeight(); ++var7) {
++            BlockState var4 = var6.getBlockState();
++            if (!var4.is(Blocks.AIR)) {
+                this.voidGen = false;
+-               this.layers[var4] = var5;
++               this.layers[var7] = var4;
+             }
+          }
+-
+-         if (var3.getBlockState().getBlock() == Blocks.AIR) {
+-            var1 += var3.getHeight();
+-         } else {
+-            this.seaLevel += var3.getHeight() + var1;
+-            var1 = 0;
+-         }
+       }
+ 
+    }
+ 
+-   public String toString() {
+-      StringBuilder var1 = new StringBuilder();
+-
+-      int var2;
+-      for(var2 = 0; var2 < this.layersInfo.size(); ++var2) {
+-         if (var2 > 0) {
+-            var1.append(",");
+-         }
+-
+-         var1.append(this.layersInfo.get(var2));
+-      }
+-
+-      var1.append(";");
+-      var1.append(Registry.BIOME.getKey(this.biome));
+-      var1.append(";");
+-      if (!this.structuresOptions.isEmpty()) {
+-         var2 = 0;
+-         Iterator var3 = this.structuresOptions.entrySet().iterator();
+-
+-         while(true) {
+-            Map var5;
+-            do {
+-               if (!var3.hasNext()) {
+-                  return var1.toString();
+-               }
+-
+-               Entry var4 = (Entry)var3.next();
+-               if (var2++ > 0) {
+-                  var1.append(",");
+-               }
+-
+-               var1.append(((String)var4.getKey()).toLowerCase(Locale.ROOT));
+-               var5 = (Map)var4.getValue();
+-            } while(var5.isEmpty());
+-
+-            var1.append("(");
+-            int var6 = 0;
+-            Iterator var7 = var5.entrySet().iterator();
+-
+-            while(var7.hasNext()) {
+-               Entry var8 = (Entry)var7.next();
+-               if (var6++ > 0) {
+-                  var1.append(" ");
+-               }
+-
+-               var1.append((String)var8.getKey());
+-               var1.append("=");
+-               var1.append((String)var8.getValue());
+-            }
+-
+-            var1.append(")");
+-         }
+-      } else {
+-         return var1.toString();
+-      }
+-   }
+-
+-   public static FlatLevelGeneratorSettings fromObject(Dynamic<?> var0) {
+-      FlatLevelGeneratorSettings var1 = (FlatLevelGeneratorSettings)ChunkGeneratorType.FLAT.createSettings();
+-      List var2 = var0.get("layers").asList((var0x) -> {
+-         return Pair.of(var0x.get("height").asInt(1), byString(var0x.get("block").asString("")));
+-      });
+-      if (var2.stream().anyMatch((var0x) -> {
+-         return var0x.getSecond() == null;
+-      })) {
+-         return getDefault();
+-      } else {
+-         List var3 = (List)var2.stream().map((var0x) -> {
+-            return new FlatLayerInfo((Integer)var0x.getFirst(), (Block)var0x.getSecond());
+-         }).collect(Collectors.toList());
+-         if (var3.isEmpty()) {
+-            return getDefault();
+-         } else {
+-            var1.getLayersInfo().addAll(var3);
+-            var1.updateLayers();
+-            var1.setBiome((Biome)Registry.BIOME.get(new ResourceLocation(var0.get("biome").asString(""))));
+-            var0.get("structures").flatMap(Dynamic::getMapValues).ifPresent((var1x) -> {
+-               var1x.keySet().forEach((var1xx) -> {
+-                  var1xx.asString().map((var1x) -> {
+-                     return (Map)var1.getStructuresOptions().put(var1x, Maps.newHashMap());
+-                  });
+-               });
+-            });
+-            return var1;
+-         }
+-      }
+-   }
+-
+    public static FlatLevelGeneratorSettings getDefault() {
+-      FlatLevelGeneratorSettings var0 = (FlatLevelGeneratorSettings)ChunkGeneratorType.FLAT.createSettings();
+-      var0.setBiome(Biomes.PLAINS);
+-      var0.getLayersInfo().add(new FlatLayerInfo(1, Blocks.BEDROCK));
+-      var0.getLayersInfo().add(new FlatLayerInfo(2, Blocks.DIRT));
+-      var0.getLayersInfo().add(new FlatLayerInfo(1, Blocks.GRASS_BLOCK));
+-      var0.updateLayers();
+-      var0.getStructuresOptions().put("village", Maps.newHashMap());
+-      return var0;
++      StructureSettings var0 = new StructureSettings(Optional.of(StructureSettings.DEFAULT_STRONGHOLD), Maps.newHashMap(ImmutableMap.of(StructureFeature.VILLAGE, StructureSettings.DEFAULTS.get(StructureFeature.VILLAGE))));
++      FlatLevelGeneratorSettings var1 = new FlatLevelGeneratorSettings(var0);
++      var1.setBiome(Biomes.PLAINS);
++      var1.getLayersInfo().add(new FlatLayerInfo(1, Blocks.BEDROCK));
++      var1.getLayersInfo().add(new FlatLayerInfo(2, Blocks.DIRT));
++      var1.getLayersInfo().add(new FlatLayerInfo(1, Blocks.GRASS_BLOCK));
++      var1.updateLayers();
++      return var1;
+    }
+ 
+-   public boolean isVoidGen() {
+-      return this.voidGen;
+-   }
+-
+-   public BlockState[] getLayers() {
+-      return this.layers;
+-   }
+-
+-   public void deleteLayer(int var1) {
+-      this.layers[var1] = null;
+-   }
+-
+    static {
+-      MINESHAFT_COMPOSITE_FEATURE = Feature.MINESHAFT.configured(new MineshaftConfiguration(0.004D, MineshaftFeature.Type.NORMAL)).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      VILLAGE_COMPOSITE_FEATURE = Feature.VILLAGE.configured(new VillageConfiguration("village/plains/town_centers", 6)).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      STRONGHOLD_COMPOSITE_FEATURE = Feature.STRONGHOLD.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      SWAMPHUT_COMPOSITE_FEATURE = Feature.SWAMP_HUT.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      DESERT_PYRAMID_COMPOSITE_FEATURE = Feature.DESERT_PYRAMID.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      JUNGLE_PYRAMID_COMPOSITE_FEATURE = Feature.JUNGLE_TEMPLE.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      IGLOO_COMPOSITE_FEATURE = Feature.IGLOO.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      SHIPWRECK_COMPOSITE_FEATURE = Feature.SHIPWRECK.configured(new ShipwreckConfiguration(false)).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      OCEAN_MONUMENT_COMPOSITE_FEATURE = Feature.OCEAN_MONUMENT.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+       WATER_LAKE_COMPOSITE_FEATURE = Feature.LAKE.configured(new BlockStateConfiguration(Blocks.WATER.defaultBlockState())).decorated(FeatureDecorator.WATER_LAKE.configured(new ChanceDecoratorConfiguration(4)));
+       LAVA_LAKE_COMPOSITE_FEATURE = Feature.LAKE.configured(new BlockStateConfiguration(Blocks.LAVA.defaultBlockState())).decorated(FeatureDecorator.LAVA_LAKE.configured(new ChanceDecoratorConfiguration(80)));
+-      ENDCITY_COMPOSITE_FEATURE = Feature.END_CITY.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      WOOLAND_MANSION_COMPOSITE_FEATURE = Feature.WOODLAND_MANSION.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      FORTRESS_COMPOSITE_FEATURE = Feature.NETHER_BRIDGE.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      OCEAN_RUIN_COMPOSITE_FEATURE = Feature.OCEAN_RUIN.configured(new OceanRuinConfiguration(OceanRuinFeature.Type.COLD, 0.3F, 0.1F)).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      PILLAGER_OUTPOST_COMPOSITE_FEATURE = Feature.PILLAGER_OUTPOST.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.NOPE.configured(DecoratorConfiguration.NONE));
+-      STRUCTURE_FEATURES_STEP = (Map)Util.make(Maps.newHashMap(), (var0) -> {
+-         var0.put(MINESHAFT_COMPOSITE_FEATURE, GenerationStep.Decoration.UNDERGROUND_STRUCTURES);
+-         var0.put(VILLAGE_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(STRONGHOLD_COMPOSITE_FEATURE, GenerationStep.Decoration.UNDERGROUND_STRUCTURES);
+-         var0.put(SWAMPHUT_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(DESERT_PYRAMID_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(JUNGLE_PYRAMID_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(IGLOO_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(SHIPWRECK_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(OCEAN_RUIN_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(WATER_LAKE_COMPOSITE_FEATURE, GenerationStep.Decoration.LOCAL_MODIFICATIONS);
+-         var0.put(LAVA_LAKE_COMPOSITE_FEATURE, GenerationStep.Decoration.LOCAL_MODIFICATIONS);
+-         var0.put(ENDCITY_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(WOOLAND_MANSION_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(FORTRESS_COMPOSITE_FEATURE, GenerationStep.Decoration.UNDERGROUND_STRUCTURES);
+-         var0.put(OCEAN_MONUMENT_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-         var0.put(PILLAGER_OUTPOST_COMPOSITE_FEATURE, GenerationStep.Decoration.SURFACE_STRUCTURES);
+-      });
+       STRUCTURE_FEATURES = (Map)Util.make(Maps.newHashMap(), (var0) -> {
+-         var0.put("mineshaft", new ConfiguredFeature[]{MINESHAFT_COMPOSITE_FEATURE});
+-         var0.put("village", new ConfiguredFeature[]{VILLAGE_COMPOSITE_FEATURE});
+-         var0.put("stronghold", new ConfiguredFeature[]{STRONGHOLD_COMPOSITE_FEATURE});
+-         var0.put("biome_1", new ConfiguredFeature[]{SWAMPHUT_COMPOSITE_FEATURE, DESERT_PYRAMID_COMPOSITE_FEATURE, JUNGLE_PYRAMID_COMPOSITE_FEATURE, IGLOO_COMPOSITE_FEATURE, OCEAN_RUIN_COMPOSITE_FEATURE, SHIPWRECK_COMPOSITE_FEATURE});
+-         var0.put("oceanmonument", new ConfiguredFeature[]{OCEAN_MONUMENT_COMPOSITE_FEATURE});
+-         var0.put("lake", new ConfiguredFeature[]{WATER_LAKE_COMPOSITE_FEATURE});
+-         var0.put("lava_lake", new ConfiguredFeature[]{LAVA_LAKE_COMPOSITE_FEATURE});
+-         var0.put("endcity", new ConfiguredFeature[]{ENDCITY_COMPOSITE_FEATURE});
+-         var0.put("mansion", new ConfiguredFeature[]{WOOLAND_MANSION_COMPOSITE_FEATURE});
+-         var0.put("fortress", new ConfiguredFeature[]{FORTRESS_COMPOSITE_FEATURE});
+-         var0.put("pillager_outpost", new ConfiguredFeature[]{PILLAGER_OUTPOST_COMPOSITE_FEATURE});
++         var0.put(StructureFeature.MINESHAFT, BiomeDefaultFeatures.MINESHAFT);
++         var0.put(StructureFeature.VILLAGE, BiomeDefaultFeatures.VILLAGE_PLAINS);
++         var0.put(StructureFeature.STRONGHOLD, BiomeDefaultFeatures.STRONGHOLD);
++         var0.put(StructureFeature.SWAMP_HUT, BiomeDefaultFeatures.SWAMP_HUT);
++         var0.put(StructureFeature.DESERT_PYRAMID, BiomeDefaultFeatures.DESERT_PYRAMID);
++         var0.put(StructureFeature.JUNGLE_TEMPLE, BiomeDefaultFeatures.JUNGLE_TEMPLE);
++         var0.put(StructureFeature.IGLOO, BiomeDefaultFeatures.IGLOO);
++         var0.put(StructureFeature.OCEAN_RUIN, BiomeDefaultFeatures.OCEAN_RUIN_COLD);
++         var0.put(StructureFeature.SHIPWRECK, BiomeDefaultFeatures.SHIPWRECK);
++         var0.put(StructureFeature.OCEAN_MONUMENT, BiomeDefaultFeatures.OCEAN_MONUMENT);
++         var0.put(StructureFeature.END_CITY, BiomeDefaultFeatures.END_CITY);
++         var0.put(StructureFeature.WOODLAND_MANSION, BiomeDefaultFeatures.WOODLAND_MANSION);
++         var0.put(StructureFeature.NETHER_BRIDGE, BiomeDefaultFeatures.NETHER_BRIDGE);
++         var0.put(StructureFeature.PILLAGER_OUTPOST, BiomeDefaultFeatures.PILLAGER_OUTPOST);
++         var0.put(StructureFeature.RUINED_PORTAL, BiomeDefaultFeatures.RUINED_PORTAL_STANDARD);
++         var0.put(StructureFeature.BASTION_REMNANT, BiomeDefaultFeatures.BASTION_REMNANT);
+       });
+-      STRUCTURE_FEATURES_DEFAULT = (Map)Util.make(Maps.newHashMap(), (var0) -> {
+-         var0.put(MINESHAFT_COMPOSITE_FEATURE, new MineshaftConfiguration(0.004D, MineshaftFeature.Type.NORMAL));
+-         var0.put(VILLAGE_COMPOSITE_FEATURE, new VillageConfiguration("village/plains/town_centers", 6));
+-         var0.put(STRONGHOLD_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(SWAMPHUT_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(DESERT_PYRAMID_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(JUNGLE_PYRAMID_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(IGLOO_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(OCEAN_RUIN_COMPOSITE_FEATURE, new OceanRuinConfiguration(OceanRuinFeature.Type.COLD, 0.3F, 0.9F));
+-         var0.put(SHIPWRECK_COMPOSITE_FEATURE, new ShipwreckConfiguration(false));
+-         var0.put(OCEAN_MONUMENT_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(ENDCITY_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(WOOLAND_MANSION_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(FORTRESS_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-         var0.put(PILLAGER_OUTPOST_COMPOSITE_FEATURE, FeatureConfiguration.NONE);
+-      });
+    }
+ }

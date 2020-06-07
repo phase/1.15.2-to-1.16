@@ -1,0 +1,42 @@
+--- net/minecraft/advancements/critereon/MobEffectsPredicate.java
++++ net/minecraft/advancements/critereon/MobEffectsPredicate.java
+@@ -4,12 +4,12 @@
+ import com.google.gson.JsonElement;
+ import com.google.gson.JsonNull;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSyntaxException;
+ import java.util.Collections;
+-import java.util.HashMap;
+ import java.util.Iterator;
++import java.util.LinkedHashMap;
+ import java.util.Map;
+ import java.util.Map.Entry;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.Registry;
+ import net.minecraft.resources.ResourceLocation;
+@@ -26,11 +26,11 @@
+    public MobEffectsPredicate(Map<MobEffect, MobEffectsPredicate.MobEffectInstancePredicate> var1) {
+       this.effects = var1;
+    }
+ 
+    public static MobEffectsPredicate effects() {
+-      return new MobEffectsPredicate(Maps.newHashMap());
++      return new MobEffectsPredicate(Maps.newLinkedHashMap());
+    }
+ 
+    public MobEffectsPredicate and(MobEffect var1) {
+       this.effects.put(var1, new MobEffectsPredicate.MobEffectInstancePredicate());
+       return this;
+@@ -70,11 +70,11 @@
+    }
+ 
+    public static MobEffectsPredicate fromJson(@Nullable JsonElement var0) {
+       if (var0 != null && !var0.isJsonNull()) {
+          JsonObject var1 = GsonHelper.convertToJsonObject(var0, "effects");
+-         HashMap var2 = Maps.newHashMap();
++         LinkedHashMap var2 = Maps.newLinkedHashMap();
+          Iterator var3 = var1.entrySet().iterator();
+ 
+          while(var3.hasNext()) {
+             Entry var4 = (Entry)var3.next();
+             ResourceLocation var5 = new ResourceLocation((String)var4.getKey());

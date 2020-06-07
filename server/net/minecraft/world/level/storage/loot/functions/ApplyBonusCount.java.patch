@@ -1,0 +1,29 @@
+--- net/minecraft/world/level/storage/loot/functions/ApplyBonusCount.java
++++ net/minecraft/world/level/storage/loot/functions/ApplyBonusCount.java
+@@ -29,10 +29,14 @@
+       super(var1);
+       this.enchantment = var2;
+       this.formula = var3;
+    }
+ 
++   public LootItemFunctionType getType() {
++      return LootItemFunctions.APPLY_BONUS;
++   }
++
+    public Set<LootContextParam<?>> getReferencedContextParams() {
+       return ImmutableSet.of(LootContextParams.TOOL);
+    }
+ 
+    public ItemStack run(ItemStack var1, LootContext var2) {
+@@ -76,11 +80,10 @@
+       FORMULAS.put(ApplyBonusCount.UniformBonusCount.TYPE, ApplyBonusCount.UniformBonusCount::deserialize);
+    }
+ 
+    public static class Serializer extends LootItemConditionalFunction.Serializer<ApplyBonusCount> {
+       public Serializer() {
+-         super(new ResourceLocation("apply_bonus"), ApplyBonusCount.class);
+       }
+ 
+       public void serialize(JsonObject var1, ApplyBonusCount var2, JsonSerializationContext var3) {
+          super.serialize(var1, (LootItemConditionalFunction)var2, var3);
+          var1.addProperty("enchantment", Registry.ENCHANTMENT.getKey(var2.enchantment).toString());

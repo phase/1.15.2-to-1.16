@@ -1,0 +1,26 @@
+--- net/minecraft/world/Difficulty.java
++++ net/minecraft/world/Difficulty.java
+@@ -26,11 +26,11 @@
+    public int getId() {
+       return this.id;
+    }
+ 
+    public Component getDisplayName() {
+-      return new TranslatableComponent("options.difficulty." + this.key, new Object[0]);
++      return new TranslatableComponent("options.difficulty." + this.key);
+    }
+ 
+    public static Difficulty byId(int var0) {
+       return BY_ID[var0 % BY_ID.length];
+    }
+@@ -51,6 +51,10 @@
+    }
+ 
+    public String getKey() {
+       return this.key;
+    }
++
++   public Difficulty nextById() {
++      return BY_ID[(this.id + 1) % BY_ID.length];
++   }
+ }

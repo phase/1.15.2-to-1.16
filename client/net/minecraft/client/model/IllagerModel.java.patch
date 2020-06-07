@@ -1,0 +1,109 @@
+--- net/minecraft/client/model/IllagerModel.java
++++ net/minecraft/client/model/IllagerModel.java
+@@ -14,11 +14,10 @@
+    private final ModelPart arms;
+    private final ModelPart leftLeg;
+    private final ModelPart rightLeg;
+    private final ModelPart rightArm;
+    private final ModelPart leftArm;
+-   private float itemUseTicks;
+ 
+    public IllagerModel(float var1, float var2, int var3, int var4) {
+       this.head = (new ModelPart(this)).setTexSize(var3, var4);
+       this.head.setPos(0.0F, 0.0F + var2, 0.0F);
+       this.head.texOffs(0, 0).addBox(-4.0F, -10.0F, -4.0F, 8.0F, 10.0F, 8.0F, var1);
+@@ -95,43 +94,12 @@
+          this.rightLeg.yRot = 0.0F;
+          this.rightLeg.zRot = 0.0F;
+       }
+ 
+       AbstractIllager.IllagerArmPose var7 = var1.getArmPose();
+-      float var8;
+       if (var7 == AbstractIllager.IllagerArmPose.ATTACKING) {
+-         var8 = Mth.sin(this.attackTime * 3.1415927F);
+-         float var9 = Mth.sin((1.0F - (1.0F - this.attackTime) * (1.0F - this.attackTime)) * 3.1415927F);
+-         this.rightArm.zRot = 0.0F;
+-         this.leftArm.zRot = 0.0F;
+-         this.rightArm.yRot = 0.15707964F;
+-         this.leftArm.yRot = -0.15707964F;
+-         ModelPart var10000;
+-         if (var1.getMainArm() == HumanoidArm.RIGHT) {
+-            this.rightArm.xRot = -1.8849558F + Mth.cos(var4 * 0.09F) * 0.15F;
+-            this.leftArm.xRot = -0.0F + Mth.cos(var4 * 0.19F) * 0.5F;
+-            var10000 = this.rightArm;
+-            var10000.xRot += var8 * 2.2F - var9 * 0.4F;
+-            var10000 = this.leftArm;
+-            var10000.xRot += var8 * 1.2F - var9 * 0.4F;
+-         } else {
+-            this.rightArm.xRot = -0.0F + Mth.cos(var4 * 0.19F) * 0.5F;
+-            this.leftArm.xRot = -1.8849558F + Mth.cos(var4 * 0.09F) * 0.15F;
+-            var10000 = this.rightArm;
+-            var10000.xRot += var8 * 1.2F - var9 * 0.4F;
+-            var10000 = this.leftArm;
+-            var10000.xRot += var8 * 2.2F - var9 * 0.4F;
+-         }
+-
+-         var10000 = this.rightArm;
+-         var10000.zRot += Mth.cos(var4 * 0.09F) * 0.05F + 0.05F;
+-         var10000 = this.leftArm;
+-         var10000.zRot -= Mth.cos(var4 * 0.09F) * 0.05F + 0.05F;
+-         var10000 = this.rightArm;
+-         var10000.xRot += Mth.sin(var4 * 0.067F) * 0.05F;
+-         var10000 = this.leftArm;
+-         var10000.xRot -= Mth.sin(var4 * 0.067F) * 0.05F;
++         AnimationUtils.swingWeaponDown(this.rightArm, this.leftArm, var1, this.attackTime, var4);
+       } else if (var7 == AbstractIllager.IllagerArmPose.SPELLCASTING) {
+          this.rightArm.z = 0.0F;
+          this.rightArm.x = -5.0F;
+          this.leftArm.z = 0.0F;
+          this.leftArm.x = 5.0F;
+@@ -146,21 +114,13 @@
+          this.rightArm.xRot = -1.5707964F + this.head.xRot;
+          this.leftArm.xRot = -0.9424779F + this.head.xRot;
+          this.leftArm.yRot = this.head.yRot - 0.4F;
+          this.leftArm.zRot = 1.5707964F;
+       } else if (var7 == AbstractIllager.IllagerArmPose.CROSSBOW_HOLD) {
+-         this.rightArm.yRot = -0.3F + this.head.yRot;
+-         this.leftArm.yRot = 0.6F + this.head.yRot;
+-         this.rightArm.xRot = -1.5707964F + this.head.xRot + 0.1F;
+-         this.leftArm.xRot = -1.5F + this.head.xRot;
++         AnimationUtils.animateCrossbowHold(this.rightArm, this.leftArm, this.head, true);
+       } else if (var7 == AbstractIllager.IllagerArmPose.CROSSBOW_CHARGE) {
+-         this.rightArm.yRot = -0.8F;
+-         this.rightArm.xRot = -0.97079635F;
+-         this.leftArm.xRot = -0.97079635F;
+-         var8 = Mth.clamp(this.itemUseTicks, 0.0F, 25.0F);
+-         this.leftArm.yRot = Mth.lerp(var8 / 25.0F, 0.4F, 0.85F);
+-         this.leftArm.xRot = Mth.lerp(var8 / 25.0F, this.leftArm.xRot, -1.5707964F);
++         AnimationUtils.animateCrossbowCharge(this.rightArm, this.leftArm, var1, true);
+       } else if (var7 == AbstractIllager.IllagerArmPose.CELEBRATING) {
+          this.rightArm.z = 0.0F;
+          this.rightArm.x = -5.0F;
+          this.rightArm.xRot = Mth.cos(var4 * 0.6662F) * 0.05F;
+          this.rightArm.zRot = 2.670354F;
+@@ -170,21 +130,16 @@
+          this.leftArm.xRot = Mth.cos(var4 * 0.6662F) * 0.05F;
+          this.leftArm.zRot = -2.3561945F;
+          this.leftArm.yRot = 0.0F;
+       }
+ 
+-      boolean var10 = var7 == AbstractIllager.IllagerArmPose.CROSSED;
+-      this.arms.visible = var10;
+-      this.leftArm.visible = !var10;
+-      this.rightArm.visible = !var10;
++      boolean var8 = var7 == AbstractIllager.IllagerArmPose.CROSSED;
++      this.arms.visible = var8;
++      this.leftArm.visible = !var8;
++      this.rightArm.visible = !var8;
+    }
+ 
+-   public void prepareMobModel(T var1, float var2, float var3, float var4) {
+-      this.itemUseTicks = (float)var1.getTicksUsingItem();
+-      super.prepareMobModel(var1, var2, var3, var4);
+-   }
+-
+    private ModelPart getArm(HumanoidArm var1) {
+       return var1 == HumanoidArm.LEFT ? this.leftArm : this.rightArm;
+    }
+ 
+    public ModelPart getHat() {

@@ -1,0 +1,7 @@
+--- net/minecraft/world/item/ItemPropertyFunction.java
++++ net/minecraft/world/item/ItemPropertyFunction.java
+@@ -1,4 +1,0 @@
+-package net.minecraft.world.item;
+-
+-public interface ItemPropertyFunction {
+-}

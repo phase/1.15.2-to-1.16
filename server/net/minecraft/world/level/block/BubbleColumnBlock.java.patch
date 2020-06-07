@@ -1,0 +1,80 @@
+--- net/minecraft/world/level/block/BubbleColumnBlock.java
++++ net/minecraft/world/level/block/BubbleColumnBlock.java
+@@ -8,10 +8,11 @@
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.material.Fluid;
+@@ -22,11 +23,11 @@
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class BubbleColumnBlock extends Block implements BucketPickup {
+    public static final BooleanProperty DRAG_DOWN;
+ 
+-   public BubbleColumnBlock(Block.Properties var1) {
++   public BubbleColumnBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(DRAG_DOWN, true));
+    }
+ 
+    public void entityInside(BlockState var1, Level var2, BlockPos var3, Entity var4) {
+@@ -66,45 +67,40 @@
+ 
+    }
+ 
+    public static boolean canExistIn(LevelAccessor var0, BlockPos var1) {
+       FluidState var2 = var0.getFluidState(var1);
+-      return var0.getBlockState(var1).getBlock() == Blocks.WATER && var2.getAmount() >= 8 && var2.isSource();
++      return var0.getBlockState(var1).is(Blocks.WATER) && var2.getAmount() >= 8 && var2.isSource();
+    }
+ 
+    private static boolean getDrag(BlockGetter var0, BlockPos var1) {
+       BlockState var2 = var0.getBlockState(var1);
+-      Block var3 = var2.getBlock();
+-      if (var3 == Blocks.BUBBLE_COLUMN) {
++      if (var2.is(Blocks.BUBBLE_COLUMN)) {
+          return (Boolean)var2.getValue(DRAG_DOWN);
+       } else {
+-         return var3 != Blocks.SOUL_SAND;
++         return !var2.is(Blocks.SOUL_SAND);
+       }
+    }
+ 
+-   public int getTickDelay(LevelReader var1) {
+-      return 5;
+-   }
+-
+    public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {
+       if (!var1.canSurvive(var4, var5)) {
+          return Blocks.WATER.defaultBlockState();
+       } else {
+          if (var2 == Direction.DOWN) {
+             var4.setBlock(var5, (BlockState)Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(DRAG_DOWN, getDrag(var4, var6)), 2);
+-         } else if (var2 == Direction.UP && var3.getBlock() != Blocks.BUBBLE_COLUMN && canExistIn(var4, var6)) {
+-            var4.getBlockTicks().scheduleTick(var5, this, this.getTickDelay(var4));
++         } else if (var2 == Direction.UP && !var3.is(Blocks.BUBBLE_COLUMN) && canExistIn(var4, var6)) {
++            var4.getBlockTicks().scheduleTick(var5, this, 5);
+          }
+ 
+          var4.getLiquidTicks().scheduleTick(var5, Fluids.WATER, Fluids.WATER.getTickDelay(var4));
+          return super.updateShape(var1, var2, var3, var4, var5, var6);
+       }
+    }
+ 
+    public boolean canSurvive(BlockState var1, LevelReader var2, BlockPos var3) {
+-      Block var4 = var2.getBlockState(var3.below()).getBlock();
+-      return var4 == Blocks.BUBBLE_COLUMN || var4 == Blocks.MAGMA_BLOCK || var4 == Blocks.SOUL_SAND;
++      BlockState var4 = var2.getBlockState(var3.below());
++      return var4.is(Blocks.BUBBLE_COLUMN) || var4.is(Blocks.MAGMA_BLOCK) || var4.is(Blocks.SOUL_SAND);
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return Shapes.empty();
+    }

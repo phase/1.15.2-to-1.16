@@ -1,0 +1,26 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/NoneFeatureConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/NoneFeatureConfiguration.java
+@@ -1,17 +1,13 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.Codec;
+ 
+ public class NoneFeatureConfiguration implements FeatureConfiguration {
++   public static final Codec<NoneFeatureConfiguration> CODEC = Codec.unit(() -> {
++      return INSTANCE;
++   });
++   public static final NoneFeatureConfiguration INSTANCE = new NoneFeatureConfiguration();
++
+    public NoneFeatureConfiguration() {
+    }
+-
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      return new Dynamic(var1, var1.emptyMap());
+-   }
+-
+-   public static <T> NoneFeatureConfiguration deserialize(Dynamic<T> var0) {
+-      return NONE;
+-   }
+ }

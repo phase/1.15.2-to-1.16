@@ -1,0 +1,151 @@
+--- net/minecraft/client/resources/language/ClientLanguage.java
++++ net/minecraft/client/resources/language/ClientLanguage.java
+@@ -1,0 +1,148 @@
++package net.minecraft.client.resources.language;
++
++import com.google.common.collect.ImmutableMap;
++import com.google.common.collect.Maps;
++import com.ibm.icu.text.ArabicShaping;
++import com.ibm.icu.text.ArabicShapingException;
++import com.ibm.icu.text.Bidi;
++import java.io.FileNotFoundException;
++import java.io.IOException;
++import java.io.InputStream;
++import java.util.HashMap;
++import java.util.Iterator;
++import java.util.List;
++import java.util.Map;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
++import net.minecraft.locale.Language;
++import net.minecraft.resources.ResourceLocation;
++import net.minecraft.server.packs.resources.Resource;
++import net.minecraft.server.packs.resources.ResourceManager;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
++
++public class ClientLanguage extends Language {
++   private static final Logger LOGGER = LogManager.getLogger();
++   private static final Pattern FORMAT_PATTERN = Pattern.compile("%(?:(\\d+)\\$)?([A-Za-z])");
++   private final Map<String, String> storage;
++   private final boolean requiresReordering;
++
++   private ClientLanguage(Map<String, String> var1, boolean var2) {
++      this.storage = var1;
++      this.requiresReordering = var2;
++   }
++
++   public static ClientLanguage loadFrom(ResourceManager var0, List<LanguageInfo> var1) {
++      HashMap var2 = Maps.newHashMap();
++      boolean var3 = false;
++      Iterator var4 = var1.iterator();
++
++      while(var4.hasNext()) {
++         LanguageInfo var5 = (LanguageInfo)var4.next();
++         var3 |= var5.isBidirectional();
++         String var6 = String.format("lang/%s.json", var5.getCode());
++         Iterator var7 = var0.getNamespaces().iterator();
++
++         while(var7.hasNext()) {
++            String var8 = (String)var7.next();
++
++            try {
++               ResourceLocation var9 = new ResourceLocation(var8, var6);
++               appendFrom(var0.getResources(var9), var2);
++            } catch (FileNotFoundException var10) {
++            } catch (Exception var11) {
++               LOGGER.warn("Skipped language file: {}:{} ({})", var8, var6, var11.toString());
++            }
++         }
++      }
++
++      return new ClientLanguage(ImmutableMap.copyOf(var2), var3);
++   }
++
++   private static void appendFrom(List<Resource> var0, Map<String, String> var1) {
++      Iterator var2 = var0.iterator();
++
++      while(var2.hasNext()) {
++         Resource var3 = (Resource)var2.next();
++
++         try {
++            InputStream var4 = var3.getInputStream();
++            Throwable var5 = null;
++
++            try {
++               Language.loadFromJson(var4, var1::put);
++            } catch (Throwable var15) {
++               var5 = var15;
++               throw var15;
++            } finally {
++               if (var4 != null) {
++                  if (var5 != null) {
++                     try {
++                        var4.close();
++                     } catch (Throwable var14) {
++                        var5.addSuppressed(var14);
++                     }
++                  } else {
++                     var4.close();
++                  }
++               }
++
++            }
++         } catch (IOException var17) {
++            LOGGER.warn("Failed to load translations from {}", var3, var17);
++         }
++      }
++
++   }
++
++   public String getOrDefault(String var1) {
++      return (String)this.storage.getOrDefault(var1, var1);
++   }
++
++   public boolean has(String var1) {
++      return this.storage.containsKey(var1);
++   }
++
++   public boolean requiresReordering() {
++      return this.requiresReordering;
++   }
++
++   public String reorder(String var1, boolean var2) {
++      if (!this.requiresReordering) {
++         return var1;
++      } else {
++         if (var2 && var1.indexOf(37) != -1) {
++            var1 = wrapFormatCodes(var1);
++         }
++
++         return this.reorder(var1);
++      }
++   }
++
++   public static String wrapFormatCodes(String var0) {
++      Matcher var1 = FORMAT_PATTERN.matcher(var0);
++      StringBuffer var2 = new StringBuffer();
++      int var3 = 1;
++
++      while(var1.find()) {
++         String var4 = var1.group(1);
++         String var5 = var4 != null ? var4 : Integer.toString(var3++);
++         String var6 = var1.group(2);
++         String var7 = Matcher.quoteReplacement("\u2066%" + var5 + "$" + var6 + "\u2069");
++         var1.appendReplacement(var2, var7);
++      }
++
++      var1.appendTail(var2);
++      return var2.toString();
++   }
++
++   private String reorder(String var1) {
++      try {
++         Bidi var2 = new Bidi((new ArabicShaping(8)).shape(var1), 127);
++         var2.setReorderingMode(0);
++         return var2.writeReordered(10);
++      } catch (ArabicShapingException var3) {
++         return var1;
++      }
++   }
++}

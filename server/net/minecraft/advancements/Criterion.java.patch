@@ -1,0 +1,63 @@
+--- net/minecraft/advancements/Criterion.java
++++ net/minecraft/advancements/Criterion.java
+@@ -1,17 +1,18 @@
+ package net.minecraft.advancements;
+ 
+ import com.google.common.collect.Maps;
+-import com.google.gson.JsonDeserializationContext;
+ import com.google.gson.JsonElement;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSyntaxException;
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.Map;
+ import java.util.Map.Entry;
+ import javax.annotation.Nullable;
++import net.minecraft.advancements.critereon.DeserializationContext;
++import net.minecraft.advancements.critereon.SerializationContext;
+ import net.minecraft.network.FriendlyByteBuf;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.GsonHelper;
+ 
+ public class Criterion {
+@@ -26,11 +27,11 @@
+    }
+ 
+    public void serializeToNetwork(FriendlyByteBuf var1) {
+    }
+ 
+-   public static Criterion criterionFromJson(JsonObject var0, JsonDeserializationContext var1) {
++   public static Criterion criterionFromJson(JsonObject var0, DeserializationContext var1) {
+       ResourceLocation var2 = new ResourceLocation(GsonHelper.getAsString(var0, "trigger"));
+       CriterionTrigger var3 = CriteriaTriggers.getCriterion(var2);
+       if (var3 == null) {
+          throw new JsonSyntaxException("Invalid criterion trigger: " + var2);
+       } else {
+@@ -41,11 +42,11 @@
+ 
+    public static Criterion criterionFromNetwork(FriendlyByteBuf var0) {
+       return new Criterion();
+    }
+ 
+-   public static Map<String, Criterion> criteriaFromJson(JsonObject var0, JsonDeserializationContext var1) {
++   public static Map<String, Criterion> criteriaFromJson(JsonObject var0, DeserializationContext var1) {
+       HashMap var2 = Maps.newHashMap();
+       Iterator var3 = var0.entrySet().iterator();
+ 
+       while(var3.hasNext()) {
+          Entry var4 = (Entry)var3.next();
+@@ -84,9 +85,13 @@
+    }
+ 
+    public JsonElement serializeToJson() {
+       JsonObject var1 = new JsonObject();
+       var1.addProperty("trigger", this.trigger.getCriterion().toString());
+-      var1.add("conditions", this.trigger.serializeToJson());
++      JsonObject var2 = this.trigger.serializeToJson(SerializationContext.INSTANCE);
++      if (var2.size() != 0) {
++         var1.add("conditions", var2);
++      }
++
+       return var1;
+    }
+ }

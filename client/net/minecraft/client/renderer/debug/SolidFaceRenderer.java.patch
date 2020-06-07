@@ -1,0 +1,15 @@
+--- net/minecraft/client/renderer/debug/SolidFaceRenderer.java
++++ net/minecraft/client/renderer/debug/SolidFaceRenderer.java
+@@ -44,11 +44,11 @@
+                return;
+             }
+ 
+             var12 = (BlockPos)var11.next();
+             var13 = var9.getBlockState(var12);
+-         } while(var13.getBlock() == Blocks.AIR);
++         } while(var13.is(Blocks.AIR));
+ 
+          VoxelShape var14 = var13.getShape(var9, var12);
+          Iterator var15 = var14.toAabbs().iterator();
+ 
+          while(var15.hasNext()) {

@@ -1,0 +1,7 @@
+--- net/minecraft/world/level/biome/BiomeSourceSettings.java
++++ net/minecraft/world/level/biome/BiomeSourceSettings.java
+@@ -1,4 +1,0 @@
+-package net.minecraft.world.level.biome;
+-
+-public interface BiomeSourceSettings {
+-}

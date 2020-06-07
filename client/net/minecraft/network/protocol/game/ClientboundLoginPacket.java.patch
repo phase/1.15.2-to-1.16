@@ -1,0 +1,176 @@
+--- net/minecraft/network/protocol/game/ClientboundLoginPacket.java
++++ net/minecraft/network/protocol/game/ClientboundLoginPacket.java
+@@ -1,76 +1,107 @@
+ package net.minecraft.network.protocol.game;
+ 
++import com.google.common.collect.Sets;
+ import java.io.IOException;
++import java.util.Iterator;
++import java.util.Set;
++import net.minecraft.core.Registry;
++import net.minecraft.core.RegistryAccess;
+ import net.minecraft.network.FriendlyByteBuf;
+ import net.minecraft.network.protocol.Packet;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.world.level.GameType;
+-import net.minecraft.world.level.LevelType;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.dimension.DimensionType;
+ 
+ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> {
+    private int playerId;
+    private long seed;
+    private boolean hardcore;
+    private GameType gameType;
+-   private DimensionType dimension;
++   private Set<ResourceKey<Level>> levels;
++   private RegistryAccess.RegistryHolder registryHolder;
++   private ResourceKey<DimensionType> dimensionType;
++   private ResourceKey<Level> dimension;
+    private int maxPlayers;
+-   private LevelType levelType;
+    private int chunkRadius;
+    private boolean reducedDebugInfo;
+    private boolean showDeathScreen;
++   private boolean isDebug;
++   private boolean isFlat;
+ 
+    public ClientboundLoginPacket() {
+    }
+ 
+-   public ClientboundLoginPacket(int var1, GameType var2, long var3, boolean var5, DimensionType var6, int var7, LevelType var8, int var9, boolean var10, boolean var11) {
++   public ClientboundLoginPacket(int var1, GameType var2, long var3, boolean var5, Set<ResourceKey<Level>> var6, RegistryAccess.RegistryHolder var7, ResourceKey<DimensionType> var8, ResourceKey<Level> var9, int var10, int var11, boolean var12, boolean var13, boolean var14, boolean var15) {
+       this.playerId = var1;
+-      this.dimension = var6;
++      this.levels = var6;
++      this.registryHolder = var7;
++      this.dimensionType = var8;
++      this.dimension = var9;
+       this.seed = var3;
+       this.gameType = var2;
+-      this.maxPlayers = var7;
++      this.maxPlayers = var10;
+       this.hardcore = var5;
+-      this.levelType = var8;
+-      this.chunkRadius = var9;
+-      this.reducedDebugInfo = var10;
+-      this.showDeathScreen = var11;
++      this.chunkRadius = var11;
++      this.reducedDebugInfo = var12;
++      this.showDeathScreen = var13;
++      this.isDebug = var14;
++      this.isFlat = var15;
+    }
+ 
+    public void read(FriendlyByteBuf var1) throws IOException {
+       this.playerId = var1.readInt();
+       short var2 = var1.readUnsignedByte();
+       this.hardcore = (var2 & 8) == 8;
+-      int var3 = var2 & -9;
+-      this.gameType = GameType.byId(var3);
+-      this.dimension = DimensionType.getById(var1.readInt());
+-      this.seed = var1.readLong();
+-      this.maxPlayers = var1.readUnsignedByte();
+-      this.levelType = LevelType.getLevelType(var1.readUtf(16));
+-      if (this.levelType == null) {
+-         this.levelType = LevelType.NORMAL;
++      int var5 = var2 & -9;
++      this.gameType = GameType.byId(var5);
++      int var3 = var1.readVarInt();
++      this.levels = Sets.newHashSet();
++
++      for(int var4 = 0; var4 < var3; ++var4) {
++         this.levels.add(ResourceKey.create(Registry.DIMENSION_REGISTRY, var1.readResourceLocation()));
+       }
+ 
++      this.registryHolder = (RegistryAccess.RegistryHolder)var1.readWithCodec(RegistryAccess.RegistryHolder.CODEC);
++      this.dimensionType = ResourceKey.create(Registry.DIMENSION_TYPE_REGISTRY, var1.readResourceLocation());
++      this.dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, var1.readResourceLocation());
++      this.seed = var1.readLong();
++      this.maxPlayers = var1.readUnsignedByte();
+       this.chunkRadius = var1.readVarInt();
+       this.reducedDebugInfo = var1.readBoolean();
+       this.showDeathScreen = var1.readBoolean();
++      this.isDebug = var1.readBoolean();
++      this.isFlat = var1.readBoolean();
+    }
+ 
+    public void write(FriendlyByteBuf var1) throws IOException {
+       var1.writeInt(this.playerId);
+       int var2 = this.gameType.getId();
+       if (this.hardcore) {
+          var2 |= 8;
+       }
+ 
+       var1.writeByte(var2);
+-      var1.writeInt(this.dimension.getId());
++      var1.writeVarInt(this.levels.size());
++      Iterator var3 = this.levels.iterator();
++
++      while(var3.hasNext()) {
++         ResourceKey var4 = (ResourceKey)var3.next();
++         var1.writeResourceLocation(var4.location());
++      }
++
++      var1.writeWithCodec(RegistryAccess.RegistryHolder.CODEC, this.registryHolder);
++      var1.writeResourceLocation(this.dimensionType.location());
++      var1.writeResourceLocation(this.dimension.location());
+       var1.writeLong(this.seed);
+       var1.writeByte(this.maxPlayers);
+-      var1.writeUtf(this.levelType.getName());
+       var1.writeVarInt(this.chunkRadius);
+       var1.writeBoolean(this.reducedDebugInfo);
+       var1.writeBoolean(this.showDeathScreen);
++      var1.writeBoolean(this.isDebug);
++      var1.writeBoolean(this.isFlat);
+    }
+ 
+    public void handle(ClientGamePacketListener var1) {
+       var1.handleLogin(this);
+    }
+@@ -89,18 +120,26 @@
+ 
+    public GameType getGameType() {
+       return this.gameType;
+    }
+ 
+-   public DimensionType getDimension() {
+-      return this.dimension;
++   public Set<ResourceKey<Level>> levels() {
++      return this.levels;
+    }
+ 
+-   public LevelType getLevelType() {
+-      return this.levelType;
++   public RegistryAccess registryAccess() {
++      return this.registryHolder;
+    }
+ 
++   public ResourceKey<DimensionType> getDimensionType() {
++      return this.dimensionType;
++   }
++
++   public ResourceKey<Level> getDimension() {
++      return this.dimension;
++   }
++
+    public int getChunkRadius() {
+       return this.chunkRadius;
+    }
+ 
+    public boolean isReducedDebugInfo() {
+@@ -108,6 +147,14 @@
+    }
+ 
+    public boolean shouldShowDeathScreen() {
+       return this.showDeathScreen;
+    }
++
++   public boolean isDebug() {
++      return this.isDebug;
++   }
++
++   public boolean isFlat() {
++      return this.isFlat;
++   }
+ }

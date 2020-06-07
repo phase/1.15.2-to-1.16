@@ -1,0 +1,19 @@
+--- net/minecraft/advancements/CriterionTriggerInstance.java
++++ net/minecraft/advancements/CriterionTriggerInstance.java
+@@ -1,13 +1,11 @@
+ package net.minecraft.advancements;
+ 
+-import com.google.gson.JsonElement;
+-import com.google.gson.JsonNull;
++import com.google.gson.JsonObject;
++import net.minecraft.advancements.critereon.SerializationContext;
+ import net.minecraft.resources.ResourceLocation;
+ 
+ public interface CriterionTriggerInstance {
+    ResourceLocation getCriterion();
+ 
+-   default JsonElement serializeToJson() {
+-      return JsonNull.INSTANCE;
+-   }
++   JsonObject serializeToJson(SerializationContext var1);
+ }

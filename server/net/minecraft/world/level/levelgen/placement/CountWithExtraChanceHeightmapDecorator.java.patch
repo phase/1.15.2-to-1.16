@@ -1,0 +1,30 @@
+--- net/minecraft/world/level/levelgen/placement/CountWithExtraChanceHeightmapDecorator.java
++++ net/minecraft/world/level/levelgen/placement/CountWithExtraChanceHeightmapDecorator.java
+@@ -1,24 +1,22 @@
+ package net.minecraft.world.level.levelgen.placement;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.Codec;
+ import java.util.Random;
+-import java.util.function.Function;
+ import java.util.stream.IntStream;
+ import java.util.stream.Stream;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ 
+ public class CountWithExtraChanceHeightmapDecorator extends FeatureDecorator<FrequencyWithExtraChanceDecoratorConfiguration> {
+-   public CountWithExtraChanceHeightmapDecorator(Function<Dynamic<?>, ? extends FrequencyWithExtraChanceDecoratorConfiguration> var1) {
++   public CountWithExtraChanceHeightmapDecorator(Codec<FrequencyWithExtraChanceDecoratorConfiguration> var1) {
+       super(var1);
+    }
+ 
+-   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, FrequencyWithExtraChanceDecoratorConfiguration var4, BlockPos var5) {
++   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator var2, Random var3, FrequencyWithExtraChanceDecoratorConfiguration var4, BlockPos var5) {
+       int var6 = var4.count;
+       if (var3.nextFloat() < var4.extraChance) {
+          var6 += var4.extraCount;
+       }
+ 

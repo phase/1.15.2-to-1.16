@@ -1,0 +1,17 @@
+--- net/minecraft/util/CrudeIncrementalIntIdentityHashBiMap.java
++++ net/minecraft/util/CrudeIncrementalIntIdentityHashBiMap.java
+@@ -34,10 +34,14 @@
+ 
+    private int getValue(int var1) {
+       return var1 == -1 ? -1 : this.values[var1];
+    }
+ 
++   public boolean contains(int var1) {
++      return this.byId(var1) != null;
++   }
++
+    public int add(K var1) {
+       int var2 = this.nextId();
+       this.addMapping(var1, var2);
+       return var2;
+    }

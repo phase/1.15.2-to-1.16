@@ -1,0 +1,170 @@
+--- net/minecraft/world/level/levelgen/NoiseGeneratorSettings.java
++++ net/minecraft/world/level/levelgen/NoiseGeneratorSettings.java
+@@ -1,0 +1,167 @@
++package net.minecraft.world.level.levelgen;
++
++import com.google.common.collect.Maps;
++import com.mojang.datafixers.util.Either;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.Objects;
++import java.util.Optional;
++import java.util.function.Function;
++import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.TranslatableComponent;
++import net.minecraft.resources.ResourceLocation;
++import net.minecraft.util.Codecs;
++import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
++import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
++
++public final class NoiseGeneratorSettings {
++   public static final Codec<NoiseGeneratorSettings> DIRECT_CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(StructureSettings.CODEC.fieldOf("structures").forGetter(NoiseGeneratorSettings::structureSettings), NoiseSettings.CODEC.fieldOf("noise").forGetter(NoiseGeneratorSettings::noiseSettings), BlockState.CODEC.fieldOf("default_block").forGetter(NoiseGeneratorSettings::getDefaultBlock), BlockState.CODEC.fieldOf("default_fluid").forGetter(NoiseGeneratorSettings::getDefaultFluid), Codecs.intRange(-20, 276).fieldOf("bedrock_roof_position").forGetter(NoiseGeneratorSettings::getBedrockRoofPosition), Codecs.intRange(-20, 276).fieldOf("bedrock_floor_position").forGetter(NoiseGeneratorSettings::getBedrockFloorPosition), Codecs.intRange(0, 255).fieldOf("sea_level").forGetter(NoiseGeneratorSettings::seaLevel), Codec.BOOL.fieldOf("disable_mob_generation").forGetter(NoiseGeneratorSettings::disableMobGeneration)).apply(var0, NoiseGeneratorSettings::new);
++   });
++   public static final Codec<NoiseGeneratorSettings> CODEC;
++   private final StructureSettings structureSettings;
++   private final NoiseSettings noiseSettings;
++   private final BlockState defaultBlock;
++   private final BlockState defaultFluid;
++   private final int bedrockRoofPosition;
++   private final int bedrockFloorPosition;
++   private final int seaLevel;
++   private final boolean disableMobGeneration;
++   private final Optional<NoiseGeneratorSettings.Preset> preset;
++
++   private NoiseGeneratorSettings(StructureSettings var1, NoiseSettings var2, BlockState var3, BlockState var4, int var5, int var6, int var7, boolean var8) {
++      this(var1, var2, var3, var4, var5, var6, var7, var8, Optional.empty());
++   }
++
++   private NoiseGeneratorSettings(StructureSettings var1, NoiseSettings var2, BlockState var3, BlockState var4, int var5, int var6, int var7, boolean var8, Optional<NoiseGeneratorSettings.Preset> var9) {
++      this.structureSettings = var1;
++      this.noiseSettings = var2;
++      this.defaultBlock = var3;
++      this.defaultFluid = var4;
++      this.bedrockRoofPosition = var5;
++      this.bedrockFloorPosition = var6;
++      this.seaLevel = var7;
++      this.disableMobGeneration = var8;
++      this.preset = var9;
++   }
++
++   public StructureSettings structureSettings() {
++      return this.structureSettings;
++   }
++
++   public NoiseSettings noiseSettings() {
++      return this.noiseSettings;
++   }
++
++   public BlockState getDefaultBlock() {
++      return this.defaultBlock;
++   }
++
++   public BlockState getDefaultFluid() {
++      return this.defaultFluid;
++   }
++
++   public int getBedrockRoofPosition() {
++      return this.bedrockRoofPosition;
++   }
++
++   public int getBedrockFloorPosition() {
++      return this.bedrockFloorPosition;
++   }
++
++   public int seaLevel() {
++      return this.seaLevel;
++   }
++
++   @Deprecated
++   protected boolean disableMobGeneration() {
++      return this.disableMobGeneration;
++   }
++
++   public boolean stable(NoiseGeneratorSettings.Preset var1) {
++      return Objects.equals(this.preset, Optional.of(var1));
++   }
++
++   static {
++      CODEC = Codec.either(NoiseGeneratorSettings.Preset.CODEC, DIRECT_CODEC).xmap((var0) -> {
++         return (NoiseGeneratorSettings)var0.map(NoiseGeneratorSettings.Preset::settings, Function.identity());
++      }, (var0) -> {
++         return (Either)var0.preset.map(Either::left).orElseGet(() -> {
++            return Either.right(var0);
++         });
++      });
++   }
++
++   public static class Preset {
++      private static final Map<ResourceLocation, NoiseGeneratorSettings.Preset> BY_NAME = Maps.newHashMap();
++      public static final Codec<NoiseGeneratorSettings.Preset> CODEC;
++      public static final NoiseGeneratorSettings.Preset OVERWORLD;
++      public static final NoiseGeneratorSettings.Preset AMPLIFIED;
++      public static final NoiseGeneratorSettings.Preset NETHER;
++      public static final NoiseGeneratorSettings.Preset END;
++      public static final NoiseGeneratorSettings.Preset CAVES;
++      public static final NoiseGeneratorSettings.Preset FLOATING_ISLANDS;
++      private final Component description;
++      private final ResourceLocation name;
++      private final NoiseGeneratorSettings settings;
++
++      public Preset(String var1, Function<NoiseGeneratorSettings.Preset, NoiseGeneratorSettings> var2) {
++         this.name = new ResourceLocation(var1);
++         this.description = new TranslatableComponent("generator.noise." + var1);
++         this.settings = (NoiseGeneratorSettings)var2.apply(this);
++         BY_NAME.put(this.name, this);
++      }
++
++      public NoiseGeneratorSettings settings() {
++         return this.settings;
++      }
++
++      private static NoiseGeneratorSettings end(StructureSettings var0, BlockState var1, BlockState var2, NoiseGeneratorSettings.Preset var3, boolean var4) {
++         return new NoiseGeneratorSettings(var0, new NoiseSettings(128, new NoiseSamplingSettings(2.0D, 1.0D, 80.0D, 160.0D), new NoiseSlideSettings(-3000, 64, -46), new NoiseSlideSettings(-30, 7, 1), 2, 1, 0.0D, 0.0D, true, false, var4, false), var1, var2, -10, -10, 0, true, Optional.of(var3));
++      }
++
++      private static NoiseGeneratorSettings nether(StructureSettings var0, BlockState var1, BlockState var2, NoiseGeneratorSettings.Preset var3) {
++         HashMap var4 = Maps.newHashMap(StructureSettings.DEFAULTS);
++         var4.put(StructureFeature.RUINED_PORTAL, new StructureFeatureConfiguration(25, 10, 34222645));
++         return new NoiseGeneratorSettings(new StructureSettings(Optional.ofNullable(var0.stronghold()), var4), new NoiseSettings(128, new NoiseSamplingSettings(1.0D, 3.0D, 80.0D, 60.0D), new NoiseSlideSettings(120, 3, 0), new NoiseSlideSettings(320, 4, -1), 1, 2, 0.0D, 0.019921875D, false, false, false, false), var1, var2, 0, 0, 32, true, Optional.of(var3));
++      }
++
++      private static NoiseGeneratorSettings overworld(StructureSettings var0, boolean var1, NoiseGeneratorSettings.Preset var2) {
++         double var3 = 0.9999999814507745D;
++         return new NoiseGeneratorSettings(var0, new NoiseSettings(256, new NoiseSamplingSettings(0.9999999814507745D, 0.9999999814507745D, 80.0D, 160.0D), new NoiseSlideSettings(-10, 3, 0), new NoiseSlideSettings(-30, 0, 0), 1, 2, 1.0D, -0.46875D, true, true, false, var1), Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), -10, 0, 63, false, Optional.of(var2));
++      }
++
++      static {
++         CODEC = ResourceLocation.CODEC.flatXmap((var0) -> {
++            return (DataResult)Optional.ofNullable(BY_NAME.get(var0)).map(DataResult::success).orElseGet(() -> {
++               return DataResult.error("Unknown preset: " + var0);
++            });
++         }, (var0) -> {
++            return DataResult.success(var0.name);
++         }).stable();
++         OVERWORLD = new NoiseGeneratorSettings.Preset("overworld", (var0) -> {
++            return overworld(new StructureSettings(true), false, var0);
++         });
++         AMPLIFIED = new NoiseGeneratorSettings.Preset("amplified", (var0) -> {
++            return overworld(new StructureSettings(true), true, var0);
++         });
++         NETHER = new NoiseGeneratorSettings.Preset("nether", (var0) -> {
++            return nether(new StructureSettings(false), Blocks.NETHERRACK.defaultBlockState(), Blocks.LAVA.defaultBlockState(), var0);
++         });
++         END = new NoiseGeneratorSettings.Preset("end", (var0) -> {
++            return end(new StructureSettings(false), Blocks.END_STONE.defaultBlockState(), Blocks.AIR.defaultBlockState(), var0, true);
++         });
++         CAVES = new NoiseGeneratorSettings.Preset("caves", (var0) -> {
++            return nether(new StructureSettings(false), Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), var0);
++         });
++         FLOATING_ISLANDS = new NoiseGeneratorSettings.Preset("floating_islands", (var0) -> {
++            return end(new StructureSettings(false), Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), var0, false);
++         });
++      }
++   }
++}

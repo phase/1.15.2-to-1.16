@@ -1,0 +1,48 @@
+--- net/minecraft/world/level/block/entity/BarrelBlockEntity.java
++++ net/minecraft/world/level/block/entity/BarrelBlockEntity.java
+@@ -39,15 +39,15 @@
+       }
+ 
+       return var1;
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
+       this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+-      if (!this.tryLoadLootTable(var1)) {
+-         ContainerHelper.loadAllItems(var1, this.items);
++      if (!this.tryLoadLootTable(var2)) {
++         ContainerHelper.loadAllItems(var2, this.items);
+       }
+ 
+    }
+ 
+    public int getContainerSize() {
+@@ -61,11 +61,11 @@
+    protected void setItems(NonNullList<ItemStack> var1) {
+       this.items = var1;
+    }
+ 
+    protected Component getDefaultName() {
+-      return new TranslatableComponent("container.barrel", new Object[0]);
++      return new TranslatableComponent("container.barrel");
+    }
+ 
+    protected AbstractContainerMenu createMenu(int var1, Inventory var2) {
+       return ChestMenu.threeRows(var1, var2, this);
+    }
+@@ -100,11 +100,11 @@
+       this.openCount = ChestBlockEntity.getOpenCount(this.level, this, var1, var2, var3);
+       if (this.openCount > 0) {
+          this.scheduleRecheck();
+       } else {
+          BlockState var4 = this.getBlockState();
+-         if (var4.getBlock() != Blocks.BARREL) {
++         if (!var4.is(Blocks.BARREL)) {
+             this.setRemoved();
+             return;
+          }
+ 
+          boolean var5 = (Boolean)var4.getValue(BarrelBlock.OPEN);

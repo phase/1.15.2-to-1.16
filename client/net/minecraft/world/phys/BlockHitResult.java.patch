@@ -1,0 +1,17 @@
+--- net/minecraft/world/phys/BlockHitResult.java
++++ net/minecraft/world/phys/BlockHitResult.java
+@@ -27,10 +27,14 @@
+ 
+    public BlockHitResult withDirection(Direction var1) {
+       return new BlockHitResult(this.miss, this.location, var1, this.blockPos, this.inside);
+    }
+ 
++   public BlockHitResult withPosition(BlockPos var1) {
++      return new BlockHitResult(this.miss, this.location, this.direction, var1, this.inside);
++   }
++
+    public BlockPos getBlockPos() {
+       return this.blockPos;
+    }
+ 
+    public Direction getDirection() {

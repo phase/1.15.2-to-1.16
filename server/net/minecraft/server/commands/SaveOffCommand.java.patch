@@ -1,0 +1,28 @@
+--- net/minecraft/server/commands/SaveOffCommand.java
++++ net/minecraft/server/commands/SaveOffCommand.java
+@@ -8,11 +8,11 @@
+ import net.minecraft.commands.Commands;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.server.level.ServerLevel;
+ 
+ public class SaveOffCommand {
+-   private static final SimpleCommandExceptionType ERROR_ALREADY_OFF = new SimpleCommandExceptionType(new TranslatableComponent("commands.save.alreadyOff", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_ALREADY_OFF = new SimpleCommandExceptionType(new TranslatableComponent("commands.save.alreadyOff"));
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("save-off").requires((var0x) -> {
+          return var0x.hasPermission(4);
+       })).executes((var0x) -> {
+@@ -29,11 +29,11 @@
+          }
+ 
+          if (!var2) {
+             throw ERROR_ALREADY_OFF.create();
+          } else {
+-            var1.sendSuccess(new TranslatableComponent("commands.save.disabled", new Object[0]), true);
++            var1.sendSuccess(new TranslatableComponent("commands.save.disabled"), true);
+             return 1;
+          }
+       }));
+    }
+ }

@@ -1,0 +1,27 @@
+--- net/minecraft/nbt/LongTag.java
++++ net/minecraft/nbt/LongTag.java
+@@ -2,10 +2,11 @@
+ 
+ import java.io.DataInput;
+ import java.io.DataOutput;
+ import java.io.IOException;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ 
+ public class LongTag extends NumericTag {
+    public static final TagType<LongTag> TYPE = new TagType<LongTag>() {
+       public LongTag load(DataInput var1, int var2, NbtAccounter var3) throws IOException {
+@@ -66,11 +67,11 @@
+    public int hashCode() {
+       return (int)(this.data ^ this.data >>> 32);
+    }
+ 
+    public Component getPrettyDisplay(String var1, int var2) {
+-      Component var3 = (new TextComponent("L")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
++      MutableComponent var3 = (new TextComponent("L")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
+       return (new TextComponent(String.valueOf(this.data))).append(var3).withStyle(SYNTAX_HIGHLIGHTING_NUMBER);
+    }
+ 
+    public long getAsLong() {
+       return this.data;

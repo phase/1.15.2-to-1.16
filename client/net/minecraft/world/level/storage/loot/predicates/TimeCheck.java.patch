@@ -1,0 +1,43 @@
+--- net/minecraft/world/level/storage/loot/predicates/TimeCheck.java
++++ net/minecraft/world/level/storage/loot/predicates/TimeCheck.java
+@@ -2,11 +2,10 @@
+ 
+ import com.google.gson.JsonDeserializationContext;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSerializationContext;
+ import javax.annotation.Nullable;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.world.level.storage.loot.LootContext;
+ import net.minecraft.world.level.storage.loot.RandomValueBounds;
+ 
+@@ -18,23 +17,26 @@
+    private TimeCheck(@Nullable Long var1, RandomValueBounds var2) {
+       this.period = var1;
+       this.value = var2;
+    }
+ 
++   public LootItemConditionType getType() {
++      return LootItemConditions.TIME_CHECK;
++   }
++
+    public boolean test(LootContext var1) {
+       ServerLevel var2 = var1.getLevel();
+       long var3 = var2.getDayTime();
+       if (this.period != null) {
+          var3 %= this.period;
+       }
+ 
+       return this.value.matchesValue((int)var3);
+    }
+ 
+-   public static class Serializer extends LootItemCondition.Serializer<TimeCheck> {
++   public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<TimeCheck> {
+       public Serializer() {
+-         super(new ResourceLocation("time_check"), TimeCheck.class);
+       }
+ 
+       public void serialize(JsonObject var1, TimeCheck var2, JsonSerializationContext var3) {
+          var1.addProperty("period", var2.period);
+          var1.add("value", var3.serialize(var2.value));

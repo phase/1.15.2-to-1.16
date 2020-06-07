@@ -1,0 +1,39 @@
+--- net/minecraft/world/level/block/SaplingBlock.java
++++ net/minecraft/world/level/block/SaplingBlock.java
+@@ -4,10 +4,11 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.grower.AbstractTreeGrower;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+@@ -16,22 +17,21 @@
+ public class SaplingBlock extends BushBlock implements BonemealableBlock {
+    public static final IntegerProperty STAGE;
+    protected static final VoxelShape SHAPE;
+    private final AbstractTreeGrower treeGrower;
+ 
+-   protected SaplingBlock(AbstractTreeGrower var1, Block.Properties var2) {
++   protected SaplingBlock(AbstractTreeGrower var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.treeGrower = var1;
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(STAGE, 0));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return SHAPE;
+    }
+ 
+-   public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+-      super.tick(var1, var2, var3, var4);
++   public void randomTick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+       if (var2.getMaxLocalRawBrightness(var3.above()) >= 9 && var4.nextInt(7) == 0) {
+          this.advanceTree(var2, var3, var1, var4);
+       }
+ 
+    }

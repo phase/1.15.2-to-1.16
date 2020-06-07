@@ -1,0 +1,57 @@
+--- net/minecraft/world/inventory/AbstractContainerMenu.java
++++ net/minecraft/world/inventory/AbstractContainerMenu.java
+@@ -35,11 +35,11 @@
+       this.containerId = var2;
+    }
+ 
+    protected static boolean stillValid(ContainerLevelAccess var0, Player var1, Block var2) {
+       return (Boolean)var0.evaluate((var2x, var3) -> {
+-         return var2x.getBlockState(var3).getBlock() != var2 ? false : var1.distanceToSqr((double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D) <= 64.0D;
++         return !var2x.getBlockState(var3).is(var2) ? false : var1.distanceToSqr((double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D) <= 64.0D;
+       }, true);
+    }
+ 
+    public MenuType<?> getType() {
+       if (this.menuType == null) {
+@@ -104,29 +104,29 @@
+       int var1;
+       for(var1 = 0; var1 < this.slots.size(); ++var1) {
+          ItemStack var2 = ((Slot)this.slots.get(var1)).getItem();
+          ItemStack var3 = (ItemStack)this.lastSlots.get(var1);
+          if (!ItemStack.matches(var3, var2)) {
+-            var3 = var2.copy();
+-            this.lastSlots.set(var1, var3);
+-            Iterator var4 = this.containerListeners.iterator();
++            ItemStack var4 = var2.copy();
++            this.lastSlots.set(var1, var4);
++            Iterator var5 = this.containerListeners.iterator();
+ 
+-            while(var4.hasNext()) {
+-               ContainerListener var5 = (ContainerListener)var4.next();
+-               var5.slotChanged(this, var1, var3);
++            while(var5.hasNext()) {
++               ContainerListener var6 = (ContainerListener)var5.next();
++               var6.slotChanged(this, var1, var4);
+             }
+          }
+       }
+ 
+       for(var1 = 0; var1 < this.dataSlots.size(); ++var1) {
+-         DataSlot var6 = (DataSlot)this.dataSlots.get(var1);
+-         if (var6.checkAndClearUpdateFlag()) {
+-            Iterator var7 = this.containerListeners.iterator();
++         DataSlot var7 = (DataSlot)this.dataSlots.get(var1);
++         if (var7.checkAndClearUpdateFlag()) {
++            Iterator var8 = this.containerListeners.iterator();
+ 
+-            while(var7.hasNext()) {
+-               ContainerListener var8 = (ContainerListener)var7.next();
+-               var8.setContainerData(this, var1, var6.get());
++            while(var8.hasNext()) {
++               ContainerListener var9 = (ContainerListener)var8.next();
++               var9.setContainerData(this, var1, var7.get());
+             }
+          }
+       }
+ 
+    }

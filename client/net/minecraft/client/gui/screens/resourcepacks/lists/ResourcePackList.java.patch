@@ -1,0 +1,179 @@
+--- net/minecraft/client/gui/screens/resourcepacks/lists/ResourcePackList.java
++++ net/minecraft/client/gui/screens/resourcepacks/lists/ResourcePackList.java
+@@ -1,27 +1,30 @@
+ package net.minecraft.client.gui.screens.resourcepacks.lists;
+ 
+ import com.mojang.blaze3d.systems.RenderSystem;
++import com.mojang.blaze3d.vertex.PoseStack;
+ import com.mojang.blaze3d.vertex.Tesselator;
+ import java.util.List;
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.GuiComponent;
+ import net.minecraft.client.gui.components.ObjectSelectionList;
+ import net.minecraft.client.gui.screens.ConfirmScreen;
+ import net.minecraft.client.gui.screens.resourcepacks.ResourcePackSelectScreen;
+ import net.minecraft.client.resources.UnopenedResourcePack;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.FormattedText;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.packs.repository.PackCompatibility;
+ 
+ public abstract class ResourcePackList extends ObjectSelectionList<ResourcePackList.ResourcePackEntry> {
+    private static final ResourceLocation ICON_OVERLAY_LOCATION = new ResourceLocation("textures/gui/resource_packs.png");
+-   private static final Component INCOMPATIBLE_TITLE = new TranslatableComponent("resourcePack.incompatible", new Object[0]);
+-   private static final Component INCOMPATIBLE_CONFIRM_TITLE = new TranslatableComponent("resourcePack.incompatible.confirm.title", new Object[0]);
++   private static final Component INCOMPATIBLE_TITLE = new TranslatableComponent("resourcePack.incompatible");
++   private static final Component INCOMPATIBLE_CONFIRM_TITLE = new TranslatableComponent("resourcePack.incompatible.confirm.title");
+    protected final Minecraft minecraft;
+    private final Component title;
+ 
+    public ResourcePackList(Minecraft var1, int var2, int var3, Component var4) {
+       super(var1, var2, var3, 32, var3 - 55 + 4, 36);
+@@ -30,13 +33,13 @@
+       var1.font.getClass();
+       this.setRenderHeader(true, (int)(9.0F * 1.5F));
+       this.title = var4;
+    }
+ 
+-   protected void renderHeader(int var1, int var2, Tesselator var3) {
+-      Component var4 = (new TextComponent("")).append(this.title).withStyle(ChatFormatting.UNDERLINE, ChatFormatting.BOLD);
+-      this.minecraft.font.draw(var4.getColoredString(), (float)(var1 + this.width / 2 - this.minecraft.font.width(var4.getColoredString()) / 2), (float)Math.min(this.y0 + 3, var2), 16777215);
++   protected void renderHeader(PoseStack var1, int var2, int var3, Tesselator var4) {
++      MutableComponent var5 = (new TextComponent("")).append(this.title).withStyle(ChatFormatting.UNDERLINE, ChatFormatting.BOLD);
++      this.minecraft.font.draw(var1, (FormattedText)var5, (float)(var2 + this.width / 2 - this.minecraft.font.width((FormattedText)var5) / 2), (float)Math.min(this.y0 + 3, var3), 16777215);
+    }
+ 
+    public int getRowWidth() {
+       return this.width;
+    }
+@@ -78,89 +81,84 @@
+ 
+       protected PackCompatibility getCompatibility() {
+          return this.resourcePack.getCompatibility();
+       }
+ 
+-      protected String getDescription() {
+-         return this.resourcePack.getDescription().getColoredString();
+-      }
+-
+-      protected String getName() {
+-         return this.resourcePack.getTitle().getColoredString();
+-      }
+-
+       public UnopenedResourcePack getResourcePack() {
+          return this.resourcePack;
+       }
+ 
+-      public void render(int var1, int var2, int var3, int var4, int var5, int var6, int var7, boolean var8, float var9) {
+-         PackCompatibility var10 = this.getCompatibility();
+-         if (!var10.isCompatible()) {
++      public void render(PoseStack var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, boolean var9, float var10) {
++         PackCompatibility var11 = this.getCompatibility();
++         if (!var11.isCompatible()) {
+             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+-            GuiComponent.fill(var3 - 1, var2 - 1, var3 + var4 - 9, var2 + var5 + 1, -8978432);
++            GuiComponent.fill(var1, var4 - 1, var3 - 1, var4 + var5 - 9, var3 + var6 + 1, -8978432);
+          }
+ 
+          this.bindToIcon();
+          RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+-         GuiComponent.blit(var3, var2, 0.0F, 0.0F, 32, 32, 32, 32);
+-         String var11 = this.getName();
+-         String var12 = this.getDescription();
+-         int var13;
+-         if (this.showHoverOverlay() && (this.minecraft.options.touchscreen || var8)) {
++         GuiComponent.blit(var1, var4, var3, 0.0F, 0.0F, 32, 32, 32, 32);
++         Component var12 = this.resourcePack.getTitle();
++         Component var13 = this.resourcePack.getDescription();
++         int var14;
++         if (this.showHoverOverlay() && (this.minecraft.options.touchscreen || var9)) {
+             this.minecraft.getTextureManager().bind(ResourcePackList.ICON_OVERLAY_LOCATION);
+-            GuiComponent.fill(var3, var2, var3 + 32, var2 + 32, -1601138544);
++            GuiComponent.fill(var1, var4, var3, var4 + 32, var3 + 32, -1601138544);
+             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+-            var13 = var6 - var3;
+-            int var14 = var7 - var2;
+-            if (!var10.isCompatible()) {
+-               var11 = ResourcePackList.INCOMPATIBLE_TITLE.getColoredString();
+-               var12 = var10.getDescription().getColoredString();
++            var14 = var7 - var4;
++            int var15 = var8 - var3;
++            if (!var11.isCompatible()) {
++               var12 = ResourcePackList.INCOMPATIBLE_TITLE;
++               var13 = var11.getDescription();
+             }
+ 
+             if (this.canMoveRight()) {
+-               if (var13 < 32) {
+-                  GuiComponent.blit(var3, var2, 0.0F, 32.0F, 32, 32, 256, 256);
++               if (var14 < 32) {
++                  GuiComponent.blit(var1, var4, var3, 0.0F, 32.0F, 32, 32, 256, 256);
+                } else {
+-                  GuiComponent.blit(var3, var2, 0.0F, 0.0F, 32, 32, 256, 256);
++                  GuiComponent.blit(var1, var4, var3, 0.0F, 0.0F, 32, 32, 256, 256);
+                }
+             } else {
+                if (this.canMoveLeft()) {
+-                  if (var13 < 16) {
+-                     GuiComponent.blit(var3, var2, 32.0F, 32.0F, 32, 32, 256, 256);
++                  if (var14 < 16) {
++                     GuiComponent.blit(var1, var4, var3, 32.0F, 32.0F, 32, 32, 256, 256);
+                   } else {
+-                     GuiComponent.blit(var3, var2, 32.0F, 0.0F, 32, 32, 256, 256);
++                     GuiComponent.blit(var1, var4, var3, 32.0F, 0.0F, 32, 32, 256, 256);
+                   }
+                }
+ 
+                if (this.canMoveUp()) {
+-                  if (var13 < 32 && var13 > 16 && var14 < 16) {
+-                     GuiComponent.blit(var3, var2, 96.0F, 32.0F, 32, 32, 256, 256);
++                  if (var14 < 32 && var14 > 16 && var15 < 16) {
++                     GuiComponent.blit(var1, var4, var3, 96.0F, 32.0F, 32, 32, 256, 256);
+                   } else {
+-                     GuiComponent.blit(var3, var2, 96.0F, 0.0F, 32, 32, 256, 256);
++                     GuiComponent.blit(var1, var4, var3, 96.0F, 0.0F, 32, 32, 256, 256);
+                   }
+                }
+ 
+                if (this.canMoveDown()) {
+-                  if (var13 < 32 && var13 > 16 && var14 > 16) {
+-                     GuiComponent.blit(var3, var2, 64.0F, 32.0F, 32, 32, 256, 256);
++                  if (var14 < 32 && var14 > 16 && var15 > 16) {
++                     GuiComponent.blit(var1, var4, var3, 64.0F, 32.0F, 32, 32, 256, 256);
+                   } else {
+-                     GuiComponent.blit(var3, var2, 64.0F, 0.0F, 32, 32, 256, 256);
++                     GuiComponent.blit(var1, var4, var3, 64.0F, 0.0F, 32, 32, 256, 256);
+                   }
+                }
+             }
+          }
+ 
+-         var13 = this.minecraft.font.width(var11);
+-         if (var13 > 157) {
+-            var11 = this.minecraft.font.substrByWidth(var11, 157 - this.minecraft.font.width("...")) + "...";
++         var14 = this.minecraft.font.width((FormattedText)var12);
++         if (var14 > 157) {
++            FormattedText var17 = FormattedText.composite(this.minecraft.font.substrByWidth(var12, 157 - this.minecraft.font.width("...")), FormattedText.of("..."));
++            this.minecraft.font.drawShadow(var1, var17, (float)(var4 + 32 + 2), (float)(var3 + 1), 16777215);
++         } else {
++            this.minecraft.font.drawShadow(var1, (FormattedText)var12, (float)(var4 + 32 + 2), (float)(var3 + 1), 16777215);
+          }
+ 
+-         this.minecraft.font.drawShadow(var11, (float)(var3 + 32 + 2), (float)(var2 + 1), 16777215);
+-         List var16 = this.minecraft.font.split(var12, 157);
++         this.minecraft.font.drawShadow(var1, (FormattedText)var12, (float)(var4 + 32 + 2), (float)(var3 + 1), 16777215);
++         List var18 = this.minecraft.font.split(var13, 157);
+ 
+-         for(int var15 = 0; var15 < 2 && var15 < var16.size(); ++var15) {
+-            this.minecraft.font.drawShadow((String)var16.get(var15), (float)(var3 + 32 + 2), (float)(var2 + 12 + 10 * var15), 8421504);
++         for(int var16 = 0; var16 < 2 && var16 < var18.size(); ++var16) {
++            this.minecraft.font.drawShadow(var1, (FormattedText)var18.get(var16), (float)(var4 + 32 + 2), (float)(var3 + 12 + 10 * var16), 8421504);
+          }
+ 
+       }
+ 
+       protected boolean showHoverOverlay() {

@@ -1,0 +1,27 @@
+--- net/minecraft/world/level/block/BaseCoralWallFanBlock.java
++++ net/minecraft/world/level/block/BaseCoralWallFanBlock.java
+@@ -9,10 +9,11 @@
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+ import net.minecraft.world.level.material.Fluids;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+@@ -20,11 +21,11 @@
+ 
+ public class BaseCoralWallFanBlock extends BaseCoralFanBlock {
+    public static final DirectionProperty FACING;
+    private static final Map<Direction, VoxelShape> SHAPES;
+ 
+-   protected BaseCoralWallFanBlock(Block.Properties var1) {
++   protected BaseCoralWallFanBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(WATERLOGGED, true));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {

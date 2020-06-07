@@ -1,0 +1,15 @@
+--- net/minecraft/world/inventory/LoomMenu.java
++++ net/minecraft/world/inventory/LoomMenu.java
+@@ -126,11 +126,11 @@
+    public void slotsChanged(Container var1) {
+       ItemStack var2 = this.bannerSlot.getItem();
+       ItemStack var3 = this.dyeSlot.getItem();
+       ItemStack var4 = this.patternSlot.getItem();
+       ItemStack var5 = this.resultSlot.getItem();
+-      if (var5.isEmpty() || !var2.isEmpty() && !var3.isEmpty() && this.selectedBannerPatternIndex.get() > 0 && (this.selectedBannerPatternIndex.get() < BannerPattern.COUNT - 5 || !var4.isEmpty())) {
++      if (var5.isEmpty() || !var2.isEmpty() && !var3.isEmpty() && this.selectedBannerPatternIndex.get() > 0 && (this.selectedBannerPatternIndex.get() < BannerPattern.COUNT - BannerPattern.PATTERN_ITEM_COUNT || !var4.isEmpty())) {
+          if (!var4.isEmpty() && var4.getItem() instanceof BannerPatternItem) {
+             CompoundTag var6 = var2.getOrCreateTagElement("BlockEntityTag");
+             boolean var7 = var6.contains("Patterns", 9) && !var2.isEmpty() && var6.getList("Patterns", 10).size() >= 6;
+             if (var7) {
+                this.selectedBannerPatternIndex.set(0);

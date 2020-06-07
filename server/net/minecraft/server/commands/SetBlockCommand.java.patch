@@ -1,0 +1,28 @@
+--- net/minecraft/server/commands/SetBlockCommand.java
++++ net/minecraft/server/commands/SetBlockCommand.java
+@@ -19,11 +19,11 @@
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.pattern.BlockInWorld;
+ import net.minecraft.world.level.levelgen.structure.BoundingBox;
+ 
+ public class SetBlockCommand {
+-   private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.setblock.failed", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.setblock.failed"));
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("setblock").requires((var0x) -> {
+          return var0x.hasPermission(2);
+       })).then(Commands.argument("pos", BlockPosArgument.blockPos()).then(((RequiredArgumentBuilder)((RequiredArgumentBuilder)((RequiredArgumentBuilder)Commands.argument("block", BlockStateArgument.block()).executes((var0x) -> {
+@@ -45,11 +45,11 @@
+          throw ERROR_FAILED.create();
+       } else {
+          boolean var6;
+          if (var3 == SetBlockCommand.Mode.DESTROY) {
+             var5.destroyBlock(var1, true);
+-            var6 = !var2.getState().isAir();
++            var6 = !var2.getState().isAir() || !var5.getBlockState(var1).isAir();
+          } else {
+             BlockEntity var7 = var5.getBlockEntity(var1);
+             Clearable.tryClear(var7);
+             var6 = true;
+          }

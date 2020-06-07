@@ -1,0 +1,48 @@
+--- net/minecraft/tags/SerializationTags.java
++++ net/minecraft/tags/SerializationTags.java
+@@ -1,0 +1,45 @@
++package net.minecraft.tags;
++
++import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.item.Item;
++import net.minecraft.world.level.block.Block;
++import net.minecraft.world.level.material.Fluid;
++
++public class SerializationTags {
++   private static volatile SerializationTags instance = new SerializationTags(BlockTags.getAllTags(), ItemTags.getAllTags(), FluidTags.getAllTags(), EntityTypeTags.getAllTags());
++   private final TagCollection<Block> blocks;
++   private final TagCollection<Item> items;
++   private final TagCollection<Fluid> fluids;
++   private final TagCollection<EntityType<?>> entityTypes;
++
++   private SerializationTags(TagCollection<Block> var1, TagCollection<Item> var2, TagCollection<Fluid> var3, TagCollection<EntityType<?>> var4) {
++      this.blocks = var1;
++      this.items = var2;
++      this.fluids = var3;
++      this.entityTypes = var4;
++   }
++
++   public TagCollection<Block> getBlocks() {
++      return this.blocks;
++   }
++
++   public TagCollection<Item> getItems() {
++      return this.items;
++   }
++
++   public TagCollection<Fluid> getFluids() {
++      return this.fluids;
++   }
++
++   public TagCollection<EntityType<?>> getEntityTypes() {
++      return this.entityTypes;
++   }
++
++   public static SerializationTags getInstance() {
++      return instance;
++   }
++
++   public static void bind(TagCollection<Block> var0, TagCollection<Item> var1, TagCollection<Fluid> var2, TagCollection<EntityType<?>> var3) {
++      instance = new SerializationTags(var0, var1, var2, var3);
++   }
++}

@@ -1,0 +1,147 @@
+--- net/minecraft/server/level/ServerPlayerGameMode.java
++++ net/minecraft/server/level/ServerPlayerGameMode.java
+@@ -1,18 +1,18 @@
+ package net.minecraft.server.level;
+ 
+ import java.util.Objects;
++import net.minecraft.advancements.CriteriaTriggers;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.network.protocol.game.ClientboundBlockBreakAckPacket;
+ import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.InteractionResultHolder;
+ import net.minecraft.world.MenuProvider;
+-import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.UseOnContext;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
+@@ -130,25 +130,19 @@
+                this.player.connection.send(new ClientboundBlockBreakAckPacket(var1, this.level.getBlockState(var1), var2, false, "may not interact"));
+                return;
+             }
+ 
+             if (this.isCreative()) {
+-               if (!this.level.extinguishFire((Player)null, var1, var3)) {
+-                  this.destroyAndAck(var1, var2, "creative destroy");
+-               } else {
+-                  this.player.connection.send(new ClientboundBlockBreakAckPacket(var1, this.level.getBlockState(var1), var2, true, "fire put out"));
+-               }
+-
++               this.destroyAndAck(var1, var2, "creative destroy");
+                return;
+             }
+ 
+             if (this.player.blockActionRestricted(this.level, var1, this.gameModeForPlayer)) {
+                this.player.connection.send(new ClientboundBlockBreakAckPacket(var1, this.level.getBlockState(var1), var2, false, "block action restricted"));
+                return;
+             }
+ 
+-            this.level.extinguishFire((Player)null, var1, var3);
+             this.destroyProgressStart = this.gameTicks;
+             float var13 = 1.0F;
+             var14 = this.level.getBlockState(var1);
+             if (!var14.isAir()) {
+                var14.attack(this.level, var1, this.player);
+@@ -238,11 +232,11 @@
+             if (this.isCreative()) {
+                return true;
+             } else {
+                ItemStack var6 = this.player.getMainHandItem();
+                ItemStack var7 = var6.copy();
+-               boolean var8 = this.player.canDestroy(var2);
++               boolean var8 = this.player.hasCorrectToolForDrops(var2);
+                var6.mineBlock(this.level, var2, var1, this.player);
+                if (var5 && var8) {
+                   var4.playerDestroy(this.level, this.player, var1, var2, var3, var7);
+                }
+ 
+@@ -250,11 +244,11 @@
+             }
+          }
+       }
+    }
+ 
+-   public InteractionResult useItem(Player var1, Level var2, ItemStack var3, InteractionHand var4) {
++   public InteractionResult useItem(ServerPlayer var1, Level var2, ItemStack var3, InteractionHand var4) {
+       if (this.gameModeForPlayer == GameType.SPECTATOR) {
+          return InteractionResult.PASS;
+       } else if (var1.getCooldowns().isOnCooldown(var3.getItem())) {
+          return InteractionResult.PASS;
+       } else {
+@@ -278,49 +272,57 @@
+             if (var8.isEmpty()) {
+                var1.setItemInHand(var4, ItemStack.EMPTY);
+             }
+ 
+             if (!var1.isUsingItem()) {
+-               ((ServerPlayer)var1).refreshContainer(var1.inventoryMenu);
++               var1.refreshContainer(var1.inventoryMenu);
+             }
+ 
+             return var7.getResult();
+          }
+       }
+    }
+ 
+-   public InteractionResult useItemOn(Player var1, Level var2, ItemStack var3, InteractionHand var4, BlockHitResult var5) {
++   public InteractionResult useItemOn(ServerPlayer var1, Level var2, ItemStack var3, InteractionHand var4, BlockHitResult var5) {
+       BlockPos var6 = var5.getBlockPos();
+       BlockState var7 = var2.getBlockState(var6);
+       if (this.gameModeForPlayer == GameType.SPECTATOR) {
+-         MenuProvider var13 = var7.getMenuProvider(var2, var6);
+-         if (var13 != null) {
+-            var1.openMenu(var13);
++         MenuProvider var14 = var7.getMenuProvider(var2, var6);
++         if (var14 != null) {
++            var1.openMenu(var14);
+             return InteractionResult.SUCCESS;
+          } else {
+             return InteractionResult.PASS;
+          }
+       } else {
+          boolean var8 = !var1.getMainHandItem().isEmpty() || !var1.getOffhandItem().isEmpty();
+          boolean var9 = var1.isSecondaryUseActive() && var8;
++         ItemStack var10 = var3.copy();
+          if (!var9) {
+-            InteractionResult var10 = var7.use(var2, var1, var4, var5);
+-            if (var10.consumesAction()) {
+-               return var10;
++            InteractionResult var11 = var7.use(var2, var1, var4, var5);
++            if (var11.consumesAction()) {
++               CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(var1, var6, var10);
++               return var11;
+             }
+          }
+ 
+          if (!var3.isEmpty() && !var1.getCooldowns().isOnCooldown(var3.getItem())) {
+-            UseOnContext var14 = new UseOnContext(var1, var4, var5);
++            UseOnContext var15 = new UseOnContext(var1, var4, var5);
++            InteractionResult var12;
+             if (this.isCreative()) {
+-               int var11 = var3.getCount();
+-               InteractionResult var12 = var3.useOn(var14);
+-               var3.setCount(var11);
+-               return var12;
++               int var13 = var3.getCount();
++               var12 = var3.useOn(var15);
++               var3.setCount(var13);
+             } else {
+-               return var3.useOn(var14);
++               var12 = var3.useOn(var15);
+             }
++
++            if (var12.consumesAction()) {
++               CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(var1, var6, var10);
++            }
++
++            return var12;
+          } else {
+             return InteractionResult.PASS;
+          }
+       }
+    }

@@ -1,0 +1,42 @@
+--- net/minecraft/client/NarratorStatus.java
++++ net/minecraft/client/NarratorStatus.java
+@@ -1,9 +1,11 @@
+ package net.minecraft.client;
+ 
+ import java.util.Arrays;
+ import java.util.Comparator;
++import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.util.Mth;
+ 
+ public enum NarratorStatus {
+    OFF(0, "options.narrator.off"),
+    ALL(1, "options.narrator.all"),
+@@ -12,23 +14,23 @@
+ 
+    private static final NarratorStatus[] BY_ID = (NarratorStatus[])Arrays.stream(values()).sorted(Comparator.comparingInt(NarratorStatus::getId)).toArray((var0) -> {
+       return new NarratorStatus[var0];
+    });
+    private final int id;
+-   private final String key;
++   private final Component name;
+ 
+    private NarratorStatus(int var3, String var4) {
+       this.id = var3;
+-      this.key = var4;
++      this.name = new TranslatableComponent(var4);
+    }
+ 
+    public int getId() {
+       return this.id;
+    }
+ 
+-   public String getKey() {
+-      return this.key;
++   public Component getName() {
++      return this.name;
+    }
+ 
+    public static NarratorStatus byId(int var0) {
+       return BY_ID[Mth.positiveModulo(var0, BY_ID.length)];
+    }

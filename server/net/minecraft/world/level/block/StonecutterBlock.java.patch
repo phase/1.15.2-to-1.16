@@ -1,0 +1,43 @@
+--- net/minecraft/world/level/block/StonecutterBlock.java
++++ net/minecraft/world/level/block/StonecutterBlock.java
+@@ -13,24 +13,25 @@
+ import net.minecraft.world.inventory.ContainerLevelAccess;
+ import net.minecraft.world.inventory.StonecutterMenu;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+ import net.minecraft.world.phys.BlockHitResult;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class StonecutterBlock extends Block {
+-   private static final TranslatableComponent CONTAINER_TITLE = new TranslatableComponent("container.stonecutter", new Object[0]);
++   private static final TranslatableComponent CONTAINER_TITLE = new TranslatableComponent("container.stonecutter");
+    public static final DirectionProperty FACING;
+    protected static final VoxelShape SHAPE;
+ 
+-   public StonecutterBlock(Block.Properties var1) {
++   public StonecutterBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH));
+    }
+ 
+    public BlockState getStateForPlacement(BlockPlaceContext var1) {
+@@ -41,11 +42,11 @@
+       if (var2.isClientSide) {
+          return InteractionResult.SUCCESS;
+       } else {
+          var4.openMenu(var1.getMenuProvider(var2, var3));
+          var4.awardStat(Stats.INTERACT_WITH_STONECUTTER);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    @Nullable
+    public MenuProvider getMenuProvider(BlockState var1, Level var2, BlockPos var3) {

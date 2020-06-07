@@ -1,0 +1,285 @@
+--- net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.java
++++ net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.java
+@@ -1,19 +1,21 @@
+ package net.minecraft.client.gui.screens.inventory;
+ 
+ import com.google.common.collect.Sets;
+ import com.mojang.blaze3d.platform.InputConstants;
+ import com.mojang.blaze3d.systems.RenderSystem;
++import com.mojang.blaze3d.vertex.PoseStack;
+ import com.mojang.datafixers.util.Pair;
+ import java.util.Iterator;
+ import java.util.Set;
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.Util;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.screens.Screen;
+ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.FormattedText;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.player.Inventory;
+ import net.minecraft.world.inventory.AbstractContainerMenu;
+ import net.minecraft.world.inventory.ClickType;
+@@ -22,10 +24,14 @@
+ 
+ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> extends Screen implements MenuAccess<T> {
+    public static final ResourceLocation INVENTORY_LOCATION = new ResourceLocation("textures/gui/container/inventory.png");
+    protected int imageWidth = 176;
+    protected int imageHeight = 166;
++   protected int titleLabelX;
++   protected int titleLabelY;
++   protected int inventoryLabelX;
++   protected int inventoryLabelY;
+    protected final T menu;
+    protected final Inventory inventory;
+    protected int leftPos;
+    protected int topPos;
+    protected Slot hoveredSlot;
+@@ -58,96 +64,100 @@
+       this.quickCraftSlots = Sets.newHashSet();
+       this.lastQuickMoved = ItemStack.EMPTY;
+       this.menu = var1;
+       this.inventory = var2;
+       this.skipNextRelease = true;
++      this.titleLabelX = 8;
++      this.titleLabelY = 6;
++      this.inventoryLabelX = 8;
++      this.inventoryLabelY = this.imageHeight - 94;
+    }
+ 
+    protected void init() {
+       super.init();
+       this.leftPos = (this.width - this.imageWidth) / 2;
+       this.topPos = (this.height - this.imageHeight) / 2;
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
+-      int var4 = this.leftPos;
+-      int var5 = this.topPos;
+-      this.renderBg(var3, var1, var2);
++   public void render(PoseStack var1, int var2, int var3, float var4) {
++      int var5 = this.leftPos;
++      int var6 = this.topPos;
++      this.renderBg(var1, var4, var2, var3);
+       RenderSystem.disableRescaleNormal();
+       RenderSystem.disableDepthTest();
+-      super.render(var1, var2, var3);
++      super.render(var1, var2, var3, var4);
+       RenderSystem.pushMatrix();
+-      RenderSystem.translatef((float)var4, (float)var5, 0.0F);
++      RenderSystem.translatef((float)var5, (float)var6, 0.0F);
+       RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+       RenderSystem.enableRescaleNormal();
+       this.hoveredSlot = null;
+-      boolean var6 = true;
+       boolean var7 = true;
++      boolean var8 = true;
+       RenderSystem.glMultiTexCoord2f(33986, 240.0F, 240.0F);
+       RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+ 
+-      int var11;
+-      for(int var8 = 0; var8 < this.menu.slots.size(); ++var8) {
+-         Slot var9 = (Slot)this.menu.slots.get(var8);
+-         if (var9.isActive()) {
+-            this.renderSlot(var9);
++      int var12;
++      for(int var9 = 0; var9 < this.menu.slots.size(); ++var9) {
++         Slot var10 = (Slot)this.menu.slots.get(var9);
++         if (var10.isActive()) {
++            this.renderSlot(var1, var10);
+          }
+ 
+-         if (this.isHovering(var9, (double)var1, (double)var2) && var9.isActive()) {
+-            this.hoveredSlot = var9;
++         if (this.isHovering(var10, (double)var2, (double)var3) && var10.isActive()) {
++            this.hoveredSlot = var10;
+             RenderSystem.disableDepthTest();
+-            int var10 = var9.x;
+-            var11 = var9.y;
++            int var11 = var10.x;
++            var12 = var10.y;
+             RenderSystem.colorMask(true, true, true, false);
+-            this.fillGradient(var10, var11, var10 + 16, var11 + 16, -2130706433, -2130706433);
++            this.fillGradient(var1, var11, var12, var11 + 16, var12 + 16, -2130706433, -2130706433);
+             RenderSystem.colorMask(true, true, true, true);
+             RenderSystem.enableDepthTest();
+          }
+       }
+ 
+-      this.renderLabels(var1, var2);
+-      Inventory var15 = this.minecraft.player.inventory;
+-      ItemStack var16 = this.draggingItem.isEmpty() ? var15.getCarried() : this.draggingItem;
+-      if (!var16.isEmpty()) {
+-         boolean var17 = true;
+-         var11 = this.draggingItem.isEmpty() ? 8 : 16;
+-         String var12 = null;
++      this.renderLabels(var1, var2, var3);
++      Inventory var16 = this.minecraft.player.inventory;
++      ItemStack var17 = this.draggingItem.isEmpty() ? var16.getCarried() : this.draggingItem;
++      if (!var17.isEmpty()) {
++         boolean var18 = true;
++         var12 = this.draggingItem.isEmpty() ? 8 : 16;
++         String var13 = null;
+          if (!this.draggingItem.isEmpty() && this.isSplittingStack) {
+-            var16 = var16.copy();
+-            var16.setCount(Mth.ceil((float)var16.getCount() / 2.0F));
++            var17 = var17.copy();
++            var17.setCount(Mth.ceil((float)var17.getCount() / 2.0F));
+          } else if (this.isQuickCrafting && this.quickCraftSlots.size() > 1) {
+-            var16 = var16.copy();
+-            var16.setCount(this.quickCraftingRemainder);
+-            if (var16.isEmpty()) {
+-               var12 = "" + ChatFormatting.YELLOW + "0";
++            var17 = var17.copy();
++            var17.setCount(this.quickCraftingRemainder);
++            if (var17.isEmpty()) {
++               var13 = "" + ChatFormatting.YELLOW + "0";
+             }
+          }
+ 
+-         this.renderFloatingItem(var16, var1 - var4 - 8, var2 - var5 - var11, var12);
++         this.renderFloatingItem(var17, var2 - var5 - 8, var3 - var6 - var12, var13);
+       }
+ 
+       if (!this.snapbackItem.isEmpty()) {
+-         float var18 = (float)(Util.getMillis() - this.snapbackTime) / 100.0F;
+-         if (var18 >= 1.0F) {
+-            var18 = 1.0F;
++         float var19 = (float)(Util.getMillis() - this.snapbackTime) / 100.0F;
++         if (var19 >= 1.0F) {
++            var19 = 1.0F;
+             this.snapbackItem = ItemStack.EMPTY;
+          }
+ 
+-         var11 = this.snapbackEnd.x - this.snapbackStartX;
+-         int var19 = this.snapbackEnd.y - this.snapbackStartY;
+-         int var13 = this.snapbackStartX + (int)((float)var11 * var18);
+-         int var14 = this.snapbackStartY + (int)((float)var19 * var18);
+-         this.renderFloatingItem(this.snapbackItem, var13, var14, (String)null);
++         var12 = this.snapbackEnd.x - this.snapbackStartX;
++         int var20 = this.snapbackEnd.y - this.snapbackStartY;
++         int var14 = this.snapbackStartX + (int)((float)var12 * var19);
++         int var15 = this.snapbackStartY + (int)((float)var20 * var19);
++         this.renderFloatingItem(this.snapbackItem, var14, var15, (String)null);
+       }
+ 
+       RenderSystem.popMatrix();
+       RenderSystem.enableDepthTest();
+    }
+ 
+-   protected void renderTooltip(int var1, int var2) {
++   protected void renderTooltip(PoseStack var1, int var2, int var3) {
+       if (this.minecraft.player.inventory.getCarried().isEmpty() && this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
+-         this.renderTooltip(this.hoveredSlot.getItem(), var1, var2);
++         this.renderTooltip(var1, this.hoveredSlot.getItem(), var2, var3);
+       }
+ 
+    }
+ 
+    private void renderFloatingItem(ItemStack var1, int var2, int var3, String var4) {
+@@ -158,66 +168,68 @@
+       this.itemRenderer.renderGuiItemDecorations(this.font, var1, var2, var3 - (this.draggingItem.isEmpty() ? 0 : 8), var4);
+       this.setBlitOffset(0);
+       this.itemRenderer.blitOffset = 0.0F;
+    }
+ 
+-   protected void renderLabels(int var1, int var2) {
++   protected void renderLabels(PoseStack var1, int var2, int var3) {
++      this.font.draw(var1, (FormattedText)this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
++      this.font.draw(var1, (FormattedText)this.inventory.getDisplayName(), (float)this.inventoryLabelX, (float)this.inventoryLabelY, 4210752);
+    }
+ 
+-   protected abstract void renderBg(float var1, int var2, int var3);
++   protected abstract void renderBg(PoseStack var1, float var2, int var3, int var4);
+ 
+-   private void renderSlot(Slot var1) {
+-      int var2 = var1.x;
+-      int var3 = var1.y;
+-      ItemStack var4 = var1.getItem();
+-      boolean var5 = false;
+-      boolean var6 = var1 == this.clickedSlot && !this.draggingItem.isEmpty() && !this.isSplittingStack;
+-      ItemStack var7 = this.minecraft.player.inventory.getCarried();
+-      String var8 = null;
+-      if (var1 == this.clickedSlot && !this.draggingItem.isEmpty() && this.isSplittingStack && !var4.isEmpty()) {
+-         var4 = var4.copy();
+-         var4.setCount(var4.getCount() / 2);
+-      } else if (this.isQuickCrafting && this.quickCraftSlots.contains(var1) && !var7.isEmpty()) {
++   private void renderSlot(PoseStack var1, Slot var2) {
++      int var3 = var2.x;
++      int var4 = var2.y;
++      ItemStack var5 = var2.getItem();
++      boolean var6 = false;
++      boolean var7 = var2 == this.clickedSlot && !this.draggingItem.isEmpty() && !this.isSplittingStack;
++      ItemStack var8 = this.minecraft.player.inventory.getCarried();
++      String var9 = null;
++      if (var2 == this.clickedSlot && !this.draggingItem.isEmpty() && this.isSplittingStack && !var5.isEmpty()) {
++         var5 = var5.copy();
++         var5.setCount(var5.getCount() / 2);
++      } else if (this.isQuickCrafting && this.quickCraftSlots.contains(var2) && !var8.isEmpty()) {
+          if (this.quickCraftSlots.size() == 1) {
+             return;
+          }
+ 
+-         if (AbstractContainerMenu.canItemQuickReplace(var1, var7, true) && this.menu.canDragTo(var1)) {
+-            var4 = var7.copy();
+-            var5 = true;
+-            AbstractContainerMenu.getQuickCraftSlotCount(this.quickCraftSlots, this.quickCraftingType, var4, var1.getItem().isEmpty() ? 0 : var1.getItem().getCount());
+-            int var9 = Math.min(var4.getMaxStackSize(), var1.getMaxStackSize(var4));
+-            if (var4.getCount() > var9) {
+-               var8 = ChatFormatting.YELLOW.toString() + var9;
+-               var4.setCount(var9);
++         if (AbstractContainerMenu.canItemQuickReplace(var2, var8, true) && this.menu.canDragTo(var2)) {
++            var5 = var8.copy();
++            var6 = true;
++            AbstractContainerMenu.getQuickCraftSlotCount(this.quickCraftSlots, this.quickCraftingType, var5, var2.getItem().isEmpty() ? 0 : var2.getItem().getCount());
++            int var10 = Math.min(var5.getMaxStackSize(), var2.getMaxStackSize(var5));
++            if (var5.getCount() > var10) {
++               var9 = ChatFormatting.YELLOW.toString() + var10;
++               var5.setCount(var10);
+             }
+          } else {
+-            this.quickCraftSlots.remove(var1);
++            this.quickCraftSlots.remove(var2);
+             this.recalculateQuickCraftRemaining();
+          }
+       }
+ 
+       this.setBlitOffset(100);
+       this.itemRenderer.blitOffset = 100.0F;
+-      if (var4.isEmpty() && var1.isActive()) {
+-         Pair var11 = var1.getNoItemIcon();
+-         if (var11 != null) {
+-            TextureAtlasSprite var10 = (TextureAtlasSprite)this.minecraft.getTextureAtlas((ResourceLocation)var11.getFirst()).apply(var11.getSecond());
+-            this.minecraft.getTextureManager().bind(var10.atlas().location());
+-            blit(var2, var3, this.getBlitOffset(), 16, 16, var10);
+-            var6 = true;
++      if (var5.isEmpty() && var2.isActive()) {
++         Pair var12 = var2.getNoItemIcon();
++         if (var12 != null) {
++            TextureAtlasSprite var11 = (TextureAtlasSprite)this.minecraft.getTextureAtlas((ResourceLocation)var12.getFirst()).apply(var12.getSecond());
++            this.minecraft.getTextureManager().bind(var11.atlas().location());
++            blit(var1, var3, var4, this.getBlitOffset(), 16, 16, var11);
++            var7 = true;
+          }
+       }
+ 
+-      if (!var6) {
+-         if (var5) {
+-            fill(var2, var3, var2 + 16, var3 + 16, -2130706433);
++      if (!var7) {
++         if (var6) {
++            fill(var1, var3, var4, var3 + 16, var4 + 16, -2130706433);
+          }
+ 
+          RenderSystem.enableDepthTest();
+-         this.itemRenderer.renderAndDecorateItem(this.minecraft.player, var4, var2, var3);
+-         this.itemRenderer.renderGuiItemDecorations(this.font, var4, var2, var3, var8);
++         this.itemRenderer.renderAndDecorateItem(this.minecraft.player, var5, var3, var4);
++         this.itemRenderer.renderGuiItemDecorations(this.font, var5, var3, var4, var9);
+       }
+ 
+       this.itemRenderer.blitOffset = 0.0F;
+       this.setBlitOffset(0);
+    }

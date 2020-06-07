@@ -1,0 +1,52 @@
+--- net/minecraft/data/models/blockstates/PropertyValue.java
++++ net/minecraft/data/models/blockstates/PropertyValue.java
+@@ -1,0 +1,49 @@
++package net.minecraft.data.models.blockstates;
++
++import java.util.stream.Stream;
++import net.minecraft.world.level.block.state.properties.Property;
++
++public final class PropertyValue<T extends Comparable<T>> {
++   private final Property<T> property;
++   private final T value;
++
++   public PropertyValue(Property<T> var1, T var2) {
++      if (!var1.getPossibleValues().contains(var2)) {
++         throw new IllegalArgumentException("Value " + var2 + " does not belong to property " + var1);
++      } else {
++         this.property = var1;
++         this.value = var2;
++      }
++   }
++
++   public Property<T> getProperty() {
++      return this.property;
++   }
++
++   public String toString() {
++      return this.property.getName() + "=" + this.property.getName(this.value);
++   }
++
++   public static <T extends Comparable<T>> Stream<PropertyValue<T>> getAll(Property<T> var0) {
++      return var0.getPossibleValues().stream().map((var1) -> {
++         return new PropertyValue(var0, var1);
++      });
++   }
++
++   public boolean equals(Object var1) {
++      if (this == var1) {
++         return true;
++      } else if (!(var1 instanceof PropertyValue)) {
++         return false;
++      } else {
++         PropertyValue var2 = (PropertyValue)var1;
++         return this.property == var2.property && this.value.equals(var2.value);
++      }
++   }
++
++   public int hashCode() {
++      int var1 = this.property.hashCode();
++      var1 = 31 * var1 + this.value.hashCode();
++      return var1;
++   }
++}

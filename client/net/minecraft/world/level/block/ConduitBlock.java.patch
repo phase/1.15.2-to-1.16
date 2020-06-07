@@ -1,0 +1,27 @@
+--- net/minecraft/world/level/block/ConduitBlock.java
++++ net/minecraft/world/level/block/ConduitBlock.java
+@@ -11,10 +11,11 @@
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.ConduitBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.material.FluidState;
+@@ -25,11 +26,11 @@
+ 
+ public class ConduitBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
+    public static final BooleanProperty WATERLOGGED;
+    protected static final VoxelShape SHAPE;
+ 
+-   public ConduitBlock(Block.Properties var1) {
++   public ConduitBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(WATERLOGGED, true));
+    }
+ 
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> var1) {

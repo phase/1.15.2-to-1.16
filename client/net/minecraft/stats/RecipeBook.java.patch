@@ -1,0 +1,21 @@
+--- net/minecraft/stats/RecipeBook.java
++++ net/minecraft/stats/RecipeBook.java
+@@ -26,10 +26,18 @@
+    }
+ 
+    public void copyOverData(RecipeBook var1) {
+       this.known.clear();
+       this.highlight.clear();
++      this.guiOpen = var1.guiOpen;
++      this.filteringCraftable = var1.filteringCraftable;
++      this.furnaceGuiOpen = var1.furnaceGuiOpen;
++      this.furnaceFilteringCraftable = var1.furnaceFilteringCraftable;
++      this.blastingFurnaceGuiOpen = var1.blastingFurnaceGuiOpen;
++      this.blastingFurnaceFilteringCraftable = var1.blastingFurnaceFilteringCraftable;
++      this.smokerGuiOpen = var1.smokerGuiOpen;
++      this.smokerFilteringCraftable = var1.smokerFilteringCraftable;
+       this.known.addAll(var1.known);
+       this.highlight.addAll(var1.highlight);
+    }
+ 
+    public void add(Recipe<?> var1) {

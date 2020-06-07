@@ -1,0 +1,70 @@
+--- net/minecraft/world/level/block/StairBlock.java
++++ net/minecraft/world/level/block/StairBlock.java
+@@ -12,11 +12,11 @@
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Explosion;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+@@ -79,11 +79,11 @@
+       }
+ 
+       return var6;
+    }
+ 
+-   protected StairBlock(BlockState var1, Block.Properties var2) {
++   protected StairBlock(BlockState var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(HALF, Half.BOTTOM)).setValue(SHAPE, StairsShape.STRAIGHT)).setValue(WATERLOGGED, false));
+       this.base = var1.getBlock();
+       this.baseState = var1;
+    }
+@@ -110,31 +110,35 @@
+ 
+    public float getExplosionResistance() {
+       return this.base.getExplosionResistance();
+    }
+ 
+-   public int getTickDelay(LevelReader var1) {
+-      return this.base.getTickDelay(var1);
+-   }
+-
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var1.getBlock()) {
++      if (!var1.is(var1.getBlock())) {
+          this.baseState.neighborChanged(var2, var3, Blocks.AIR, var3, false);
+          this.base.onPlace(this.baseState, var2, var3, var4, false);
+       }
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var4.getBlock()) {
++      if (!var1.is(var4.getBlock())) {
+          this.baseState.onRemove(var2, var3, var4, var5);
+       }
+    }
+ 
+    public void stepOn(Level var1, BlockPos var2, Entity var3) {
+       this.base.stepOn(var1, var2, var3);
+    }
+ 
++   public boolean isRandomlyTicking(BlockState var1) {
++      return this.base.isRandomlyTicking(var1);
++   }
++
++   public void randomTick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
++      this.base.randomTick(var1, var2, var3, var4);
++   }
++
+    public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+       this.base.tick(var1, var2, var3, var4);
+    }
+ 
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {

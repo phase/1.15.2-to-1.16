@@ -1,0 +1,71 @@
+--- net/minecraft/world/level/levelgen/feature/ReplaceBlobsFeature.java
++++ net/minecraft/world/level/levelgen/feature/ReplaceBlobsFeature.java
+@@ -1,0 +1,68 @@
++package net.minecraft.world.level.levelgen.feature;
++
++import com.mojang.serialization.Codec;
++import java.util.Iterator;
++import java.util.Random;
++import javax.annotation.Nullable;
++import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
++import net.minecraft.core.Vec3i;
++import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.StructureFeatureManager;
++import net.minecraft.world.level.WorldGenLevel;
++import net.minecraft.world.level.block.Block;
++import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.chunk.ChunkGenerator;
++import net.minecraft.world.level.levelgen.feature.configurations.ReplaceSpheroidConfiguration;
++
++public class ReplaceBlobsFeature extends Feature<ReplaceSpheroidConfiguration> {
++   public ReplaceBlobsFeature(Codec<ReplaceSpheroidConfiguration> var1) {
++      super(var1);
++   }
++
++   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, ReplaceSpheroidConfiguration var6) {
++      Block var7 = var6.targetState.getBlock();
++      BlockPos var8 = findTarget(var1, var5.mutable().clamp(Direction.Axis.Y, 1, var1.getMaxBuildHeight() - 1), var7);
++      if (var8 == null) {
++         return false;
++      } else {
++         Vec3i var9 = calculateReach(var4, var6);
++         int var10 = Math.max(var9.getX(), Math.max(var9.getY(), var9.getZ()));
++         boolean var11 = false;
++         Iterator var12 = BlockPos.withinManhattan(var8, var9.getX(), var9.getY(), var9.getZ()).iterator();
++
++         while(var12.hasNext()) {
++            BlockPos var13 = (BlockPos)var12.next();
++            if (var13.distManhattan(var8) > var10) {
++               break;
++            }
++
++            BlockState var14 = var1.getBlockState(var13);
++            if (var14.is(var7)) {
++               this.setBlock(var1, var13, var6.replaceState);
++               var11 = true;
++            }
++         }
++
++         return var11;
++      }
++   }
++
++   @Nullable
++   private static BlockPos findTarget(LevelAccessor var0, BlockPos.MutableBlockPos var1, Block var2) {
++      while(var1.getY() > 1) {
++         BlockState var3 = var0.getBlockState(var1);
++         if (var3.is(var2)) {
++            return var1;
++         }
++
++         var1.move(Direction.DOWN);
++      }
++
++      return null;
++   }
++
++   private static Vec3i calculateReach(Random var0, ReplaceSpheroidConfiguration var1) {
++      return new Vec3i(var1.minimumReach.getX() + var0.nextInt(var1.maximumReach.getX() - var1.minimumReach.getX() + 1), var1.minimumReach.getY() + var0.nextInt(var1.maximumReach.getY() - var1.minimumReach.getY() + 1), var1.minimumReach.getZ() + var0.nextInt(var1.maximumReach.getZ() - var1.minimumReach.getZ() + 1));
++   }
++}

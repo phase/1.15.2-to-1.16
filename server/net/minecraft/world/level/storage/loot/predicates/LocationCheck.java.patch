@@ -1,0 +1,47 @@
+--- net/minecraft/world/level/storage/loot/predicates/LocationCheck.java
++++ net/minecraft/world/level/storage/loot/predicates/LocationCheck.java
+@@ -3,24 +3,27 @@
+ import com.google.gson.JsonDeserializationContext;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSerializationContext;
+ import net.minecraft.advancements.critereon.LocationPredicate;
+ import net.minecraft.core.BlockPos;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.world.level.storage.loot.LootContext;
+ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+ 
+ public class LocationCheck implements LootItemCondition {
+    private final LocationPredicate predicate;
+    private final BlockPos offset;
+ 
+-   public LocationCheck(LocationPredicate var1, BlockPos var2) {
++   private LocationCheck(LocationPredicate var1, BlockPos var2) {
+       this.predicate = var1;
+       this.offset = var2;
+    }
+ 
++   public LootItemConditionType getType() {
++      return LootItemConditions.LOCATION_CHECK;
++   }
++
+    public boolean test(LootContext var1) {
+       BlockPos var2 = (BlockPos)var1.getParamOrNull(LootContextParams.BLOCK_POS);
+       return var2 != null && this.predicate.matches(var1.getLevel(), (float)(var2.getX() + this.offset.getX()), (float)(var2.getY() + this.offset.getY()), (float)(var2.getZ() + this.offset.getZ()));
+    }
+ 
+@@ -28,13 +31,12 @@
+       return () -> {
+          return new LocationCheck(var0.build(), BlockPos.ZERO);
+       };
+    }
+ 
+-   public static class Serializer extends LootItemCondition.Serializer<LocationCheck> {
++   public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<LocationCheck> {
+       public Serializer() {
+-         super(new ResourceLocation("location_check"), LocationCheck.class);
+       }
+ 
+       public void serialize(JsonObject var1, LocationCheck var2, JsonSerializationContext var3) {
+          var1.add("predicate", var2.predicate.serializeToJson());
+          if (var2.offset.getX() != 0) {

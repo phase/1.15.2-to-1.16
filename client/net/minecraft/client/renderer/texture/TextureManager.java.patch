@@ -1,0 +1,15 @@
+--- net/minecraft/client/renderer/texture/TextureManager.java
++++ net/minecraft/client/renderer/texture/TextureManager.java
+@@ -24,11 +24,11 @@
+ import net.minecraft.server.packs.resources.ResourceManager;
+ import net.minecraft.util.profiling.ProfilerFiller;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+-public class TextureManager implements Tickable, AutoCloseable, PreparableReloadListener {
++public class TextureManager implements PreparableReloadListener, Tickable, AutoCloseable {
+    private static final Logger LOGGER = LogManager.getLogger();
+    public static final ResourceLocation INTENTIONAL_MISSING_TEXTURE = new ResourceLocation("");
+    private final Map<ResourceLocation, AbstractTexture> byPath = Maps.newHashMap();
+    private final Set<Tickable> tickableTextures = Sets.newHashSet();
+    private final Map<String, Integer> prefixRegister = Maps.newHashMap();

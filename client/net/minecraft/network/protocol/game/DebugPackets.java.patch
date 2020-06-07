@@ -1,0 +1,35 @@
+--- net/minecraft/network/protocol/game/DebugPackets.java
++++ net/minecraft/network/protocol/game/DebugPackets.java
+@@ -43,25 +43,31 @@
+ 
+    public static void sendPoiPacketsForChunk(ServerLevel var0, ChunkPos var1) {
+    }
+ 
+    public static void sendPoiAddedPacket(ServerLevel var0, BlockPos var1) {
++      sendVillageSectionsPacket(var0, var1);
+    }
+ 
+    public static void sendPoiRemovedPacket(ServerLevel var0, BlockPos var1) {
++      sendVillageSectionsPacket(var0, var1);
+    }
+ 
+    public static void sendPoiTicketCountPacket(ServerLevel var0, BlockPos var1) {
++      sendVillageSectionsPacket(var0, var1);
+    }
+ 
++   private static void sendVillageSectionsPacket(ServerLevel var0, BlockPos var1) {
++   }
++
+    public static void sendPathFindingPacket(Level var0, Mob var1, @Nullable Path var2, float var3) {
+    }
+ 
+    public static void sendNeighborsUpdatePacket(Level var0, BlockPos var1) {
+    }
+ 
+-   public static void sendStructurePacket(LevelAccessor var0, StructureStart var1) {
++   public static void sendStructurePacket(LevelAccessor var0, StructureStart<?> var1) {
+    }
+ 
+    public static void sendGoalSelector(Level var0, Mob var1, GoalSelector var2) {
+    }
+ 

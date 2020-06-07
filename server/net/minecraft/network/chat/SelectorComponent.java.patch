@@ -1,0 +1,25 @@
+--- net/minecraft/network/chat/SelectorComponent.java
++++ net/minecraft/network/chat/SelectorComponent.java
+@@ -32,19 +32,19 @@
+ 
+    public String getPattern() {
+       return this.pattern;
+    }
+ 
+-   public Component resolve(@Nullable CommandSourceStack var1, @Nullable Entity var2, int var3) throws CommandSyntaxException {
+-      return (Component)(var1 != null && this.selector != null ? EntitySelector.joinNames(this.selector.findEntities(var1)) : new TextComponent(""));
++   public MutableComponent resolve(@Nullable CommandSourceStack var1, @Nullable Entity var2, int var3) throws CommandSyntaxException {
++      return (MutableComponent)(var1 != null && this.selector != null ? EntitySelector.joinNames(this.selector.findEntities(var1)) : new TextComponent(""));
+    }
+ 
+    public String getContents() {
+       return this.pattern;
+    }
+ 
+-   public SelectorComponent copy() {
++   public SelectorComponent toMutable() {
+       return new SelectorComponent(this.pattern);
+    }
+ 
+    public boolean equals(Object var1) {
+       if (this == var1) {

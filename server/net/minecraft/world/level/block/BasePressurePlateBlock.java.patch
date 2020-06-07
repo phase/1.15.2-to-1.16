@@ -1,0 +1,60 @@
+--- net/minecraft/world/level/block/BasePressurePlateBlock.java
++++ net/minecraft/world/level/block/BasePressurePlateBlock.java
+@@ -7,10 +7,11 @@
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.material.PushReaction;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+@@ -18,19 +19,19 @@
+ public abstract class BasePressurePlateBlock extends Block {
+    protected static final VoxelShape PRESSED_AABB = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 0.5D, 15.0D);
+    protected static final VoxelShape AABB = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 1.0D, 15.0D);
+    protected static final AABB TOUCH_AABB = new AABB(0.125D, 0.0D, 0.125D, 0.875D, 0.25D, 0.875D);
+ 
+-   protected BasePressurePlateBlock(Block.Properties var1) {
++   protected BasePressurePlateBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return this.getSignalForState(var1) > 0 ? PRESSED_AABB : AABB;
+    }
+ 
+-   public int getTickDelay(LevelReader var1) {
++   protected int getPressedTime() {
+       return 20;
+    }
+ 
+    public boolean isPossibleToRespawnInThis() {
+       return true;
+@@ -79,21 +80,21 @@
+       } else if (var7 && !var6) {
+          this.playOnSound(var1, var2);
+       }
+ 
+       if (var7) {
+-         var1.getBlockTicks().scheduleTick(new BlockPos(var2), this, this.getTickDelay(var1));
++         var1.getBlockTicks().scheduleTick(new BlockPos(var2), this, this.getPressedTime());
+       }
+ 
+    }
+ 
+    protected abstract void playOnSound(LevelAccessor var1, BlockPos var2);
+ 
+    protected abstract void playOffSound(LevelAccessor var1, BlockPos var2);
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (!var5 && var1.getBlock() != var4.getBlock()) {
++      if (!var5 && !var1.is(var4.getBlock())) {
+          if (this.getSignalForState(var1) > 0) {
+             this.updateNeighbours(var2, var3);
+          }
+ 
+          super.onRemove(var1, var2, var3, var4, var5);

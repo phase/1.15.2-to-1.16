@@ -1,0 +1,24 @@
+--- net/minecraft/world/level/PortalForcer.java
++++ net/minecraft/world/level/PortalForcer.java
+@@ -31,19 +31,19 @@
+    }
+ 
+    public boolean findAndMoveToPortal(Entity var1, float var2) {
+       Vec3 var3 = var1.getPortalEntranceOffset();
+       Direction var4 = var1.getPortalEntranceForwards();
+-      BlockPattern.PortalInfo var5 = this.findPortal(new BlockPos(var1), var1.getDeltaMovement(), var4, var3.x, var3.y, var1 instanceof Player);
++      BlockPattern.PortalInfo var5 = this.findPortal(var1.blockPosition(), var1.getDeltaMovement(), var4, var3.x, var3.y, var1 instanceof Player);
+       if (var5 == null) {
+          return false;
+       } else {
+          Vec3 var6 = var5.pos;
+          Vec3 var7 = var5.speed;
+          var1.setDeltaMovement(var7);
+          var1.yRot = var2 + (float)var5.angle;
+-         var1.forceMove(var6.x, var6.y, var6.z);
++         var1.moveTo(var6.x, var6.y, var6.z);
+          return true;
+       }
+    }
+ 
+    @Nullable

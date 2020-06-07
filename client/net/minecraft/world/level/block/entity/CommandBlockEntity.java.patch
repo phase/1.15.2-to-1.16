@@ -1,0 +1,78 @@
+--- net/minecraft/world/level/block/entity/CommandBlockEntity.java
++++ net/minecraft/world/level/block/entity/CommandBlockEntity.java
+@@ -35,15 +35,15 @@
+          BlockState var1 = CommandBlockEntity.this.level.getBlockState(CommandBlockEntity.this.worldPosition);
+          this.getLevel().sendBlockUpdated(CommandBlockEntity.this.worldPosition, var1, var1, 3);
+       }
+ 
+       public Vec3 getPosition() {
+-         return new Vec3((double)CommandBlockEntity.this.worldPosition.getX() + 0.5D, (double)CommandBlockEntity.this.worldPosition.getY() + 0.5D, (double)CommandBlockEntity.this.worldPosition.getZ() + 0.5D);
++         return Vec3.atCenterOf(CommandBlockEntity.this.worldPosition);
+       }
+ 
+       public CommandSourceStack createCommandSourceStack() {
+-         return new CommandSourceStack(this, new Vec3((double)CommandBlockEntity.this.worldPosition.getX() + 0.5D, (double)CommandBlockEntity.this.worldPosition.getY() + 0.5D, (double)CommandBlockEntity.this.worldPosition.getZ() + 0.5D), Vec2.ZERO, this.getLevel(), 2, this.getName().getString(), this.getName(), this.getLevel().getServer(), (Entity)null);
++         return new CommandSourceStack(this, Vec3.atCenterOf(CommandBlockEntity.this.worldPosition), Vec2.ZERO, this.getLevel(), 2, this.getName().getString(), this.getName(), this.getLevel().getServer(), (Entity)null);
+       }
+    };
+ 
+    public CommandBlockEntity() {
+       super(BlockEntityType.COMMAND_BLOCK);
+@@ -56,16 +56,16 @@
+       var1.putBoolean("conditionMet", this.wasConditionMet());
+       var1.putBoolean("auto", this.isAutomatic());
+       return var1;
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
+-      this.commandBlock.load(var1);
+-      this.powered = var1.getBoolean("powered");
+-      this.conditionMet = var1.getBoolean("conditionMet");
+-      this.setAutomatic(var1.getBoolean("auto"));
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
++      this.commandBlock.load(var2);
++      this.powered = var2.getBoolean("powered");
++      this.conditionMet = var2.getBoolean("conditionMet");
++      this.setAutomatic(var2.getBoolean("auto"));
+    }
+ 
+    @Nullable
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+       if (this.isSendToClient()) {
+@@ -116,11 +116,11 @@
+ 
+    private void scheduleTick() {
+       Block var1 = this.getBlockState().getBlock();
+       if (var1 instanceof CommandBlock) {
+          this.markConditionMet();
+-         this.level.getBlockTicks().scheduleTick(this.worldPosition, var1, var1.getTickDelay(this.level));
++         this.level.getBlockTicks().scheduleTick(this.worldPosition, var1, 1);
+       }
+ 
+    }
+ 
+    public boolean wasConditionMet() {
+@@ -149,17 +149,17 @@
+    public void setSendToClient(boolean var1) {
+       this.sendToClient = var1;
+    }
+ 
+    public CommandBlockEntity.Mode getMode() {
+-      Block var1 = this.getBlockState().getBlock();
+-      if (var1 == Blocks.COMMAND_BLOCK) {
++      BlockState var1 = this.getBlockState();
++      if (var1.is(Blocks.COMMAND_BLOCK)) {
+          return CommandBlockEntity.Mode.REDSTONE;
+-      } else if (var1 == Blocks.REPEATING_COMMAND_BLOCK) {
++      } else if (var1.is(Blocks.REPEATING_COMMAND_BLOCK)) {
+          return CommandBlockEntity.Mode.AUTO;
+       } else {
+-         return var1 == Blocks.CHAIN_COMMAND_BLOCK ? CommandBlockEntity.Mode.SEQUENCE : CommandBlockEntity.Mode.REDSTONE;
++         return var1.is(Blocks.CHAIN_COMMAND_BLOCK) ? CommandBlockEntity.Mode.SEQUENCE : CommandBlockEntity.Mode.REDSTONE;
+       }
+    }
+ 
+    public boolean isConditional() {
+       BlockState var1 = this.level.getBlockState(this.getBlockPos());

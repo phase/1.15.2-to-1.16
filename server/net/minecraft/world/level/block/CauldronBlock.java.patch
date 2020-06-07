@@ -1,0 +1,92 @@
+--- net/minecraft/world/level/block/CauldronBlock.java
++++ net/minecraft/world/level/block/CauldronBlock.java
+@@ -19,10 +19,11 @@
+ import net.minecraft.world.item.alchemy.PotionUtils;
+ import net.minecraft.world.item.alchemy.Potions;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.BannerBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+@@ -35,11 +36,11 @@
+ public class CauldronBlock extends Block {
+    public static final IntegerProperty LEVEL;
+    private static final VoxelShape INSIDE;
+    protected static final VoxelShape SHAPE;
+ 
+-   public CauldronBlock(Block.Properties var1) {
++   public CauldronBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(LEVEL, 0));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+@@ -76,11 +77,11 @@
+                var4.awardStat(Stats.FILL_CAULDRON);
+                this.setWaterLevel(var2, var3, var1, 3);
+                var2.playSound((Player)null, (BlockPos)var3, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
+             }
+ 
+-            return InteractionResult.SUCCESS;
++            return InteractionResult.sidedSuccess(var2.isClientSide);
+          } else if (var9 == Items.BUCKET) {
+             if (var8 == 3 && !var2.isClientSide) {
+                if (!var4.abilities.instabuild) {
+                   var7.shrink(1);
+                   if (var7.isEmpty()) {
+@@ -93,11 +94,11 @@
+                var4.awardStat(Stats.USE_CAULDRON);
+                this.setWaterLevel(var2, var3, var1, 0);
+                var2.playSound((Player)null, (BlockPos)var3, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
+             }
+ 
+-            return InteractionResult.SUCCESS;
++            return InteractionResult.sidedSuccess(var2.isClientSide);
+          } else {
+             ItemStack var13;
+             if (var9 == Items.GLASS_BOTTLE) {
+                if (var8 > 0 && !var2.isClientSide) {
+                   if (!var4.abilities.instabuild) {
+@@ -115,11 +116,11 @@
+ 
+                   var2.playSound((Player)null, (BlockPos)var3, SoundEvents.BOTTLE_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
+                   this.setWaterLevel(var2, var3, var1, var8 - 1);
+                }
+ 
+-               return InteractionResult.SUCCESS;
++               return InteractionResult.sidedSuccess(var2.isClientSide);
+             } else if (var9 == Items.POTION && PotionUtils.getPotion(var7) == Potions.WATER) {
+                if (var8 < 3 && !var2.isClientSide) {
+                   if (!var4.abilities.instabuild) {
+                      var13 = new ItemStack(Items.GLASS_BOTTLE);
+                      var4.awardStat(Stats.USE_CAULDRON);
+@@ -131,11 +132,11 @@
+ 
+                   var2.playSound((Player)null, (BlockPos)var3, SoundEvents.BOTTLE_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
+                   this.setWaterLevel(var2, var3, var1, var8 + 1);
+                }
+ 
+-               return InteractionResult.SUCCESS;
++               return InteractionResult.sidedSuccess(var2.isClientSide);
+             } else {
+                if (var8 > 0 && var9 instanceof DyeableLeatherItem) {
+                   DyeableLeatherItem var10 = (DyeableLeatherItem)var9;
+                   if (var10.hasCustomColor(var7) && !var2.isClientSide) {
+                      var10.clearColor(var7);
+@@ -163,11 +164,11 @@
+                      } else if (var4 instanceof ServerPlayer) {
+                         ((ServerPlayer)var4).refreshContainer(var4.inventoryMenu);
+                      }
+                   }
+ 
+-                  return InteractionResult.SUCCESS;
++                  return InteractionResult.sidedSuccess(var2.isClientSide);
+                } else if (var8 > 0 && var9 instanceof BlockItem) {
+                   Block var12 = ((BlockItem)var9).getBlock();
+                   if (var12 instanceof ShulkerBoxBlock && !var2.isClientSide()) {
+                      ItemStack var11 = new ItemStack(Blocks.SHULKER_BOX, 1);
+                      if (var7.hasTag()) {

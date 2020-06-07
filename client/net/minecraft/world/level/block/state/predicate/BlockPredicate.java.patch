@@ -1,0 +1,12 @@
+--- net/minecraft/world/level/block/state/predicate/BlockPredicate.java
++++ net/minecraft/world/level/block/state/predicate/BlockPredicate.java
+@@ -15,8 +15,8 @@
+    public static BlockPredicate forBlock(Block var0) {
+       return new BlockPredicate(var0);
+    }
+ 
+    public boolean test(@Nullable BlockState var1) {
+-      return var1 != null && var1.getBlock() == this.block;
++      return var1 != null && var1.is(this.block);
+    }
+ }

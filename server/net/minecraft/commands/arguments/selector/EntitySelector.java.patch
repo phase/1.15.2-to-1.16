@@ -1,0 +1,27 @@
+--- net/minecraft/commands/arguments/selector/EntitySelector.java
++++ net/minecraft/commands/arguments/selector/EntitySelector.java
+@@ -12,12 +12,12 @@
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
+ import net.minecraft.advancements.critereon.MinMaxBounds;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.arguments.EntityArgument;
+-import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.ComponentUtils;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.phys.AABB;
+@@ -223,9 +223,9 @@
+       }
+ 
+       return var2.subList(0, Math.min(this.maxResults, var2.size()));
+    }
+ 
+-   public static Component joinNames(List<? extends Entity> var0) {
++   public static MutableComponent joinNames(List<? extends Entity> var0) {
+       return ComponentUtils.formatList(var0, Entity::getDisplayName);
+    }
+ }

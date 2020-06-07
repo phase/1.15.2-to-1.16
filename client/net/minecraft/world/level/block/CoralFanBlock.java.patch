@@ -1,0 +1,22 @@
+--- net/minecraft/world/level/block/CoralFanBlock.java
++++ net/minecraft/world/level/block/CoralFanBlock.java
+@@ -4,17 +4,18 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.material.Fluids;
+ 
+ public class CoralFanBlock extends BaseCoralFanBlock {
+    private final Block deadBlock;
+ 
+-   protected CoralFanBlock(Block var1, Block.Properties var2) {
++   protected CoralFanBlock(Block var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.deadBlock = var1;
+    }
+ 
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {

@@ -1,0 +1,42 @@
+--- net/minecraft/client/resources/sounds/BeeSoundInstance.java
++++ net/minecraft/client/resources/sounds/BeeSoundInstance.java
+@@ -22,11 +22,11 @@
+       this.volume = 0.0F;
+    }
+ 
+    public void tick() {
+       boolean var1 = this.shouldSwitchSounds();
+-      if (var1 && !this.stopped) {
++      if (var1 && !this.isStopped()) {
+          Minecraft.getInstance().getSoundManager().queueTickingSound(this.getAlternativeSoundInstance());
+          this.hasSwitched = true;
+       }
+ 
+       if (!this.bee.removed && !this.hasSwitched) {
+@@ -41,11 +41,11 @@
+             this.pitch = 0.0F;
+             this.volume = 0.0F;
+          }
+ 
+       } else {
+-         this.stopped = true;
++         this.stop();
+       }
+    }
+ 
+    private float getMinPitch() {
+       return this.bee.isBaby() ? 1.1F : 0.7F;
+@@ -57,9 +57,13 @@
+ 
+    public boolean canStartSilent() {
+       return true;
+    }
+ 
++   public boolean canPlaySound() {
++      return !this.bee.isSilent();
++   }
++
+    protected abstract AbstractTickableSoundInstance getAlternativeSoundInstance();
+ 
+    protected abstract boolean shouldSwitchSounds();
+ }

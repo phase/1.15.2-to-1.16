@@ -1,0 +1,117 @@
+--- net/minecraft/world/level/biome/BiomeSpecialEffects.java
++++ net/minecraft/world/level/biome/BiomeSpecialEffects.java
+@@ -1,0 +1,114 @@
++package net.minecraft.world.level.biome;
++
++import com.mojang.datafixers.util.Function8;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
++import java.util.Optional;
++import java.util.OptionalInt;
++import net.minecraft.sounds.Music;
++import net.minecraft.sounds.SoundEvent;
++
++public class BiomeSpecialEffects {
++   public static final Codec<BiomeSpecialEffects> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(Codec.INT.fieldOf("fog_color").forGetter((var0x) -> {
++         return var0x.fogColor;
++      }), Codec.INT.fieldOf("water_color").forGetter((var0x) -> {
++         return var0x.waterColor;
++      }), Codec.INT.fieldOf("water_fog_color").forGetter((var0x) -> {
++         return var0x.waterFogColor;
++      }), AmbientParticleSettings.CODEC.optionalFieldOf("particle").forGetter((var0x) -> {
++         return var0x.ambientParticleSettings;
++      }), SoundEvent.CODEC.optionalFieldOf("ambient_sound").forGetter((var0x) -> {
++         return var0x.ambientLoopSoundEvent;
++      }), AmbientMoodSettings.CODEC.optionalFieldOf("mood_sound").forGetter((var0x) -> {
++         return var0x.ambientMoodSettings;
++      }), AmbientAdditionsSettings.CODEC.optionalFieldOf("additions_sound").forGetter((var0x) -> {
++         return var0x.ambientAdditionsSettings;
++      }), Music.CODEC.optionalFieldOf("music").forGetter((var0x) -> {
++         return var0x.backgroundMusic;
++      })).apply(var0, (Function8)(BiomeSpecialEffects::new));
++   });
++   private final int fogColor;
++   private final int waterColor;
++   private final int waterFogColor;
++   private final Optional<AmbientParticleSettings> ambientParticleSettings;
++   private final Optional<SoundEvent> ambientLoopSoundEvent;
++   private final Optional<AmbientMoodSettings> ambientMoodSettings;
++   private final Optional<AmbientAdditionsSettings> ambientAdditionsSettings;
++   private final Optional<Music> backgroundMusic;
++
++   private BiomeSpecialEffects(int var1, int var2, int var3, Optional<AmbientParticleSettings> var4, Optional<SoundEvent> var5, Optional<AmbientMoodSettings> var6, Optional<AmbientAdditionsSettings> var7, Optional<Music> var8) {
++      this.fogColor = var1;
++      this.waterColor = var2;
++      this.waterFogColor = var3;
++      this.ambientParticleSettings = var4;
++      this.ambientLoopSoundEvent = var5;
++      this.ambientMoodSettings = var6;
++      this.ambientAdditionsSettings = var7;
++      this.backgroundMusic = var8;
++   }
++
++   public static class Builder {
++      private OptionalInt fogColor = OptionalInt.empty();
++      private OptionalInt waterColor = OptionalInt.empty();
++      private OptionalInt waterFogColor = OptionalInt.empty();
++      private Optional<AmbientParticleSettings> ambientParticle = Optional.empty();
++      private Optional<SoundEvent> ambientLoopSoundEvent = Optional.empty();
++      private Optional<AmbientMoodSettings> ambientMoodSettings = Optional.empty();
++      private Optional<AmbientAdditionsSettings> ambientAdditionsSettings = Optional.empty();
++      private Optional<Music> backgroundMusic = Optional.empty();
++
++      public Builder() {
++      }
++
++      public BiomeSpecialEffects.Builder fogColor(int var1) {
++         this.fogColor = OptionalInt.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects.Builder waterColor(int var1) {
++         this.waterColor = OptionalInt.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects.Builder waterFogColor(int var1) {
++         this.waterFogColor = OptionalInt.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects.Builder ambientParticle(AmbientParticleSettings var1) {
++         this.ambientParticle = Optional.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects.Builder ambientLoopSound(SoundEvent var1) {
++         this.ambientLoopSoundEvent = Optional.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects.Builder ambientMoodSound(AmbientMoodSettings var1) {
++         this.ambientMoodSettings = Optional.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects.Builder ambientAdditionsSound(AmbientAdditionsSettings var1) {
++         this.ambientAdditionsSettings = Optional.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects.Builder backgroundMusic(Music var1) {
++         this.backgroundMusic = Optional.of(var1);
++         return this;
++      }
++
++      public BiomeSpecialEffects build() {
++         return new BiomeSpecialEffects(this.fogColor.orElseThrow(() -> {
++            return new IllegalStateException("Missing 'fog' color.");
++         }), this.waterColor.orElseThrow(() -> {
++            return new IllegalStateException("Missing 'water' color.");
++         }), this.waterFogColor.orElseThrow(() -> {
++            return new IllegalStateException("Missing 'water fog' color.");
++         }), this.ambientParticle, this.ambientLoopSoundEvent, this.ambientMoodSettings, this.ambientAdditionsSettings, this.backgroundMusic);
++      }
++   }
++}

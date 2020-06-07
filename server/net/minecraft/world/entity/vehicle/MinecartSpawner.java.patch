@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/vehicle/MinecartSpawner.java
++++ net/minecraft/world/entity/vehicle/MinecartSpawner.java
+@@ -17,11 +17,11 @@
+       public Level getLevel() {
+          return MinecartSpawner.this.level;
+       }
+ 
+       public BlockPos getPos() {
+-         return new BlockPos(MinecartSpawner.this);
++         return MinecartSpawner.this.blockPosition();
+       }
+    };
+ 
+    public MinecartSpawner(EntityType<? extends MinecartSpawner> var1, Level var2) {
+       super(var1, var2);

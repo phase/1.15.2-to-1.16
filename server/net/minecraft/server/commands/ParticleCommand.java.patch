@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/ParticleCommand.java
++++ net/minecraft/server/commands/ParticleCommand.java
+@@ -19,11 +19,11 @@
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class ParticleCommand {
+-   private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.particle.failed", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.particle.failed"));
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("particle").requires((var0x) -> {
+          return var0x.hasPermission(2);
+       })).then(((RequiredArgumentBuilder)Commands.argument("name", ParticleArgument.particle()).executes((var0x) -> {

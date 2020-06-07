@@ -1,0 +1,144 @@
+--- net/minecraft/server/commands/DataPackCommand.java
++++ net/minecraft/server/commands/DataPackCommand.java
+@@ -8,20 +8,20 @@
+ import com.mojang.brigadier.context.CommandContext;
+ import com.mojang.brigadier.exceptions.CommandSyntaxException;
+ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+ import com.mojang.brigadier.suggestion.SuggestionProvider;
+ import java.util.ArrayList;
++import java.util.Collection;
+ import java.util.List;
++import java.util.stream.Collectors;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+ import net.minecraft.commands.SharedSuggestionProvider;
+ import net.minecraft.network.chat.ComponentUtils;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.server.packs.repository.PackRepository;
+ import net.minecraft.server.packs.repository.UnopenedPack;
+-import net.minecraft.world.level.dimension.DimensionType;
+-import net.minecraft.world.level.storage.LevelData;
+ 
+ public class DataPackCommand {
+    private static final DynamicCommandExceptionType ERROR_UNKNOWN_PACK = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.datapack.unknown", new Object[]{var0});
+    });
+@@ -30,14 +30,14 @@
+    });
+    private static final DynamicCommandExceptionType ERROR_PACK_ALREADY_DISABLED = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.datapack.disable.failed", new Object[]{var0});
+    });
+    private static final SuggestionProvider<CommandSourceStack> SELECTED_PACKS = (var0, var1) -> {
+-      return SharedSuggestionProvider.suggest(((CommandSourceStack)var0.getSource()).getServer().getPackRepository().getSelected().stream().map(UnopenedPack::getId).map(StringArgumentType::escapeIfRequired), var1);
++      return SharedSuggestionProvider.suggest(((CommandSourceStack)var0.getSource()).getServer().getPackRepository().getSelectedIds().stream().map(StringArgumentType::escapeIfRequired), var1);
+    };
+    private static final SuggestionProvider<CommandSourceStack> AVAILABLE_PACKS = (var0, var1) -> {
+-      return SharedSuggestionProvider.suggest(((CommandSourceStack)var0.getSource()).getServer().getPackRepository().getUnselected().stream().map(UnopenedPack::getId).map(StringArgumentType::escapeIfRequired), var1);
++      return SharedSuggestionProvider.suggest(((CommandSourceStack)var0.getSource()).getServer().getPackRepository().getAvailableIds().stream().map(StringArgumentType::escapeIfRequired), var1);
+    };
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("datapack").requires((var0x) -> {
+          return var0x.hasPermission(2);
+@@ -72,78 +72,72 @@
+       }))));
+    }
+ 
+    private static int enablePack(CommandSourceStack var0, UnopenedPack var1, DataPackCommand.Inserter var2) throws CommandSyntaxException {
+       PackRepository var3 = var0.getServer().getPackRepository();
+-      ArrayList var4 = Lists.newArrayList((Iterable)var3.getSelected());
++      ArrayList var4 = Lists.newArrayList((Iterable)var3.getSelectedPacks());
+       var2.apply(var4, var1);
+-      var3.setSelected(var4);
+-      LevelData var5 = var0.getServer().getLevel(DimensionType.OVERWORLD).getLevelData();
+-      var5.getEnabledDataPacks().clear();
+-      var3.getSelected().forEach((var1x) -> {
+-         var5.getEnabledDataPacks().add(var1x.getId());
+-      });
+-      var5.getDisabledDataPacks().remove(var1.getId());
+       var0.sendSuccess(new TranslatableComponent("commands.datapack.enable.success", new Object[]{var1.getChatLink(true)}), true);
+-      var0.getServer().reloadResources();
+-      return var3.getSelected().size();
++      ReloadCommand.reloadPacks((Collection)var4.stream().map(UnopenedPack::getId).collect(Collectors.toList()), var0);
++      return var4.size();
+    }
+ 
+    private static int disablePack(CommandSourceStack var0, UnopenedPack var1) {
+       PackRepository var2 = var0.getServer().getPackRepository();
+-      ArrayList var3 = Lists.newArrayList((Iterable)var2.getSelected());
++      ArrayList var3 = Lists.newArrayList((Iterable)var2.getSelectedPacks());
+       var3.remove(var1);
+-      var2.setSelected(var3);
+-      LevelData var4 = var0.getServer().getLevel(DimensionType.OVERWORLD).getLevelData();
+-      var4.getEnabledDataPacks().clear();
+-      var2.getSelected().forEach((var1x) -> {
+-         var4.getEnabledDataPacks().add(var1x.getId());
+-      });
+-      var4.getDisabledDataPacks().add(var1.getId());
++      ReloadCommand.reloadPacks((Collection)var3.stream().map(UnopenedPack::getId).collect(Collectors.toList()), var0);
+       var0.sendSuccess(new TranslatableComponent("commands.datapack.disable.success", new Object[]{var1.getChatLink(true)}), true);
+-      var0.getServer().reloadResources();
+-      return var2.getSelected().size();
++      return var3.size();
+    }
+ 
+    private static int listPacks(CommandSourceStack var0) {
+       return listEnabledPacks(var0) + listAvailablePacks(var0);
+    }
+ 
+    private static int listAvailablePacks(CommandSourceStack var0) {
+       PackRepository var1 = var0.getServer().getPackRepository();
+-      if (var1.getUnselected().isEmpty()) {
+-         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.available.none", new Object[0]), false);
++      var1.reload();
++      Collection var2 = var1.getSelectedPacks();
++      Collection var3 = var1.getAvailablePacks();
++      List var4 = (List)var3.stream().filter((var1x) -> {
++         return !var2.contains(var1x);
++      }).collect(Collectors.toList());
++      if (var4.isEmpty()) {
++         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.available.none"), false);
+       } else {
+-         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.available.success", new Object[]{var1.getUnselected().size(), ComponentUtils.formatList(var1.getUnselected(), (var0x) -> {
++         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.available.success", new Object[]{var4.size(), ComponentUtils.formatList(var4, (var0x) -> {
+             return var0x.getChatLink(false);
+          })}), false);
+       }
+ 
+-      return var1.getUnselected().size();
++      return var4.size();
+    }
+ 
+    private static int listEnabledPacks(CommandSourceStack var0) {
+       PackRepository var1 = var0.getServer().getPackRepository();
+-      if (var1.getSelected().isEmpty()) {
+-         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.enabled.none", new Object[0]), false);
++      var1.reload();
++      Collection var2 = var1.getSelectedPacks();
++      if (var2.isEmpty()) {
++         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.enabled.none"), false);
+       } else {
+-         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.enabled.success", new Object[]{var1.getSelected().size(), ComponentUtils.formatList(var1.getSelected(), (var0x) -> {
++         var0.sendSuccess(new TranslatableComponent("commands.datapack.list.enabled.success", new Object[]{var2.size(), ComponentUtils.formatList(var2, (var0x) -> {
+             return var0x.getChatLink(true);
+          })}), false);
+       }
+ 
+-      return var1.getSelected().size();
++      return var2.size();
+    }
+ 
+    private static UnopenedPack getPack(CommandContext<CommandSourceStack> var0, String var1, boolean var2) throws CommandSyntaxException {
+       String var3 = StringArgumentType.getString(var0, var1);
+       PackRepository var4 = ((CommandSourceStack)var0.getSource()).getServer().getPackRepository();
+       UnopenedPack var5 = var4.getPack(var3);
+       if (var5 == null) {
+          throw ERROR_UNKNOWN_PACK.create(var3);
+       } else {
+-         boolean var6 = var4.getSelected().contains(var5);
++         boolean var6 = var4.getSelectedPacks().contains(var5);
+          if (var2 && var6) {
+             throw ERROR_PACK_ALREADY_ENABLED.create(var3);
+          } else if (!var2 && !var6) {
+             throw ERROR_PACK_ALREADY_DISABLED.create(var3);
+          } else {

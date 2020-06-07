@@ -1,0 +1,83 @@
+--- net/minecraft/world/level/block/entity/ConduitBlockEntity.java
++++ net/minecraft/world/level/block/entity/ConduitBlockEntity.java
+@@ -7,11 +7,10 @@
+ import java.util.UUID;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.particles.ParticleTypes;
+ import net.minecraft.nbt.CompoundTag;
+-import net.minecraft.nbt.NbtUtils;
+ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.util.Mth;
+@@ -47,24 +46,24 @@
+    public ConduitBlockEntity(BlockEntityType<?> var1) {
+       super(var1);
+       this.effectBlocks = Lists.newArrayList();
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
+-      if (var1.contains("target_uuid")) {
+-         this.destroyTargetUUID = NbtUtils.loadUUIDTag(var1.getCompound("target_uuid"));
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
++      if (var2.hasUUID("Target")) {
++         this.destroyTargetUUID = var2.getUUID("Target");
+       } else {
+          this.destroyTargetUUID = null;
+       }
+ 
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+       super.save(var1);
+       if (this.destroyTarget != null) {
+-         var1.put("target_uuid", NbtUtils.createUUIDTag(this.destroyTarget.getUUID()));
++         var1.putUUID("Target", this.destroyTarget.getUUID());
+       }
+ 
+       return var1;
+    }
+ 
+@@ -136,11 +135,11 @@
+                   Block[] var9 = VALID_BLOCKS;
+                   int var10 = var9.length;
+ 
+                   for(int var11 = 0; var11 < var10; ++var11) {
+                      Block var12 = var9[var11];
+-                     if (var8.getBlock() == var12) {
++                     if (var8.is(var12)) {
+                         this.effectBlocks.add(var7);
+                      }
+                   }
+                }
+             }
+@@ -162,11 +161,11 @@
+       if (!var7.isEmpty()) {
+          Iterator var8 = var7.iterator();
+ 
+          while(var8.hasNext()) {
+             Player var9 = (Player)var8.next();
+-            if (this.worldPosition.closerThan(new BlockPos(var9), (double)var2) && var9.isInWaterOrRain()) {
++            if (this.worldPosition.closerThan(var9.blockPosition(), (double)var2) && var9.isInWaterOrRain()) {
+                var9.addEffect(new MobEffectInstance(MobEffects.CONDUIT_POWER, 260, 0, true, true));
+             }
+          }
+ 
+       }
+@@ -185,11 +184,11 @@
+             return var0 instanceof Enemy && var0.isInWaterOrRain();
+          });
+          if (!var3.isEmpty()) {
+             this.destroyTarget = (LivingEntity)var3.get(this.level.random.nextInt(var3.size()));
+          }
+-      } else if (!this.destroyTarget.isAlive() || !this.worldPosition.closerThan(new BlockPos(this.destroyTarget), 8.0D)) {
++      } else if (!this.destroyTarget.isAlive() || !this.worldPosition.closerThan(this.destroyTarget.blockPosition(), 8.0D)) {
+          this.destroyTarget = null;
+       }
+ 
+       if (this.destroyTarget != null) {
+          this.level.playSound((Player)null, this.destroyTarget.getX(), this.destroyTarget.getY(), this.destroyTarget.getZ(), SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.BLOCKS, 1.0F, 1.0F);

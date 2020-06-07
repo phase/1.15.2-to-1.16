@@ -1,0 +1,112 @@
+--- net/minecraft/core/Direction.java
++++ net/minecraft/core/Direction.java
+@@ -3,10 +3,11 @@
+ import com.google.common.collect.Iterators;
+ import com.mojang.math.Matrix4f;
+ import com.mojang.math.Quaternion;
+ import com.mojang.math.Vector3f;
+ import com.mojang.math.Vector4f;
++import com.mojang.serialization.Codec;
+ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+ import java.util.Arrays;
+ import java.util.Comparator;
+ import java.util.Iterator;
+@@ -14,10 +15,11 @@
+ import java.util.Map;
+ import java.util.Random;
+ import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
++import net.minecraft.Util;
+ import net.minecraft.util.Mth;
+ import net.minecraft.util.StringRepresentable;
+ import net.minecraft.world.entity.Entity;
+ 
+ public enum Direction implements StringRepresentable {
+@@ -239,12 +241,12 @@
+ 
+    public float toYRot() {
+       return (float)((this.data2d & 3) * 90);
+    }
+ 
+-   public static Direction getRandomFace(Random var0) {
+-      return values()[var0.nextInt(values().length)];
++   public static Direction getRandom(Random var0) {
++      return (Direction)Util.getRandom((Object[])VALUES, var0);
+    }
+ 
+    public static Direction getNearest(double var0, double var2, double var4) {
+       return getNearest((float)var0, (float)var2, (float)var4);
+    }
+@@ -274,11 +276,11 @@
+    public String getSerializedName() {
+       return this.name;
+    }
+ 
+    public static Direction get(Direction.AxisDirection var0, Direction.Axis var1) {
+-      Direction[] var2 = values();
++      Direction[] var2 = VALUES;
+       int var3 = var2.length;
+ 
+       for(int var4 = 0; var4 < var3; ++var4) {
+          Direction var5 = var2[var4];
+          if (var5.getAxisDirection() == var0 && var5.getAxis() == var1) {
+@@ -304,11 +306,11 @@
+          this.faces = var3;
+          this.axis = var4;
+       }
+ 
+       public Direction getRandomDirection(Random var1) {
+-         return this.faces[var1.nextInt(this.faces.length)];
++         return (Direction)Util.getRandom((Object[])this.faces, var1);
+       }
+ 
+       public boolean test(@Nullable Direction var1) {
+          return var1 != null && var1.getAxis().getPlane() == this;
+       }
+@@ -335,10 +337,14 @@
+       }
+ 
+       public String toString() {
+          return this.name;
+       }
++
++      public Direction.AxisDirection opposite() {
++         return this == POSITIVE ? NEGATIVE : POSITIVE;
++      }
+    }
+ 
+    public static enum Axis implements StringRepresentable, Predicate<Direction> {
+       X("x") {
+          public int choose(int var1, int var2, int var3) {
+@@ -366,11 +372,13 @@
+          public double choose(double var1, double var3, double var5) {
+             return var5;
+          }
+       };
+ 
+-      private static final Map<String, Direction.Axis> BY_NAME = (Map)Arrays.stream(values()).collect(Collectors.toMap(Direction.Axis::getName, (var0) -> {
++      private static final Direction.Axis[] VALUES = values();
++      public static final Codec<Direction.Axis> CODEC = StringRepresentable.fromEnum(Direction.Axis::values, Direction.Axis::byName);
++      private static final Map<String, Direction.Axis> BY_NAME = (Map)Arrays.stream(VALUES).collect(Collectors.toMap(Direction.Axis::getName, (var0) -> {
+          return var0;
+       }));
+       private final String name;
+ 
+       private Axis(String var3) {
+@@ -396,12 +404,12 @@
+ 
+       public String toString() {
+          return this.name;
+       }
+ 
+-      public static Direction.Axis getRandomAxis(Random var0) {
+-         return values()[var0.nextInt(values().length)];
++      public static Direction.Axis getRandom(Random var0) {
++         return (Direction.Axis)Util.getRandom((Object[])VALUES, var0);
+       }
+ 
+       public boolean test(@Nullable Direction var1) {
+          return var1 != null && var1.getAxis() == this;
+       }

@@ -1,0 +1,72 @@
+--- net/minecraft/core/Vec3i.java
++++ net/minecraft/core/Vec3i.java
+@@ -1,20 +1,21 @@
+ package net.minecraft.core;
+ 
+ import com.google.common.base.MoreObjects;
++import com.mojang.serialization.Codec;
++import java.util.stream.IntStream;
+ import javax.annotation.concurrent.Immutable;
++import net.minecraft.Util;
+ import net.minecraft.util.Mth;
+ 
+ @Immutable
+ public class Vec3i implements Comparable<Vec3i> {
+-   public static final Vec3i ZERO = new Vec3i(0, 0, 0);
+-   @Deprecated
+-   private final int x;
+-   @Deprecated
+-   private final int y;
+-   @Deprecated
+-   private final int z;
++   public static final Codec<Vec3i> CODEC;
++   public static final Vec3i ZERO;
++   private int x;
++   private int y;
++   private int z;
+ 
+    public Vec3i(int var1, int var2, int var3) {
+       this.x = var1;
+       this.y = var2;
+       this.z = var3;
+@@ -63,10 +64,22 @@
+ 
+    public int getZ() {
+       return this.z;
+    }
+ 
++   protected void setX(int var1) {
++      this.x = var1;
++   }
++
++   protected void setY(int var1) {
++      this.y = var1;
++   }
++
++   protected void setZ(int var1) {
++      this.z = var1;
++   }
++
+    public Vec3i below() {
+       return this.below(1);
+    }
+ 
+    public Vec3i below(int var1) {
+@@ -113,6 +126,17 @@
+    }
+ 
+    public String toString() {
+       return MoreObjects.toStringHelper((Object)this).add("x", this.getX()).add("y", this.getY()).add("z", this.getZ()).toString();
+    }
++
++   static {
++      CODEC = Codec.INT_STREAM.comapFlatMap((var0) -> {
++         return Util.fixedSize(var0, 3).map((var0x) -> {
++            return new Vec3i(var0x[0], var0x[1], var0x[2]);
++         });
++      }, (var0) -> {
++         return IntStream.of(new int[]{var0.getX(), var0.getY(), var0.getZ()});
++      });
++      ZERO = new Vec3i(0, 0, 0);
++   }
+ }

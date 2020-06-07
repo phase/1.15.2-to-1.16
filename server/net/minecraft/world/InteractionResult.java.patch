@@ -1,0 +1,13 @@
+--- net/minecraft/world/InteractionResult.java
++++ net/minecraft/world/InteractionResult.java
+@@ -14,6 +14,10 @@
+    }
+ 
+    public boolean shouldSwing() {
+       return this == SUCCESS;
+    }
++
++   public static InteractionResult sidedSuccess(boolean var0) {
++      return var0 ? SUCCESS : CONSUME;
++   }
+ }

@@ -1,0 +1,40 @@
+--- net/minecraft/client/renderer/entity/StriderRenderer.java
++++ net/minecraft/client/renderer/entity/StriderRenderer.java
+@@ -1,0 +1,37 @@
++package net.minecraft.client.renderer.entity;
++
++import com.mojang.blaze3d.vertex.PoseStack;
++import net.minecraft.client.model.StriderModel;
++import net.minecraft.client.renderer.entity.layers.SaddleLayer;
++import net.minecraft.resources.ResourceLocation;
++import net.minecraft.world.entity.monster.Strider;
++
++public class StriderRenderer extends MobRenderer<Strider, StriderModel<Strider>> {
++   private static final ResourceLocation STRIDER_LOCATION = new ResourceLocation("textures/entity/strider/strider.png");
++   private static final ResourceLocation COLD_LOCATION = new ResourceLocation("textures/entity/strider/strider_cold.png");
++
++   public StriderRenderer(EntityRenderDispatcher var1) {
++      super(var1, new StriderModel(), 0.5F);
++      this.addLayer(new SaddleLayer(this, new StriderModel(), new ResourceLocation("textures/entity/strider/strider_saddle.png")));
++   }
++
++   public ResourceLocation getTextureLocation(Strider var1) {
++      return var1.isSuffocating() ? COLD_LOCATION : STRIDER_LOCATION;
++   }
++
++   protected void scale(Strider var1, PoseStack var2, float var3) {
++      float var4 = 0.9375F;
++      if (var1.isBaby()) {
++         var4 *= 0.5F;
++         this.shadowRadius = 0.25F;
++      } else {
++         this.shadowRadius = 0.5F;
++      }
++
++      var2.scale(var4, var4, var4);
++   }
++
++   protected boolean isShaking(Strider var1) {
++      return var1.isSuffocating();
++   }
++}

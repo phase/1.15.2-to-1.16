@@ -1,0 +1,40 @@
+--- net/minecraft/world/level/block/CakeBlock.java
++++ net/minecraft/world/level/block/CakeBlock.java
+@@ -9,10 +9,11 @@
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+@@ -22,11 +23,11 @@
+ 
+ public class CakeBlock extends Block {
+    public static final IntegerProperty BITES;
+    protected static final VoxelShape[] SHAPE_BY_BITE;
+ 
+-   protected CakeBlock(Block.Properties var1) {
++   protected CakeBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(BITES, 0));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+@@ -34,11 +35,11 @@
+    }
+ 
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
+       if (var2.isClientSide) {
+          ItemStack var7 = var4.getItemInHand(var5);
+-         if (this.eat(var2, var3, var1, var4) == InteractionResult.SUCCESS) {
++         if (this.eat(var2, var3, var1, var4).consumesAction()) {
+             return InteractionResult.SUCCESS;
+          }
+ 
+          if (var7.isEmpty()) {
+             return InteractionResult.CONSUME;

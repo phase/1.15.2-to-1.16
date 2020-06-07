@@ -1,0 +1,16 @@
+--- net/minecraft/world/level/levelgen/feature/DecoratedFlowerFeature.java
++++ net/minecraft/world/level/levelgen/feature/DecoratedFlowerFeature.java
+@@ -1,11 +1,10 @@
+ package net.minecraft.world.level.levelgen.feature;
+ 
+-import com.mojang.datafixers.Dynamic;
+-import java.util.function.Function;
++import com.mojang.serialization.Codec;
+ import net.minecraft.world.level.levelgen.feature.configurations.DecoratedFeatureConfiguration;
+ 
+ public class DecoratedFlowerFeature extends DecoratedFeature {
+-   public DecoratedFlowerFeature(Function<Dynamic<?>, ? extends DecoratedFeatureConfiguration> var1) {
++   public DecoratedFlowerFeature(Codec<DecoratedFeatureConfiguration> var1) {
+       super(var1);
+    }
+ }

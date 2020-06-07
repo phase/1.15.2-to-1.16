@@ -1,0 +1,29 @@
+--- net/minecraft/client/particle/SingleQuadParticle.java
++++ net/minecraft/client/particle/SingleQuadParticle.java
+@@ -2,23 +2,23 @@
+ 
+ import com.mojang.blaze3d.vertex.VertexConsumer;
+ import com.mojang.math.Quaternion;
+ import com.mojang.math.Vector3f;
+ import net.minecraft.client.Camera;
++import net.minecraft.client.multiplayer.ClientLevel;
+ import net.minecraft.util.Mth;
+-import net.minecraft.world.level.Level;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public abstract class SingleQuadParticle extends Particle {
+    protected float quadSize;
+ 
+-   protected SingleQuadParticle(Level var1, double var2, double var4, double var6) {
++   protected SingleQuadParticle(ClientLevel var1, double var2, double var4, double var6) {
+       super(var1, var2, var4, var6);
+       this.quadSize = 0.1F * (this.random.nextFloat() * 0.5F + 0.5F) * 2.0F;
+    }
+ 
+-   protected SingleQuadParticle(Level var1, double var2, double var4, double var6, double var8, double var10, double var12) {
++   protected SingleQuadParticle(ClientLevel var1, double var2, double var4, double var6, double var8, double var10, double var12) {
+       super(var1, var2, var4, var6, var8, var10, var12);
+       this.quadSize = 0.1F * (this.random.nextFloat() * 0.5F + 0.5F) * 2.0F;
+    }
+ 
+    public void render(VertexConsumer var1, Camera var2, float var3) {

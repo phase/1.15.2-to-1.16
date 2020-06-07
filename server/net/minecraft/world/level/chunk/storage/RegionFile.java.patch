@@ -1,0 +1,98 @@
+--- net/minecraft/world/level/chunk/storage/RegionFile.java
++++ net/minecraft/world/level/chunk/storage/RegionFile.java
+@@ -33,15 +33,15 @@
+    private final ByteBuffer header;
+    private final IntBuffer offsets;
+    private final IntBuffer timestamps;
+    private final RegionBitmap usedSectors;
+ 
+-   public RegionFile(File var1, File var2) throws IOException {
+-      this(var1.toPath(), var2.toPath(), RegionFileVersion.VERSION_DEFLATE);
++   public RegionFile(File var1, File var2, boolean var3) throws IOException {
++      this(var1.toPath(), var2.toPath(), RegionFileVersion.VERSION_DEFLATE, var3);
+    }
+ 
+-   public RegionFile(Path var1, Path var2, RegionFileVersion var3) throws IOException {
++   public RegionFile(Path var1, Path var2, RegionFileVersion var3, boolean var4) throws IOException {
+       this.header = ByteBuffer.allocateDirect(8192);
+       this.usedSectors = new RegionBitmap();
+       this.version = var3;
+       if (!Files.isDirectory(var2, new LinkOption[0])) {
+          throw new IllegalArgumentException("Expected directory, got " + var2.toAbsolutePath());
+@@ -49,25 +49,30 @@
+          this.externalFileDir = var2;
+          this.offsets = this.header.asIntBuffer();
+          this.offsets.limit(1024);
+          this.header.position(4096);
+          this.timestamps = this.header.asIntBuffer();
+-         this.file = FileChannel.open(var1, StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
++         if (var4) {
++            this.file = FileChannel.open(var1, StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.DSYNC);
++         } else {
++            this.file = FileChannel.open(var1, StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
++         }
++
+          this.usedSectors.force(0, 2);
+          this.header.position(0);
+-         int var4 = this.file.read(this.header, 0L);
+-         if (var4 != -1) {
+-            if (var4 != 8192) {
+-               LOGGER.warn((String)"Region file {} has truncated header: {}", (Object)var1, (Object)var4);
++         int var5 = this.file.read(this.header, 0L);
++         if (var5 != -1) {
++            if (var5 != 8192) {
++               LOGGER.warn((String)"Region file {} has truncated header: {}", (Object)var1, (Object)var5);
+             }
+ 
+-            for(int var5 = 0; var5 < 1024; ++var5) {
+-               int var6 = this.offsets.get(var5);
+-               if (var6 != 0) {
+-                  int var7 = getSectorNumber(var6);
+-                  int var8 = getNumSectors(var6);
+-                  this.usedSectors.force(var7, var8);
++            for(int var6 = 0; var6 < 1024; ++var6) {
++               int var7 = this.offsets.get(var6);
++               if (var7 != 0) {
++                  int var8 = getSectorNumber(var7);
++                  int var9 = getNumSectors(var7);
++                  this.usedSectors.force(var8, var9);
+                }
+             }
+          }
+ 
+       }
+@@ -221,10 +226,14 @@
+ 
+    public DataOutputStream getChunkDataOutputStream(ChunkPos var1) throws IOException {
+       return new DataOutputStream(new BufferedOutputStream(this.version.wrap((OutputStream)(new RegionFile.ChunkBuffer(var1)))));
+    }
+ 
++   public void flush() throws IOException {
++      this.file.force(true);
++   }
++
+    protected synchronized void write(ChunkPos var1, ByteBuffer var2) throws IOException {
+       int var3 = getOffsetIndex(var1);
+       int var4 = this.offsets.get(var3);
+       int var5 = getSectorNumber(var4);
+       int var6 = getNumSectors(var4);
+@@ -318,17 +327,13 @@
+    public void close() throws IOException {
+       try {
+          this.padToFullSector();
+       } finally {
+          try {
+-            this.writeHeader();
++            this.file.force(true);
+          } finally {
+-            try {
+-               this.file.force(true);
+-            } finally {
+-               this.file.close();
+-            }
++            this.file.close();
+          }
+       }
+ 
+    }
+ 

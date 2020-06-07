@@ -1,0 +1,28 @@
+--- net/minecraft/server/commands/SpectateCommand.java
++++ net/minecraft/server/commands/SpectateCommand.java
+@@ -14,11 +14,11 @@
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.GameType;
+ 
+ public class SpectateCommand {
+-   private static final SimpleCommandExceptionType ERROR_SELF = new SimpleCommandExceptionType(new TranslatableComponent("commands.spectate.self", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_SELF = new SimpleCommandExceptionType(new TranslatableComponent("commands.spectate.self"));
+    private static final DynamicCommandExceptionType ERROR_NOT_SPECTATOR = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.spectate.not_spectator", new Object[]{var0});
+    });
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+@@ -41,11 +41,11 @@
+       } else {
+          var2.setCamera(var1);
+          if (var1 != null) {
+             var0.sendSuccess(new TranslatableComponent("commands.spectate.success.started", new Object[]{var1.getDisplayName()}), false);
+          } else {
+-            var0.sendSuccess(new TranslatableComponent("commands.spectate.success.stopped", new Object[0]), false);
++            var0.sendSuccess(new TranslatableComponent("commands.spectate.success.stopped"), false);
+          }
+ 
+          return 1;
+       }
+    }

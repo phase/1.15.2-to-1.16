@@ -1,0 +1,49 @@
+--- net/minecraft/core/SerializableLong.java
++++ net/minecraft/core/SerializableLong.java
+@@ -1,30 +1,21 @@
+ package net.minecraft.core;
+ 
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
+-import net.minecraft.util.Serializable;
++import com.mojang.serialization.Codec;
+ 
+-public final class SerializableLong implements Serializable {
++public final class SerializableLong {
++   public static final Codec<SerializableLong> CODEC;
+    private final long value;
+ 
+    private SerializableLong(long var1) {
+       this.value = var1;
+    }
+ 
+    public long value() {
+       return this.value;
+    }
+ 
+-   public <T> T serialize(DynamicOps<T> var1) {
+-      return var1.createLong(this.value);
+-   }
+-
+-   public static SerializableLong of(Dynamic<?> var0) {
+-      return new SerializableLong(var0.asNumber(0).longValue());
+-   }
+-
+    public static SerializableLong of(long var0) {
+       return new SerializableLong(var0);
+    }
+ 
+    public boolean equals(Object var1) {
+@@ -43,6 +34,12 @@
+    }
+ 
+    public String toString() {
+       return Long.toString(this.value);
+    }
++
++   static {
++      CODEC = Codec.LONG.xmap(SerializableLong::new, (var0) -> {
++         return var0.value;
++      });
++   }
+ }

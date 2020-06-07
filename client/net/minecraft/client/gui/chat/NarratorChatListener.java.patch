@@ -1,0 +1,99 @@
+--- net/minecraft/client/gui/chat/NarratorChatListener.java
++++ net/minecraft/client/gui/chat/NarratorChatListener.java
+@@ -1,8 +1,9 @@
+ package net.minecraft.client.gui.chat;
+ 
+ import com.mojang.text2speech.Narrator;
++import java.util.UUID;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.NarratorStatus;
+ import net.minecraft.client.gui.components.toasts.SystemToast;
+ import net.minecraft.client.gui.components.toasts.ToastComponent;
+@@ -12,32 +13,34 @@
+ import net.minecraft.network.chat.TranslatableComponent;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class NarratorChatListener implements ChatListener {
+-   public static final Component NO_TITLE = new TextComponent("");
+-   private static final Logger LOGGER = LogManager.getLogger();
+-   public static final NarratorChatListener INSTANCE = new NarratorChatListener();
++   public static final Component NO_TITLE;
++   private static final Logger LOGGER;
++   public static final NarratorChatListener INSTANCE;
+    private final Narrator narrator = Narrator.getNarrator();
+ 
+    public NarratorChatListener() {
+    }
+ 
+-   public void handle(ChatType var1, Component var2) {
+-      NarratorStatus var3 = getStatus();
+-      if (var3 != NarratorStatus.OFF && this.narrator.active()) {
+-         if (var3 == NarratorStatus.ALL || var3 == NarratorStatus.CHAT && var1 == ChatType.CHAT || var3 == NarratorStatus.SYSTEM && var1 == ChatType.SYSTEM) {
+-            Object var4;
+-            if (var2 instanceof TranslatableComponent && "chat.type.text".equals(((TranslatableComponent)var2).getKey())) {
+-               var4 = new TranslatableComponent("chat.type.text.narrate", ((TranslatableComponent)var2).getArgs());
+-            } else {
+-               var4 = var2;
++   public void handle(ChatType var1, Component var2, UUID var3) {
++      if (!Minecraft.getInstance().isBlocked(var3)) {
++         NarratorStatus var4 = getStatus();
++         if (var4 != NarratorStatus.OFF && this.narrator.active()) {
++            if (var4 == NarratorStatus.ALL || var4 == NarratorStatus.CHAT && var1 == ChatType.CHAT || var4 == NarratorStatus.SYSTEM && var1 == ChatType.SYSTEM) {
++               Object var5;
++               if (var2 instanceof TranslatableComponent && "chat.type.text".equals(((TranslatableComponent)var2).getKey())) {
++                  var5 = new TranslatableComponent("chat.type.text.narrate", ((TranslatableComponent)var2).getArgs());
++               } else {
++                  var5 = var2;
++               }
++
++               this.doSay(var1.shouldInterrupt(), ((Component)var5).getString());
+             }
+ 
+-            this.doSay(var1.shouldInterrupt(), ((Component)var4).getString());
+          }
+-
+       }
+    }
+ 
+    public void sayNow(String var1) {
+       NarratorStatus var2 = getStatus();
+@@ -60,20 +63,20 @@
+       this.narrator.say(var2, var1);
+    }
+ 
+    public void updateNarratorStatus(NarratorStatus var1) {
+       this.clear();
+-      this.narrator.say((new TranslatableComponent("options.narrator", new Object[0])).getString() + " : " + (new TranslatableComponent(var1.getKey(), new Object[0])).getString(), true);
++      this.narrator.say((new TranslatableComponent("options.narrator")).append(" : ").append(var1.getName()).getString(), true);
+       ToastComponent var2 = Minecraft.getInstance().getToasts();
+       if (this.narrator.active()) {
+          if (var1 == NarratorStatus.OFF) {
+-            SystemToast.addOrUpdate(var2, SystemToast.SystemToastIds.NARRATOR_TOGGLE, new TranslatableComponent("narrator.toast.disabled", new Object[0]), (Component)null);
++            SystemToast.addOrUpdate(var2, SystemToast.SystemToastIds.NARRATOR_TOGGLE, new TranslatableComponent("narrator.toast.disabled"), (Component)null);
+          } else {
+-            SystemToast.addOrUpdate(var2, SystemToast.SystemToastIds.NARRATOR_TOGGLE, new TranslatableComponent("narrator.toast.enabled", new Object[0]), new TranslatableComponent(var1.getKey(), new Object[0]));
++            SystemToast.addOrUpdate(var2, SystemToast.SystemToastIds.NARRATOR_TOGGLE, new TranslatableComponent("narrator.toast.enabled"), var1.getName());
+          }
+       } else {
+-         SystemToast.addOrUpdate(var2, SystemToast.SystemToastIds.NARRATOR_TOGGLE, new TranslatableComponent("narrator.toast.disabled", new Object[0]), new TranslatableComponent("options.narrator.notavailable", new Object[0]));
++         SystemToast.addOrUpdate(var2, SystemToast.SystemToastIds.NARRATOR_TOGGLE, new TranslatableComponent("narrator.toast.disabled"), new TranslatableComponent("options.narrator.notavailable"));
+       }
+ 
+    }
+ 
+    public boolean isActive() {
+@@ -87,6 +90,12 @@
+    }
+ 
+    public void destroy() {
+       this.narrator.destroy();
+    }
++
++   static {
++      NO_TITLE = TextComponent.EMPTY;
++      LOGGER = LogManager.getLogger();
++      INSTANCE = new NarratorChatListener();
++   }
+ }

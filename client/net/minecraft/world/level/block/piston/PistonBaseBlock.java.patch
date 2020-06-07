@@ -1,0 +1,254 @@
+--- net/minecraft/world/level/block/piston/PistonBaseBlock.java
++++ net/minecraft/world/level/block/piston/PistonBaseBlock.java
+@@ -22,10 +22,11 @@
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.DirectionalBlock;
+ import net.minecraft.world.level.block.Mirror;
+ import net.minecraft.world.level.block.Rotation;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.PistonType;
+@@ -43,20 +44,16 @@
+    protected static final VoxelShape NORTH_AABB;
+    protected static final VoxelShape UP_AABB;
+    protected static final VoxelShape DOWN_AABB;
+    private final boolean isSticky;
+ 
+-   public PistonBaseBlock(boolean var1, Block.Properties var2) {
++   public PistonBaseBlock(boolean var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(EXTENDED, false));
+       this.isSticky = var1;
+    }
+ 
+-   public boolean isSuffocating(BlockState var1, BlockGetter var2, BlockPos var3) {
+-      return !(Boolean)var1.getValue(EXTENDED);
+-   }
+-
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       if ((Boolean)var1.getValue(EXTENDED)) {
+          switch((Direction)var1.getValue(FACING)) {
+          case DOWN:
+             return DOWN_AABB;
+@@ -75,14 +72,10 @@
+       } else {
+          return Shapes.block();
+       }
+    }
+ 
+-   public boolean isRedstoneConductor(BlockState var1, BlockGetter var2, BlockPos var3) {
+-      return false;
+-   }
+-
+    public void setPlacedBy(Level var1, BlockPos var2, BlockState var3, LivingEntity var4, ItemStack var5) {
+       if (!var1.isClientSide) {
+          this.checkIfExtend(var1, var2, var3);
+       }
+ 
+@@ -94,11 +87,11 @@
+       }
+ 
+    }
+ 
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var4.getBlock() != var1.getBlock()) {
++      if (!var4.is(var1.getBlock())) {
+          if (!var2.isClientSide && var2.getBlockEntity(var3) == null) {
+             this.checkIfExtend(var2, var3, var1);
+          }
+ 
+       }
+@@ -117,11 +110,11 @@
+          }
+       } else if (!var5 && (Boolean)var3.getValue(EXTENDED)) {
+          BlockPos var6 = var2.relative(var4, 2);
+          BlockState var7 = var1.getBlockState(var6);
+          byte var8 = 1;
+-         if (var7.getBlock() == Blocks.MOVING_PISTON && var7.getValue(FACING) == var4) {
++         if (var7.is(Blocks.MOVING_PISTON) && var7.getValue(FACING) == var4) {
+             BlockEntity var9 = var1.getBlockEntity(var6);
+             if (var9 instanceof PistonMovingBlockEntity) {
+                PistonMovingBlockEntity var10 = (PistonMovingBlockEntity)var9;
+                if (var10.isExtending() && (var10.getProgress(0.0F) < 0.5F || var1.getGameTime() == var10.getLastTicked() || ((ServerLevel)var1).isHandlingTick())) {
+                   var8 = 2;
+@@ -189,30 +182,32 @@
+          BlockEntity var14 = var2.getBlockEntity(var3.relative(var6));
+          if (var14 instanceof PistonMovingBlockEntity) {
+             ((PistonMovingBlockEntity)var14).finalTick();
+          }
+ 
+-         var2.setBlock(var3, (BlockState)((BlockState)Blocks.MOVING_PISTON.defaultBlockState().setValue(MovingPistonBlock.FACING, var6)).setValue(MovingPistonBlock.TYPE, this.isSticky ? PistonType.STICKY : PistonType.DEFAULT), 3);
++         BlockState var8 = (BlockState)((BlockState)Blocks.MOVING_PISTON.defaultBlockState().setValue(MovingPistonBlock.FACING, var6)).setValue(MovingPistonBlock.TYPE, this.isSticky ? PistonType.STICKY : PistonType.DEFAULT);
++         var2.setBlock(var3, var8, 20);
+          var2.setBlockEntity(var3, MovingPistonBlock.newMovingBlockEntity((BlockState)this.defaultBlockState().setValue(FACING, Direction.from3DDataValue(var5 & 7)), var6, false, true));
++         var2.blockUpdated(var3, var8.getBlock());
++         var8.updateNeighbourShapes(var2, var3, 2);
+          if (this.isSticky) {
+-            BlockPos var8 = var3.offset(var6.getStepX() * 2, var6.getStepY() * 2, var6.getStepZ() * 2);
+-            BlockState var9 = var2.getBlockState(var8);
+-            Block var10 = var9.getBlock();
++            BlockPos var9 = var3.offset(var6.getStepX() * 2, var6.getStepY() * 2, var6.getStepZ() * 2);
++            BlockState var10 = var2.getBlockState(var9);
+             boolean var11 = false;
+-            if (var10 == Blocks.MOVING_PISTON) {
+-               BlockEntity var12 = var2.getBlockEntity(var8);
++            if (var10.is(Blocks.MOVING_PISTON)) {
++               BlockEntity var12 = var2.getBlockEntity(var9);
+                if (var12 instanceof PistonMovingBlockEntity) {
+                   PistonMovingBlockEntity var13 = (PistonMovingBlockEntity)var12;
+                   if (var13.getDirection() == var6 && var13.isExtending()) {
+                      var13.finalTick();
+                      var11 = true;
+                   }
+                }
+             }
+ 
+             if (!var11) {
+-               if (var4 != 1 || var9.isAir() || !isPushable(var9, var2, var8, var6.getOpposite(), false, var6) || var9.getPistonPushReaction() != PushReaction.NORMAL && var10 != Blocks.PISTON && var10 != Blocks.STICKY_PISTON) {
++               if (var4 != 1 || var10.isAir() || !isPushable(var10, var2, var9, var6.getOpposite(), false, var6) || var10.getPistonPushReaction() != PushReaction.NORMAL && !var10.is(Blocks.PISTON) && !var10.is(Blocks.STICKY_PISTON)) {
+                   var2.removeBlock(var3.relative(var6), false);
+                } else {
+                   this.moveBlocks(var2, var3, var6, false);
+                }
+             }
+@@ -225,44 +220,45 @@
+ 
+       return true;
+    }
+ 
+    public static boolean isPushable(BlockState var0, Level var1, BlockPos var2, Direction var3, boolean var4, Direction var5) {
+-      Block var6 = var0.getBlock();
+-      if (var6 == Blocks.OBSIDIAN) {
+-         return false;
+-      } else if (!var1.getWorldBorder().isWithinBounds(var2)) {
+-         return false;
+-      } else if (var2.getY() < 0 || var3 == Direction.DOWN && var2.getY() == 0) {
+-         return false;
+-      } else if (var2.getY() <= var1.getMaxBuildHeight() - 1 && (var3 != Direction.UP || var2.getY() != var1.getMaxBuildHeight() - 1)) {
+-         if (var6 != Blocks.PISTON && var6 != Blocks.STICKY_PISTON) {
+-            if (var0.getDestroySpeed(var1, var2) == -1.0F) {
+-               return false;
+-            }
++      if (!var0.is(Blocks.OBSIDIAN) && !var0.is(Blocks.CRYING_OBSIDIAN) && !var0.is(Blocks.RESPAWN_ANCHOR)) {
++         if (!var1.getWorldBorder().isWithinBounds(var2)) {
++            return false;
++         } else if (var2.getY() < 0 || var3 == Direction.DOWN && var2.getY() == 0) {
++            return false;
++         } else if (var2.getY() > var1.getMaxBuildHeight() - 1 || var3 == Direction.UP && var2.getY() == var1.getMaxBuildHeight() - 1) {
++            return false;
++         } else {
++            if (!var0.is(Blocks.PISTON) && !var0.is(Blocks.STICKY_PISTON)) {
++               if (var0.getDestroySpeed(var1, var2) == -1.0F) {
++                  return false;
++               }
+ 
+-            switch(var0.getPistonPushReaction()) {
+-            case BLOCK:
++               switch(var0.getPistonPushReaction()) {
++               case BLOCK:
++                  return false;
++               case DESTROY:
++                  return var4;
++               case PUSH_ONLY:
++                  return var3 == var5;
++               }
++            } else if ((Boolean)var0.getValue(EXTENDED)) {
+                return false;
+-            case DESTROY:
+-               return var4;
+-            case PUSH_ONLY:
+-               return var3 == var5;
+             }
+-         } else if ((Boolean)var0.getValue(EXTENDED)) {
+-            return false;
+-         }
+ 
+-         return !var6.isEntityBlock();
++            return !var0.getBlock().isEntityBlock();
++         }
+       } else {
+          return false;
+       }
+    }
+ 
+    private boolean moveBlocks(Level var1, BlockPos var2, Direction var3, boolean var4) {
+       BlockPos var5 = var2.relative(var3);
+-      if (!var4 && var1.getBlockState(var5).getBlock() == Blocks.PISTON_HEAD) {
++      if (!var4 && var1.getBlockState(var5).is(Blocks.PISTON_HEAD)) {
+          var1.setBlock(var5, Blocks.AIR.defaultBlockState(), 20);
+       }
+ 
+       PistonStructureResolver var6 = new PistonStructureResolver(var1, var2, var3, var4);
+       if (!var6.resolve()) {
+@@ -278,36 +274,34 @@
+             var9.add(var12);
+             var7.put(var11, var12);
+          }
+ 
+          List var19 = var6.getToDestroy();
+-         int var20 = var8.size() + var19.size();
+-         BlockState[] var21 = new BlockState[var20];
+-         Direction var13 = var4 ? var3 : var3.getOpposite();
++         BlockState[] var20 = new BlockState[var8.size() + var19.size()];
++         Direction var21 = var4 ? var3 : var3.getOpposite();
++         int var13 = 0;
+ 
+          int var14;
+          BlockPos var15;
+          BlockState var16;
+          for(var14 = var19.size() - 1; var14 >= 0; --var14) {
+             var15 = (BlockPos)var19.get(var14);
+             var16 = var1.getBlockState(var15);
+             BlockEntity var17 = var16.getBlock().isEntityBlock() ? var1.getBlockEntity(var15) : null;
+             dropResources(var16, var1, var15, var17);
+             var1.setBlock(var15, Blocks.AIR.defaultBlockState(), 18);
+-            --var20;
+-            var21[var20] = var16;
++            var20[var13++] = var16;
+          }
+ 
+          for(var14 = var8.size() - 1; var14 >= 0; --var14) {
+             var15 = (BlockPos)var8.get(var14);
+             var16 = var1.getBlockState(var15);
+-            var15 = var15.relative(var13);
++            var15 = var15.relative(var21);
+             var7.remove(var15);
+             var1.setBlock(var15, (BlockState)Blocks.MOVING_PISTON.defaultBlockState().setValue(FACING, var3), 68);
+             var1.setBlockEntity(var15, MovingPistonBlock.newMovingBlockEntity((BlockState)var9.get(var14), var3, var4, false));
+-            --var20;
+-            var21[var20] = var16;
++            var20[var13++] = var16;
+          }
+ 
+          if (var4) {
+             PistonType var22 = this.isSticky ? PistonType.STICKY : PistonType.DEFAULT;
+             BlockState var24 = (BlockState)((BlockState)Blocks.PISTON_HEAD.defaultBlockState().setValue(PistonHeadBlock.FACING, var3)).setValue(PistonHeadBlock.TYPE, var22);
+@@ -335,20 +329,22 @@
+             var18.updateIndirectNeighbourShapes(var1, var29, 2);
+             var23.updateNeighbourShapes(var1, var29, 2);
+             var23.updateIndirectNeighbourShapes(var1, var29, 2);
+          }
+ 
++         var13 = 0;
++
+          int var27;
+          for(var27 = var19.size() - 1; var27 >= 0; --var27) {
+-            var16 = var21[var20++];
++            var16 = var20[var13++];
+             var29 = (BlockPos)var19.get(var27);
+             var16.updateIndirectNeighbourShapes(var1, var29, 2);
+             var1.updateNeighborsAt(var29, var16.getBlock());
+          }
+ 
+          for(var27 = var8.size() - 1; var27 >= 0; --var27) {
+-            var1.updateNeighborsAt((BlockPos)var8.get(var27), var21[var20++].getBlock());
++            var1.updateNeighborsAt((BlockPos)var8.get(var27), var20[var13++].getBlock());
+          }
+ 
+          if (var4) {
+             var1.updateNeighborsAt(var5, Blocks.PISTON_HEAD);
+          }

@@ -1,0 +1,29 @@
+--- net/minecraft/client/gui/screens/ReceivingLevelScreen.java
++++ net/minecraft/client/gui/screens/ReceivingLevelScreen.java
+@@ -1,7 +1,8 @@
+ package net.minecraft.client.gui.screens;
+ 
++import com.mojang.blaze3d.vertex.PoseStack;
+ import net.minecraft.client.gui.chat.NarratorChatListener;
+ import net.minecraft.client.resources.language.I18n;
+ 
+ public class ReceivingLevelScreen extends Screen {
+    public ReceivingLevelScreen() {
+@@ -10,14 +11,14 @@
+ 
+    public boolean shouldCloseOnEsc() {
+       return false;
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
++   public void render(PoseStack var1, int var2, int var3, float var4) {
+       this.renderDirtBackground(0);
+-      this.drawCenteredString(this.font, I18n.get("multiplayer.downloadingTerrain"), this.width / 2, this.height / 2 - 50, 16777215);
+-      super.render(var1, var2, var3);
++      this.drawCenteredString(var1, this.font, I18n.get("multiplayer.downloadingTerrain"), this.width / 2, this.height / 2 - 50, 16777215);
++      super.render(var1, var2, var3, var4);
+    }
+ 
+    public boolean isPauseScreen() {
+       return false;
+    }

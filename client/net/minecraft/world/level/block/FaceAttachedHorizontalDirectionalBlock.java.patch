@@ -1,0 +1,24 @@
+--- net/minecraft/world/level/block/FaceAttachedHorizontalDirectionalBlock.java
++++ net/minecraft/world/level/block/FaceAttachedHorizontalDirectionalBlock.java
+@@ -4,19 +4,20 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.AttachFace;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.EnumProperty;
+ 
+ public class FaceAttachedHorizontalDirectionalBlock extends HorizontalDirectionalBlock {
+    public static final EnumProperty<AttachFace> FACE;
+ 
+-   protected FaceAttachedHorizontalDirectionalBlock(Block.Properties var1) {
++   protected FaceAttachedHorizontalDirectionalBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public boolean canSurvive(BlockState var1, LevelReader var2, BlockPos var3) {
+       return canAttach(var2, var3, getConnectedDirection(var1).getOpposite());

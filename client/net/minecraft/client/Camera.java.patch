@@ -1,0 +1,15 @@
+--- net/minecraft/client/Camera.java
++++ net/minecraft/client/Camera.java
+@@ -79,11 +79,11 @@
+          var4 *= 0.1F;
+          var5 *= 0.1F;
+          var6 *= 0.1F;
+          Vec3 var7 = this.position.add((double)var4, (double)var5, (double)var6);
+          Vec3 var8 = new Vec3(this.position.x - (double)this.forwards.x() * var1 + (double)var4 + (double)var6, this.position.y - (double)this.forwards.y() * var1 + (double)var5, this.position.z - (double)this.forwards.z() * var1 + (double)var6);
+-         BlockHitResult var9 = this.level.clip(new ClipContext(var7, var8, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this.entity));
++         BlockHitResult var9 = this.level.clip(new ClipContext(var7, var8, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, this.entity));
+          if (var9.getType() != HitResult.Type.MISS) {
+             double var10 = var9.getLocation().distanceTo(this.position);
+             if (var10 < var1) {
+                var1 = var10;
+             }

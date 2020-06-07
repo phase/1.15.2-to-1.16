@@ -1,0 +1,129 @@
+--- net/minecraft/world/level/block/DoorBlock.java
++++ net/minecraft/world/level/block/DoorBlock.java
+@@ -13,10 +13,11 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+@@ -40,11 +41,11 @@
+    protected static final VoxelShape SOUTH_AABB;
+    protected static final VoxelShape NORTH_AABB;
+    protected static final VoxelShape WEST_AABB;
+    protected static final VoxelShape EAST_AABB;
+ 
+-   protected DoorBlock(Block.Properties var1) {
++   protected DoorBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(OPEN, false)).setValue(HINGE, DoorHingeSide.LEFT)).setValue(POWERED, false)).setValue(HALF, DoubleBlockHalf.LOWER));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+@@ -65,11 +66,11 @@
+    }
+ 
+    public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {
+       DoubleBlockHalf var7 = (DoubleBlockHalf)var1.getValue(HALF);
+       if (var2.getAxis() == Direction.Axis.Y && var7 == DoubleBlockHalf.LOWER == (var2 == Direction.UP)) {
+-         return var3.getBlock() == this && var3.getValue(HALF) != var7 ? (BlockState)((BlockState)((BlockState)((BlockState)var1.setValue(FACING, var3.getValue(FACING))).setValue(OPEN, var3.getValue(OPEN))).setValue(HINGE, var3.getValue(HINGE))).setValue(POWERED, var3.getValue(POWERED)) : Blocks.AIR.defaultBlockState();
++         return var3.is(this) && var3.getValue(HALF) != var7 ? (BlockState)((BlockState)((BlockState)((BlockState)var1.setValue(FACING, var3.getValue(FACING))).setValue(OPEN, var3.getValue(OPEN))).setValue(HINGE, var3.getValue(HINGE))).setValue(POWERED, var3.getValue(POWERED)) : Blocks.AIR.defaultBlockState();
+       } else {
+          return var7 == DoubleBlockHalf.LOWER && var2 == Direction.DOWN && !var1.canSurvive(var4, var5) ? Blocks.AIR.defaultBlockState() : super.updateShape(var1, var2, var3, var4, var5, var6);
+       }
+    }
+ 
+@@ -79,15 +80,15 @@
+ 
+    public void playerWillDestroy(Level var1, BlockPos var2, BlockState var3, Player var4) {
+       DoubleBlockHalf var5 = (DoubleBlockHalf)var3.getValue(HALF);
+       BlockPos var6 = var5 == DoubleBlockHalf.LOWER ? var2.above() : var2.below();
+       BlockState var7 = var1.getBlockState(var6);
+-      if (var7.getBlock() == this && var7.getValue(HALF) != var5) {
++      if (var7.is(this) && var7.getValue(HALF) != var5) {
+          var1.setBlock(var6, Blocks.AIR.defaultBlockState(), 35);
+          var1.levelEvent(var4, 2001, var6, Block.getId(var7));
+          ItemStack var8 = var4.getMainHandItem();
+-         if (!var1.isClientSide && !var4.isCreative() && var4.canDestroy(var7)) {
++         if (!var1.isClientSide && !var4.isCreative() && var4.hasCorrectToolForDrops(var7)) {
+             Block.dropResources(var3, var1, var2, (BlockEntity)null, var4, var8);
+             Block.dropResources(var7, var1, var6, (BlockEntity)null, var4, var8);
+          }
+       }
+ 
+@@ -145,12 +146,12 @@
+       BlockPos var12 = var3.relative(var11);
+       BlockState var13 = var2.getBlockState(var12);
+       BlockPos var14 = var5.relative(var11);
+       BlockState var15 = var2.getBlockState(var14);
+       int var16 = (var8.isCollisionShapeFullBlock(var2, var7) ? -1 : 0) + (var10.isCollisionShapeFullBlock(var2, var9) ? -1 : 0) + (var13.isCollisionShapeFullBlock(var2, var12) ? 1 : 0) + (var15.isCollisionShapeFullBlock(var2, var14) ? 1 : 0);
+-      boolean var17 = var8.getBlock() == this && var8.getValue(HALF) == DoubleBlockHalf.LOWER;
+-      boolean var18 = var13.getBlock() == this && var13.getValue(HALF) == DoubleBlockHalf.LOWER;
++      boolean var17 = var8.is(this) && var8.getValue(HALF) == DoubleBlockHalf.LOWER;
++      boolean var18 = var13.is(this) && var13.getValue(HALF) == DoubleBlockHalf.LOWER;
+       if ((!var17 || var18) && var16 <= 0) {
+          if ((!var18 || var17) && var16 >= 0) {
+             int var19 = var4.getStepX();
+             int var20 = var4.getStepZ();
+             Vec3 var21 = var1.getClickLocation();
+@@ -170,17 +171,17 @@
+          return InteractionResult.PASS;
+       } else {
+          var1 = (BlockState)var1.cycle(OPEN);
+          var2.setBlock(var3, var1, 10);
+          var2.levelEvent(var4, (Boolean)var1.getValue(OPEN) ? this.getOpenSound() : this.getCloseSound(), var3, 0);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       }
+    }
+ 
+    public void setOpen(Level var1, BlockPos var2, boolean var3) {
+       BlockState var4 = var1.getBlockState(var2);
+-      if (var4.getBlock() == this && (Boolean)var4.getValue(OPEN) != var3) {
++      if (var4.is(this) && (Boolean)var4.getValue(OPEN) != var3) {
+          var1.setBlock(var2, (BlockState)var4.setValue(OPEN, var3), 10);
+          this.playSound(var1, var2, var3);
+       }
+    }
+ 
+@@ -197,15 +198,11 @@
+    }
+ 
+    public boolean canSurvive(BlockState var1, LevelReader var2, BlockPos var3) {
+       BlockPos var4 = var3.below();
+       BlockState var5 = var2.getBlockState(var4);
+-      if (var1.getValue(HALF) == DoubleBlockHalf.LOWER) {
+-         return var5.isFaceSturdy(var2, var4, Direction.UP);
+-      } else {
+-         return var5.getBlock() == this;
+-      }
++      return var1.getValue(HALF) == DoubleBlockHalf.LOWER ? var5.isFaceSturdy(var2, var4, Direction.UP) : var5.is(this);
+    }
+ 
+    private void playSound(Level var1, BlockPos var2, boolean var3) {
+       var1.levelEvent((Player)null, var3 ? this.getOpenSound() : this.getCloseSound(), var2, 0);
+    }
+@@ -228,10 +225,18 @@
+ 
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> var1) {
+       var1.add(HALF, FACING, OPEN, HINGE, POWERED);
+    }
+ 
++   public static boolean isWoodenDoor(Level var0, BlockPos var1) {
++      return isWoodenDoor(var0.getBlockState(var1));
++   }
++
++   public static boolean isWoodenDoor(BlockState var0) {
++      return var0.getBlock() instanceof DoorBlock && (var0.getMaterial() == Material.WOOD || var0.getMaterial() == Material.NETHER_WOOD);
++   }
++
+    static {
+       FACING = HorizontalDirectionalBlock.FACING;
+       OPEN = BlockStateProperties.OPEN;
+       HINGE = BlockStateProperties.DOOR_HINGE;
+       POWERED = BlockStateProperties.POWERED;

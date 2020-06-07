@@ -1,0 +1,27 @@
+--- net/minecraft/util/datafix/fixes/SimplestEntityRenameFix.java
++++ net/minecraft/util/datafix/fixes/SimplestEntityRenameFix.java
+@@ -5,10 +5,11 @@
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.schemas.Schema;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.templates.TaggedChoice.TaggedChoiceType;
+ import java.util.Objects;
++import net.minecraft.util.datafix.schemas.NamespacedSchema;
+ 
+ public abstract class SimplestEntityRenameFix extends DataFix {
+    private final String name;
+ 
+    public SimplestEntityRenameFix(String var1, Schema var2, boolean var3) {
+@@ -17,11 +18,11 @@
+    }
+ 
+    public TypeRewriteRule makeRule() {
+       TaggedChoiceType var1 = this.getInputSchema().findChoiceType(References.ENTITY);
+       TaggedChoiceType var2 = this.getOutputSchema().findChoiceType(References.ENTITY);
+-      Type var3 = DSL.named(References.ENTITY_NAME.typeName(), DSL.namespacedString());
++      Type var3 = DSL.named(References.ENTITY_NAME.typeName(), NamespacedSchema.namespacedString());
+       if (!Objects.equals(this.getOutputSchema().getType(References.ENTITY_NAME), var3)) {
+          throw new IllegalStateException("Entity name type is not what was expected.");
+       } else {
+          return TypeRewriteRule.seq(this.fixTypeEverywhere(this.name, var1, var2, (var3x) -> {
+             return (var3) -> {

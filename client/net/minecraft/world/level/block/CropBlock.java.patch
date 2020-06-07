@@ -1,0 +1,69 @@
+--- net/minecraft/world/level/block/CropBlock.java
++++ net/minecraft/world/level/block/CropBlock.java
+@@ -11,10 +11,11 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.ItemLike;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+@@ -22,21 +23,21 @@
+ 
+ public class CropBlock extends BushBlock implements BonemealableBlock {
+    public static final IntegerProperty AGE;
+    private static final VoxelShape[] SHAPE_BY_AGE;
+ 
+-   protected CropBlock(Block.Properties var1) {
++   protected CropBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(this.getAgeProperty(), 0));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return SHAPE_BY_AGE[(Integer)var1.getValue(this.getAgeProperty())];
+    }
+ 
+    protected boolean mayPlaceOn(BlockState var1, BlockGetter var2, BlockPos var3) {
+-      return var1.getBlock() == Blocks.FARMLAND;
++      return var1.is(Blocks.FARMLAND);
+    }
+ 
+    public IntegerProperty getAgeProperty() {
+       return AGE;
+    }
+@@ -55,12 +56,15 @@
+ 
+    public boolean isMaxAge(BlockState var1) {
+       return (Integer)var1.getValue(this.getAgeProperty()) >= this.getMaxAge();
+    }
+ 
+-   public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+-      super.tick(var1, var2, var3, var4);
++   public boolean isRandomlyTicking(BlockState var1) {
++      return !this.isMaxAge(var1);
++   }
++
++   public void randomTick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+       if (var2.getRawBrightness(var3, 0) >= 9) {
+          int var5 = this.getAge(var1);
+          if (var5 < this.getMaxAge()) {
+             float var6 = getGrowthSpeed(this, var2, var3);
+             if (var4.nextInt((int)(25.0F / var6) + 1) == 0) {
+@@ -91,11 +95,11 @@
+ 
+       for(int var5 = -1; var5 <= 1; ++var5) {
+          for(int var6 = -1; var6 <= 1; ++var6) {
+             float var7 = 0.0F;
+             BlockState var8 = var1.getBlockState(var4.offset(var5, 0, var6));
+-            if (var8.getBlock() == Blocks.FARMLAND) {
++            if (var8.is(Blocks.FARMLAND)) {
+                var7 = 1.0F;
+                if ((Integer)var8.getValue(FarmBlock.MOISTURE) > 0) {
+                   var7 = 3.0F;
+                }
+             }

@@ -1,0 +1,73 @@
+--- net/minecraft/client/multiplayer/ClientChunkCache.java
++++ net/minecraft/client/multiplayer/ClientChunkCache.java
+@@ -31,11 +31,11 @@
+    private final ClientLevel level;
+ 
+    public ClientChunkCache(ClientLevel var1, int var2) {
+       this.level = var1;
+       this.emptyChunk = new EmptyLevelChunk(var1, new ChunkPos(0, 0));
+-      this.lightEngine = new LevelLightEngine(this, true, var1.getDimension().isHasSkyLight());
++      this.lightEngine = new LevelLightEngine(this, true, var1.dimensionType().hasSkyLight());
+       this.storage = new ClientChunkCache.Storage(calculateStorageRange(var2));
+    }
+ 
+    public LevelLightEngine getLightEngine() {
+       return this.lightEngine;
+@@ -76,41 +76,41 @@
+    public BlockGetter getLevel() {
+       return this.level;
+    }
+ 
+    @Nullable
+-   public LevelChunk replaceWithPacketData(int var1, int var2, @Nullable ChunkBiomeContainer var3, FriendlyByteBuf var4, CompoundTag var5, int var6) {
++   public LevelChunk replaceWithPacketData(int var1, int var2, @Nullable ChunkBiomeContainer var3, FriendlyByteBuf var4, CompoundTag var5, int var6, boolean var7) {
+       if (!this.storage.inRange(var1, var2)) {
+          LOGGER.warn("Ignoring chunk since it's not in the view range: {}, {}", var1, var2);
+          return null;
+       } else {
+-         int var7 = this.storage.getIndex(var1, var2);
+-         LevelChunk var8 = (LevelChunk)this.storage.chunks.get(var7);
+-         if (!isValidChunk(var8, var1, var2)) {
++         int var8 = this.storage.getIndex(var1, var2);
++         LevelChunk var9 = (LevelChunk)this.storage.chunks.get(var8);
++         if (!var7 && isValidChunk(var9, var1, var2)) {
++            var9.replaceWithPacketData(var3, var4, var5, var6);
++         } else {
+             if (var3 == null) {
+                LOGGER.warn("Ignoring chunk since we don't have complete data: {}, {}", var1, var2);
+                return null;
+             }
+ 
+-            var8 = new LevelChunk(this.level, new ChunkPos(var1, var2), var3);
+-            var8.replaceWithPacketData(var3, var4, var5, var6);
+-            this.storage.replace(var7, var8);
+-         } else {
+-            var8.replaceWithPacketData(var3, var4, var5, var6);
++            var9 = new LevelChunk(this.level, new ChunkPos(var1, var2), var3);
++            var9.replaceWithPacketData(var3, var4, var5, var6);
++            this.storage.replace(var8, var9);
+          }
+ 
+-         LevelChunkSection[] var9 = var8.getSections();
+-         LevelLightEngine var10 = this.getLightEngine();
+-         var10.enableLightSources(new ChunkPos(var1, var2), true);
++         LevelChunkSection[] var10 = var9.getSections();
++         LevelLightEngine var11 = this.getLightEngine();
++         var11.enableLightSources(new ChunkPos(var1, var2), true);
+ 
+-         for(int var11 = 0; var11 < var9.length; ++var11) {
+-            LevelChunkSection var12 = var9[var11];
+-            var10.updateSectionStatus(SectionPos.of(var1, var11, var2), LevelChunkSection.isEmpty(var12));
++         for(int var12 = 0; var12 < var10.length; ++var12) {
++            LevelChunkSection var13 = var10[var12];
++            var11.updateSectionStatus(SectionPos.of(var1, var12, var2), LevelChunkSection.isEmpty(var13));
+          }
+ 
+          this.level.onChunkLoaded(var1, var2);
+-         return var8;
++         return var9;
+       }
+    }
+ 
+    public void tick(BooleanSupplier var1) {
+    }

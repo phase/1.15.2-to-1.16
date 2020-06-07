@@ -1,0 +1,15 @@
+--- net/minecraft/server/packs/resources/SimpleReloadInstance.java
++++ net/minecraft/server/packs/resources/SimpleReloadInstance.java
+@@ -24,11 +24,11 @@
+    private final AtomicInteger startedTaskCounter = new AtomicInteger();
+    private final AtomicInteger doneTaskCounter = new AtomicInteger();
+ 
+    public static SimpleReloadInstance<Void> of(ResourceManager var0, List<PreparableReloadListener> var1, Executor var2, Executor var3, CompletableFuture<Unit> var4) {
+       return new SimpleReloadInstance(var2, var3, var0, var1, (var1x, var2x, var3x, var4x, var5) -> {
+-         return var3x.reload(var1x, var2x, InactiveProfiler.INACTIVE, InactiveProfiler.INACTIVE, var2, var5);
++         return var3x.reload(var1x, var2x, InactiveProfiler.INSTANCE, InactiveProfiler.INSTANCE, var2, var5);
+       }, var4);
+    }
+ 
+    protected SimpleReloadInstance(Executor var1, final Executor var2, ResourceManager var3, List<PreparableReloadListener> var4, SimpleReloadInstance.StateFactory<S> var5, CompletableFuture<Unit> var6) {
+       this.resourceManager = var3;

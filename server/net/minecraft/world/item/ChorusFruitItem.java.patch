@@ -1,0 +1,32 @@
+--- net/minecraft/world/item/ChorusFruitItem.java
++++ net/minecraft/world/item/ChorusFruitItem.java
+@@ -1,11 +1,13 @@
+ package net.minecraft.world.item;
+ 
++import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.entity.animal.Fox;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.Level;
+ 
+ public class ChorusFruitItem extends Item {
+    public ChorusFruitItem(Item.Properties var1) {
+@@ -26,12 +28,13 @@
+             if (var3.isPassenger()) {
+                var3.stopRiding();
+             }
+ 
+             if (var3.randomTeleport(var12, var14, var16, true)) {
+-               var2.playSound((Player)null, var5, var7, var9, SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
+-               var3.playSound(SoundEvents.CHORUS_FRUIT_TELEPORT, 1.0F, 1.0F);
++               SoundEvent var18 = var3 instanceof Fox ? SoundEvents.FOX_TELEPORT : SoundEvents.CHORUS_FRUIT_TELEPORT;
++               var2.playSound((Player)null, var5, var7, var9, var18, SoundSource.PLAYERS, 1.0F, 1.0F);
++               var3.playSound(var18, 1.0F, 1.0F);
+                break;
+             }
+          }
+ 
+          if (var3 instanceof Player) {

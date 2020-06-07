@@ -1,0 +1,54 @@
+--- net/minecraft/network/FriendlyByteBuf.java
++++ net/minecraft/network/FriendlyByteBuf.java
+@@ -1,7 +1,9 @@
+ package net.minecraft.network;
+ 
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
+ import io.netty.buffer.ByteBuf;
+ import io.netty.buffer.ByteBufAllocator;
+ import io.netty.buffer.ByteBufInputStream;
+ import io.netty.buffer.ByteBufOutputStream;
+ import io.netty.handler.codec.DecoderException;
+@@ -23,10 +25,11 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtAccounter;
+ import net.minecraft.nbt.NbtIo;
++import net.minecraft.nbt.NbtOps;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.phys.BlockHitResult;
+@@ -47,10 +50,29 @@
+       }
+ 
+       return 5;
+    }
+ 
++   public <T> T readWithCodec(Codec<T> var1) throws IOException {
++      CompoundTag var2 = this.readNbt();
++      DataResult var3 = var1.parse(NbtOps.INSTANCE, var2);
++      if (var3.error().isPresent()) {
++         throw new IOException("Failed to decode: " + ((DataResult.PartialResult)var3.error().get()).message() + " " + var2);
++      } else {
++         return var3.result().get();
++      }
++   }
++
++   public <T> void writeWithCodec(Codec<T> var1, T var2) throws IOException {
++      DataResult var3 = var1.encodeStart(NbtOps.INSTANCE, var2);
++      if (var3.error().isPresent()) {
++         throw new IOException("Failed to encode: " + ((DataResult.PartialResult)var3.error().get()).message() + " " + var2);
++      } else {
++         this.writeNbt((CompoundTag)var3.result().get());
++      }
++   }
++
+    public FriendlyByteBuf writeByteArray(byte[] var1) {
+       this.writeVarInt(var1.length);
+       this.writeBytes(var1);
+       return this;
+    }

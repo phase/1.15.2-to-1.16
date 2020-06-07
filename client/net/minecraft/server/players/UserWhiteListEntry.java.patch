@@ -1,0 +1,22 @@
+--- net/minecraft/server/players/UserWhiteListEntry.java
++++ net/minecraft/server/players/UserWhiteListEntry.java
+@@ -8,18 +8,17 @@
+    public UserWhiteListEntry(GameProfile var1) {
+       super(var1);
+    }
+ 
+    public UserWhiteListEntry(JsonObject var1) {
+-      super(createGameProfile(var1), var1);
++      super(createGameProfile(var1));
+    }
+ 
+    protected void serialize(JsonObject var1) {
+       if (this.getUser() != null) {
+          var1.addProperty("uuid", ((GameProfile)this.getUser()).getId() == null ? "" : ((GameProfile)this.getUser()).getId().toString());
+          var1.addProperty("name", ((GameProfile)this.getUser()).getName());
+-         super.serialize(var1);
+       }
+    }
+ 
+    private static GameProfile createGameProfile(JsonObject var0) {
+       if (var0.has("uuid") && var0.has("name")) {

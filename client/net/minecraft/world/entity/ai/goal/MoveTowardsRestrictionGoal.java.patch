@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal.java
++++ net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal.java
+@@ -20,11 +20,11 @@
+ 
+    public boolean canUse() {
+       if (this.mob.isWithinRestriction()) {
+          return false;
+       } else {
+-         Vec3 var1 = RandomPos.getPosTowards(this.mob, 16, 7, new Vec3(this.mob.getRestrictCenter()));
++         Vec3 var1 = RandomPos.getPosTowards(this.mob, 16, 7, Vec3.atBottomCenterOf(this.mob.getRestrictCenter()));
+          if (var1 == null) {
+             return false;
+          } else {
+             this.wantedX = var1.x;
+             this.wantedY = var1.y;

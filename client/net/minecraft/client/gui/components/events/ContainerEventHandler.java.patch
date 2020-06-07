@@ -1,0 +1,14 @@
+--- net/minecraft/client/gui/components/events/ContainerEventHandler.java
++++ net/minecraft/client/gui/components/events/ContainerEventHandler.java
+@@ -84,10 +84,11 @@
+ 
+    void setFocused(@Nullable GuiEventListener var1);
+ 
+    default void setInitialFocus(@Nullable GuiEventListener var1) {
+       this.setFocused(var1);
++      var1.changeFocus(true);
+    }
+ 
+    default void magicalSpecialHackyFocus(@Nullable GuiEventListener var1) {
+       this.setFocused(var1);
+    }

@@ -1,0 +1,90 @@
+--- net/minecraft/client/renderer/block/model/FaceBakery.java
++++ net/minecraft/client/renderer/block/model/FaceBakery.java
+@@ -43,11 +43,11 @@
+       System.arraycopy(var11, 0, var10.uvs, 0, var11.length);
+       if (var7 == null) {
+          this.recalculateWinding(var15, var16);
+       }
+ 
+-      return new BakedQuad(var15, var3.tintIndex, var16, var4);
++      return new BakedQuad(var15, var3.tintIndex, var16, var4, var8);
+    }
+ 
+    public static BlockFaceUV recomputeUVs(BlockFaceUV var0, Direction var1, Transformation var2, ResourceLocation var3) {
+       Matrix4f var4 = BlockMath.getUVLockTransform(var2, var1, () -> {
+          return "Unable to resolve UVLock for model: " + var3;
+@@ -100,33 +100,10 @@
+       }
+ 
+       return var8;
+    }
+ 
+-   private int getShadeValue(Direction var1) {
+-      float var2 = this.getShade(var1);
+-      int var3 = Mth.clamp((int)(var2 * 255.0F), 0, 255);
+-      return -16777216 | var3 << 16 | var3 << 8 | var3;
+-   }
+-
+-   private float getShade(Direction var1) {
+-      switch(var1) {
+-      case DOWN:
+-         return 0.5F;
+-      case UP:
+-         return 1.0F;
+-      case NORTH:
+-      case SOUTH:
+-         return 0.8F;
+-      case WEST:
+-      case EAST:
+-         return 0.6F;
+-      default:
+-         return 1.0F;
+-      }
+-   }
+-
+    private float[] setupShape(Vector3f var1, Vector3f var2) {
+       float[] var3 = new float[Direction.values().length];
+       var3[FaceInfo.Constants.MIN_X] = var1.x() / 16.0F;
+       var3[FaceInfo.Constants.MIN_Y] = var1.y() / 16.0F;
+       var3[FaceInfo.Constants.MIN_Z] = var1.z() / 16.0F;
+@@ -135,27 +112,25 @@
+       var3[FaceInfo.Constants.MAX_Z] = var2.z() / 16.0F;
+       return var3;
+    }
+ 
+    private void bakeVertex(int[] var1, int var2, Direction var3, BlockFaceUV var4, float[] var5, TextureAtlasSprite var6, Transformation var7, @Nullable BlockElementRotation var8, boolean var9) {
+-      Direction var10 = Direction.rotate(var7.getMatrix(), var3);
+-      int var11 = var9 ? this.getShadeValue(var10) : -1;
+-      FaceInfo.VertexInfo var12 = FaceInfo.fromFacing(var3).getVertexInfo(var2);
+-      Vector3f var13 = new Vector3f(var5[var12.xFace], var5[var12.yFace], var5[var12.zFace]);
+-      this.applyElementRotation(var13, var8);
+-      this.applyModelRotation(var13, var7);
+-      this.fillVertex(var1, var2, var13, var11, var6, var4);
++      FaceInfo.VertexInfo var10 = FaceInfo.fromFacing(var3).getVertexInfo(var2);
++      Vector3f var11 = new Vector3f(var5[var10.xFace], var5[var10.yFace], var5[var10.zFace]);
++      this.applyElementRotation(var11, var8);
++      this.applyModelRotation(var11, var7);
++      this.fillVertex(var1, var2, var11, var6, var4);
+    }
+ 
+-   private void fillVertex(int[] var1, int var2, Vector3f var3, int var4, TextureAtlasSprite var5, BlockFaceUV var6) {
+-      int var7 = var2 * 8;
+-      var1[var7] = Float.floatToRawIntBits(var3.x());
+-      var1[var7 + 1] = Float.floatToRawIntBits(var3.y());
+-      var1[var7 + 2] = Float.floatToRawIntBits(var3.z());
+-      var1[var7 + 3] = var4;
+-      var1[var7 + 4] = Float.floatToRawIntBits(var5.getU((double)var6.getU(var2)));
+-      var1[var7 + 4 + 1] = Float.floatToRawIntBits(var5.getV((double)var6.getV(var2)));
++   private void fillVertex(int[] var1, int var2, Vector3f var3, TextureAtlasSprite var4, BlockFaceUV var5) {
++      int var6 = var2 * 8;
++      var1[var6] = Float.floatToRawIntBits(var3.x());
++      var1[var6 + 1] = Float.floatToRawIntBits(var3.y());
++      var1[var6 + 2] = Float.floatToRawIntBits(var3.z());
++      var1[var6 + 3] = -1;
++      var1[var6 + 4] = Float.floatToRawIntBits(var4.getU((double)var5.getU(var2)));
++      var1[var6 + 4 + 1] = Float.floatToRawIntBits(var4.getV((double)var5.getV(var2)));
+    }
+ 
+    private void applyElementRotation(Vector3f var1, @Nullable BlockElementRotation var2) {
+       if (var2 != null) {
+          Vector3f var3;

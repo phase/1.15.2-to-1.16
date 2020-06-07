@@ -1,0 +1,27 @@
+--- net/minecraft/commands/arguments/item/ItemArgument.java
++++ net/minecraft/commands/arguments/item/ItemArgument.java
+@@ -7,10 +7,11 @@
+ import com.mojang.brigadier.suggestion.Suggestions;
+ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+ import java.util.Arrays;
+ import java.util.Collection;
+ import java.util.concurrent.CompletableFuture;
++import net.minecraft.tags.ItemTags;
+ 
+ public class ItemArgument implements ArgumentType<ItemInput> {
+    private static final Collection<String> EXAMPLES = Arrays.asList("stick", "minecraft:stick", "stick{foo=bar}");
+ 
+    public ItemArgument() {
+@@ -37,11 +38,11 @@
+       try {
+          var4.parse();
+       } catch (CommandSyntaxException var6) {
+       }
+ 
+-      return var4.fillSuggestions(var2);
++      return var4.fillSuggestions(var2, ItemTags.getAllTags());
+    }
+ 
+    public Collection<String> getExamples() {
+       return EXAMPLES;
+    }

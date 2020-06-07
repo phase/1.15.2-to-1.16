@@ -1,0 +1,58 @@
+--- net/minecraft/world/phys/Vec3.java
++++ net/minecraft/world/phys/Vec3.java
+@@ -11,24 +11,36 @@
+    public static final Vec3 ZERO = new Vec3(0.0D, 0.0D, 0.0D);
+    public final double x;
+    public final double y;
+    public final double z;
+ 
++   public static Vec3 atCenterOf(Vec3i var0) {
++      return new Vec3((double)var0.getX() + 0.5D, (double)var0.getY() + 0.5D, (double)var0.getZ() + 0.5D);
++   }
++
++   public static Vec3 atLowerCornerOf(Vec3i var0) {
++      return new Vec3((double)var0.getX(), (double)var0.getY(), (double)var0.getZ());
++   }
++
++   public static Vec3 atBottomCenterOf(Vec3i var0) {
++      return new Vec3((double)var0.getX() + 0.5D, (double)var0.getY(), (double)var0.getZ() + 0.5D);
++   }
++
++   public static Vec3 upFromBottomCenterOf(Vec3i var0, double var1) {
++      return new Vec3((double)var0.getX() + 0.5D, (double)var0.getY() + var1, (double)var0.getZ() + 0.5D);
++   }
++
+    public Vec3(double var1, double var3, double var5) {
+       this.x = var1;
+       this.y = var3;
+       this.z = var5;
+    }
+ 
+    public Vec3(Vector3f var1) {
+       this((double)var1.x(), (double)var1.y(), (double)var1.z());
+    }
+ 
+-   public Vec3(Vec3i var1) {
+-      this((double)var1.getX(), (double)var1.getY(), (double)var1.getZ());
+-   }
+-
+    public Vec3 vectorTo(Vec3 var1) {
+       return new Vec3(var1.x - this.x, var1.y - this.y, var1.z - this.z);
+    }
+ 
+    public Vec3 normalize() {
+@@ -58,10 +70,14 @@
+ 
+    public Vec3 add(double var1, double var3, double var5) {
+       return new Vec3(this.x + var1, this.y + var3, this.z + var5);
+    }
+ 
++   public boolean closerThan(Position var1, double var2) {
++      return this.distanceToSqr(var1.x(), var1.y(), var1.z()) < var2 * var2;
++   }
++
+    public double distanceTo(Vec3 var1) {
+       double var2 = var1.x - this.x;
+       double var4 = var1.y - this.y;
+       double var6 = var1.z - this.z;
+       return (double)Mth.sqrt(var2 * var2 + var4 * var4 + var6 * var6);

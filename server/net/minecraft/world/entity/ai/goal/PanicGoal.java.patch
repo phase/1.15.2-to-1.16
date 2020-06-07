@@ -1,0 +1,46 @@
+--- net/minecraft/world/entity/ai/goal/PanicGoal.java
++++ net/minecraft/world/entity/ai/goal/PanicGoal.java
+@@ -14,10 +14,11 @@
+    protected final PathfinderMob mob;
+    protected final double speedModifier;
+    protected double posX;
+    protected double posY;
+    protected double posZ;
++   protected boolean isRunning;
+ 
+    public PanicGoal(PathfinderMob var1, double var2) {
+       this.mob = var1;
+       this.speedModifier = var2;
+       this.setFlags(EnumSet.of(Goal.Flag.MOVE));
+@@ -51,21 +52,30 @@
+          this.posZ = var1.z;
+          return true;
+       }
+    }
+ 
++   public boolean isRunning() {
++      return this.isRunning;
++   }
++
+    public void start() {
+       this.mob.getNavigation().moveTo(this.posX, this.posY, this.posZ, this.speedModifier);
++      this.isRunning = true;
+    }
+ 
++   public void stop() {
++      this.isRunning = false;
++   }
++
+    public boolean canContinueToUse() {
+       return !this.mob.getNavigation().isDone();
+    }
+ 
+    @Nullable
+    protected BlockPos lookForWater(BlockGetter var1, Entity var2, int var3, int var4) {
+-      BlockPos var5 = new BlockPos(var2);
++      BlockPos var5 = var2.blockPosition();
+       int var6 = var5.getX();
+       int var7 = var5.getY();
+       int var8 = var5.getZ();
+       float var9 = (float)(var3 * var3 * var4 * 2);
+       BlockPos var10 = null;

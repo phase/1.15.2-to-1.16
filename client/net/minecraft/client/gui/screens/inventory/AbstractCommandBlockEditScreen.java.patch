@@ -1,0 +1,112 @@
+--- net/minecraft/client/gui/screens/inventory/AbstractCommandBlockEditScreen.java
++++ net/minecraft/client/gui/screens/inventory/AbstractCommandBlockEditScreen.java
+@@ -1,15 +1,20 @@
+ package net.minecraft.client.gui.screens.inventory;
+ 
++import com.mojang.blaze3d.vertex.PoseStack;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.chat.NarratorChatListener;
+ import net.minecraft.client.gui.components.Button;
+ import net.minecraft.client.gui.components.CommandSuggestions;
+ import net.minecraft.client.gui.components.EditBox;
+ import net.minecraft.client.gui.screens.Screen;
+ import net.minecraft.client.resources.language.I18n;
++import net.minecraft.network.chat.CommonComponents;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
++import net.minecraft.network.chat.TextComponent;
++import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.world.level.BaseCommandBlock;
+ 
+ public abstract class AbstractCommandBlockEditScreen extends Screen {
+    protected EditBox commandEdit;
+    protected EditBox previousEdit;
+@@ -31,30 +36,30 @@
+ 
+    abstract int getPreviousY();
+ 
+    protected void init() {
+       this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
+-      this.doneButton = (Button)this.addButton(new Button(this.width / 2 - 4 - 150, this.height / 4 + 120 + 12, 150, 20, I18n.get("gui.done"), (var1) -> {
++      this.doneButton = (Button)this.addButton(new Button(this.width / 2 - 4 - 150, this.height / 4 + 120 + 12, 150, 20, CommonComponents.GUI_DONE, (var1) -> {
+          this.onDone();
+       }));
+-      this.cancelButton = (Button)this.addButton(new Button(this.width / 2 + 4, this.height / 4 + 120 + 12, 150, 20, I18n.get("gui.cancel"), (var1) -> {
++      this.cancelButton = (Button)this.addButton(new Button(this.width / 2 + 4, this.height / 4 + 120 + 12, 150, 20, CommonComponents.GUI_CANCEL, (var1) -> {
+          this.onClose();
+       }));
+-      this.outputButton = (Button)this.addButton(new Button(this.width / 2 + 150 - 20, this.getPreviousY(), 20, 20, "O", (var1) -> {
++      this.outputButton = (Button)this.addButton(new Button(this.width / 2 + 150 - 20, this.getPreviousY(), 20, 20, new TextComponent("O"), (var1) -> {
+          BaseCommandBlock var2 = this.getCommandBlock();
+          var2.setTrackOutput(!var2.isTrackOutput());
+          this.updateCommandOutput();
+       }));
+-      this.commandEdit = new EditBox(this.font, this.width / 2 - 150, 50, 300, 20, I18n.get("advMode.command")) {
+-         protected String getNarrationMessage() {
+-            return super.getNarrationMessage() + AbstractCommandBlockEditScreen.this.commandSuggestions.getNarrationMessage();
++      this.commandEdit = new EditBox(this.font, this.width / 2 - 150, 50, 300, 20, new TranslatableComponent("advMode.command")) {
++         protected MutableComponent createNarrationMessage() {
++            return super.createNarrationMessage().append(AbstractCommandBlockEditScreen.this.commandSuggestions.getNarrationMessage());
+          }
+       };
+       this.commandEdit.setMaxLength(32500);
+       this.commandEdit.setResponder(this::onEdited);
+       this.children.add(this.commandEdit);
+-      this.previousEdit = new EditBox(this.font, this.width / 2 - 150, this.getPreviousY(), 276, 20, I18n.get("advMode.previousOutput"));
++      this.previousEdit = new EditBox(this.font, this.width / 2 - 150, this.getPreviousY(), 276, 20, new TranslatableComponent("advMode.previousOutput"));
+       this.previousEdit.setMaxLength(32500);
+       this.previousEdit.setEditable(false);
+       this.previousEdit.setValue("-");
+       this.children.add(this.previousEdit);
+       this.setInitialFocus(this.commandEdit);
+@@ -71,14 +76,14 @@
+       this.commandSuggestions.updateCommandInfo();
+    }
+ 
+    protected void updateCommandOutput() {
+       if (this.getCommandBlock().isTrackOutput()) {
+-         this.outputButton.setMessage("O");
++         this.outputButton.setMessage(new TextComponent("O"));
+          this.previousEdit.setValue(this.getCommandBlock().getLastOutput().getString());
+       } else {
+-         this.outputButton.setMessage("X");
++         this.outputButton.setMessage(new TextComponent("X"));
+          this.previousEdit.setValue("-");
+       }
+ 
+    }
+ 
+@@ -126,22 +131,22 @@
+ 
+    public boolean mouseClicked(double var1, double var3, int var5) {
+       return this.commandSuggestions.mouseClicked(var1, var3, var5) ? true : super.mouseClicked(var1, var3, var5);
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
+-      this.renderBackground();
+-      this.drawCenteredString(this.font, I18n.get("advMode.setCommand"), this.width / 2, 20, 16777215);
+-      this.drawString(this.font, I18n.get("advMode.command"), this.width / 2 - 150, 40, 10526880);
+-      this.commandEdit.render(var1, var2, var3);
+-      byte var4 = 75;
++   public void render(PoseStack var1, int var2, int var3, float var4) {
++      this.renderBackground(var1);
++      this.drawCenteredString(var1, this.font, I18n.get("advMode.setCommand"), this.width / 2, 20, 16777215);
++      this.drawString(var1, this.font, I18n.get("advMode.command"), this.width / 2 - 150, 40, 10526880);
++      this.commandEdit.render(var1, var2, var3, var4);
++      byte var5 = 75;
+       if (!this.previousEdit.getValue().isEmpty()) {
+          this.font.getClass();
+-         int var5 = var4 + (5 * 9 + 1 + this.getPreviousY() - 135);
+-         this.drawString(this.font, I18n.get("advMode.previousOutput"), this.width / 2 - 150, var5 + 4, 10526880);
+-         this.previousEdit.render(var1, var2, var3);
++         int var6 = var5 + (5 * 9 + 1 + this.getPreviousY() - 135);
++         this.drawString(var1, this.font, I18n.get("advMode.previousOutput"), this.width / 2 - 150, var6 + 4, 10526880);
++         this.previousEdit.render(var1, var2, var3, var4);
+       }
+ 
+-      super.render(var1, var2, var3);
+-      this.commandSuggestions.render(var1, var2);
++      super.render(var1, var2, var3, var4);
++      this.commandSuggestions.render(var1, var2, var3);
+    }
+ }

@@ -1,0 +1,23 @@
+--- net/minecraft/realms/RealmsBridge.java
++++ net/minecraft/realms/RealmsBridge.java
+@@ -12,17 +12,17 @@
+    public RealmsBridge() {
+    }
+ 
+    public void switchToRealms(Screen var1) {
+       this.previousScreen = var1;
+-      Realms.setScreen(new RealmsMainScreen(this));
++      Minecraft.getInstance().setScreen(new RealmsMainScreen(this));
+    }
+ 
+    @Nullable
+-   public RealmsScreenProxy getNotificationScreen(Screen var1) {
++   public RealmsScreen getNotificationScreen(Screen var1) {
+       this.previousScreen = var1;
+-      return (new RealmsNotificationsScreen(this)).getProxy();
++      return new RealmsNotificationsScreen();
+    }
+ 
+    public void init() {
+       Minecraft.getInstance().setScreen(this.previousScreen);
+    }

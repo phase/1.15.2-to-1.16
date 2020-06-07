@@ -1,0 +1,111 @@
+--- net/minecraft/client/particle/ParticleEngine.java
++++ net/minecraft/client/particle/ParticleEngine.java
+@@ -30,10 +30,11 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+ import net.minecraft.client.Camera;
++import net.minecraft.client.multiplayer.ClientLevel;
+ import net.minecraft.client.renderer.LightTexture;
+ import net.minecraft.client.renderer.MultiBufferSource;
+ import net.minecraft.client.renderer.texture.AbstractTexture;
+ import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+ import net.minecraft.client.renderer.texture.TextureAtlas;
+@@ -51,29 +52,28 @@
+ import net.minecraft.server.packs.resources.ResourceManager;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.util.Mth;
+ import net.minecraft.util.profiling.ProfilerFiller;
+ import net.minecraft.world.entity.Entity;
+-import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.RenderShape;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class ParticleEngine implements PreparableReloadListener {
+    private static final List<ParticleRenderType> RENDER_ORDER;
+-   protected Level level;
++   protected ClientLevel level;
+    private final Map<ParticleRenderType, Queue<Particle>> particles = Maps.newIdentityHashMap();
+    private final Queue<TrackingEmitter> trackingEmitters = Queues.newArrayDeque();
+    private final TextureManager textureManager;
+    private final Random random = new Random();
+    private final Int2ObjectMap<ParticleProvider<?>> providers = new Int2ObjectOpenHashMap();
+    private final Queue<Particle> particlesToAdd = Queues.newArrayDeque();
+    private final Map<ResourceLocation, ParticleEngine.MutableSpriteSet> spriteSets = Maps.newHashMap();
+    private final TextureAtlas textureAtlas;
+ 
+-   public ParticleEngine(Level var1, TextureManager var2) {
++   public ParticleEngine(ClientLevel var1, TextureManager var2) {
+       this.textureAtlas = new TextureAtlas(TextureAtlas.LOCATION_PARTICLES);
+       var2.register((ResourceLocation)this.textureAtlas.location(), (AbstractTexture)this.textureAtlas);
+       this.level = var1;
+       this.textureManager = var2;
+       this.registerProviders();
+@@ -112,10 +112,12 @@
+       this.register(ParticleTypes.EXPLOSION, (ParticleEngine.SpriteParticleRegistration)(HugeExplosionParticle.Provider::new));
+       this.register(ParticleTypes.FALLING_DUST, FallingDustParticle.Provider::new);
+       this.register(ParticleTypes.FIREWORK, (ParticleEngine.SpriteParticleRegistration)(FireworkParticles.SparkProvider::new));
+       this.register(ParticleTypes.FISHING, (ParticleEngine.SpriteParticleRegistration)(WakeParticle.Provider::new));
+       this.register(ParticleTypes.FLAME, (ParticleEngine.SpriteParticleRegistration)(FlameParticle.Provider::new));
++      this.register(ParticleTypes.SOUL, (ParticleEngine.SpriteParticleRegistration)(SoulParticle.Provider::new));
++      this.register(ParticleTypes.SOUL_FIRE_FLAME, (ParticleEngine.SpriteParticleRegistration)(FlameParticle.Provider::new));
+       this.register(ParticleTypes.FLASH, (ParticleEngine.SpriteParticleRegistration)(FireworkParticles.FlashProvider::new));
+       this.register(ParticleTypes.HAPPY_VILLAGER, (ParticleEngine.SpriteParticleRegistration)(SuspendedTownParticle.HappyVillagerProvider::new));
+       this.register(ParticleTypes.HEART, (ParticleEngine.SpriteParticleRegistration)(HeartParticle.Provider::new));
+       this.register(ParticleTypes.INSTANT_EFFECT, (ParticleEngine.SpriteParticleRegistration)(SpellParticle.InstantProvider::new));
+       this.register(ParticleTypes.ITEM, (ParticleProvider)(new BreakingItemParticle.Provider()));
+@@ -133,17 +135,25 @@
+       this.register(ParticleTypes.SNEEZE, (ParticleEngine.SpriteParticleRegistration)(PlayerCloudParticle.SneezeProvider::new));
+       this.register(ParticleTypes.SPIT, (ParticleEngine.SpriteParticleRegistration)(SpitParticle.Provider::new));
+       this.register(ParticleTypes.SWEEP_ATTACK, (ParticleEngine.SpriteParticleRegistration)(AttackSweepParticle.Provider::new));
+       this.register(ParticleTypes.TOTEM_OF_UNDYING, (ParticleEngine.SpriteParticleRegistration)(TotemParticle.Provider::new));
+       this.register(ParticleTypes.SQUID_INK, (ParticleEngine.SpriteParticleRegistration)(SquidInkParticle.Provider::new));
+-      this.register(ParticleTypes.UNDERWATER, (ParticleEngine.SpriteParticleRegistration)(SuspendedParticle.Provider::new));
++      this.register(ParticleTypes.UNDERWATER, (ParticleEngine.SpriteParticleRegistration)(SuspendedParticle.UnderwaterProvider::new));
+       this.register(ParticleTypes.SPLASH, (ParticleEngine.SpriteParticleRegistration)(SplashParticle.Provider::new));
+       this.register(ParticleTypes.WITCH, (ParticleEngine.SpriteParticleRegistration)(SpellParticle.WitchProvider::new));
+       this.register(ParticleTypes.DRIPPING_HONEY, (ParticleEngine.SpriteParticleRegistration)(DripParticle.HoneyHangProvider::new));
+       this.register(ParticleTypes.FALLING_HONEY, (ParticleEngine.SpriteParticleRegistration)(DripParticle.HoneyFallProvider::new));
+       this.register(ParticleTypes.LANDING_HONEY, (ParticleEngine.SpriteParticleRegistration)(DripParticle.HoneyLandProvider::new));
+       this.register(ParticleTypes.FALLING_NECTAR, (ParticleEngine.SpriteParticleRegistration)(DripParticle.NectarFallProvider::new));
++      this.register(ParticleTypes.ASH, (ParticleEngine.SpriteParticleRegistration)(AshParticle.Provider::new));
++      this.register(ParticleTypes.CRIMSON_SPORE, (ParticleEngine.SpriteParticleRegistration)(SuspendedParticle.CrimsonSporeProvider::new));
++      this.register(ParticleTypes.WARPED_SPORE, (ParticleEngine.SpriteParticleRegistration)(SuspendedParticle.WarpedSporeProvider::new));
++      this.register(ParticleTypes.DRIPPING_OBSIDIAN_TEAR, (ParticleEngine.SpriteParticleRegistration)(DripParticle.ObsidianTearHangProvider::new));
++      this.register(ParticleTypes.FALLING_OBSIDIAN_TEAR, (ParticleEngine.SpriteParticleRegistration)(DripParticle.ObsidianTearFallProvider::new));
++      this.register(ParticleTypes.LANDING_OBSIDIAN_TEAR, (ParticleEngine.SpriteParticleRegistration)(DripParticle.ObsidianTearLandProvider::new));
++      this.register(ParticleTypes.REVERSE_PORTAL, (ParticleEngine.SpriteParticleRegistration)(ReversePortalParticle.ReversePortalProvider::new));
++      this.register(ParticleTypes.WHITE_ASH, (ParticleEngine.SpriteParticleRegistration)(WhiteAshParticle.Provider::new));
+    }
+ 
+    private <T extends ParticleOptions> void register(ParticleType<T> var1, ParticleProvider<T> var2) {
+       this.providers.put(Registry.PARTICLE_TYPE.getId(var1), var2);
+    }
+@@ -374,10 +384,11 @@
+          Iterable var8;
+          do {
+             if (!var6.hasNext()) {
+                RenderSystem.popMatrix();
+                RenderSystem.depthMask(true);
++               RenderSystem.depthFunc(515);
+                RenderSystem.disableBlend();
+                RenderSystem.defaultAlphaFunc();
+                var3.turnOffLightLayer();
+                RenderSystem.disableFog();
+                return;
+@@ -409,11 +420,11 @@
+ 
+          var7.end(var9);
+       }
+    }
+ 
+-   public void setLevel(@Nullable Level var1) {
++   public void setLevel(@Nullable ClientLevel var1) {
+       this.level = var1;
+       this.particles.clear();
+       this.trackingEmitters.clear();
+    }
+ 

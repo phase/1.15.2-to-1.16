@@ -1,0 +1,17 @@
+--- net/minecraft/server/packs/repository/PackCompatibility.java
++++ net/minecraft/server/packs/repository/PackCompatibility.java
+@@ -11,12 +11,12 @@
+ 
+    private final Component description;
+    private final Component confirmation;
+ 
+    private PackCompatibility(String var3) {
+-      this.description = new TranslatableComponent("resourcePack.incompatible." + var3, new Object[0]);
+-      this.confirmation = new TranslatableComponent("resourcePack.incompatible.confirm." + var3, new Object[0]);
++      this.description = new TranslatableComponent("resourcePack.incompatible." + var3);
++      this.confirmation = new TranslatableComponent("resourcePack.incompatible.confirm." + var3);
+    }
+ 
+    public boolean isCompatible() {
+       return this == COMPATIBLE;
+    }

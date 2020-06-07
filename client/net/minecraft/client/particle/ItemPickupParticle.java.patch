@@ -1,0 +1,49 @@
+--- net/minecraft/client/particle/ItemPickupParticle.java
++++ net/minecraft/client/particle/ItemPickupParticle.java
+@@ -1,37 +1,42 @@
+ package net.minecraft.client.particle;
+ 
+ import com.mojang.blaze3d.vertex.PoseStack;
+ import com.mojang.blaze3d.vertex.VertexConsumer;
+ import net.minecraft.client.Camera;
++import net.minecraft.client.multiplayer.ClientLevel;
+ import net.minecraft.client.renderer.MultiBufferSource;
+ import net.minecraft.client.renderer.RenderBuffers;
+ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
+-import net.minecraft.world.level.Level;
++import net.minecraft.world.entity.item.ItemEntity;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class ItemPickupParticle extends Particle {
+    private final RenderBuffers renderBuffers;
+    private final Entity itemEntity;
+    private final Entity target;
+    private int life;
+    private final EntityRenderDispatcher entityRenderDispatcher;
+ 
+-   public ItemPickupParticle(EntityRenderDispatcher var1, RenderBuffers var2, Level var3, Entity var4, Entity var5) {
++   public ItemPickupParticle(EntityRenderDispatcher var1, RenderBuffers var2, ClientLevel var3, Entity var4, Entity var5) {
+       this(var1, var2, var3, var4, var5, var4.getDeltaMovement());
+    }
+ 
+-   private ItemPickupParticle(EntityRenderDispatcher var1, RenderBuffers var2, Level var3, Entity var4, Entity var5, Vec3 var6) {
++   private ItemPickupParticle(EntityRenderDispatcher var1, RenderBuffers var2, ClientLevel var3, Entity var4, Entity var5, Vec3 var6) {
+       super(var3, var4.getX(), var4.getY(), var4.getZ(), var6.x, var6.y, var6.z);
+       this.renderBuffers = var2;
+-      this.itemEntity = var4;
++      this.itemEntity = this.getSafeCopy(var4);
+       this.target = var5;
+       this.entityRenderDispatcher = var1;
+    }
+ 
++   private Entity getSafeCopy(Entity var1) {
++      return (Entity)(!(var1 instanceof ItemEntity) ? var1 : ((ItemEntity)var1).copy());
++   }
++
+    public ParticleRenderType getRenderType() {
+       return ParticleRenderType.CUSTOM;
+    }
+ 
+    public void render(VertexConsumer var1, Camera var2, float var3) {

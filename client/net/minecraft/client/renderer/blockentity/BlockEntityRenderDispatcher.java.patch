@@ -1,0 +1,27 @@
+--- net/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher.java
++++ net/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher.java
+@@ -17,10 +17,11 @@
+ import net.minecraft.client.renderer.texture.TextureManager;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntityType;
+ import net.minecraft.world.phys.HitResult;
++import net.minecraft.world.phys.Vec3;
+ 
+ public class BlockEntityRenderDispatcher {
+    private final Map<BlockEntityType<?>, BlockEntityRenderer<?>> renderers = Maps.newHashMap();
+    public static final BlockEntityRenderDispatcher instance = new BlockEntityRenderDispatcher();
+    private final BufferBuilder singleRenderBuffer = new BufferBuilder(256);
+@@ -71,11 +72,11 @@
+       this.font = var3;
+       this.cameraHitResult = var5;
+    }
+ 
+    public <E extends BlockEntity> void render(E var1, float var2, PoseStack var3, MultiBufferSource var4) {
+-      if (var1.distanceToSqr(this.camera.getPosition().x, this.camera.getPosition().y, this.camera.getPosition().z) < var1.getViewDistance()) {
++      if (Vec3.atCenterOf(var1.getBlockPos()).closerThan(this.camera.getPosition(), var1.getViewDistance())) {
+          BlockEntityRenderer var5 = this.getRenderer(var1);
+          if (var5 != null) {
+             if (var1.hasLevel() && var1.getType().isValid(var1.getBlockState().getBlock())) {
+                tryRender(var1, () -> {
+                   setupAndRender(var5, var1, var2, var3, var4);

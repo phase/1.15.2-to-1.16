@@ -1,0 +1,140 @@
+--- net/minecraft/world/level/levelgen/feature/BasaltColumnsFeature.java
++++ net/minecraft/world/level/levelgen/feature/BasaltColumnsFeature.java
+@@ -1,0 +1,137 @@
++package net.minecraft.world.level.levelgen.feature;
++
++import com.google.common.collect.ImmutableList;
++import com.mojang.serialization.Codec;
++import java.util.Iterator;
++import java.util.Random;
++import javax.annotation.Nullable;
++import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
++import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.StructureFeatureManager;
++import net.minecraft.world.level.WorldGenLevel;
++import net.minecraft.world.level.block.Block;
++import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.chunk.ChunkGenerator;
++import net.minecraft.world.level.levelgen.feature.configurations.ColumnFeatureConfiguration;
++
++public class BasaltColumnsFeature extends Feature<ColumnFeatureConfiguration> {
++   private static final ImmutableList<Block> CANNOT_PLACE_ON;
++
++   public BasaltColumnsFeature(Codec<ColumnFeatureConfiguration> var1) {
++      super(var1);
++   }
++
++   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, ColumnFeatureConfiguration var6) {
++      int var7 = var3.getSeaLevel();
++      BlockPos var8 = findSurface(var1, var7, var5.mutable().clamp(Direction.Axis.Y, 1, var1.getMaxBuildHeight() - 1), Integer.MAX_VALUE);
++      if (var8 == null) {
++         return false;
++      } else {
++         int var9 = calculateHeight(var4, var6);
++         boolean var10 = var4.nextFloat() < 0.9F;
++         int var11 = Math.min(var9, var10 ? 5 : 8);
++         int var12 = var10 ? 50 : 15;
++         boolean var13 = false;
++         Iterator var14 = BlockPos.randomBetweenClosed(var4, var12, var8.getX() - var11, var8.getY(), var8.getZ() - var11, var8.getX() + var11, var8.getY(), var8.getZ() + var11).iterator();
++
++         while(var14.hasNext()) {
++            BlockPos var15 = (BlockPos)var14.next();
++            int var16 = var9 - var15.distManhattan(var8);
++            if (var16 >= 0) {
++               var13 |= this.placeColumn(var1, var7, var15, var16, calculateReach(var4, var6));
++            }
++         }
++
++         return var13;
++      }
++   }
++
++   private boolean placeColumn(LevelAccessor var1, int var2, BlockPos var3, int var4, int var5) {
++      boolean var6 = false;
++      Iterator var7 = BlockPos.betweenClosed(var3.getX() - var5, var3.getY(), var3.getZ() - var5, var3.getX() + var5, var3.getY(), var3.getZ() + var5).iterator();
++
++      while(true) {
++         int var9;
++         BlockPos var10;
++         do {
++            if (!var7.hasNext()) {
++               return var6;
++            }
++
++            BlockPos var8 = (BlockPos)var7.next();
++            var9 = var8.distManhattan(var3);
++            var10 = isAirOrLavaOcean(var1, var2, var8) ? findSurface(var1, var2, var8.mutable(), var9) : findAir(var1, var8.mutable(), var9);
++         } while(var10 == null);
++
++         int var11 = var4 - var9 / 2;
++
++         for(BlockPos.MutableBlockPos var12 = var10.mutable(); var11 >= 0; --var11) {
++            if (isAirOrLavaOcean(var1, var2, var12)) {
++               this.setBlock(var1, var12, Blocks.BASALT.defaultBlockState());
++               var12.move(Direction.UP);
++               var6 = true;
++            } else {
++               if (!var1.getBlockState(var12).is(Blocks.BASALT)) {
++                  break;
++               }
++
++               var12.move(Direction.UP);
++            }
++         }
++      }
++   }
++
++   @Nullable
++   private static BlockPos findSurface(LevelAccessor var0, int var1, BlockPos.MutableBlockPos var2, int var3) {
++      for(; var2.getY() > 1 && var3 > 0; var2.move(Direction.DOWN)) {
++         --var3;
++         if (isAirOrLavaOcean(var0, var1, var2)) {
++            BlockState var4 = var0.getBlockState(var2.move(Direction.DOWN));
++            var2.move(Direction.UP);
++            if (!var4.isAir() && !CANNOT_PLACE_ON.contains(var4.getBlock())) {
++               return var2;
++            }
++         }
++      }
++
++      return null;
++   }
++
++   @Nullable
++   private static BlockPos findAir(LevelAccessor var0, BlockPos.MutableBlockPos var1, int var2) {
++      while(var1.getY() < var0.getMaxBuildHeight() && var2 > 0) {
++         --var2;
++         BlockState var3 = var0.getBlockState(var1);
++         if (CANNOT_PLACE_ON.contains(var3.getBlock())) {
++            return null;
++         }
++
++         if (var3.isAir()) {
++            return var1;
++         }
++
++         var1.move(Direction.UP);
++      }
++
++      return null;
++   }
++
++   private static int calculateHeight(Random var0, ColumnFeatureConfiguration var1) {
++      return var1.minimumHeight + var0.nextInt(var1.maximumHeight - var1.minimumHeight + 1);
++   }
++
++   private static int calculateReach(Random var0, ColumnFeatureConfiguration var1) {
++      return var1.minimumReach + var0.nextInt(var1.maximumReach - var1.minimumReach + 1);
++   }
++
++   private static boolean isAirOrLavaOcean(LevelAccessor var0, int var1, BlockPos var2) {
++      BlockState var3 = var0.getBlockState(var2);
++      return var3.isAir() || var3.is(Blocks.LAVA) && var2.getY() <= var1;
++   }
++
++   static {
++      CANNOT_PLACE_ON = ImmutableList.of(Blocks.LAVA, Blocks.BEDROCK, Blocks.MAGMA_BLOCK, Blocks.SOUL_SAND, Blocks.NETHER_BRICKS, Blocks.NETHER_BRICK_FENCE, Blocks.NETHER_BRICK_STAIRS, Blocks.NETHER_WART, Blocks.CHEST, Blocks.SPAWNER);
++   }
++}

@@ -1,0 +1,95 @@
+--- net/minecraft/client/renderer/entity/EntityRenderDispatcher.java
++++ net/minecraft/client/renderer/entity/EntityRenderDispatcher.java
+@@ -45,11 +45,11 @@
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class EntityRenderDispatcher {
+-   private static final RenderType SHADOW_RENDER_TYPE = RenderType.entityNoOutline(new ResourceLocation("textures/misc/shadow.png"));
++   private static final RenderType SHADOW_RENDER_TYPE = RenderType.entityShadow(new ResourceLocation("textures/misc/shadow.png"));
+    private final Map<EntityType<?>, EntityRenderer<?>> renderers = Maps.newHashMap();
+    private final Map<String, PlayerRenderer> playerRenderers = Maps.newHashMap();
+    private final PlayerRenderer defaultPlayerRenderer;
+    private final Font font;
+    public final TextureManager textureManager;
+@@ -108,17 +108,18 @@
+       this.register(EntityType.FOX, new FoxRenderer(this));
+       this.register(EntityType.FURNACE_MINECART, new MinecartRenderer(this));
+       this.register(EntityType.GHAST, new GhastRenderer(this));
+       this.register(EntityType.GIANT, new GiantMobRenderer(this, 6.0F));
+       this.register(EntityType.GUARDIAN, new GuardianRenderer(this));
++      this.register(EntityType.HOGLIN, new HoglinRenderer(this));
+       this.register(EntityType.HOPPER_MINECART, new MinecartRenderer(this));
+       this.register(EntityType.HORSE, new HorseRenderer(this));
+       this.register(EntityType.HUSK, new HuskRenderer(this));
+       this.register(EntityType.ILLUSIONER, new IllusionerRenderer(this));
+       this.register(EntityType.IRON_GOLEM, new IronGolemRenderer(this));
+-      this.register(EntityType.ITEM_FRAME, new ItemFrameRenderer(this, var1));
+       this.register(EntityType.ITEM, new ItemEntityRenderer(this, var1));
++      this.register(EntityType.ITEM_FRAME, new ItemFrameRenderer(this, var1));
+       this.register(EntityType.LEASH_KNOT, new LeashKnotRenderer(this));
+       this.register(EntityType.LIGHTNING_BOLT, new LightningBoltRenderer(this));
+       this.register(EntityType.LLAMA, new LlamaRenderer(this));
+       this.register(EntityType.LLAMA_SPIT, new LlamaSpitRenderer(this));
+       this.register(EntityType.MAGMA_CUBE, new MagmaCubeRenderer(this));
+@@ -129,10 +130,11 @@
+       this.register(EntityType.PAINTING, new PaintingRenderer(this));
+       this.register(EntityType.PANDA, new PandaRenderer(this));
+       this.register(EntityType.PARROT, new ParrotRenderer(this));
+       this.register(EntityType.PHANTOM, new PhantomRenderer(this));
+       this.register(EntityType.PIG, new PigRenderer(this));
++      this.register(EntityType.PIGLIN, new PiglinRenderer(this, false));
+       this.register(EntityType.PILLAGER, new PillagerRenderer(this));
+       this.register(EntityType.POLAR_BEAR, new PolarBearRenderer(this));
+       this.register(EntityType.POTION, new ThrownItemRenderer(this, var1));
+       this.register(EntityType.PUFFERFISH, new PufferfishRenderer(this));
+       this.register(EntityType.RABBIT, new RabbitRenderer(this));
+@@ -166,14 +168,16 @@
+       this.register(EntityType.WITCH, new WitchRenderer(this));
+       this.register(EntityType.WITHER, new WitherBossRenderer(this));
+       this.register(EntityType.WITHER_SKELETON, new WitherSkeletonRenderer(this));
+       this.register(EntityType.WITHER_SKULL, new WitherSkullRenderer(this));
+       this.register(EntityType.WOLF, new WolfRenderer(this));
++      this.register(EntityType.ZOGLIN, new ZoglinRenderer(this));
+       this.register(EntityType.ZOMBIE_HORSE, new UndeadHorseRenderer(this));
+       this.register(EntityType.ZOMBIE, new ZombieRenderer(this));
+-      this.register(EntityType.ZOMBIE_PIGMAN, new PigZombieRenderer(this));
++      this.register(EntityType.ZOMBIFIED_PIGLIN, new PiglinRenderer(this, true));
+       this.register(EntityType.ZOMBIE_VILLAGER, new ZombieVillagerRenderer(this, var2));
++      this.register(EntityType.STRIDER, new StriderRenderer(this));
+    }
+ 
+    public EntityRenderDispatcher(TextureManager var1, ItemRenderer var2, ReloadableResourceManager var3, Font var4, Options var5) {
+       this.textureManager = var1;
+       this.font = var4;
+@@ -278,13 +282,13 @@
+ 
+    private void renderHitbox(PoseStack var1, VertexConsumer var2, Entity var3, float var4) {
+       float var5 = var3.getBbWidth() / 2.0F;
+       this.renderBox(var1, var2, var3, 1.0F, 1.0F, 1.0F);
+       if (var3 instanceof EnderDragon) {
+-         double var6 = var3.getX() - Mth.lerp((double)var4, var3.xOld, var3.getX());
+-         double var8 = var3.getY() - Mth.lerp((double)var4, var3.yOld, var3.getY());
+-         double var10 = var3.getZ() - Mth.lerp((double)var4, var3.zOld, var3.getZ());
++         double var6 = -Mth.lerp((double)var4, var3.xOld, var3.getX());
++         double var8 = -Mth.lerp((double)var4, var3.yOld, var3.getY());
++         double var10 = -Mth.lerp((double)var4, var3.zOld, var3.getZ());
+          EnderDragonPart[] var12 = ((EnderDragon)var3).getSubEntities();
+          int var13 = var12.length;
+ 
+          for(int var14 = 0; var14 < var13; ++var14) {
+             EnderDragonPart var15 = var12[var14];
+@@ -407,11 +411,11 @@
+                   double var21 = (double)var3.getY() + var16.minY;
+                   double var23 = (double)var3.getZ() + var16.minZ;
+                   double var25 = (double)var3.getZ() + var16.maxZ;
+                   float var27 = (float)(var17 - var4);
+                   float var28 = (float)(var19 - var4);
+-                  float var29 = (float)(var21 - var6 + 0.015625D);
++                  float var29 = (float)(var21 - var6);
+                   float var30 = (float)(var23 - var8);
+                   float var31 = (float)(var25 - var8);
+                   float var32 = -var27 / 2.0F / var10 + 0.5F;
+                   float var33 = -var28 / 2.0F / var10 + 0.5F;
+                   float var34 = -var30 / 2.0F / var10 + 0.5F;

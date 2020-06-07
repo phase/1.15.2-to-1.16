@@ -1,0 +1,28 @@
+--- net/minecraft/commands/arguments/blocks/BlockInput.java
++++ net/minecraft/commands/arguments/blocks/BlockInput.java
+@@ -29,11 +29,11 @@
+       return this.state;
+    }
+ 
+    public boolean test(BlockInWorld var1) {
+       BlockState var2 = var1.getState();
+-      if (var2.getBlock() != this.state.getBlock()) {
++      if (!var2.is(this.state.getBlock())) {
+          return false;
+       } else {
+          Iterator var3 = this.properties.iterator();
+ 
+          while(var3.hasNext()) {
+@@ -61,11 +61,11 @@
+             if (var4 != null) {
+                CompoundTag var5 = this.tag.copy();
+                var5.putInt("x", var2.getX());
+                var5.putInt("y", var2.getY());
+                var5.putInt("z", var2.getZ());
+-               var4.load(var5);
++               var4.load(this.state, var5);
+             }
+          }
+ 
+          return true;
+       }

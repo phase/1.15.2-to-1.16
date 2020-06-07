@@ -1,0 +1,142 @@
+--- net/minecraft/world/item/MapItem.java
++++ net/minecraft/world/item/MapItem.java
+@@ -4,13 +4,13 @@
+ import com.google.common.collect.LinkedHashMultiset;
+ import com.google.common.collect.Multisets;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+-import net.minecraft.core.Vec3i;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.protocol.Packet;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.tags.BlockTags;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.Entity;
+@@ -19,11 +19,10 @@
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.chunk.LevelChunk;
+-import net.minecraft.world.level.dimension.DimensionType;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.level.material.FluidState;
+ import net.minecraft.world.level.material.MaterialColor;
+ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+ 
+@@ -32,11 +31,11 @@
+       super(var1);
+    }
+ 
+    public static ItemStack create(Level var0, int var1, int var2, byte var3, boolean var4, boolean var5) {
+       ItemStack var6 = new ItemStack(Items.FILLED_MAP);
+-      createAndStoreSavedData(var6, var0, var1, var2, var3, var4, var5, var0.dimension.getType());
++      createAndStoreSavedData(var6, var0, var1, var2, var3, var4, var5, var0.dimension());
+       return var6;
+    }
+ 
+    @Nullable
+    public static MapItemSavedData getSavedData(ItemStack var0, Level var1) {
+@@ -44,23 +43,23 @@
+    }
+ 
+    @Nullable
+    public static MapItemSavedData getOrCreateSavedData(ItemStack var0, Level var1) {
+       MapItemSavedData var2 = getSavedData(var0, var1);
+-      if (var2 == null && !var1.isClientSide) {
+-         var2 = createAndStoreSavedData(var0, var1, var1.getLevelData().getXSpawn(), var1.getLevelData().getZSpawn(), 3, false, false, var1.dimension.getType());
++      if (var2 == null && var1 instanceof ServerLevel) {
++         var2 = createAndStoreSavedData(var0, var1, var1.getLevelData().getXSpawn(), var1.getLevelData().getZSpawn(), 3, false, false, var1.dimension());
+       }
+ 
+       return var2;
+    }
+ 
+    public static int getMapId(ItemStack var0) {
+       CompoundTag var1 = var0.getTag();
+       return var1 != null && var1.contains("map", 99) ? var1.getInt("map") : 0;
+    }
+ 
+-   private static MapItemSavedData createAndStoreSavedData(ItemStack var0, Level var1, int var2, int var3, int var4, boolean var5, boolean var6, DimensionType var7) {
++   private static MapItemSavedData createAndStoreSavedData(ItemStack var0, Level var1, int var2, int var3, int var4, boolean var5, boolean var6, ResourceKey<Level> var7) {
+       int var8 = var1.getFreeMapId();
+       MapItemSavedData var9 = new MapItemSavedData(makeKey(var8));
+       var9.setProperties(var2, var3, var4, var5, var6, var7);
+       var1.setMapData(var9);
+       var0.getOrCreateTag().putInt("map", var8);
+@@ -70,18 +69,18 @@
+    public static String makeKey(int var0) {
+       return "map_" + var0;
+    }
+ 
+    public void update(Level var1, Entity var2, MapItemSavedData var3) {
+-      if (var1.dimension.getType() == var3.dimension && var2 instanceof Player) {
++      if (var1.dimension() == var3.dimension && var2 instanceof Player) {
+          int var4 = 1 << var3.scale;
+          int var5 = var3.x;
+          int var6 = var3.z;
+          int var7 = Mth.floor(var2.getX() - (double)var5) / var4 + 64;
+          int var8 = Mth.floor(var2.getZ() - (double)var6) / var4 + 64;
+          int var9 = 128 / var4;
+-         if (var1.dimension.isHasCeiling()) {
++         if (var1.dimensionType().hasCeiling()) {
+             var9 /= 2;
+          }
+ 
+          MapItemSavedData.HoldingPlayer var10 = var3.getHoldingPlayer((Player)var2);
+          ++var10.step;
+@@ -105,11 +104,11 @@
+                         ChunkPos var23 = var22.getPos();
+                         int var24 = var19 & 15;
+                         int var25 = var20 & 15;
+                         int var26 = 0;
+                         double var27 = 0.0D;
+-                        if (var1.dimension.isHasCeiling()) {
++                        if (var1.dimensionType().hasCeiling()) {
+                            int var29 = var19 + var20 * 231871;
+                            var29 = var29 * var29 * 31287121 + var29 * 11;
+                            if ((var29 >> 20 & 1) == 0) {
+                               var21.add(Blocks.DIRT.defaultBlockState().getMapColor(var1, BlockPos.ZERO), 10);
+                            } else {
+@@ -134,11 +133,11 @@
+                                        var34 = var22.getBlockState(var37);
+                                     } while(var34.getMapColor(var1, var37) == MaterialColor.NONE && var33 > 0);
+ 
+                                     if (var33 > 0 && !var34.getFluidState().isEmpty()) {
+                                        int var35 = var33 - 1;
+-                                       var30.set((Vec3i)var37);
++                                       var30.set(var37);
+ 
+                                        BlockState var36;
+                                        do {
+                                           var30.setY(var35--);
+                                           var36 = var22.getBlockState(var30);
+@@ -209,11 +208,11 @@
+    }
+ 
+    public static void renderBiomePreviewMap(ServerLevel var0, ItemStack var1) {
+       MapItemSavedData var2 = getOrCreateSavedData(var1, var0);
+       if (var2 != null) {
+-         if (var0.dimension.getType() == var2.dimension) {
++         if (var0.dimension() == var2.dimension) {
+             int var3 = 1 << var2.scale;
+             int var4 = var2.x;
+             int var5 = var2.z;
+             Biome[] var6 = new Biome[128 * var3 * 128 * var3];
+ 
+@@ -361,11 +360,11 @@
+          if (!var1.level.isClientSide) {
+             MapItemSavedData var3 = getOrCreateSavedData(var1.getItemInHand(), var1.getLevel());
+             var3.toggleBanner(var1.getLevel(), var1.getClickedPos());
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var1.level.isClientSide);
+       } else {
+          return super.useOn(var1);
+       }
+    }
+ }

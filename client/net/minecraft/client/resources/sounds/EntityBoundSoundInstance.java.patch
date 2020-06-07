@@ -1,0 +1,21 @@
+--- net/minecraft/client/resources/sounds/EntityBoundSoundInstance.java
++++ net/minecraft/client/resources/sounds/EntityBoundSoundInstance.java
+@@ -19,13 +19,17 @@
+       this.x = (float)this.entity.getX();
+       this.y = (float)this.entity.getY();
+       this.z = (float)this.entity.getZ();
+    }
+ 
++   public boolean canPlaySound() {
++      return !this.entity.isSilent();
++   }
++
+    public void tick() {
+       if (this.entity.removed) {
+-         this.stopped = true;
++         this.stop();
+       } else {
+          this.x = (float)this.entity.getX();
+          this.y = (float)this.entity.getY();
+          this.z = (float)this.entity.getZ();
+       }

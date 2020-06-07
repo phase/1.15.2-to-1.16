@@ -1,0 +1,54 @@
+--- net/minecraft/network/protocol/game/ClientboundSetPlayerTeamPacket.java
++++ net/minecraft/network/protocol/game/ClientboundSetPlayerTeamPacket.java
+@@ -12,28 +12,34 @@
+ import net.minecraft.world.scores.PlayerTeam;
+ import net.minecraft.world.scores.Team;
+ 
+ public class ClientboundSetPlayerTeamPacket implements Packet<ClientGamePacketListener> {
+    private String name = "";
+-   private Component displayName = new TextComponent("");
+-   private Component playerPrefix = new TextComponent("");
+-   private Component playerSuffix = new TextComponent("");
++   private Component displayName;
++   private Component playerPrefix;
++   private Component playerSuffix;
+    private String nametagVisibility;
+    private String collisionRule;
+    private ChatFormatting color;
+    private final Collection<String> players;
+    private int method;
+    private int options;
+ 
+    public ClientboundSetPlayerTeamPacket() {
++      this.displayName = TextComponent.EMPTY;
++      this.playerPrefix = TextComponent.EMPTY;
++      this.playerSuffix = TextComponent.EMPTY;
+       this.nametagVisibility = Team.Visibility.ALWAYS.name;
+       this.collisionRule = Team.CollisionRule.ALWAYS.name;
+       this.color = ChatFormatting.RESET;
+       this.players = Lists.newArrayList();
+    }
+ 
+    public ClientboundSetPlayerTeamPacket(PlayerTeam var1, int var2) {
++      this.displayName = TextComponent.EMPTY;
++      this.playerPrefix = TextComponent.EMPTY;
++      this.playerSuffix = TextComponent.EMPTY;
+       this.nametagVisibility = Team.Visibility.ALWAYS.name;
+       this.collisionRule = Team.CollisionRule.ALWAYS.name;
+       this.color = ChatFormatting.RESET;
+       this.players = Lists.newArrayList();
+       this.name = var1.getName();
+@@ -53,10 +59,13 @@
+       }
+ 
+    }
+ 
+    public ClientboundSetPlayerTeamPacket(PlayerTeam var1, Collection<String> var2, int var3) {
++      this.displayName = TextComponent.EMPTY;
++      this.playerPrefix = TextComponent.EMPTY;
++      this.playerSuffix = TextComponent.EMPTY;
+       this.nametagVisibility = Team.Visibility.ALWAYS.name;
+       this.collisionRule = Team.CollisionRule.ALWAYS.name;
+       this.color = ChatFormatting.RESET;
+       this.players = Lists.newArrayList();
+       if (var3 != 3 && var3 != 4) {

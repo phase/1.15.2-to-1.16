@@ -1,0 +1,13 @@
+--- net/minecraft/world/entity/ai/goal/target/NearestAttackableTargetGoal.java
++++ net/minecraft/world/entity/ai/goal/target/NearestAttackableTargetGoal.java
+@@ -57,6 +57,10 @@
+ 
+    public void start() {
+       this.mob.setTarget(this.target);
+       super.start();
+    }
++
++   public void setTarget(@Nullable LivingEntity var1) {
++      this.target = var1;
++   }
+ }

@@ -1,0 +1,53 @@
+--- net/minecraft/world/level/block/LeverBlock.java
++++ net/minecraft/world/level/block/LeverBlock.java
+@@ -9,10 +9,11 @@
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.AttachFace;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+@@ -29,11 +30,11 @@
+    protected static final VoxelShape UP_AABB_Z;
+    protected static final VoxelShape UP_AABB_X;
+    protected static final VoxelShape DOWN_AABB_Z;
+    protected static final VoxelShape DOWN_AABB_X;
+ 
+-   protected LeverBlock(Block.Properties var1) {
++   protected LeverBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(POWERED, false)).setValue(FACE, AttachFace.WALL));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+@@ -81,11 +82,11 @@
+          return InteractionResult.SUCCESS;
+       } else {
+          var7 = this.pull(var1, var2, var3);
+          float var8 = (Boolean)var7.getValue(POWERED) ? 0.6F : 0.5F;
+          var2.playSound((Player)null, (BlockPos)var3, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.3F, var8);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    public BlockState pull(BlockState var1, Level var2, BlockPos var3) {
+       var1 = (BlockState)var1.cycle(POWERED);
+@@ -102,11 +103,11 @@
+       double var10 = (double)var2.getZ() + 0.5D + 0.1D * (double)var4.getStepZ() + 0.2D * (double)var5.getStepZ();
+       var1.addParticle(new DustParticleOptions(1.0F, 0.0F, 0.0F, var3), var6, var8, var10, 0.0D, 0.0D, 0.0D);
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (!var5 && var1.getBlock() != var4.getBlock()) {
++      if (!var5 && !var1.is(var4.getBlock())) {
+          if ((Boolean)var1.getValue(POWERED)) {
+             this.updateNeighbours(var1, var2, var3);
+          }
+ 
+          super.onRemove(var1, var2, var3, var4, var5);

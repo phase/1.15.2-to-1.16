@@ -1,0 +1,40 @@
+--- net/minecraft/world/level/block/NoteBlock.java
++++ net/minecraft/world/level/block/NoteBlock.java
+@@ -9,10 +9,11 @@
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.EnumProperty;
+@@ -23,11 +24,11 @@
+ public class NoteBlock extends Block {
+    public static final EnumProperty<NoteBlockInstrument> INSTRUMENT;
+    public static final BooleanProperty POWERED;
+    public static final IntegerProperty NOTE;
+ 
+-   public NoteBlock(Block.Properties var1) {
++   public NoteBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(INSTRUMENT, NoteBlockInstrument.HARP)).setValue(NOTE, 0)).setValue(POWERED, false));
+    }
+ 
+    public BlockState getStateForPlacement(BlockPlaceContext var1) {
+@@ -63,11 +64,11 @@
+       } else {
+          var1 = (BlockState)var1.cycle(NOTE);
+          var2.setBlock(var3, var1, 3);
+          this.playNote(var2, var3);
+          var4.awardStat(Stats.TUNE_NOTEBLOCK);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    public void attack(BlockState var1, Level var2, BlockPos var3, Player var4) {
+       if (!var2.isClientSide) {

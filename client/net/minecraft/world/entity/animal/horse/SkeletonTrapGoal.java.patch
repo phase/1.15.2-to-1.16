@@ -1,0 +1,24 @@
+--- net/minecraft/world/entity/animal/horse/SkeletonTrapGoal.java
++++ net/minecraft/world/entity/animal/horse/SkeletonTrapGoal.java
+@@ -1,8 +1,7 @@
+ package net.minecraft.world.entity.animal.horse;
+ 
+-import net.minecraft.core.BlockPos;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.DifficultyInstance;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.EquipmentSlot;
+@@ -25,11 +24,11 @@
+    public boolean canUse() {
+       return this.horse.level.hasNearbyAlivePlayer(this.horse.getX(), this.horse.getY(), this.horse.getZ(), 10.0D);
+    }
+ 
+    public void tick() {
+-      DifficultyInstance var1 = this.horse.level.getCurrentDifficultyAt(new BlockPos(this.horse));
++      DifficultyInstance var1 = this.horse.level.getCurrentDifficultyAt(this.horse.blockPosition());
+       this.horse.setTrap(false);
+       this.horse.setTamed(true);
+       this.horse.setAge(0);
+       ((ServerLevel)this.horse.level).addGlobalEntity(new LightningBolt(this.horse.level, this.horse.getX(), this.horse.getY(), this.horse.getZ(), true));
+       Skeleton var2 = this.createSkeleton(var1, this.horse);

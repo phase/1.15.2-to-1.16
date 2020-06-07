@@ -1,0 +1,78 @@
+--- net/minecraft/world/level/block/DispenserBlock.java
++++ net/minecraft/world/level/block/DispenserBlock.java
+@@ -25,14 +25,14 @@
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.ItemLike;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelReader;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.DispenserBlockEntity;
+ import net.minecraft.world.level.block.entity.DropperBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+@@ -45,19 +45,15 @@
+ 
+    public static void registerBehavior(ItemLike var0, DispenseItemBehavior var1) {
+       DISPENSER_REGISTRY.put(var0.asItem(), var1);
+    }
+ 
+-   protected DispenserBlock(Block.Properties var1) {
++   protected DispenserBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(TRIGGERED, false));
+    }
+ 
+-   public int getTickDelay(LevelReader var1) {
+-      return 4;
+-   }
+-
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
+       if (var2.isClientSide) {
+          return InteractionResult.SUCCESS;
+       } else {
+          BlockEntity var7 = var2.getBlockEntity(var3);
+@@ -68,11 +64,11 @@
+             } else {
+                var4.awardStat(Stats.INSPECT_DISPENSER);
+             }
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    protected void dispenseFrom(Level var1, BlockPos var2) {
+       BlockSourceImpl var3 = new BlockSourceImpl(var1, var2);
+@@ -96,11 +92,11 @@
+ 
+    public void neighborChanged(BlockState var1, Level var2, BlockPos var3, Block var4, BlockPos var5, boolean var6) {
+       boolean var7 = var2.hasNeighborSignal(var3) || var2.hasNeighborSignal(var3.above());
+       boolean var8 = (Boolean)var1.getValue(TRIGGERED);
+       if (var7 && !var8) {
+-         var2.getBlockTicks().scheduleTick(var3, this, this.getTickDelay(var2));
++         var2.getBlockTicks().scheduleTick(var3, this, 4);
+          var2.setBlock(var3, (BlockState)var1.setValue(TRIGGERED, true), 4);
+       } else if (!var7 && var8) {
+          var2.setBlock(var3, (BlockState)var1.setValue(TRIGGERED, false), 4);
+       }
+ 
+@@ -127,11 +123,11 @@
+       }
+ 
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var4.getBlock()) {
++      if (!var1.is(var4.getBlock())) {
+          BlockEntity var6 = var2.getBlockEntity(var3);
+          if (var6 instanceof DispenserBlockEntity) {
+             Containers.dropContents(var2, (BlockPos)var3, (Container)((DispenserBlockEntity)var6));
+             var2.updateNeighbourForOutputSignal(var3, this);
+          }

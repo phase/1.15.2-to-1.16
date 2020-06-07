@@ -1,0 +1,88 @@
+--- net/minecraft/stats/ServerRecipeBook.java
++++ net/minecraft/stats/ServerRecipeBook.java
+@@ -21,14 +21,12 @@
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class ServerRecipeBook extends RecipeBook {
+    private static final Logger LOGGER = LogManager.getLogger();
+-   private final RecipeManager manager;
+ 
+-   public ServerRecipeBook(RecipeManager var1) {
+-      this.manager = var1;
++   public ServerRecipeBook() {
+    }
+ 
+    public int addRecipes(Collection<Recipe<?>> var1, ServerPlayer var2) {
+       ArrayList var3 = Lists.newArrayList();
+       int var4 = 0;
+@@ -77,10 +75,14 @@
+       CompoundTag var1 = new CompoundTag();
+       var1.putBoolean("isGuiOpen", this.guiOpen);
+       var1.putBoolean("isFilteringCraftable", this.filteringCraftable);
+       var1.putBoolean("isFurnaceGuiOpen", this.furnaceGuiOpen);
+       var1.putBoolean("isFurnaceFilteringCraftable", this.furnaceFilteringCraftable);
++      var1.putBoolean("isBlastingFurnaceGuiOpen", this.blastingFurnaceGuiOpen);
++      var1.putBoolean("isBlastingFurnaceFilteringCraftable", this.blastingFurnaceFilteringCraftable);
++      var1.putBoolean("isSmokerGuiOpen", this.smokerGuiOpen);
++      var1.putBoolean("isSmokerFilteringCraftable", this.smokerFilteringCraftable);
+       ListTag var2 = new ListTag();
+       Iterator var3 = this.known.iterator();
+ 
+       while(var3.hasNext()) {
+          ResourceLocation var4 = (ResourceLocation)var3.next();
+@@ -98,35 +100,39 @@
+ 
+       var1.put("toBeDisplayed", var6);
+       return var1;
+    }
+ 
+-   public void fromNbt(CompoundTag var1) {
++   public void fromNbt(CompoundTag var1, RecipeManager var2) {
+       this.guiOpen = var1.getBoolean("isGuiOpen");
+       this.filteringCraftable = var1.getBoolean("isFilteringCraftable");
+       this.furnaceGuiOpen = var1.getBoolean("isFurnaceGuiOpen");
+       this.furnaceFilteringCraftable = var1.getBoolean("isFurnaceFilteringCraftable");
+-      ListTag var2 = var1.getList("recipes", 8);
+-      this.loadRecipes(var2, this::add);
+-      ListTag var3 = var1.getList("toBeDisplayed", 8);
+-      this.loadRecipes(var3, this::addHighlight);
++      this.blastingFurnaceGuiOpen = var1.getBoolean("isBlastingFurnaceGuiOpen");
++      this.blastingFurnaceFilteringCraftable = var1.getBoolean("isBlastingFurnaceFilteringCraftable");
++      this.smokerGuiOpen = var1.getBoolean("isSmokerGuiOpen");
++      this.smokerFilteringCraftable = var1.getBoolean("isSmokerFilteringCraftable");
++      ListTag var3 = var1.getList("recipes", 8);
++      this.loadRecipes(var3, this::add, var2);
++      ListTag var4 = var1.getList("toBeDisplayed", 8);
++      this.loadRecipes(var4, this::addHighlight, var2);
+    }
+ 
+-   private void loadRecipes(ListTag var1, Consumer<Recipe<?>> var2) {
+-      for(int var3 = 0; var3 < var1.size(); ++var3) {
+-         String var4 = var1.getString(var3);
++   private void loadRecipes(ListTag var1, Consumer<Recipe<?>> var2, RecipeManager var3) {
++      for(int var4 = 0; var4 < var1.size(); ++var4) {
++         String var5 = var1.getString(var4);
+ 
+          try {
+-            ResourceLocation var5 = new ResourceLocation(var4);
+-            Optional var6 = this.manager.byKey(var5);
+-            if (!var6.isPresent()) {
+-               LOGGER.error("Tried to load unrecognized recipe: {} removed now.", var5);
++            ResourceLocation var6 = new ResourceLocation(var5);
++            Optional var7 = var3.byKey(var6);
++            if (!var7.isPresent()) {
++               LOGGER.error("Tried to load unrecognized recipe: {} removed now.", var6);
+             } else {
+-               var2.accept(var6.get());
++               var2.accept(var7.get());
+             }
+-         } catch (ResourceLocationException var7) {
+-            LOGGER.error("Tried to load improperly formatted recipe: {} removed now.", var4);
++         } catch (ResourceLocationException var8) {
++            LOGGER.error("Tried to load improperly formatted recipe: {} removed now.", var5);
+          }
+       }
+ 
+    }
+ 

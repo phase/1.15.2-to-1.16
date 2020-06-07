@@ -1,0 +1,33 @@
+--- net/minecraft/world/level/chunk/HashMapPalette.java
++++ net/minecraft/world/level/chunk/HashMapPalette.java
+@@ -1,8 +1,9 @@
+ package net.minecraft.world.level.chunk;
+ 
+ import java.util.function.Function;
++import java.util.function.Predicate;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.IdMapper;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.ListTag;
+ import net.minecraft.network.FriendlyByteBuf;
+@@ -35,12 +36,18 @@
+       }
+ 
+       return var2;
+    }
+ 
+-   public boolean maybeHas(T var1) {
+-      return this.values.getId(var1) != -1;
++   public boolean maybeHas(Predicate<T> var1) {
++      for(int var2 = 0; var2 < this.getSize(); ++var2) {
++         if (var1.test(this.values.byId(var2))) {
++            return true;
++         }
++      }
++
++      return false;
+    }
+ 
+    @Nullable
+    public T valueFor(int var1) {
+       return this.values.byId(var1);

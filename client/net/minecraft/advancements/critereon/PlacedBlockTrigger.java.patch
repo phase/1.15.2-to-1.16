@@ -1,0 +1,114 @@
+--- net/minecraft/advancements/critereon/PlacedBlockTrigger.java
++++ net/minecraft/advancements/critereon/PlacedBlockTrigger.java
+@@ -1,9 +1,7 @@
+ package net.minecraft.advancements.critereon;
+ 
+-import com.google.gson.JsonDeserializationContext;
+-import com.google.gson.JsonElement;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSyntaxException;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Registry;
+@@ -23,22 +21,22 @@
+ 
+    public ResourceLocation getId() {
+       return ID;
+    }
+ 
+-   public PlacedBlockTrigger.TriggerInstance createInstance(JsonObject var1, JsonDeserializationContext var2) {
+-      Block var3 = deserializeBlock(var1);
+-      StatePropertiesPredicate var4 = StatePropertiesPredicate.fromJson(var1.get("state"));
+-      if (var3 != null) {
+-         var4.checkState(var3.getStateDefinition(), (var1x) -> {
+-            throw new JsonSyntaxException("Block " + var3 + " has no property " + var1x + ":");
++   public PlacedBlockTrigger.TriggerInstance createInstance(JsonObject var1, EntityPredicate.Composite var2, DeserializationContext var3) {
++      Block var4 = deserializeBlock(var1);
++      StatePropertiesPredicate var5 = StatePropertiesPredicate.fromJson(var1.get("state"));
++      if (var4 != null) {
++         var5.checkState(var4.getStateDefinition(), (var1x) -> {
++            throw new JsonSyntaxException("Block " + var4 + " has no property " + var1x + ":");
+          });
+       }
+ 
+-      LocationPredicate var5 = LocationPredicate.fromJson(var1.get("location"));
+-      ItemPredicate var6 = ItemPredicate.fromJson(var1.get("item"));
+-      return new PlacedBlockTrigger.TriggerInstance(var3, var4, var5, var6);
++      LocationPredicate var6 = LocationPredicate.fromJson(var1.get("location"));
++      ItemPredicate var7 = ItemPredicate.fromJson(var1.get("item"));
++      return new PlacedBlockTrigger.TriggerInstance(var2, var4, var5, var6, var7);
+    }
+ 
+    @Nullable
+    private static Block deserializeBlock(JsonObject var0) {
+       if (var0.has("block")) {
+@@ -51,53 +49,53 @@
+       }
+    }
+ 
+    public void trigger(ServerPlayer var1, BlockPos var2, ItemStack var3) {
+       BlockState var4 = var1.getLevel().getBlockState(var2);
+-      this.trigger(var1.getAdvancements(), (var4x) -> {
++      this.trigger(var1, (var4x) -> {
+          return var4x.matches(var4, var2, var1.getLevel(), var3);
+       });
+    }
+ 
+    public static class TriggerInstance extends AbstractCriterionTriggerInstance {
+       private final Block block;
+       private final StatePropertiesPredicate state;
+       private final LocationPredicate location;
+       private final ItemPredicate item;
+ 
+-      public TriggerInstance(@Nullable Block var1, StatePropertiesPredicate var2, LocationPredicate var3, ItemPredicate var4) {
+-         super(PlacedBlockTrigger.ID);
+-         this.block = var1;
+-         this.state = var2;
+-         this.location = var3;
+-         this.item = var4;
++      public TriggerInstance(EntityPredicate.Composite var1, @Nullable Block var2, StatePropertiesPredicate var3, LocationPredicate var4, ItemPredicate var5) {
++         super(PlacedBlockTrigger.ID, var1);
++         this.block = var2;
++         this.state = var3;
++         this.location = var4;
++         this.item = var5;
+       }
+ 
+       public static PlacedBlockTrigger.TriggerInstance placedBlock(Block var0) {
+-         return new PlacedBlockTrigger.TriggerInstance(var0, StatePropertiesPredicate.ANY, LocationPredicate.ANY, ItemPredicate.ANY);
++         return new PlacedBlockTrigger.TriggerInstance(EntityPredicate.Composite.ANY, var0, StatePropertiesPredicate.ANY, LocationPredicate.ANY, ItemPredicate.ANY);
+       }
+ 
+       public boolean matches(BlockState var1, BlockPos var2, ServerLevel var3, ItemStack var4) {
+-         if (this.block != null && var1.getBlock() != this.block) {
++         if (this.block != null && !var1.is(this.block)) {
+             return false;
+          } else if (!this.state.matches(var1)) {
+             return false;
+          } else if (!this.location.matches(var3, (float)var2.getX(), (float)var2.getY(), (float)var2.getZ())) {
+             return false;
+          } else {
+             return this.item.matches(var4);
+          }
+       }
+ 
+-      public JsonElement serializeToJson() {
+-         JsonObject var1 = new JsonObject();
++      public JsonObject serializeToJson(SerializationContext var1) {
++         JsonObject var2 = super.serializeToJson(var1);
+          if (this.block != null) {
+-            var1.addProperty("block", Registry.BLOCK.getKey(this.block).toString());
++            var2.addProperty("block", Registry.BLOCK.getKey(this.block).toString());
+          }
+ 
+-         var1.add("state", this.state.serializeToJson());
+-         var1.add("location", this.location.serializeToJson());
+-         var1.add("item", this.item.serializeToJson());
+-         return var1;
++         var2.add("state", this.state.serializeToJson());
++         var2.add("location", this.location.serializeToJson());
++         var2.add("item", this.item.serializeToJson());
++         return var2;
+       }
+    }
+ }

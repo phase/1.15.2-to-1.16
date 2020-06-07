@@ -1,0 +1,36 @@
+--- net/minecraft/world/level/levelgen/synth/PerlinNoise.java
++++ net/minecraft/world/level/levelgen/synth/PerlinNoise.java
+@@ -1,24 +1,30 @@
+ package net.minecraft.world.level.levelgen.synth;
+ 
++import com.google.common.collect.ImmutableList;
+ import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
+ import it.unimi.dsi.fastutil.ints.IntSortedSet;
++import java.util.List;
+ import java.util.stream.IntStream;
+ import javax.annotation.Nullable;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.level.levelgen.WorldgenRandom;
+ 
+ public class PerlinNoise implements SurfaceNoise {
+    private final ImprovedNoise[] noiseLevels;
+    private final double highestFreqValueFactor;
+    private final double highestFreqInputFactor;
+ 
+-   public PerlinNoise(WorldgenRandom var1, int var2, int var3) {
+-      this(var1, new IntRBTreeSet(IntStream.rangeClosed(-var2, var3).toArray()));
++   public PerlinNoise(WorldgenRandom var1, IntStream var2) {
++      this(var1, (List)var2.boxed().collect(ImmutableList.toImmutableList()));
+    }
+ 
+-   public PerlinNoise(WorldgenRandom var1, IntSortedSet var2) {
++   public PerlinNoise(WorldgenRandom var1, List<Integer> var2) {
++      this(var1, (IntSortedSet)(new IntRBTreeSet(var2)));
++   }
++
++   private PerlinNoise(WorldgenRandom var1, IntSortedSet var2) {
+       if (var2.isEmpty()) {
+          throw new IllegalArgumentException("Need some octaves!");
+       } else {
+          int var3 = -var2.firstInt();
+          int var4 = var2.lastInt();

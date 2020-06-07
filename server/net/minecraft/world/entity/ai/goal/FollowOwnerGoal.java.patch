@@ -1,0 +1,63 @@
+--- net/minecraft/world/entity/ai/goal/FollowOwnerGoal.java
++++ net/minecraft/world/entity/ai/goal/FollowOwnerGoal.java
+@@ -44,11 +44,11 @@
+       LivingEntity var1 = this.tamable.getOwner();
+       if (var1 == null) {
+          return false;
+       } else if (var1.isSpectator()) {
+          return false;
+-      } else if (this.tamable.isSitting()) {
++      } else if (this.tamable.isOrderedToSit()) {
+          return false;
+       } else if (this.tamable.distanceToSqr(var1) < (double)(this.startDistance * this.startDistance)) {
+          return false;
+       } else {
+          this.owner = var1;
+@@ -57,11 +57,11 @@
+    }
+ 
+    public boolean canContinueToUse() {
+       if (this.navigation.isDone()) {
+          return false;
+-      } else if (this.tamable.isSitting()) {
++      } else if (this.tamable.isOrderedToSit()) {
+          return false;
+       } else {
+          return this.tamable.distanceToSqr(this.owner) > (double)(this.stopDistance * this.stopDistance);
+       }
+    }
+@@ -92,11 +92,11 @@
+          }
+       }
+    }
+ 
+    private void teleportToOwner() {
+-      BlockPos var1 = new BlockPos(this.owner);
++      BlockPos var1 = this.owner.blockPosition();
+ 
+       for(int var2 = 0; var2 < 10; ++var2) {
+          int var3 = this.randomIntInclusive(-3, 3);
+          int var4 = this.randomIntInclusive(-1, 1);
+          int var5 = this.randomIntInclusive(-3, 3);
+@@ -119,19 +119,19 @@
+          return true;
+       }
+    }
+ 
+    private boolean canTeleportTo(BlockPos var1) {
+-      BlockPathTypes var2 = WalkNodeEvaluator.getBlockPathTypeStatic(this.level, var1.getX(), var1.getY(), var1.getZ());
++      BlockPathTypes var2 = WalkNodeEvaluator.getBlockPathTypeStatic(this.level, var1.mutable());
+       if (var2 != BlockPathTypes.WALKABLE) {
+          return false;
+       } else {
+          BlockState var3 = this.level.getBlockState(var1.below());
+          if (!this.canFly && var3.getBlock() instanceof LeavesBlock) {
+             return false;
+          } else {
+-            BlockPos var4 = var1.subtract(new BlockPos(this.tamable));
++            BlockPos var4 = var1.subtract(this.tamable.blockPosition());
+             return this.level.noCollision(this.tamable, this.tamable.getBoundingBox().move(var4));
+          }
+       }
+    }
+ 

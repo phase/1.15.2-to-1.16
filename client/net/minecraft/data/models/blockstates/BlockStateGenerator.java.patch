@@ -1,0 +1,12 @@
+--- net/minecraft/data/models/blockstates/BlockStateGenerator.java
++++ net/minecraft/data/models/blockstates/BlockStateGenerator.java
+@@ -1,0 +1,9 @@
++package net.minecraft.data.models.blockstates;
++
++import com.google.gson.JsonElement;
++import java.util.function.Supplier;
++import net.minecraft.world.level.block.Block;
++
++public interface BlockStateGenerator extends Supplier<JsonElement> {
++   Block getBlock();
++}

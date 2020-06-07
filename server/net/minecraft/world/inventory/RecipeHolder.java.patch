@@ -1,0 +1,15 @@
+--- net/minecraft/world/inventory/RecipeHolder.java
++++ net/minecraft/world/inventory/RecipeHolder.java
+@@ -12,11 +12,11 @@
+    void setRecipeUsed(@Nullable Recipe<?> var1);
+ 
+    @Nullable
+    Recipe<?> getRecipeUsed();
+ 
+-   default void awardAndReset(Player var1) {
++   default void awardUsedRecipes(Player var1) {
+       Recipe var2 = this.getRecipeUsed();
+       if (var2 != null && !var2.isSpecial()) {
+          var1.awardRecipes(Collections.singleton(var2));
+          this.setRecipeUsed((Recipe)null);
+       }

@@ -1,0 +1,98 @@
+--- net/minecraft/world/level/newbiome/layer/BiomeInitLayer.java
++++ net/minecraft/world/level/newbiome/layer/BiomeInitLayer.java
+@@ -1,9 +1,8 @@
+ package net.minecraft.world.level.newbiome.layer;
+ 
+ import net.minecraft.core.Registry;
+-import net.minecraft.world.level.LevelType;
+ import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.newbiome.context.Context;
+ import net.minecraft.world.level.newbiome.layer.traits.C0Transformer;
+ 
+ public class BiomeInitLayer implements C0Transformer {
+@@ -26,58 +25,50 @@
+    private static final int[] LEGACY_WARM_BIOMES;
+    private static final int[] WARM_BIOMES;
+    private static final int[] MEDIUM_BIOMES;
+    private static final int[] COLD_BIOMES;
+    private static final int[] ICE_BIOMES;
+-   private final int fixedBiome;
+    private int[] warmBiomes;
+ 
+-   public BiomeInitLayer(LevelType var1, int var2) {
++   public BiomeInitLayer(boolean var1) {
+       this.warmBiomes = WARM_BIOMES;
+-      if (var1 == LevelType.NORMAL_1_1) {
++      if (var1) {
+          this.warmBiomes = LEGACY_WARM_BIOMES;
+-         this.fixedBiome = -1;
+-      } else {
+-         this.fixedBiome = var2;
+       }
+ 
+    }
+ 
+    public int apply(Context var1, int var2) {
+-      if (this.fixedBiome >= 0) {
+-         return this.fixedBiome;
+-      } else {
+-         int var3 = (var2 & 3840) >> 8;
+-         var2 &= -3841;
+-         if (!Layers.isOcean(var2) && var2 != MUSHROOM_FIELDS) {
+-            switch(var2) {
+-            case 1:
+-               if (var3 > 0) {
+-                  return var1.nextRandom(3) == 0 ? BADLANDS_PLATEAU : WOODED_BADLANDS_PLATEAU;
+-               }
++      int var3 = (var2 & 3840) >> 8;
++      var2 &= -3841;
++      if (!Layers.isOcean(var2) && var2 != MUSHROOM_FIELDS) {
++         switch(var2) {
++         case 1:
++            if (var3 > 0) {
++               return var1.nextRandom(3) == 0 ? BADLANDS_PLATEAU : WOODED_BADLANDS_PLATEAU;
++            }
+ 
+-               return this.warmBiomes[var1.nextRandom(this.warmBiomes.length)];
+-            case 2:
+-               if (var3 > 0) {
+-                  return JUNGLE;
+-               }
++            return this.warmBiomes[var1.nextRandom(this.warmBiomes.length)];
++         case 2:
++            if (var3 > 0) {
++               return JUNGLE;
++            }
+ 
+-               return MEDIUM_BIOMES[var1.nextRandom(MEDIUM_BIOMES.length)];
+-            case 3:
+-               if (var3 > 0) {
+-                  return GIANT_TREE_TAIGA;
+-               }
+-
+-               return COLD_BIOMES[var1.nextRandom(COLD_BIOMES.length)];
+-            case 4:
+-               return ICE_BIOMES[var1.nextRandom(ICE_BIOMES.length)];
+-            default:
+-               return MUSHROOM_FIELDS;
++            return MEDIUM_BIOMES[var1.nextRandom(MEDIUM_BIOMES.length)];
++         case 3:
++            if (var3 > 0) {
++               return GIANT_TREE_TAIGA;
+             }
+-         } else {
+-            return var2;
++
++            return COLD_BIOMES[var1.nextRandom(COLD_BIOMES.length)];
++         case 4:
++            return ICE_BIOMES[var1.nextRandom(ICE_BIOMES.length)];
++         default:
++            return MUSHROOM_FIELDS;
+          }
++      } else {
++         return var2;
+       }
+    }
+ 
+    static {
+       BIRCH_FOREST = Registry.BIOME.getId(Biomes.BIRCH_FOREST);

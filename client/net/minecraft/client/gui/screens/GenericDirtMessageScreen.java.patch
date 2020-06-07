@@ -1,0 +1,26 @@
+--- net/minecraft/client/gui/screens/GenericDirtMessageScreen.java
++++ net/minecraft/client/gui/screens/GenericDirtMessageScreen.java
+@@ -1,7 +1,8 @@
+ package net.minecraft.client.gui.screens;
+ 
++import com.mojang.blaze3d.vertex.PoseStack;
+ import net.minecraft.network.chat.Component;
+ 
+ public class GenericDirtMessageScreen extends Screen {
+    public GenericDirtMessageScreen(Component var1) {
+       super(var1);
+@@ -9,11 +10,11 @@
+ 
+    public boolean shouldCloseOnEsc() {
+       return false;
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
++   public void render(PoseStack var1, int var2, int var3, float var4) {
+       this.renderDirtBackground(0);
+-      this.drawCenteredString(this.font, this.title.getColoredString(), this.width / 2, 70, 16777215);
+-      super.render(var1, var2, var3);
++      this.drawCenteredString(var1, this.font, this.title, this.width / 2, 70, 16777215);
++      super.render(var1, var2, var3, var4);
+    }
+ }

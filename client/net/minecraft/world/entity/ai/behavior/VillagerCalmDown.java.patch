@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/ai/behavior/VillagerCalmDown.java
++++ net/minecraft/world/entity/ai/behavior/VillagerCalmDown.java
+@@ -13,11 +13,11 @@
+    protected void start(ServerLevel var1, Villager var2, long var3) {
+       boolean var5 = VillagerPanicTrigger.isHurt(var2) || VillagerPanicTrigger.hasHostile(var2) || isCloseToEntityThatHurtMe(var2);
+       if (!var5) {
+          var2.getBrain().eraseMemory(MemoryModuleType.HURT_BY);
+          var2.getBrain().eraseMemory(MemoryModuleType.HURT_BY_ENTITY);
+-         var2.getBrain().updateActivity(var1.getDayTime(), var1.getGameTime());
++         var2.getBrain().updateActivityFromSchedule(var1.getDayTime(), var1.getGameTime());
+       }
+ 
+    }
+ 
+    private static boolean isCloseToEntityThatHurtMe(Villager var0) {

@@ -1,0 +1,154 @@
+--- net/minecraft/world/level/levelgen/feature/foliageplacers/FoliagePlacer.java
++++ net/minecraft/world/level/levelgen/feature/foliageplacers/FoliagePlacer.java
+@@ -1,61 +1,121 @@
+ package net.minecraft.world.level.levelgen.feature.foliageplacers;
+ 
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.datafixers.Products;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
+ import java.util.Random;
+ import java.util.Set;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Registry;
+-import net.minecraft.util.Serializable;
+ import net.minecraft.world.level.LevelSimulatedRW;
+-import net.minecraft.world.level.levelgen.feature.AbstractTreeFeature;
+-import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
++import net.minecraft.world.level.levelgen.feature.TreeFeature;
++import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
++import net.minecraft.world.level.levelgen.structure.BoundingBox;
+ 
+-public abstract class FoliagePlacer implements Serializable {
++public abstract class FoliagePlacer {
++   public static final Codec<FoliagePlacer> CODEC;
+    protected final int radius;
+    protected final int radiusRandom;
+-   protected final FoliagePlacerType<?> type;
++   protected final int offset;
++   protected final int offsetRandom;
+ 
+-   public FoliagePlacer(int var1, int var2, FoliagePlacerType<?> var3) {
++   protected static <P extends FoliagePlacer> Products.P4<RecordCodecBuilder.Mu<P>, Integer, Integer, Integer, Integer> foliagePlacerParts(RecordCodecBuilder.Instance<P> var0) {
++      return var0.group(Codec.INT.fieldOf("radius").forGetter((var0x) -> {
++         return var0x.radius;
++      }), Codec.INT.fieldOf("radius_random").forGetter((var0x) -> {
++         return var0x.radiusRandom;
++      }), Codec.INT.fieldOf("offset").forGetter((var0x) -> {
++         return var0x.offset;
++      }), Codec.INT.fieldOf("offset_random").forGetter((var0x) -> {
++         return var0x.offsetRandom;
++      }));
++   }
++
++   public FoliagePlacer(int var1, int var2, int var3, int var4) {
+       this.radius = var1;
+       this.radiusRandom = var2;
+-      this.type = var3;
++      this.offset = var3;
++      this.offsetRandom = var4;
+    }
+ 
+-   public abstract void createFoliage(LevelSimulatedRW var1, Random var2, SmallTreeConfiguration var3, int var4, int var5, int var6, BlockPos var7, Set<BlockPos> var8);
++   protected abstract FoliagePlacerType<?> type();
+ 
+-   public abstract int foliageRadius(Random var1, int var2, int var3, SmallTreeConfiguration var4);
++   public void createFoliage(LevelSimulatedRW var1, Random var2, TreeConfiguration var3, int var4, FoliagePlacer.FoliageAttachment var5, int var6, int var7, Set<BlockPos> var8, BoundingBox var9) {
++      this.createFoliage(var1, var2, var3, var4, var5, var6, var7, var8, this.offset(var2), var9);
++   }
+ 
+-   protected abstract boolean shouldSkipLocation(Random var1, int var2, int var3, int var4, int var5, int var6);
++   protected abstract void createFoliage(LevelSimulatedRW var1, Random var2, TreeConfiguration var3, int var4, FoliagePlacer.FoliageAttachment var5, int var6, int var7, Set<BlockPos> var8, int var9, BoundingBox var10);
+ 
+-   public abstract int getTreeRadiusForHeight(int var1, int var2, int var3, int var4);
++   public abstract int foliageHeight(Random var1, int var2, TreeConfiguration var3);
+ 
+-   protected void placeLeavesRow(LevelSimulatedRW var1, Random var2, SmallTreeConfiguration var3, int var4, BlockPos var5, int var6, int var7, Set<BlockPos> var8) {
+-      BlockPos.MutableBlockPos var9 = new BlockPos.MutableBlockPos();
++   public int foliageRadius(Random var1, int var2) {
++      return this.radius + var1.nextInt(this.radiusRandom + 1);
++   }
+ 
+-      for(int var10 = -var7; var10 <= var7; ++var10) {
+-         for(int var11 = -var7; var11 <= var7; ++var11) {
+-            if (!this.shouldSkipLocation(var2, var4, var10, var6, var11, var7)) {
+-               var9.set(var10 + var5.getX(), var6 + var5.getY(), var11 + var5.getZ());
+-               this.placeLeaf(var1, var2, var9, var3, var8);
++   private int offset(Random var1) {
++      return this.offset + var1.nextInt(this.offsetRandom + 1);
++   }
++
++   protected abstract boolean shouldSkipLocation(Random var1, int var2, int var3, int var4, int var5, boolean var6);
++
++   protected boolean shouldSkipLocationSigned(Random var1, int var2, int var3, int var4, int var5, boolean var6) {
++      int var7;
++      int var8;
++      if (var6) {
++         var7 = Math.min(Math.abs(var2), Math.abs(var2 - 1));
++         var8 = Math.min(Math.abs(var4), Math.abs(var4 - 1));
++      } else {
++         var7 = Math.abs(var2);
++         var8 = Math.abs(var4);
++      }
++
++      return this.shouldSkipLocation(var1, var7, var3, var8, var5, var6);
++   }
++
++   protected void placeLeavesRow(LevelSimulatedRW var1, Random var2, TreeConfiguration var3, BlockPos var4, int var5, Set<BlockPos> var6, int var7, boolean var8, BoundingBox var9) {
++      int var10 = var8 ? 1 : 0;
++      BlockPos.MutableBlockPos var11 = new BlockPos.MutableBlockPos();
++
++      for(int var12 = -var5; var12 <= var5 + var10; ++var12) {
++         for(int var13 = -var5; var13 <= var5 + var10; ++var13) {
++            if (!this.shouldSkipLocationSigned(var2, var12, var7, var13, var5, var8)) {
++               var11.setWithOffset(var4, var12, var7, var13);
++               if (TreeFeature.validTreePos(var1, var11)) {
++                  var1.setBlock(var11, var3.leavesProvider.getState(var2, var11), 19);
++                  var9.expand(new BoundingBox(var11, var11));
++                  var6.add(var11.immutable());
++               }
+             }
+          }
+       }
+ 
+    }
+ 
+-   protected void placeLeaf(LevelSimulatedRW var1, Random var2, BlockPos var3, SmallTreeConfiguration var4, Set<BlockPos> var5) {
+-      if (AbstractTreeFeature.isAirOrLeaves(var1, var3) || AbstractTreeFeature.isReplaceablePlant(var1, var3) || AbstractTreeFeature.isBlockWater(var1, var3)) {
+-         var1.setBlock(var3, var4.leavesProvider.getState(var2, var3), 19);
+-         var5.add(var3.immutable());
++   static {
++      CODEC = Registry.FOLIAGE_PLACER_TYPES.dispatch(FoliagePlacer::type, FoliagePlacerType::codec);
++   }
++
++   public static final class FoliageAttachment {
++      private final BlockPos foliagePos;
++      private final int radiusOffset;
++      private final boolean doubleTrunk;
++
++      public FoliageAttachment(BlockPos var1, int var2, boolean var3) {
++         this.foliagePos = var1;
++         this.radiusOffset = var2;
++         this.doubleTrunk = var3;
+       }
+ 
+-   }
++      public BlockPos foliagePos() {
++         return this.foliagePos;
++      }
+ 
+-   public <T> T serialize(DynamicOps<T> var1) {
+-      ImmutableMap.Builder var2 = ImmutableMap.builder();
+-      var2.put(var1.createString("type"), var1.createString(Registry.FOLIAGE_PLACER_TYPES.getKey(this.type).toString())).put(var1.createString("radius"), var1.createInt(this.radius)).put(var1.createString("radius_random"), var1.createInt(this.radiusRandom));
+-      return (new Dynamic(var1, var1.createMap(var2.build()))).getValue();
++      public int radiusOffset() {
++         return this.radiusOffset;
++      }
++
++      public boolean doubleTrunk() {
++         return this.doubleTrunk;
++      }
+    }
+ }

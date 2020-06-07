@@ -1,0 +1,85 @@
+--- net/minecraft/world/entity/ai/village/poi/PoiManager.java
++++ net/minecraft/world/entity/ai/village/poi/PoiManager.java
+@@ -10,10 +10,11 @@
+ import java.util.Collections;
+ import java.util.Comparator;
+ import java.util.List;
+ import java.util.Optional;
+ import java.util.Random;
++import java.util.Set;
+ import java.util.function.BiConsumer;
+ import java.util.function.BooleanSupplier;
+ import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+ import java.util.stream.IntStream;
+@@ -32,12 +33,12 @@
+ 
+ public class PoiManager extends SectionStorage<PoiSection> {
+    private final PoiManager.DistanceTracker distanceTracker = new PoiManager.DistanceTracker();
+    private final LongSet loadedChunks = new LongOpenHashSet();
+ 
+-   public PoiManager(File var1, DataFixer var2) {
+-      super(var1, PoiSection::new, PoiSection::new, var2, DataFixTypes.POI_CHUNK);
++   public PoiManager(File var1, DataFixer var2, boolean var3) {
++      super(var1, PoiSection::codec, PoiSection::new, var2, DataFixTypes.POI_CHUNK, var3);
+    }
+ 
+    public void add(BlockPos var1, PoiType var2) {
+       ((PoiSection)this.getOrCreate(SectionPos.of(var1).asLong())).add(var1, var2);
+    }
+@@ -48,12 +49,18 @@
+ 
+    public long getCountInRange(Predicate<PoiType> var1, BlockPos var2, int var3, PoiManager.Occupancy var4) {
+       return this.getInRange(var1, var2, var3, var4).count();
+    }
+ 
++   public boolean existsAtPosition(PoiType var1, BlockPos var2) {
++      Optional var3 = ((PoiSection)this.getOrCreate(SectionPos.of(var2).asLong())).getType(var2);
++      return var3.isPresent() && ((PoiType)var3.get()).equals(var1);
++   }
++
+    public Stream<PoiRecord> getInSquare(Predicate<PoiType> var1, BlockPos var2, int var3, PoiManager.Occupancy var4) {
+-      return ChunkPos.rangeClosed(new ChunkPos(var2), Math.floorDiv(var3, 16)).flatMap((var3x) -> {
++      int var5 = Math.floorDiv(var3, 16) + 1;
++      return ChunkPos.rangeClosed(new ChunkPos(var2), var5).flatMap((var3x) -> {
+          return this.getInChunk(var1, var3x, var4);
+       });
+    }
+ 
+    public Stream<PoiRecord> getInRange(Predicate<PoiType> var1, BlockPos var2, int var3, PoiManager.Occupancy var4) {
+@@ -81,14 +88,14 @@
+ 
+    public Optional<BlockPos> find(Predicate<PoiType> var1, Predicate<BlockPos> var2, BlockPos var3, int var4, PoiManager.Occupancy var5) {
+       return this.findAll(var1, var2, var3, var4, var5).findFirst();
+    }
+ 
+-   public Optional<BlockPos> findClosest(Predicate<PoiType> var1, Predicate<BlockPos> var2, BlockPos var3, int var4, PoiManager.Occupancy var5) {
+-      return this.getInRange(var1, var3, var4, var5).map(PoiRecord::getPos).sorted(Comparator.comparingDouble((var1x) -> {
+-         return var1x.distSqr(var3);
+-      })).filter(var2).findFirst();
++   public Optional<BlockPos> findClosest(Predicate<PoiType> var1, BlockPos var2, int var3, PoiManager.Occupancy var4) {
++      return this.getInRange(var1, var2, var3, var4).map(PoiRecord::getPos).min(Comparator.comparingDouble((var1x) -> {
++         return var1x.distSqr(var2);
++      }));
+    }
+ 
+    public Optional<BlockPos> take(Predicate<PoiType> var1, Predicate<BlockPos> var2, BlockPos var3, int var4) {
+       return this.getInRange(var1, var3, var4, PoiManager.Occupancy.HAS_SPACE).filter((var1x) -> {
+          return var2.test(var1x.getPos());
+@@ -164,13 +171,13 @@
+ 
+       });
+    }
+ 
+    private static boolean mayHavePoi(LevelChunkSection var0) {
+-      Stream var10000 = PoiType.allPoiStates();
+-      var0.getClass();
+-      return var10000.anyMatch(var0::maybeHas);
++      Set var10001 = PoiType.ALL_STATES;
++      var10001.getClass();
++      return var0.maybeHas(var10001::contains);
+    }
+ 
+    private void updateFromSection(LevelChunkSection var1, SectionPos var2, BiConsumer<BlockPos, PoiType> var3) {
+       var2.blocksInside().forEach((var2x) -> {
+          BlockState var3x = var1.getBlockState(SectionPos.sectionRelative(var2x.getX()), SectionPos.sectionRelative(var2x.getY()), SectionPos.sectionRelative(var2x.getZ()));

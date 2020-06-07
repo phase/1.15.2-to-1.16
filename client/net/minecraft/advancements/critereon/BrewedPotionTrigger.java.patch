@@ -1,0 +1,77 @@
+--- net/minecraft/advancements/critereon/BrewedPotionTrigger.java
++++ net/minecraft/advancements/critereon/BrewedPotionTrigger.java
+@@ -1,9 +1,7 @@
+ package net.minecraft.advancements.critereon;
+ 
+-import com.google.gson.JsonDeserializationContext;
+-import com.google.gson.JsonElement;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSyntaxException;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.Registry;
+ import net.minecraft.resources.ResourceLocation;
+@@ -19,49 +17,49 @@
+ 
+    public ResourceLocation getId() {
+       return ID;
+    }
+ 
+-   public BrewedPotionTrigger.TriggerInstance createInstance(JsonObject var1, JsonDeserializationContext var2) {
+-      Potion var3 = null;
++   public BrewedPotionTrigger.TriggerInstance createInstance(JsonObject var1, EntityPredicate.Composite var2, DeserializationContext var3) {
++      Potion var4 = null;
+       if (var1.has("potion")) {
+-         ResourceLocation var4 = new ResourceLocation(GsonHelper.getAsString(var1, "potion"));
+-         var3 = (Potion)Registry.POTION.getOptional(var4).orElseThrow(() -> {
+-            return new JsonSyntaxException("Unknown potion '" + var4 + "'");
++         ResourceLocation var5 = new ResourceLocation(GsonHelper.getAsString(var1, "potion"));
++         var4 = (Potion)Registry.POTION.getOptional(var5).orElseThrow(() -> {
++            return new JsonSyntaxException("Unknown potion '" + var5 + "'");
+          });
+       }
+ 
+-      return new BrewedPotionTrigger.TriggerInstance(var3);
++      return new BrewedPotionTrigger.TriggerInstance(var2, var4);
+    }
+ 
+    public void trigger(ServerPlayer var1, Potion var2) {
+-      this.trigger(var1.getAdvancements(), (var1x) -> {
++      this.trigger(var1, (var1x) -> {
+          return var1x.matches(var2);
+       });
+    }
+ 
+    public static class TriggerInstance extends AbstractCriterionTriggerInstance {
+       private final Potion potion;
+ 
+-      public TriggerInstance(@Nullable Potion var1) {
+-         super(BrewedPotionTrigger.ID);
+-         this.potion = var1;
++      public TriggerInstance(EntityPredicate.Composite var1, @Nullable Potion var2) {
++         super(BrewedPotionTrigger.ID, var1);
++         this.potion = var2;
+       }
+ 
+       public static BrewedPotionTrigger.TriggerInstance brewedPotion() {
+-         return new BrewedPotionTrigger.TriggerInstance((Potion)null);
++         return new BrewedPotionTrigger.TriggerInstance(EntityPredicate.Composite.ANY, (Potion)null);
+       }
+ 
+       public boolean matches(Potion var1) {
+          return this.potion == null || this.potion == var1;
+       }
+ 
+-      public JsonElement serializeToJson() {
+-         JsonObject var1 = new JsonObject();
++      public JsonObject serializeToJson(SerializationContext var1) {
++         JsonObject var2 = super.serializeToJson(var1);
+          if (this.potion != null) {
+-            var1.addProperty("potion", Registry.POTION.getKey(this.potion).toString());
++            var2.addProperty("potion", Registry.POTION.getKey(this.potion).toString());
+          }
+ 
+-         return var1;
++         return var2;
+       }
+    }
+ }

@@ -1,0 +1,37 @@
+--- net/minecraft/world/level/levelgen/feature/ConfiguredStructureFeature.java
++++ net/minecraft/world/level/levelgen/feature/ConfiguredStructureFeature.java
+@@ -1,0 +1,34 @@
++package net.minecraft.world.level.levelgen.feature;
++
++import com.mojang.serialization.Codec;
++import net.minecraft.core.Registry;
++import net.minecraft.world.level.ChunkPos;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.biome.BiomeSource;
++import net.minecraft.world.level.chunk.ChunkGenerator;
++import net.minecraft.world.level.levelgen.WorldgenRandom;
++import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
++import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
++import net.minecraft.world.level.levelgen.structure.StructureStart;
++import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
++
++public class ConfiguredStructureFeature<FC extends FeatureConfiguration, F extends StructureFeature<FC>> {
++   public static final Codec<ConfiguredStructureFeature<?, ?>> CODEC;
++   public final F feature;
++   public final FC config;
++
++   public ConfiguredStructureFeature(F var1, FC var2) {
++      this.feature = var1;
++      this.config = var2;
++   }
++
++   public StructureStart<?> generate(ChunkGenerator var1, BiomeSource var2, StructureManager var3, long var4, ChunkPos var6, Biome var7, int var8, StructureFeatureConfiguration var9) {
++      return this.feature.generate(var1, var2, var3, var4, var6, var7, var8, new WorldgenRandom(), var9, this.config);
++   }
++
++   static {
++      CODEC = Registry.STRUCTURE_FEATURE.dispatch("name", (var0) -> {
++         return var0.feature;
++      }, StructureFeature::configuredStructureCodec);
++   }
++}

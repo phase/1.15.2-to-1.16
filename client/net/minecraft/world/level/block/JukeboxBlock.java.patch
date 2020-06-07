@@ -1,0 +1,49 @@
+--- net/minecraft/world/level/block/JukeboxBlock.java
++++ net/minecraft/world/level/block/JukeboxBlock.java
+@@ -11,30 +11,31 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.phys.BlockHitResult;
+ 
+ public class JukeboxBlock extends BaseEntityBlock {
+    public static final BooleanProperty HAS_RECORD;
+ 
+-   protected JukeboxBlock(Block.Properties var1) {
++   protected JukeboxBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(HAS_RECORD, false));
+    }
+ 
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
+       if ((Boolean)var1.getValue(HAS_RECORD)) {
+          this.dropRecording(var2, var3);
+          var1 = (BlockState)var1.setValue(HAS_RECORD, false);
+          var2.setBlock(var3, var1, 2);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       } else {
+          return InteractionResult.PASS;
+       }
+    }
+ 
+@@ -67,11 +68,11 @@
+          }
+       }
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var4.getBlock()) {
++      if (!var1.is(var4.getBlock())) {
+          this.dropRecording(var2, var3);
+          super.onRemove(var1, var2, var3, var4, var5);
+       }
+    }
+ 

@@ -1,0 +1,18 @@
+--- net/minecraft/ChatFormatting.java
++++ net/minecraft/ChatFormatting.java
+@@ -79,10 +79,15 @@
+ 
+    public boolean isColor() {
+       return !this.isFormat && this != RESET;
+    }
+ 
++   @Nullable
++   public Integer getColor() {
++      return this.color;
++   }
++
+    public String getName() {
+       return this.name().toLowerCase(Locale.ROOT);
+    }
+ 
+    public String toString() {

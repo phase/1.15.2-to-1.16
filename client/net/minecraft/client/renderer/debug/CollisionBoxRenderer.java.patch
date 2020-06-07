@@ -1,0 +1,17 @@
+--- net/minecraft/client/renderer/debug/CollisionBoxRenderer.java
++++ net/minecraft/client/renderer/debug/CollisionBoxRenderer.java
+@@ -26,11 +26,13 @@
+    public void render(PoseStack var1, MultiBufferSource var2, double var3, double var5, double var7) {
+       double var9 = (double)Util.getNanos();
+       if (var9 - this.lastUpdateTime > 1.0E8D) {
+          this.lastUpdateTime = var9;
+          Entity var11 = this.minecraft.gameRenderer.getMainCamera().getEntity();
+-         this.shapes = (List)var11.level.getCollisions(var11, var11.getBoundingBox().inflate(6.0D), Collections.emptySet()).collect(Collectors.toList());
++         this.shapes = (List)var11.level.getCollisions(var11, var11.getBoundingBox().inflate(6.0D), (var0) -> {
++            return true;
++         }).collect(Collectors.toList());
+       }
+ 
+       VertexConsumer var14 = var2.getBuffer(RenderType.lines());
+       Iterator var12 = this.shapes.iterator();
+ 

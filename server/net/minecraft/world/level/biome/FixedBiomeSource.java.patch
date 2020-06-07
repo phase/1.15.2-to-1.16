@@ -1,0 +1,57 @@
+--- net/minecraft/world/level/biome/FixedBiomeSource.java
++++ net/minecraft/world/level/biome/FixedBiomeSource.java
+@@ -1,31 +1,48 @@
+ package net.minecraft.world.level.biome;
+ 
+-import com.google.common.collect.ImmutableSet;
++import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.Sets;
++import com.mojang.serialization.Codec;
+ import java.util.List;
+ import java.util.Random;
+ import java.util.Set;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.Registry;
+ 
+ public class FixedBiomeSource extends BiomeSource {
++   public static final Codec<FixedBiomeSource> CODEC;
+    private final Biome biome;
+ 
+-   public FixedBiomeSource(FixedBiomeSourceSettings var1) {
+-      super(ImmutableSet.of(var1.getBiome()));
+-      this.biome = var1.getBiome();
++   public FixedBiomeSource(Biome var1) {
++      super(ImmutableList.of(var1));
++      this.biome = var1;
+    }
+ 
++   protected Codec<? extends BiomeSource> codec() {
++      return CODEC;
++   }
++
+    public Biome getNoiseBiome(int var1, int var2, int var3) {
+       return this.biome;
+    }
+ 
+    @Nullable
+-   public BlockPos findBiomeHorizontal(int var1, int var2, int var3, int var4, List<Biome> var5, Random var6) {
+-      return var5.contains(this.biome) ? new BlockPos(var1 - var4 + var6.nextInt(var4 * 2 + 1), var2, var3 - var4 + var6.nextInt(var4 * 2 + 1)) : null;
++   public BlockPos findBiomeHorizontal(int var1, int var2, int var3, int var4, int var5, List<Biome> var6, Random var7, boolean var8) {
++      if (var6.contains(this.biome)) {
++         return var8 ? new BlockPos(var1, var2, var3) : new BlockPos(var1 - var4 + var7.nextInt(var4 * 2 + 1), var2, var3 - var4 + var7.nextInt(var4 * 2 + 1));
++      } else {
++         return null;
++      }
+    }
+ 
+    public Set<Biome> getBiomesWithin(int var1, int var2, int var3, int var4) {
+       return Sets.newHashSet((Object[])(this.biome));
+    }
++
++   static {
++      CODEC = Registry.BIOME.fieldOf("biome").xmap(FixedBiomeSource::new, (var0) -> {
++         return var0.biome;
++      }).stable().codec();
++   }
+ }

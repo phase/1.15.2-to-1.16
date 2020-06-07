@@ -1,0 +1,24 @@
+--- net/minecraft/world/level/block/GrassPathBlock.java
++++ net/minecraft/world/level/block/GrassPathBlock.java
+@@ -6,19 +6,20 @@
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class GrassPathBlock extends Block {
+    protected static final VoxelShape SHAPE;
+ 
+-   protected GrassPathBlock(Block.Properties var1) {
++   protected GrassPathBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public boolean useShapeForLightOcclusion(BlockState var1) {
+       return true;

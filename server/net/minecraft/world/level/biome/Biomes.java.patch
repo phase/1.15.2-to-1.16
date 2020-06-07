@@ -1,0 +1,56 @@
+--- net/minecraft/world/level/biome/Biomes.java
++++ net/minecraft/world/level/biome/Biomes.java
+@@ -12,11 +12,11 @@
+    public static final Biome MOUNTAINS;
+    public static final Biome FOREST;
+    public static final Biome TAIGA;
+    public static final Biome SWAMP;
+    public static final Biome RIVER;
+-   public static final Biome NETHER;
++   public static final Biome NETHER_WASTES;
+    public static final Biome THE_END;
+    public static final Biome FROZEN_OCEAN;
+    public static final Biome FROZEN_RIVER;
+    public static final Biome SNOWY_TUNDRA;
+    public static final Biome SNOWY_MOUNTAINS;
+@@ -79,10 +79,14 @@
+    public static final Biome ERODED_BADLANDS;
+    public static final Biome MODIFIED_WOODED_BADLANDS_PLATEAU;
+    public static final Biome MODIFIED_BADLANDS_PLATEAU;
+    public static final Biome BAMBOO_JUNGLE;
+    public static final Biome BAMBOO_JUNGLE_HILLS;
++   public static final Biome SOUL_SAND_VALLEY;
++   public static final Biome CRIMSON_FOREST;
++   public static final Biome WARPED_FOREST;
++   public static final Biome BASALT_DELTAS;
+ 
+    private static Biome register(int var0, String var1, Biome var2) {
+       Registry.registerMapping(Registry.BIOME, var0, var1, var2);
+       if (var2.isMutated()) {
+          Biome.MUTATED_BIOMES.addMapping(var2, Registry.BIOME.getId(Registry.BIOME.get(new ResourceLocation(var2.parent))));
+@@ -98,11 +102,11 @@
+       MOUNTAINS = register(3, "mountains", new MountainBiome());
+       FOREST = register(4, "forest", new ForestBiome());
+       TAIGA = register(5, "taiga", new TaigaBiome());
+       SWAMP = register(6, "swamp", new SwampBiome());
+       RIVER = register(7, "river", new RiverBiome());
+-      NETHER = register(8, "nether", new NetherBiome());
++      NETHER_WASTES = register(8, "nether_wastes", new NetherWastesBiome());
+       THE_END = register(9, "the_end", new TheEndBiome());
+       FROZEN_OCEAN = register(10, "frozen_ocean", new FrozenOceanBiome());
+       FROZEN_RIVER = register(11, "frozen_river", new FrozenRiverBiome());
+       SNOWY_TUNDRA = register(12, "snowy_tundra", new SnowyTundraBiome());
+       SNOWY_MOUNTAINS = register(13, "snowy_mountains", new SnowyMountainsBiome());
+@@ -165,8 +169,12 @@
+       ERODED_BADLANDS = register(165, "eroded_badlands", new ErodedBadlandsBiome());
+       MODIFIED_WOODED_BADLANDS_PLATEAU = register(166, "modified_wooded_badlands_plateau", new ModifiedWoodedBadlandsPlateauBiome());
+       MODIFIED_BADLANDS_PLATEAU = register(167, "modified_badlands_plateau", new ModifiedBadlandsPlateauBiome());
+       BAMBOO_JUNGLE = register(168, "bamboo_jungle", new BambooJungleBiome());
+       BAMBOO_JUNGLE_HILLS = register(169, "bamboo_jungle_hills", new BambooJungleHillsBiome());
++      SOUL_SAND_VALLEY = register(170, "soul_sand_valley", new SoulSandValleyBiome());
++      CRIMSON_FOREST = register(171, "crimson_forest", new CrimsonForestBiome());
++      WARPED_FOREST = register(172, "warped_forest", new WarpedForestBiome());
++      BASALT_DELTAS = register(173, "basalt_deltas", new BasaltDeltasBiome());
+       Collections.addAll(Biome.EXPLORABLE_BIOMES, new Biome[]{OCEAN, PLAINS, DESERT, MOUNTAINS, FOREST, TAIGA, SWAMP, RIVER, FROZEN_RIVER, SNOWY_TUNDRA, SNOWY_MOUNTAINS, MUSHROOM_FIELDS, MUSHROOM_FIELD_SHORE, BEACH, DESERT_HILLS, WOODED_HILLS, TAIGA_HILLS, JUNGLE, JUNGLE_HILLS, JUNGLE_EDGE, DEEP_OCEAN, STONE_SHORE, SNOWY_BEACH, BIRCH_FOREST, BIRCH_FOREST_HILLS, DARK_FOREST, SNOWY_TAIGA, SNOWY_TAIGA_HILLS, GIANT_TREE_TAIGA, GIANT_TREE_TAIGA_HILLS, WOODED_MOUNTAINS, SAVANNA, SAVANNA_PLATEAU, BADLANDS, WOODED_BADLANDS_PLATEAU, BADLANDS_PLATEAU});
+    }
+ }

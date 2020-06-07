@@ -1,0 +1,28 @@
+--- net/minecraft/server/commands/BanPlayerCommands.java
++++ net/minecraft/server/commands/BanPlayerCommands.java
+@@ -20,11 +20,11 @@
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.server.players.UserBanList;
+ import net.minecraft.server.players.UserBanListEntry;
+ 
+ public class BanPlayerCommands {
+-   private static final SimpleCommandExceptionType ERROR_ALREADY_BANNED = new SimpleCommandExceptionType(new TranslatableComponent("commands.ban.failed", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_ALREADY_BANNED = new SimpleCommandExceptionType(new TranslatableComponent("commands.ban.failed"));
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("ban").requires((var0x) -> {
+          return var0x.getServer().getPlayerList().getBans().isEnabled() && var0x.hasPermission(3);
+       })).then(((RequiredArgumentBuilder)Commands.argument("targets", GameProfileArgument.gameProfile()).executes((var0x) -> {
+@@ -46,11 +46,11 @@
+             var3.add(var7);
+             ++var4;
+             var0.sendSuccess(new TranslatableComponent("commands.ban.success", new Object[]{ComponentUtils.getDisplayName(var6), var7.getReason()}), true);
+             ServerPlayer var8 = var0.getServer().getPlayerList().getPlayer(var6.getId());
+             if (var8 != null) {
+-               var8.connection.disconnect(new TranslatableComponent("multiplayer.disconnect.banned", new Object[0]));
++               var8.connection.disconnect(new TranslatableComponent("multiplayer.disconnect.banned"));
+             }
+          }
+       }
+ 
+       if (var4 == 0) {

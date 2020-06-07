@@ -1,0 +1,42 @@
+--- net/minecraft/world/level/levelgen/feature/BastionFeature.java
++++ net/minecraft/world/level/levelgen/feature/BastionFeature.java
+@@ -1,0 +1,39 @@
++package net.minecraft.world.level.levelgen.feature;
++
++import com.mojang.serialization.Codec;
++import net.minecraft.core.BlockPos;
++import net.minecraft.world.level.ChunkPos;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.biome.BiomeSource;
++import net.minecraft.world.level.chunk.ChunkGenerator;
++import net.minecraft.world.level.levelgen.WorldgenRandom;
++import net.minecraft.world.level.levelgen.feature.configurations.MultiJigsawConfiguration;
++import net.minecraft.world.level.levelgen.structure.BeardedStructureStart;
++import net.minecraft.world.level.levelgen.structure.BoundingBox;
++import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
++
++public class BastionFeature extends StructureFeature<MultiJigsawConfiguration> {
++   public BastionFeature(Codec<MultiJigsawConfiguration> var1) {
++      super(var1);
++   }
++
++   protected boolean isFeatureChunk(ChunkGenerator var1, BiomeSource var2, long var3, WorldgenRandom var5, int var6, int var7, Biome var8, ChunkPos var9, MultiJigsawConfiguration var10) {
++      return var5.nextInt(6) >= 2;
++   }
++
++   public StructureFeature.StructureStartFactory<MultiJigsawConfiguration> getStartFactory() {
++      return BastionFeature.FeatureStart::new;
++   }
++
++   public static class FeatureStart extends BeardedStructureStart<MultiJigsawConfiguration> {
++      public FeatureStart(StructureFeature<MultiJigsawConfiguration> var1, int var2, int var3, BoundingBox var4, int var5, long var6) {
++         super(var1, var2, var3, var4, var5, var6);
++      }
++
++      public void generatePieces(ChunkGenerator var1, StructureManager var2, int var3, int var4, Biome var5, MultiJigsawConfiguration var6) {
++         BlockPos var7 = new BlockPos(var3 * 16, 33, var4 * 16);
++         BastionPieces.addPieces(var1, var2, var7, this.pieces, this.random, var6);
++         this.calculateBoundingBox();
++      }
++   }
++}

@@ -1,0 +1,46 @@
+--- net/minecraft/tags/SynchronizableTagCollection.java
++++ net/minecraft/tags/SynchronizableTagCollection.java
+@@ -1,8 +1,10 @@
+ package net.minecraft.tags;
+ 
++import com.google.common.collect.ImmutableSet;
+ import com.google.common.collect.Maps;
++import com.google.common.collect.ImmutableSet.Builder;
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.Map;
+ import java.util.Map.Entry;
+ import net.minecraft.core.Registry;
+@@ -11,11 +13,11 @@
+ 
+ public class SynchronizableTagCollection<T> extends TagCollection<T> {
+    private final Registry<T> registry;
+ 
+    public SynchronizableTagCollection(Registry<T> var1, String var2, String var3) {
+-      super(var1::getOptional, var2, false, var3);
++      super(var1::getOptional, var2, var3);
+       this.registry = var1;
+    }
+ 
+    public void serializeToNetwork(FriendlyByteBuf var1) {
+       Map var2 = this.getAllTags();
+@@ -41,17 +43,17 @@
+       int var3 = var1.readVarInt();
+ 
+       for(int var4 = 0; var4 < var3; ++var4) {
+          ResourceLocation var5 = var1.readResourceLocation();
+          int var6 = var1.readVarInt();
+-         Tag.Builder var7 = Tag.Builder.tag();
++         Builder var7 = ImmutableSet.builder();
+ 
+          for(int var8 = 0; var8 < var6; ++var8) {
+             var7.add(this.registry.byId(var1.readVarInt()));
+          }
+ 
+-         var2.put(var5, var7.build(var5));
++         var2.put(var5, Tag.fromSet(var7.build()));
+       }
+ 
+       this.replace(var2);
+    }
+ }

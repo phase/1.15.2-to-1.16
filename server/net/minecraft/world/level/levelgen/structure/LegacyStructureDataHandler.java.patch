@@ -1,0 +1,66 @@
+--- net/minecraft/world/level/levelgen/structure/LegacyStructureDataHandler.java
++++ net/minecraft/world/level/levelgen/structure/LegacyStructureDataHandler.java
+@@ -12,13 +12,13 @@
+ import java.util.Map;
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.ListTag;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.world.level.ChunkPos;
+-import net.minecraft.world.level.dimension.DimensionType;
+-import net.minecraft.world.level.levelgen.feature.Feature;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.level.storage.DimensionDataStorage;
+ 
+ public class LegacyStructureDataHandler {
+    private static final Map<String, String> CURRENT_TO_LEGACY_MAP = (Map)Util.make(Maps.newHashMap(), (var0) -> {
+@@ -96,19 +96,19 @@
+                   var1.put("Level", var2);
+                   return var1;
+                }
+ 
+                var7 = (String)var6.next();
+-               var8 = (StructureFeature)Feature.STRUCTURES_REGISTRY.get(var7.toLowerCase(Locale.ROOT));
++               var8 = (StructureFeature)StructureFeature.STRUCTURES_REGISTRY.get(var7.toLowerCase(Locale.ROOT));
+             } while(var5.contains(var7, 12));
+          } while(var8 == null);
+ 
+-         int var9 = var8.getLookupRange();
++         boolean var9 = true;
+          LongArrayList var10 = new LongArrayList();
+ 
+-         for(int var11 = var3.x - var9; var11 <= var3.x + var9; ++var11) {
+-            for(int var12 = var3.z - var9; var12 <= var3.z + var9; ++var12) {
++         for(int var11 = var3.x - 8; var11 <= var3.x + 8; ++var11) {
++            for(int var12 = var3.z - 8; var12 <= var3.z + 8; ++var12) {
+                if (this.hasLegacyStart(var11, var12, var7)) {
+                   var10.add(ChunkPos.asLong(var11, var12));
+                }
+             }
+          }
+@@ -230,19 +230,19 @@
+          }
+ 
+       }
+    }
+ 
+-   public static LegacyStructureDataHandler getLegacyStructureHandler(DimensionType var0, @Nullable DimensionDataStorage var1) {
+-      if (var0 == DimensionType.OVERWORLD) {
++   public static LegacyStructureDataHandler getLegacyStructureHandler(ResourceKey<Level> var0, @Nullable DimensionDataStorage var1) {
++      if (var0 == Level.OVERWORLD) {
+          return new LegacyStructureDataHandler(var1, ImmutableList.of("Monument", "Stronghold", "Village", "Mineshaft", "Temple", "Mansion"), ImmutableList.of("Village", "Mineshaft", "Mansion", "Igloo", "Desert_Pyramid", "Jungle_Pyramid", "Swamp_Hut", "Stronghold", "Monument"));
+       } else {
+          ImmutableList var2;
+-         if (var0 == DimensionType.NETHER) {
++         if (var0 == Level.NETHER) {
+             var2 = ImmutableList.of("Fortress");
+             return new LegacyStructureDataHandler(var1, var2, var2);
+-         } else if (var0 == DimensionType.THE_END) {
++         } else if (var0 == Level.END) {
+             var2 = ImmutableList.of("EndCity");
+             return new LegacyStructureDataHandler(var1, var2, var2);
+          } else {
+             throw new RuntimeException(String.format("Unknown dimension type : %s", var0));
+          }

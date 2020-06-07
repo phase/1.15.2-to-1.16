@@ -1,0 +1,14 @@
+--- net/minecraft/core/particles/ParticleOptions.java
++++ net/minecraft/core/particles/ParticleOptions.java
+@@ -9,10 +9,11 @@
+ 
+    void writeToNetwork(FriendlyByteBuf var1);
+ 
+    String writeToString();
+ 
++   @Deprecated
+    public interface Deserializer<T extends ParticleOptions> {
+       T fromCommand(ParticleType<T> var1, StringReader var2) throws CommandSyntaxException;
+ 
+       T fromNetwork(ParticleType<T> var1, FriendlyByteBuf var2);
+    }

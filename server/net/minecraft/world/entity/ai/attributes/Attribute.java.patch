@@ -1,0 +1,44 @@
+--- net/minecraft/world/entity/ai/attributes/Attribute.java
++++ net/minecraft/world/entity/ai/attributes/Attribute.java
+@@ -1,16 +1,33 @@
+ package net.minecraft.world.entity.ai.attributes;
+ 
+-import javax.annotation.Nullable;
++public class Attribute {
++   private final double defaultValue;
++   private boolean syncable;
++   private final String descriptionId;
+ 
+-public interface Attribute {
+-   String getName();
++   protected Attribute(String var1, double var2) {
++      this.defaultValue = var2;
++      this.descriptionId = var1;
++   }
+ 
+-   double sanitizeValue(double var1);
++   public double getDefaultValue() {
++      return this.defaultValue;
++   }
+ 
+-   double getDefaultValue();
++   public boolean isClientSyncable() {
++      return this.syncable;
++   }
+ 
+-   boolean isClientSyncable();
++   public Attribute setSyncable(boolean var1) {
++      this.syncable = var1;
++      return this;
++   }
+ 
+-   @Nullable
+-   Attribute getParentAttribute();
++   public double sanitizeValue(double var1) {
++      return var1;
++   }
++
++   public String getDescriptionId() {
++      return this.descriptionId;
++   }
+ }

@@ -1,0 +1,120 @@
+--- net/minecraft/client/renderer/DimensionSpecialEffects.java
++++ net/minecraft/client/renderer/DimensionSpecialEffects.java
+@@ -1,0 +1,117 @@
++package net.minecraft.client.renderer;
++
++import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
++import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
++import java.util.Optional;
++import javax.annotation.Nullable;
++import net.minecraft.Util;
++import net.minecraft.resources.ResourceKey;
++import net.minecraft.util.Mth;
++import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.phys.Vec3;
++
++public abstract class DimensionSpecialEffects {
++   private static final Object2ObjectMap<ResourceKey<DimensionType>, DimensionSpecialEffects> EFFECTS = (Object2ObjectMap)Util.make(new Object2ObjectArrayMap(), (var0) -> {
++      DimensionSpecialEffects.OverworldEffects var1 = new DimensionSpecialEffects.OverworldEffects();
++      var0.defaultReturnValue(var1);
++      var0.put(DimensionType.OVERWORLD_LOCATION, var1);
++      var0.put(DimensionType.NETHER_LOCATION, new DimensionSpecialEffects.NetherEffects());
++      var0.put(DimensionType.END_LOCATION, new DimensionSpecialEffects.EndEffects());
++   });
++   private final float[] sunriseCol = new float[4];
++   private final float cloudLevel;
++   private final boolean hasGround;
++   private final boolean renderNormalSky;
++
++   public DimensionSpecialEffects(float var1, boolean var2, boolean var3) {
++      this.cloudLevel = var1;
++      this.hasGround = var2;
++      this.renderNormalSky = var3;
++   }
++
++   public static DimensionSpecialEffects forType(Optional<ResourceKey<DimensionType>> var0) {
++      return (DimensionSpecialEffects)EFFECTS.get(var0.orElse(DimensionType.OVERWORLD_LOCATION));
++   }
++
++   @Nullable
++   public float[] getSunriseColor(float var1, float var2) {
++      float var3 = 0.4F;
++      float var4 = Mth.cos(var1 * 6.2831855F) - 0.0F;
++      float var5 = -0.0F;
++      if (var4 >= -0.4F && var4 <= 0.4F) {
++         float var6 = (var4 - -0.0F) / 0.4F * 0.5F + 0.5F;
++         float var7 = 1.0F - (1.0F - Mth.sin(var6 * 3.1415927F)) * 0.99F;
++         var7 *= var7;
++         this.sunriseCol[0] = var6 * 0.3F + 0.7F;
++         this.sunriseCol[1] = var6 * var6 * 0.7F + 0.2F;
++         this.sunriseCol[2] = var6 * var6 * 0.0F + 0.2F;
++         this.sunriseCol[3] = var7;
++         return this.sunriseCol;
++      } else {
++         return null;
++      }
++   }
++
++   public float getCloudHeight() {
++      return this.cloudLevel;
++   }
++
++   public boolean hasGround() {
++      return this.hasGround;
++   }
++
++   public abstract Vec3 getBrightnessDependentFogColor(Vec3 var1, float var2);
++
++   public abstract boolean isFoggyAt(int var1, int var2);
++
++   public boolean renderNormalSky() {
++      return this.renderNormalSky;
++   }
++
++   public static class EndEffects extends DimensionSpecialEffects {
++      public EndEffects() {
++         super(Float.NaN, false, false);
++      }
++
++      public Vec3 getBrightnessDependentFogColor(Vec3 var1, float var2) {
++         return var1.scale(0.15000000596046448D);
++      }
++
++      public boolean isFoggyAt(int var1, int var2) {
++         return false;
++      }
++
++      @Nullable
++      public float[] getSunriseColor(float var1, float var2) {
++         return null;
++      }
++   }
++
++   public static class OverworldEffects extends DimensionSpecialEffects {
++      public OverworldEffects() {
++         super(128.0F, true, true);
++      }
++
++      public Vec3 getBrightnessDependentFogColor(Vec3 var1, float var2) {
++         return var1.multiply((double)(var2 * 0.94F + 0.06F), (double)(var2 * 0.94F + 0.06F), (double)(var2 * 0.91F + 0.09F));
++      }
++
++      public boolean isFoggyAt(int var1, int var2) {
++         return false;
++      }
++   }
++
++   public static class NetherEffects extends DimensionSpecialEffects {
++      public NetherEffects() {
++         super(Float.NaN, true, false);
++      }
++
++      public Vec3 getBrightnessDependentFogColor(Vec3 var1, float var2) {
++         return var1;
++      }
++
++      public boolean isFoggyAt(int var1, int var2) {
++         return true;
++      }
++   }
++}

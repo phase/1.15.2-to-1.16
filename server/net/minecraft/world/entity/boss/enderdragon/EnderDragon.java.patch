@@ -1,0 +1,83 @@
+--- net/minecraft/world/entity/boss/enderdragon/EnderDragon.java
++++ net/minecraft/world/entity/boss/enderdragon/EnderDragon.java
+@@ -9,10 +9,11 @@
+ import net.minecraft.core.particles.ParticleTypes;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.syncher.EntityDataAccessor;
+ import net.minecraft.network.syncher.EntityDataSerializers;
+ import net.minecraft.network.syncher.SynchedEntityData;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.tags.BlockTags;
+ import net.minecraft.util.Mth;
+@@ -24,24 +25,24 @@
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.ExperienceOrb;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.MoverType;
++import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+ import net.minecraft.world.entity.boss.EnderDragonPart;
+ import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
+ import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
+ import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhaseManager;
+ import net.minecraft.world.entity.monster.Enemy;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.dimension.end.EndDragonFight;
+-import net.minecraft.world.level.dimension.end.TheEndDimension;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.level.levelgen.feature.EndPodiumFeature;
+ import net.minecraft.world.level.material.Material;
+ import net.minecraft.world.level.pathfinder.BinaryHeap;
+ import net.minecraft.world.level.pathfinder.Node;
+@@ -86,22 +87,21 @@
+       super(EntityType.ENDER_DRAGON, var2);
+       this.subEntities = new EnderDragonPart[]{this.head, this.neck, this.body, this.tail1, this.tail2, this.tail3, this.wing1, this.wing2};
+       this.setHealth(this.getMaxHealth());
+       this.noPhysics = true;
+       this.noCulling = true;
+-      if (!var2.isClientSide && var2.dimension instanceof TheEndDimension) {
+-         this.dragonFight = ((TheEndDimension)var2.dimension).getDragonFight();
++      if (var2 instanceof ServerLevel) {
++         this.dragonFight = ((ServerLevel)var2).dragonFight();
+       } else {
+          this.dragonFight = null;
+       }
+ 
+       this.phaseManager = new EnderDragonPhaseManager(this);
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(200.0D);
++   public static AttributeSupplier.Builder createAttributes() {
++      return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 200.0D);
+    }
+ 
+    protected void defineSynchedData() {
+       super.defineSynchedData();
+       this.getEntityData().define(DATA_PHASE, EnderDragonPhase.HOVERING.getId());
+@@ -511,12 +511,12 @@
+       if (!this.level.isClientSide) {
+          if (this.dragonDeathTime > 150 && this.dragonDeathTime % 5 == 0 && var4) {
+             this.dropExperience(Mth.floor((float)var5 * 0.08F));
+          }
+ 
+-         if (this.dragonDeathTime == 1) {
+-            this.level.globalLevelEvent(1028, new BlockPos(this), 0);
++         if (this.dragonDeathTime == 1 && !this.isSilent()) {
++            this.level.globalLevelEvent(1028, this.blockPosition(), 0);
+          }
+       }
+ 
+       this.move(MoverType.SELF, new Vec3(0.0D, 0.10000000149011612D, 0.0D));
+       this.yRot += 20.0F;

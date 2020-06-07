@@ -1,0 +1,15 @@
+--- net/minecraft/data/loot/LootTableProvider.java
++++ net/minecraft/data/loot/LootTableProvider.java
+@@ -35,11 +35,11 @@
+    private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
+    private final DataGenerator generator;
+    private final List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, LootTable.Builder>>>, LootContextParamSet>> subProviders;
+ 
+    public LootTableProvider(DataGenerator var1) {
+-      this.subProviders = ImmutableList.of(Pair.of(FishingLoot::new, LootContextParamSets.FISHING), Pair.of(ChestLoot::new, LootContextParamSets.CHEST), Pair.of(EntityLoot::new, LootContextParamSets.ENTITY), Pair.of(BlockLoot::new, LootContextParamSets.BLOCK), Pair.of(GiftLoot::new, LootContextParamSets.GIFT));
++      this.subProviders = ImmutableList.of(Pair.of(FishingLoot::new, LootContextParamSets.FISHING), Pair.of(ChestLoot::new, LootContextParamSets.CHEST), Pair.of(EntityLoot::new, LootContextParamSets.ENTITY), Pair.of(BlockLoot::new, LootContextParamSets.BLOCK), Pair.of(PiglinBarterLoot::new, LootContextParamSets.PIGLIN_BARTER), Pair.of(GiftLoot::new, LootContextParamSets.GIFT));
+       this.generator = var1;
+    }
+ 
+    public void run(HashCache var1) {
+       Path var2 = this.generator.getOutputFolder();

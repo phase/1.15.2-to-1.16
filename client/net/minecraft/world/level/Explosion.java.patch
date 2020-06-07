@@ -1,0 +1,64 @@
+--- net/minecraft/world/level/Explosion.java
++++ net/minecraft/world/level/Explosion.java
+@@ -23,13 +23,14 @@
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.item.ItemEntity;
+ import net.minecraft.world.entity.item.PrimedTnt;
+ import net.minecraft.world.entity.player.Player;
+-import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
++import net.minecraft.world.entity.projectile.Projectile;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.enchantment.ProtectionEnchantment;
++import net.minecraft.world.level.block.BaseFireBlock;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.material.FluidState;
+@@ -174,11 +175,11 @@
+          Entity var13 = (Entity)var34.get(var35);
+          if (!var13.ignoreExplosion()) {
+             double var36 = (double)(Mth.sqrt(var13.distanceToSqr(var11)) / var31);
+             if (var36 <= 1.0D) {
+                double var16 = var13.getX() - this.x;
+-               double var18 = var13.getEyeY() - this.y;
++               double var18 = (var13 instanceof PrimedTnt ? var13.getY() : var13.getEyeY()) - this.y;
+                double var20 = var13.getZ() - this.z;
+                double var37 = (double)Mth.sqrt(var16 * var16 + var18 * var18 + var20 * var20);
+                if (var37 != 0.0D) {
+                   var16 /= var37;
+                   var18 /= var37;
+@@ -261,11 +262,11 @@
+          Iterator var11 = this.toBlow.iterator();
+ 
+          while(var11.hasNext()) {
+             BlockPos var13 = (BlockPos)var11.next();
+             if (this.random.nextInt(3) == 0 && this.level.getBlockState(var13).isAir() && this.level.getBlockState(var13.below()).isSolidRender(this.level, var13.below())) {
+-               this.level.setBlockAndUpdate(var13, Blocks.FIRE.defaultBlockState());
++               this.level.setBlockAndUpdate(var13, BaseFireBlock.getState(this.level, var13));
+             }
+          }
+       }
+ 
+    }
+@@ -307,11 +308,18 @@
+       } else if (this.source instanceof PrimedTnt) {
+          return ((PrimedTnt)this.source).getOwner();
+       } else if (this.source instanceof LivingEntity) {
+          return (LivingEntity)this.source;
+       } else {
+-         return this.source instanceof AbstractHurtingProjectile ? ((AbstractHurtingProjectile)this.source).owner : null;
++         if (this.source instanceof Projectile) {
++            Entity var1 = ((Projectile)this.source).getOwner();
++            if (var1 instanceof LivingEntity) {
++               return (LivingEntity)var1;
++            }
++         }
++
++         return null;
+       }
+    }
+ 
+    public void clearToBlow() {
+       this.toBlow.clear();

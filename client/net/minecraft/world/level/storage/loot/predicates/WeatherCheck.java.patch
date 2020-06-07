@@ -1,0 +1,42 @@
+--- net/minecraft/world/level/storage/loot/predicates/WeatherCheck.java
++++ net/minecraft/world/level/storage/loot/predicates/WeatherCheck.java
+@@ -2,11 +2,10 @@
+ 
+ import com.google.gson.JsonDeserializationContext;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSerializationContext;
+ import javax.annotation.Nullable;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.world.level.storage.loot.LootContext;
+ 
+ public class WeatherCheck implements LootItemCondition {
+@@ -18,22 +17,25 @@
+    private WeatherCheck(@Nullable Boolean var1, @Nullable Boolean var2) {
+       this.isRaining = var1;
+       this.isThundering = var2;
+    }
+ 
++   public LootItemConditionType getType() {
++      return LootItemConditions.WEATHER_CHECK;
++   }
++
+    public boolean test(LootContext var1) {
+       ServerLevel var2 = var1.getLevel();
+       if (this.isRaining != null && this.isRaining != var2.isRaining()) {
+          return false;
+       } else {
+          return this.isThundering == null || this.isThundering == var2.isThundering();
+       }
+    }
+ 
+-   public static class Serializer extends LootItemCondition.Serializer<WeatherCheck> {
++   public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<WeatherCheck> {
+       public Serializer() {
+-         super(new ResourceLocation("weather_check"), WeatherCheck.class);
+       }
+ 
+       public void serialize(JsonObject var1, WeatherCheck var2, JsonSerializationContext var3) {
+          var1.addProperty("raining", var2.isRaining);
+          var1.addProperty("thundering", var2.isThundering);

@@ -1,0 +1,63 @@
+--- net/minecraft/client/player/AbstractClientPlayer.java
++++ net/minecraft/client/player/AbstractClientPlayer.java
+@@ -11,12 +11,11 @@
+ import net.minecraft.client.renderer.texture.HttpTexture;
+ import net.minecraft.client.renderer.texture.TextureManager;
+ import net.minecraft.client.resources.DefaultPlayerSkin;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.StringUtil;
+-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.GameType;
+ 
+ public abstract class AbstractClientPlayer extends Player {
+@@ -25,11 +24,11 @@
+    public float elytraRotY;
+    public float elytraRotZ;
+    public final ClientLevel clientLevel;
+ 
+    public AbstractClientPlayer(ClientLevel var1, GameProfile var2) {
+-      super(var1, var2);
++      super(var1, var1.getSharedSpawnPos(), var2);
+       this.clientLevel = var1;
+    }
+ 
+    public boolean isSpectator() {
+       PlayerInfo var1 = Minecraft.getInstance().getConnection().getPlayerInfo(this.getGameProfile().getId());
+@@ -104,26 +103,25 @@
+       float var1 = 1.0F;
+       if (this.abilities.flying) {
+          var1 *= 1.1F;
+       }
+ 
+-      AttributeInstance var2 = this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
+-      var1 = (float)((double)var1 * ((var2.getValue() / (double)this.abilities.getWalkingSpeed() + 1.0D) / 2.0D));
++      var1 = (float)((double)var1 * ((this.getAttributeValue(Attributes.MOVEMENT_SPEED) / (double)this.abilities.getWalkingSpeed() + 1.0D) / 2.0D));
+       if (this.abilities.getWalkingSpeed() == 0.0F || Float.isNaN(var1) || Float.isInfinite(var1)) {
+          var1 = 1.0F;
+       }
+ 
+       if (this.isUsingItem() && this.getUseItem().getItem() == Items.BOW) {
+-         int var3 = this.getTicksUsingItem();
+-         float var4 = (float)var3 / 20.0F;
+-         if (var4 > 1.0F) {
+-            var4 = 1.0F;
++         int var2 = this.getTicksUsingItem();
++         float var3 = (float)var2 / 20.0F;
++         if (var3 > 1.0F) {
++            var3 = 1.0F;
+          } else {
+-            var4 *= var4;
++            var3 *= var3;
+          }
+ 
+-         var1 *= 1.0F - var4 * 0.15F;
++         var1 *= 1.0F - var3 * 0.15F;
+       }
+ 
+       return var1;
+    }
+ }

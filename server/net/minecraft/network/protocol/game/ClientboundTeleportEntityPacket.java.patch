@@ -1,0 +1,15 @@
+--- net/minecraft/network/protocol/game/ClientboundTeleportEntityPacket.java
++++ net/minecraft/network/protocol/game/ClientboundTeleportEntityPacket.java
+@@ -22,11 +22,11 @@
+       this.x = var1.getX();
+       this.y = var1.getY();
+       this.z = var1.getZ();
+       this.yRot = (byte)((int)(var1.yRot * 256.0F / 360.0F));
+       this.xRot = (byte)((int)(var1.xRot * 256.0F / 360.0F));
+-      this.onGround = var1.onGround;
++      this.onGround = var1.isOnGround();
+    }
+ 
+    public void read(FriendlyByteBuf var1) throws IOException {
+       this.id = var1.readVarInt();
+       this.x = var1.readDouble();

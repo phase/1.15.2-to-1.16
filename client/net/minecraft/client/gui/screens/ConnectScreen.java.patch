@@ -1,0 +1,77 @@
+--- net/minecraft/client/gui/screens/ConnectScreen.java
++++ net/minecraft/client/gui/screens/ConnectScreen.java
+@@ -1,7 +1,8 @@
+ package net.minecraft.client.gui.screens;
+ 
++import com.mojang.blaze3d.vertex.PoseStack;
+ import java.net.InetAddress;
+ import java.net.UnknownHostException;
+ import java.util.concurrent.atomic.AtomicInteger;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.Util;
+@@ -9,13 +10,13 @@
+ import net.minecraft.client.gui.chat.NarratorChatListener;
+ import net.minecraft.client.gui.components.Button;
+ import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
+ import net.minecraft.client.multiplayer.ServerAddress;
+ import net.minecraft.client.multiplayer.ServerData;
+-import net.minecraft.client.resources.language.I18n;
+ import net.minecraft.network.Connection;
+ import net.minecraft.network.ConnectionProtocol;
++import net.minecraft.network.chat.CommonComponents;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
+ import net.minecraft.network.protocol.login.ServerboundHelloPacket;
+ import org.apache.logging.log4j.LogManager;
+@@ -25,11 +26,11 @@
+    private static final AtomicInteger UNIQUE_THREAD_ID = new AtomicInteger(0);
+    private static final Logger LOGGER = LogManager.getLogger();
+    private Connection connection;
+    private boolean aborted;
+    private final Screen parent;
+-   private Component status = new TranslatableComponent("connect.connecting", new Object[0]);
++   private Component status = new TranslatableComponent("connect.connecting");
+    private long lastNarration = -1L;
+ 
+    public ConnectScreen(Screen var1, Minecraft var2, ServerData var3) {
+       super(NarratorChatListener.NO_TITLE);
+       this.minecraft = var2;
+@@ -111,27 +112,27 @@
+    public boolean shouldCloseOnEsc() {
+       return false;
+    }
+ 
+    protected void init() {
+-      this.addButton(new Button(this.width / 2 - 100, this.height / 4 + 120 + 12, 200, 20, I18n.get("gui.cancel"), (var1) -> {
++      this.addButton(new Button(this.width / 2 - 100, this.height / 4 + 120 + 12, 200, 20, CommonComponents.GUI_CANCEL, (var1) -> {
+          this.aborted = true;
+          if (this.connection != null) {
+-            this.connection.disconnect(new TranslatableComponent("connect.aborted", new Object[0]));
++            this.connection.disconnect(new TranslatableComponent("connect.aborted"));
+          }
+ 
+          this.minecraft.setScreen(this.parent);
+       }));
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
+-      this.renderBackground();
+-      long var4 = Util.getMillis();
+-      if (var4 - this.lastNarration > 2000L) {
+-         this.lastNarration = var4;
+-         NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.joining", new Object[0])).getString());
++   public void render(PoseStack var1, int var2, int var3, float var4) {
++      this.renderBackground(var1);
++      long var5 = Util.getMillis();
++      if (var5 - this.lastNarration > 2000L) {
++         this.lastNarration = var5;
++         NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.joining")).getString());
+       }
+ 
+-      this.drawCenteredString(this.font, this.status.getColoredString(), this.width / 2, this.height / 2 - 50, 16777215);
+-      super.render(var1, var2, var3);
++      this.drawCenteredString(var1, this.font, this.status, this.width / 2, this.height / 2 - 50, 16777215);
++      super.render(var1, var2, var3, var4);
+    }
+ }

@@ -1,0 +1,27 @@
+--- net/minecraft/world/level/saveddata/maps/MapBanner.java
++++ net/minecraft/world/level/saveddata/maps/MapBanner.java
+@@ -4,10 +4,11 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtUtils;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.world.item.DyeColor;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.block.entity.BannerBlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ 
+@@ -24,11 +25,11 @@
+    }
+ 
+    public static MapBanner load(CompoundTag var0) {
+       BlockPos var1 = NbtUtils.readBlockPos(var0.getCompound("Pos"));
+       DyeColor var2 = DyeColor.byName(var0.getString("Color"), DyeColor.WHITE);
+-      Component var3 = var0.contains("Name") ? Component.Serializer.fromJson(var0.getString("Name")) : null;
++      MutableComponent var3 = var0.contains("Name") ? Component.Serializer.fromJson(var0.getString("Name")) : null;
+       return new MapBanner(var1, var2, var3);
+    }
+ 
+    @Nullable
+    public static MapBanner fromWorld(BlockGetter var0, BlockPos var1) {

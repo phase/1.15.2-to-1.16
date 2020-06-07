@@ -1,0 +1,17 @@
+--- net/minecraft/world/level/block/StoneButtonBlock.java
++++ net/minecraft/world/level/block/StoneButtonBlock.java
+@@ -1,12 +1,13 @@
+ package net.minecraft.world.level.block;
+ 
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ 
+ public class StoneButtonBlock extends ButtonBlock {
+-   protected StoneButtonBlock(Block.Properties var1) {
++   protected StoneButtonBlock(BlockBehaviour.Properties var1) {
+       super(false, var1);
+    }
+ 
+    protected SoundEvent getSound(boolean var1) {
+       return var1 ? SoundEvents.STONE_BUTTON_CLICK_ON : SoundEvents.STONE_BUTTON_CLICK_OFF;

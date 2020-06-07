@@ -1,0 +1,99 @@
+--- net/minecraft/world/level/levelgen/feature/FossilFeature.java
++++ net/minecraft/world/level/levelgen/feature/FossilFeature.java
+@@ -1,19 +1,18 @@
+ package net.minecraft.world.level.levelgen.feature;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.Codec;
+ import java.util.Random;
+-import java.util.function.Function;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.ChunkPos;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.StructureFeatureManager;
++import net.minecraft.world.level.WorldGenLevel;
+ import net.minecraft.world.level.block.Mirror;
+ import net.minecraft.world.level.block.Rotation;
+ import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+ import net.minecraft.world.level.levelgen.structure.BoundingBox;
+ import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
+ import net.minecraft.world.level.levelgen.structure.templatesystem.BlockRotProcessor;
+@@ -39,46 +38,44 @@
+    private static final ResourceLocation SKULL_3_COAL = new ResourceLocation("fossil/skull_3_coal");
+    private static final ResourceLocation SKULL_4_COAL = new ResourceLocation("fossil/skull_4_coal");
+    private static final ResourceLocation[] fossils;
+    private static final ResourceLocation[] fossilsCoal;
+ 
+-   public FossilFeature(Function<Dynamic<?>, ? extends NoneFeatureConfiguration> var1) {
++   public FossilFeature(Codec<NoneFeatureConfiguration> var1) {
+       super(var1);
+    }
+ 
+-   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
+-      Random var6 = var1.getRandom();
+-      Rotation[] var7 = Rotation.values();
+-      Rotation var8 = var7[var6.nextInt(var7.length)];
+-      int var9 = var6.nextInt(fossils.length);
+-      StructureManager var10 = ((ServerLevel)var1.getLevel()).getLevelStorage().getStructureManager();
+-      StructureTemplate var11 = var10.getOrCreate(fossils[var9]);
+-      StructureTemplate var12 = var10.getOrCreate(fossilsCoal[var9]);
+-      ChunkPos var13 = new ChunkPos(var4);
+-      BoundingBox var14 = new BoundingBox(var13.getMinBlockX(), 0, var13.getMinBlockZ(), var13.getMaxBlockX(), 256, var13.getMaxBlockZ());
+-      StructurePlaceSettings var15 = (new StructurePlaceSettings()).setRotation(var8).setBoundingBox(var14).setRandom(var6).addProcessor(BlockIgnoreProcessor.STRUCTURE_AND_AIR);
+-      BlockPos var16 = var11.getSize(var8);
+-      int var17 = var6.nextInt(16 - var16.getX());
+-      int var18 = var6.nextInt(16 - var16.getZ());
+-      int var19 = 256;
++   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
++      Rotation var7 = Rotation.getRandom(var4);
++      int var8 = var4.nextInt(fossils.length);
++      StructureManager var9 = ((ServerLevel)var1.getLevel()).getServer().getStructureManager();
++      StructureTemplate var10 = var9.getOrCreate(fossils[var8]);
++      StructureTemplate var11 = var9.getOrCreate(fossilsCoal[var8]);
++      ChunkPos var12 = new ChunkPos(var5);
++      BoundingBox var13 = new BoundingBox(var12.getMinBlockX(), 0, var12.getMinBlockZ(), var12.getMaxBlockX(), 256, var12.getMaxBlockZ());
++      StructurePlaceSettings var14 = (new StructurePlaceSettings()).setRotation(var7).setBoundingBox(var13).setRandom(var4).addProcessor(BlockIgnoreProcessor.STRUCTURE_AND_AIR);
++      BlockPos var15 = var10.getSize(var7);
++      int var16 = var4.nextInt(16 - var15.getX());
++      int var17 = var4.nextInt(16 - var15.getZ());
++      int var18 = 256;
+ 
+-      int var20;
+-      for(var20 = 0; var20 < var16.getX(); ++var20) {
+-         for(int var21 = 0; var21 < var16.getZ(); ++var21) {
+-            var19 = Math.min(var19, var1.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, var4.getX() + var20 + var17, var4.getZ() + var21 + var18));
++      int var19;
++      for(var19 = 0; var19 < var15.getX(); ++var19) {
++         for(int var20 = 0; var20 < var15.getZ(); ++var20) {
++            var18 = Math.min(var18, var1.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, var5.getX() + var19 + var16, var5.getZ() + var20 + var17));
+          }
+       }
+ 
+-      var20 = Math.max(var19 - 15 - var6.nextInt(10), 10);
+-      BlockPos var24 = var11.getZeroPositionWithTransform(var4.offset(var17, var20, var18), Mirror.NONE, var8);
+-      BlockRotProcessor var22 = new BlockRotProcessor(0.9F);
+-      var15.clearProcessors().addProcessor(var22);
+-      var11.placeInWorld(var1, var24, var15, 4);
+-      var15.popProcessor(var22);
+-      BlockRotProcessor var23 = new BlockRotProcessor(0.1F);
+-      var15.clearProcessors().addProcessor(var23);
+-      var12.placeInWorld(var1, var24, var15, 4);
++      var19 = Math.max(var18 - 15 - var4.nextInt(10), 10);
++      BlockPos var23 = var10.getZeroPositionWithTransform(var5.offset(var16, var19, var17), Mirror.NONE, var7);
++      BlockRotProcessor var21 = new BlockRotProcessor(0.9F);
++      var14.clearProcessors().addProcessor(var21);
++      var10.placeInWorld(var1, var23, var23, var14, var4, 4);
++      var14.popProcessor(var21);
++      BlockRotProcessor var22 = new BlockRotProcessor(0.1F);
++      var14.clearProcessors().addProcessor(var22);
++      var11.placeInWorld(var1, var23, var23, var14, var4, 4);
+       return true;
+    }
+ 
+    static {
+       fossils = new ResourceLocation[]{SPINE_1, SPINE_2, SPINE_3, SPINE_4, SKULL_1, SKULL_2, SKULL_3, SKULL_4};

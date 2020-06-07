@@ -1,0 +1,30 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/JigsawConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/JigsawConfiguration.java
+@@ -1,0 +1,27 @@
++package net.minecraft.world.level.levelgen.feature.configurations;
++
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
++import java.util.function.BiFunction;
++import net.minecraft.resources.ResourceLocation;
++
++public class JigsawConfiguration implements FeatureConfiguration {
++   public static final Codec<JigsawConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(ResourceLocation.CODEC.fieldOf("start_pool").forGetter(JigsawConfiguration::getStartPool), Codec.INT.fieldOf("size").forGetter(JigsawConfiguration::getSize)).apply(var0, (BiFunction)(JigsawConfiguration::new));
++   });
++   public final ResourceLocation startPool;
++   public final int size;
++
++   public JigsawConfiguration(ResourceLocation var1, int var2) {
++      this.startPool = var1;
++      this.size = var2;
++   }
++
++   public int getSize() {
++      return this.size;
++   }
++
++   public ResourceLocation getStartPool() {
++      return this.startPool;
++   }
++}

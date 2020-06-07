@@ -1,0 +1,22 @@
+--- net/minecraft/client/model/SkeletonModel.java
++++ net/minecraft/client/model/SkeletonModel.java
+@@ -66,18 +66,11 @@
+          this.leftArm.xRot = -1.5707964F;
+          ModelPart var10000 = this.rightArm;
+          var10000.xRot -= var8 * 1.2F - var9 * 0.4F;
+          var10000 = this.leftArm;
+          var10000.xRot -= var8 * 1.2F - var9 * 0.4F;
+-         var10000 = this.rightArm;
+-         var10000.zRot += Mth.cos(var4 * 0.09F) * 0.05F + 0.05F;
+-         var10000 = this.leftArm;
+-         var10000.zRot -= Mth.cos(var4 * 0.09F) * 0.05F + 0.05F;
+-         var10000 = this.rightArm;
+-         var10000.xRot += Mth.sin(var4 * 0.067F) * 0.05F;
+-         var10000 = this.leftArm;
+-         var10000.xRot -= Mth.sin(var4 * 0.067F) * 0.05F;
++         AnimationUtils.bobArms(this.rightArm, this.leftArm, var4);
+       }
+ 
+    }
+ 
+    public void translateToHand(HumanoidArm var1, PoseStack var2) {

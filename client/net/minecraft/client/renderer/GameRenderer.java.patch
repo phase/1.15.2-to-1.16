@@ -1,0 +1,86 @@
+--- net/minecraft/client/renderer/GameRenderer.java
++++ net/minecraft/client/renderer/GameRenderer.java
+@@ -50,11 +50,11 @@
+ import net.minecraft.world.phys.HitResult;
+ import net.minecraft.world.phys.Vec3;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+-public class GameRenderer implements AutoCloseable, ResourceManagerReloadListener {
++public class GameRenderer implements ResourceManagerReloadListener, AutoCloseable {
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final Minecraft minecraft;
+    private final ResourceManager resourceManager;
+    private final Random random = new Random();
+    private float renderDistance;
+@@ -414,15 +414,14 @@
+       }
+ 
+       if (!this.minecraft.noRender) {
+          int var5 = (int)(this.minecraft.mouseHandler.xpos() * (double)this.minecraft.getWindow().getGuiScaledWidth() / (double)this.minecraft.getWindow().getScreenWidth());
+          int var6 = (int)(this.minecraft.mouseHandler.ypos() * (double)this.minecraft.getWindow().getGuiScaledHeight() / (double)this.minecraft.getWindow().getScreenHeight());
+-         PoseStack var7 = new PoseStack();
+          RenderSystem.viewport(0, 0, this.minecraft.getWindow().getWidth(), this.minecraft.getWindow().getHeight());
+          if (var4 && this.minecraft.level != null) {
+             this.minecraft.getProfiler().push("level");
+-            this.renderLevel(var1, var2, var7);
++            this.renderLevel(var1, var2, new PoseStack());
+             if (this.minecraft.hasSingleplayerServer() && this.lastScreenshotAttempt < Util.getMillis() - 1000L) {
+                this.lastScreenshotAttempt = Util.getMillis();
+                if (!this.minecraft.getSingleplayerServer().hasWorldScreenshot()) {
+                   this.takeAutoScreenshot();
+                }
+@@ -442,47 +441,48 @@
+             }
+ 
+             this.minecraft.getMainRenderTarget().bindWrite(true);
+          }
+ 
+-         Window var8 = this.minecraft.getWindow();
++         Window var7 = this.minecraft.getWindow();
+          RenderSystem.clear(256, Minecraft.ON_OSX);
+          RenderSystem.matrixMode(5889);
+          RenderSystem.loadIdentity();
+-         RenderSystem.ortho(0.0D, (double)var8.getWidth() / var8.getGuiScale(), (double)var8.getHeight() / var8.getGuiScale(), 0.0D, 1000.0D, 3000.0D);
++         RenderSystem.ortho(0.0D, (double)var7.getWidth() / var7.getGuiScale(), (double)var7.getHeight() / var7.getGuiScale(), 0.0D, 1000.0D, 3000.0D);
+          RenderSystem.matrixMode(5888);
+          RenderSystem.loadIdentity();
+          RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
+          Lighting.setupFor3DItems();
++         PoseStack var8 = new PoseStack();
+          if (var4 && this.minecraft.level != null) {
+             this.minecraft.getProfiler().popPush("gui");
+             if (!this.minecraft.options.hideGui || this.minecraft.screen != null) {
+                RenderSystem.defaultAlphaFunc();
+                this.renderItemActivationAnimation(this.minecraft.getWindow().getGuiScaledWidth(), this.minecraft.getWindow().getGuiScaledHeight(), var1);
+-               this.minecraft.gui.render(var1);
++               this.minecraft.gui.render(var8, var1);
+                RenderSystem.clear(256, Minecraft.ON_OSX);
+             }
+ 
+             this.minecraft.getProfiler().pop();
+          }
+ 
+          CrashReport var10;
+          CrashReportCategory var11;
+          if (this.minecraft.overlay != null) {
+             try {
+-               this.minecraft.overlay.render(var5, var6, this.minecraft.getDeltaFrameTime());
++               this.minecraft.overlay.render(var8, var5, var6, this.minecraft.getDeltaFrameTime());
+             } catch (Throwable var13) {
+                var10 = CrashReport.forThrowable(var13, "Rendering overlay");
+                var11 = var10.addCategory("Overlay render details");
+                var11.setDetail("Overlay name", () -> {
+                   return this.minecraft.overlay.getClass().getCanonicalName();
+                });
+                throw new ReportedException(var10);
+             }
+          } else if (this.minecraft.screen != null) {
+             try {
+-               this.minecraft.screen.render(var5, var6, this.minecraft.getDeltaFrameTime());
++               this.minecraft.screen.render(var8, var5, var6, this.minecraft.getDeltaFrameTime());
+             } catch (Throwable var12) {
+                var10 = CrashReport.forThrowable(var12, "Rendering screen");
+                var11 = var10.addCategory("Screen render details");
+                var11.setDetail("Screen name", () -> {
+                   return this.minecraft.screen.getClass().getCanonicalName();

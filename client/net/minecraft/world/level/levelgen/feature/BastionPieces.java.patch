@@ -1,0 +1,48 @@
+--- net/minecraft/world/level/levelgen/feature/BastionPieces.java
++++ net/minecraft/world/level/levelgen/feature/BastionPieces.java
+@@ -1,0 +1,45 @@
++package net.minecraft.world.level.levelgen.feature;
++
++import com.google.common.collect.ImmutableMap;
++import java.util.List;
++import net.minecraft.core.BlockPos;
++import net.minecraft.nbt.CompoundTag;
++import net.minecraft.world.level.block.Rotation;
++import net.minecraft.world.level.chunk.ChunkGenerator;
++import net.minecraft.world.level.levelgen.WorldgenRandom;
++import net.minecraft.world.level.levelgen.feature.configurations.JigsawConfiguration;
++import net.minecraft.world.level.levelgen.feature.configurations.MultiJigsawConfiguration;
++import net.minecraft.world.level.levelgen.feature.structures.JigsawPlacement;
++import net.minecraft.world.level.levelgen.feature.structures.StructurePoolElement;
++import net.minecraft.world.level.levelgen.structure.BoundingBox;
++import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
++import net.minecraft.world.level.levelgen.structure.StructurePiece;
++import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
++
++public class BastionPieces {
++   public static final ImmutableMap<String, Integer> POOLS = ImmutableMap.builder().put("bastion/units/base", 60).put("bastion/hoglin_stable/origin", 60).put("bastion/treasure/starters", 60).put("bastion/bridge/start", 60).build();
++
++   public static void bootstrap() {
++      BastionHousingUnitsPools.bootstrap();
++      BastionHoglinStablePools.bootstrap();
++      BastionTreasureRoomPools.bootstrap();
++      BastionBridgePools.bootstrap();
++      BastionSharedPools.bootstrap();
++   }
++
++   public static void addPieces(ChunkGenerator var0, StructureManager var1, BlockPos var2, List<StructurePiece> var3, WorldgenRandom var4, MultiJigsawConfiguration var5) {
++      bootstrap();
++      JigsawConfiguration var6 = var5.getRandomPool(var4);
++      JigsawPlacement.addPieces(var6.startPool, var6.size, BastionPieces.BastionPiece::new, var0, var1, var2, var3, var4, false, false);
++   }
++
++   public static class BastionPiece extends PoolElementStructurePiece {
++      public BastionPiece(StructureManager var1, StructurePoolElement var2, BlockPos var3, int var4, Rotation var5, BoundingBox var6) {
++         super(StructurePieceType.BASTION_REMNANT, var1, var2, var3, var4, var5, var6);
++      }
++
++      public BastionPiece(StructureManager var1, CompoundTag var2) {
++         super(var1, var2, StructurePieceType.BASTION_REMNANT);
++      }
++   }
++}

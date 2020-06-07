@@ -1,0 +1,97 @@
+--- net/minecraft/world/level/levelgen/feature/BasaltPillarFeature.java
++++ net/minecraft/world/level/levelgen/feature/BasaltPillarFeature.java
+@@ -1,0 +1,94 @@
++package net.minecraft.world.level.levelgen.feature;
++
++import com.mojang.serialization.Codec;
++import java.util.Random;
++import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
++import net.minecraft.util.Mth;
++import net.minecraft.world.level.Level;
++import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.StructureFeatureManager;
++import net.minecraft.world.level.WorldGenLevel;
++import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.chunk.ChunkGenerator;
++import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
++
++public class BasaltPillarFeature extends Feature<NoneFeatureConfiguration> {
++   public BasaltPillarFeature(Codec<NoneFeatureConfiguration> var1) {
++      super(var1);
++   }
++
++   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
++      if (var1.isEmptyBlock(var5) && !var1.isEmptyBlock(var5.above())) {
++         BlockPos.MutableBlockPos var7 = var5.mutable();
++         BlockPos.MutableBlockPos var8 = var5.mutable();
++         boolean var9 = true;
++         boolean var10 = true;
++         boolean var11 = true;
++         boolean var12 = true;
++
++         while(var1.isEmptyBlock(var7)) {
++            if (Level.isOutsideBuildHeight(var7)) {
++               return true;
++            }
++
++            var1.setBlock(var7, Blocks.BASALT.defaultBlockState(), 2);
++            var9 = var9 && this.placeHangOff(var1, var4, var8.setWithOffset(var7, Direction.NORTH));
++            var10 = var10 && this.placeHangOff(var1, var4, var8.setWithOffset(var7, Direction.SOUTH));
++            var11 = var11 && this.placeHangOff(var1, var4, var8.setWithOffset(var7, Direction.WEST));
++            var12 = var12 && this.placeHangOff(var1, var4, var8.setWithOffset(var7, Direction.EAST));
++            var7.move(Direction.DOWN);
++         }
++
++         var7.move(Direction.UP);
++         this.placeBaseHangOff(var1, var4, var8.setWithOffset(var7, Direction.NORTH));
++         this.placeBaseHangOff(var1, var4, var8.setWithOffset(var7, Direction.SOUTH));
++         this.placeBaseHangOff(var1, var4, var8.setWithOffset(var7, Direction.WEST));
++         this.placeBaseHangOff(var1, var4, var8.setWithOffset(var7, Direction.EAST));
++         var7.move(Direction.DOWN);
++         BlockPos.MutableBlockPos var13 = new BlockPos.MutableBlockPos();
++
++         for(int var14 = -3; var14 < 4; ++var14) {
++            for(int var15 = -3; var15 < 4; ++var15) {
++               int var16 = Mth.abs(var14) * Mth.abs(var15);
++               if (var4.nextInt(10) < 10 - var16) {
++                  var13.set(var7.offset(var14, 0, var15));
++                  int var17 = 3;
++
++                  while(var1.isEmptyBlock(var8.setWithOffset(var13, Direction.DOWN))) {
++                     var13.move(Direction.DOWN);
++                     --var17;
++                     if (var17 <= 0) {
++                        break;
++                     }
++                  }
++
++                  if (!var1.isEmptyBlock(var8.setWithOffset(var13, Direction.DOWN))) {
++                     var1.setBlock(var13, Blocks.BASALT.defaultBlockState(), 2);
++                  }
++               }
++            }
++         }
++
++         return true;
++      } else {
++         return false;
++      }
++   }
++
++   private void placeBaseHangOff(LevelAccessor var1, Random var2, BlockPos var3) {
++      if (var2.nextBoolean()) {
++         var1.setBlock(var3, Blocks.BASALT.defaultBlockState(), 2);
++      }
++
++   }
++
++   private boolean placeHangOff(LevelAccessor var1, Random var2, BlockPos var3) {
++      if (var2.nextInt(10) != 0) {
++         var1.setBlock(var3, Blocks.BASALT.defaultBlockState(), 2);
++         return true;
++      } else {
++         return false;
++      }
++   }
++}

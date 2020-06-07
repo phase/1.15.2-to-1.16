@@ -1,0 +1,8 @@
+--- net/minecraft/realms/RealmsConfirmResultListener.java
++++ net/minecraft/realms/RealmsConfirmResultListener.java
+@@ -1,5 +1,0 @@
+-package net.minecraft.realms;
+-
+-public interface RealmsConfirmResultListener {
+-   void confirmResult(boolean var1, int var2);
+-}

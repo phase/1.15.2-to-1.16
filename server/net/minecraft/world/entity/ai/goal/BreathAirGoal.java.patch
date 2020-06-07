@@ -1,0 +1,12 @@
+--- net/minecraft/world/entity/ai/goal/BreathAirGoal.java
++++ net/minecraft/world/entity/ai/goal/BreathAirGoal.java
+@@ -62,8 +62,8 @@
+       this.mob.move(MoverType.SELF, this.mob.getDeltaMovement());
+    }
+ 
+    private boolean givesAir(LevelReader var1, BlockPos var2) {
+       BlockState var3 = var1.getBlockState(var2);
+-      return (var1.getFluidState(var2).isEmpty() || var3.getBlock() == Blocks.BUBBLE_COLUMN) && var3.isPathfindable(var1, var2, PathComputationType.LAND);
++      return (var1.getFluidState(var2).isEmpty() || var3.is(Blocks.BUBBLE_COLUMN)) && var3.isPathfindable(var1, var2, PathComputationType.LAND);
+    }
+ }

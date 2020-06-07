@@ -1,0 +1,33 @@
+--- net/minecraft/gametest/framework/GameTestRegistry.java
++++ net/minecraft/gametest/framework/GameTestRegistry.java
+@@ -14,10 +14,11 @@
+ 
+ public class GameTestRegistry {
+    private static final Collection<TestFunction> testFunctions = Lists.newArrayList();
+    private static final Set<String> testClassNames = Sets.newHashSet();
+    private static final Map<String, Consumer<ServerLevel>> beforeBatchFunctions = Maps.newHashMap();
++   private static final Collection<TestFunction> lastFailedTests = Sets.newHashSet();
+ 
+    public static Collection<TestFunction> getTestFunctionsForClassName(String var0) {
+       return (Collection)testFunctions.stream().filter((var1) -> {
+          return isTestFunctionPartOfClass(var1, var0);
+       }).collect(Collectors.toList());
+@@ -56,6 +57,18 @@
+    }
+ 
+    private static boolean isTestFunctionPartOfClass(TestFunction var0, String var1) {
+       return var0.getTestName().toLowerCase().startsWith(var1.toLowerCase() + ".");
+    }
++
++   public static Collection<TestFunction> getLastFailedTests() {
++      return lastFailedTests;
++   }
++
++   public static void rememberFailedTest(TestFunction var0) {
++      lastFailedTests.add(var0);
++   }
++
++   public static void forgetFailedTests() {
++      lastFailedTests.clear();
++   }
+ }

@@ -1,0 +1,342 @@
+--- net/minecraft/world/entity/animal/Bee.java
++++ net/minecraft/world/entity/animal/Bee.java
+@@ -10,11 +10,10 @@
+ import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+-import net.minecraft.core.Vec3i;
+ import net.minecraft.core.particles.ParticleOptions;
+ import net.minecraft.core.particles.ParticleTypes;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtUtils;
+ import net.minecraft.network.protocol.game.DebugPackets;
+@@ -39,10 +38,12 @@
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.MobType;
+ import net.minecraft.world.entity.PathfinderMob;
+ import net.minecraft.world.entity.Pose;
++import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+ import net.minecraft.world.entity.ai.control.LookControl;
+ import net.minecraft.world.entity.ai.goal.BreedGoal;
+ import net.minecraft.world.entity.ai.goal.FloatGoal;
+ import net.minecraft.world.entity.ai.goal.FollowParentGoal;
+@@ -55,11 +56,10 @@
+ import net.minecraft.world.entity.ai.navigation.PathNavigation;
+ import net.minecraft.world.entity.ai.util.RandomPos;
+ import net.minecraft.world.entity.ai.village.poi.PoiManager;
+ import net.minecraft.world.entity.ai.village.poi.PoiRecord;
+ import net.minecraft.world.entity.ai.village.poi.PoiType;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.crafting.Ingredient;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelReader;
+@@ -103,10 +103,11 @@
+ 
+    public Bee(EntityType<? extends Bee> var1, Level var2) {
+       super(var1, var2);
+       this.moveControl = new FlyingMoveControl(this, 20, true);
+       this.lookControl = new Bee.BeeLookControl(this);
++      this.setPathfindingMalus(BlockPathTypes.DANGER_FIRE, -1.0F);
+       this.setPathfindingMalus(BlockPathTypes.WATER, -1.0F);
+       this.setPathfindingMalus(BlockPathTypes.COCOA, -1.0F);
+       this.setPathfindingMalus(BlockPathTypes.FENCE, -1.0F);
+    }
+ 
+@@ -122,11 +123,11 @@
+ 
+    protected void registerGoals() {
+       this.goalSelector.addGoal(0, new Bee.BeeAttackGoal(this, 1.399999976158142D, true));
+       this.goalSelector.addGoal(1, new Bee.BeeEnterHiveGoal());
+       this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
+-      this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(ItemTags.FLOWERS), false));
++      this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of((Tag)ItemTags.FLOWERS), false));
+       this.beePollinateGoal = new Bee.BeePollinateGoal();
+       this.goalSelector.addGoal(4, this.beePollinateGoal);
+       this.goalSelector.addGoal(5, new FollowParentGoal(this, 1.25D));
+       this.goalSelector.addGoal(5, new Bee.BeeLocateHiveGoal());
+       this.goToHiveGoal = new Bee.BeeGoToHiveGoal();
+@@ -155,13 +156,11 @@
+       var1.putInt("TicksSincePollination", this.ticksWithoutNectarSinceExitingHive);
+       var1.putInt("CannotEnterHiveTicks", this.stayOutOfHiveCountdown);
+       var1.putInt("CropsGrownSincePollination", this.numCropsGrownSincePollination);
+       var1.putInt("Anger", this.getAngerTime());
+       if (this.lastHurtByUUID != null) {
+-         var1.putString("HurtBy", this.lastHurtByUUID.toString());
+-      } else {
+-         var1.putString("HurtBy", "");
++         var1.putUUID("HurtBy", this.lastHurtByUUID);
+       }
+ 
+    }
+ 
+    public void readAdditionalSaveData(CompoundTag var1) {
+@@ -180,25 +179,24 @@
+       this.setHasStung(var1.getBoolean("HasStung"));
+       this.setAngerTime(var1.getInt("Anger"));
+       this.ticksWithoutNectarSinceExitingHive = var1.getInt("TicksSincePollination");
+       this.stayOutOfHiveCountdown = var1.getInt("CannotEnterHiveTicks");
+       this.numCropsGrownSincePollination = var1.getInt("CropsGrownSincePollination");
+-      String var2 = var1.getString("HurtBy");
+-      if (!var2.isEmpty()) {
+-         this.lastHurtByUUID = UUID.fromString(var2);
+-         Player var3 = this.level.getPlayerByUUID(this.lastHurtByUUID);
+-         this.setLastHurtByMob(var3);
+-         if (var3 != null) {
+-            this.lastHurtByPlayer = var3;
++      if (var1.hasUUID("HurtBy")) {
++         this.lastHurtByUUID = var1.getUUID("HurtBy");
++         Player var2 = this.level.getPlayerByUUID(this.lastHurtByUUID);
++         this.setLastHurtByMob(var2);
++         if (var2 != null) {
++            this.lastHurtByPlayer = var2;
+             this.lastHurtByPlayerTime = this.getLastHurtByMobTimestamp();
+          }
+       }
+ 
+    }
+ 
+    public boolean doHurtTarget(Entity var1) {
+-      boolean var2 = var1.hurt(DamageSource.sting(this), (float)((int)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue()));
++      boolean var2 = var1.hurt(DamageSource.sting(this), (float)((int)this.getAttributeValue(Attributes.ATTACK_DAMAGE)));
+       if (var2) {
+          this.doEnchantDamageEffects(this, var1);
+          if (var1 instanceof LivingEntity) {
+             ((LivingEntity)var1).setStingerCount(((LivingEntity)var1).getStingerCount() + 1);
+             byte var3 = 0;
+@@ -235,13 +233,13 @@
+    private void spawnFluidParticle(Level var1, double var2, double var4, double var6, double var8, double var10, ParticleOptions var12) {
+       var1.addParticle(var12, Mth.lerp(var1.random.nextDouble(), var2, var4), var10, Mth.lerp(var1.random.nextDouble(), var6, var8), 0.0D, 0.0D, 0.0D);
+    }
+ 
+    private void pathfindRandomlyTowards(BlockPos var1) {
+-      Vec3 var2 = new Vec3(var1);
++      Vec3 var2 = Vec3.atBottomCenterOf(var1);
+       byte var3 = 0;
+-      BlockPos var4 = new BlockPos(this);
++      BlockPos var4 = this.blockPosition();
+       int var5 = (int)var2.y - var4.getY();
+       if (var5 > 2) {
+          var3 = 4;
+       } else if (var5 < -2) {
+          var3 = -4;
+@@ -464,11 +462,11 @@
+    private void setRolling(boolean var1) {
+       this.setFlag(2, var1);
+    }
+ 
+    private boolean isTooFarAway(BlockPos var1) {
+-      return !this.closerThan(var1, 48);
++      return !this.closerThan(var1, 32);
+    }
+ 
+    private void setFlag(int var1, boolean var2) {
+       if (var2) {
+          this.entityData.set(DATA_FLAGS_ID, (byte)((Byte)this.entityData.get(DATA_FLAGS_ID) | var1));
+@@ -480,18 +478,12 @@
+ 
+    private boolean getFlag(int var1) {
+       return ((Byte)this.entityData.get(DATA_FLAGS_ID) & var1) != 0;
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttributes().registerAttribute(SharedMonsterAttributes.FLYING_SPEED);
+-      this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0D);
+-      this.getAttribute(SharedMonsterAttributes.FLYING_SPEED).setBaseValue(0.6000000238418579D);
+-      this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.30000001192092896D);
+-      this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(2.0D);
+-      this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(48.0D);
++   public static AttributeSupplier.Builder createAttributes() {
++      return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 10.0D).add(Attributes.FLYING_SPEED, 0.6000000238418579D).add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D).add(Attributes.ATTACK_DAMAGE, 2.0D).add(Attributes.FOLLOW_RANGE, 48.0D);
+    }
+ 
+    protected PathNavigation createNavigation(Level var1) {
+       FlyingPathNavigation var2 = new FlyingPathNavigation(this, var1) {
+          public boolean isStableDestination(BlockPos var1) {
+@@ -513,11 +505,11 @@
+    public boolean isFood(ItemStack var1) {
+       return var1.getItem().is(ItemTags.FLOWERS);
+    }
+ 
+    private boolean isFlowerValid(BlockPos var1) {
+-      return this.level.isLoaded(var1) && this.level.getBlockState(var1).getBlock().is(BlockTags.FLOWERS);
++      return this.level.isLoaded(var1) && this.level.getBlockState(var1).getBlock().is((Tag)BlockTags.FLOWERS);
+    }
+ 
+    protected void playStepSound(BlockPos var1, BlockState var2) {
+    }
+ 
+@@ -591,11 +583,11 @@
+    protected void jumpInLiquid(Tag<Fluid> var1) {
+       this.setDeltaMovement(this.getDeltaMovement().add(0.0D, 0.01D, 0.0D));
+    }
+ 
+    private boolean closerThan(BlockPos var1, int var2) {
+-      return var1.closerThan(new BlockPos(this), (double)var2);
++      return var1.closerThan(this.blockPosition(), (double)var2);
+    }
+ 
+    static {
+       DATA_FLAGS_ID = SynchedEntityData.defineId(Bee.class, EntityDataSerializers.BYTE);
+       ANGER_TIME = SynchedEntityData.defineId(Bee.class, EntityDataSerializers.INT);
+@@ -670,16 +662,16 @@
+       }
+ 
+       public void tick() {
+          if (Bee.this.random.nextInt(30) == 0) {
+             for(int var1 = 1; var1 <= 2; ++var1) {
+-               BlockPos var2 = (new BlockPos(Bee.this)).below(var1);
++               BlockPos var2 = Bee.this.blockPosition().below(var1);
+                BlockState var3 = Bee.this.level.getBlockState(var2);
+                Block var4 = var3.getBlock();
+                boolean var5 = false;
+                IntegerProperty var6 = null;
+-               if (var4.is(BlockTags.BEE_GROWABLES)) {
++               if (var4.is((Tag)BlockTags.BEE_GROWABLES)) {
+                   if (var4 instanceof CropBlock) {
+                      CropBlock var7 = (CropBlock)var4;
+                      if (!var7.isMaxAge(var3)) {
+                         var5 = true;
+                         var6 = var7.getAgeProperty();
+@@ -746,11 +738,11 @@
+             Bee.this.hivePos = var3;
+          }
+       }
+ 
+       private List<BlockPos> findNearbyHivesWithSpace() {
+-         BlockPos var1 = new BlockPos(Bee.this);
++         BlockPos var1 = Bee.this.blockPosition();
+          PoiManager var2 = ((ServerLevel)Bee.this.level).getPoiManager();
+          Stream var3 = var2.getInRange((var0) -> {
+             return var0 == PoiType.BEEHIVE || var0 == PoiType.BEE_NEST;
+          }, var1, 20, PoiManager.Occupancy.ANY);
+          return (List)var3.map(PoiRecord::getPos).filter((var1x) -> {
+@@ -762,11 +754,11 @@
+    }
+ 
+    class BeePollinateGoal extends Bee.BaseBeeGoal {
+       private final Predicate<BlockState> VALID_POLLINATION_BLOCKS = (var0) -> {
+          if (var0.is(BlockTags.TALL_FLOWERS)) {
+-            if (var0.getBlock() == Blocks.SUNFLOWER) {
++            if (var0.is(Blocks.SUNFLOWER)) {
+                return var0.getValue(DoublePlantBlock.HALF) == DoubleBlockHalf.UPPER;
+             } else {
+                return true;
+             }
+          } else {
+@@ -855,11 +847,11 @@
+       public void tick() {
+          ++this.pollinatingTicks;
+          if (this.pollinatingTicks > 600) {
+             Bee.this.savedFlowerPos = null;
+          } else {
+-            Vec3 var1 = (new Vec3(Bee.this.savedFlowerPos)).add(0.5D, 0.6000000238418579D, 0.5D);
++            Vec3 var1 = Vec3.atBottomCenterOf(Bee.this.savedFlowerPos).add(0.0D, 0.6000000238418579D, 0.0D);
+             if (var1.distanceTo(Bee.this.position()) > 1.0D) {
+                this.hoverPos = var1;
+                this.setWantedPos();
+             } else {
+                if (this.hoverPos == null) {
+@@ -870,11 +862,11 @@
+                boolean var3 = true;
+                if (!var2 && this.pollinatingTicks > 600) {
+                   Bee.this.savedFlowerPos = null;
+                } else {
+                   if (var2) {
+-                     boolean var4 = Bee.this.random.nextInt(100) == 0;
++                     boolean var4 = Bee.this.random.nextInt(25) == 0;
+                      if (var4) {
+                         this.hoverPos = new Vec3(var1.x() + (double)this.getOffset(), var1.y(), var1.z() + (double)this.getOffset());
+                         Bee.this.navigation.stop();
+                      } else {
+                         var3 = false;
+@@ -909,18 +901,18 @@
+       private Optional<BlockPos> findNearbyFlower() {
+          return this.findNearestBlock(this.VALID_POLLINATION_BLOCKS, 5.0D);
+       }
+ 
+       private Optional<BlockPos> findNearestBlock(Predicate<BlockState> var1, double var2) {
+-         BlockPos var4 = new BlockPos(Bee.this);
++         BlockPos var4 = Bee.this.blockPosition();
+          BlockPos.MutableBlockPos var5 = new BlockPos.MutableBlockPos();
+ 
+          for(int var6 = 0; (double)var6 <= var2; var6 = var6 > 0 ? -var6 : 1 - var6) {
+             for(int var7 = 0; (double)var7 < var2; ++var7) {
+                for(int var8 = 0; var8 <= var7; var8 = var8 > 0 ? -var8 : 1 - var8) {
+                   for(int var9 = var8 < var7 && var8 > -var7 ? var7 : 0; var9 <= var7; var9 = var9 > 0 ? -var9 : 1 - var9) {
+-                     var5.set((Vec3i)var4).move(var8, var6 - 1, var9);
++                     var5.setWithOffset(var4, var8, var6 - 1, var9);
+                      if (var4.closerThan(var5, var2) && var1.test(Bee.this.level.getBlockState(var5))) {
+                         return Optional.of(var5);
+                      }
+                   }
+                }
+@@ -998,10 +990,11 @@
+    public class BeeGoToHiveGoal extends Bee.BaseBeeGoal {
+       private int travellingTicks;
+       private List<BlockPos> blacklistedTargets;
+       @Nullable
+       private Path lastPath;
++      private int ticksStuck;
+ 
+       BeeGoToHiveGoal() {
+          super(null);
+          this.travellingTicks = Bee.this.level.random.nextInt(10);
+          this.blacklistedTargets = Lists.newArrayList();
+@@ -1017,15 +1010,17 @@
+          return this.canBeeUse();
+       }
+ 
+       public void start() {
+          this.travellingTicks = 0;
++         this.ticksStuck = 0;
+          super.start();
+       }
+ 
+       public void stop() {
+          this.travellingTicks = 0;
++         this.ticksStuck = 0;
+          Bee.this.navigation.stop();
+          Bee.this.navigation.resetMaxVisitedNodesMultiplier();
+       }
+ 
+       public void tick() {
+@@ -1043,11 +1038,15 @@
+                } else {
+                   boolean var1 = this.pathfindDirectlyTowards(Bee.this.hivePos);
+                   if (!var1) {
+                      this.dropAndBlacklistHive();
+                   } else if (this.lastPath != null && Bee.this.navigation.getPath().sameAs(this.lastPath)) {
+-                     this.dropHive();
++                     ++this.ticksStuck;
++                     if (this.ticksStuck > 60) {
++                        this.dropHive();
++                        this.ticksStuck = 0;
++                     }
+                   } else {
+                      this.lastPath = Bee.this.navigation.getPath();
+                   }
+ 
+                }
+@@ -1123,12 +1122,12 @@
+       }
+ 
+       @Nullable
+       private Vec3 findPos() {
+          Vec3 var1;
+-         if (Bee.this.isHiveValid() && !Bee.this.closerThan(Bee.this.hivePos, 40)) {
+-            Vec3 var2 = new Vec3(Bee.this.hivePos);
++         if (Bee.this.isHiveValid() && !Bee.this.closerThan(Bee.this.hivePos, 22)) {
++            Vec3 var2 = Vec3.atCenterOf(Bee.this.hivePos);
+             var1 = var2.subtract(Bee.this.position()).normalize();
+          } else {
+             var1 = Bee.this.getViewVector(0.0F);
+          }
+ 

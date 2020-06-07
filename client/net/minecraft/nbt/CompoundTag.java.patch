@@ -1,0 +1,185 @@
+--- net/minecraft/nbt/CompoundTag.java
++++ net/minecraft/nbt/CompoundTag.java
+@@ -1,10 +1,13 @@
+ package net.minecraft.nbt;
+ 
+ import com.google.common.base.Strings;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.Dynamic;
+ import java.io.DataInput;
+ import java.io.DataOutput;
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.Collection;
+@@ -20,50 +23,23 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class CompoundTag implements Tag {
+-   private static final Logger LOGGER = LogManager.getLogger();
+-   private static final Pattern SIMPLE_VALUE = Pattern.compile("[A-Za-z0-9._+-]+");
+-   public static final TagType<CompoundTag> TYPE = new TagType<CompoundTag>() {
+-      public CompoundTag load(DataInput var1, int var2, NbtAccounter var3) throws IOException {
+-         var3.accountBits(384L);
+-         if (var2 > 512) {
+-            throw new RuntimeException("Tried to read NBT tag with too high complexity, depth > 512");
+-         } else {
+-            HashMap var4 = Maps.newHashMap();
+-
+-            byte var5;
+-            while((var5 = CompoundTag.readNamedTagType(var1, var3)) != 0) {
+-               String var6 = CompoundTag.readNamedTagName(var1, var3);
+-               var3.accountBits((long)(224 + 16 * var6.length()));
+-               Tag var7 = CompoundTag.readNamedTagData(TagTypes.getType(var5), var6, var1, var2 + 1, var3);
+-               if (var4.put(var6, var7) != null) {
+-                  var3.accountBits(288L);
+-               }
+-            }
+-
+-            return new CompoundTag(var4);
+-         }
+-      }
+-
+-      public String getName() {
+-         return "COMPOUND";
+-      }
+-
+-      public String getPrettyName() {
+-         return "TAG_Compound";
+-      }
+-   };
++   public static final Codec<CompoundTag> CODEC;
++   private static final Logger LOGGER;
++   private static final Pattern SIMPLE_VALUE;
++   public static final TagType<CompoundTag> TYPE;
+    private final Map<String, Tag> tags;
+ 
+-   private CompoundTag(Map<String, Tag> var1) {
++   protected CompoundTag(Map<String, Tag> var1) {
+       this.tags = var1;
+    }
+ 
+    public CompoundTag() {
+       this(Maps.newHashMap());
+@@ -117,27 +93,22 @@
+    public void putLong(String var1, long var2) {
+       this.tags.put(var1, LongTag.valueOf(var2));
+    }
+ 
+    public void putUUID(String var1, UUID var2) {
+-      this.putLong(var1 + "Most", var2.getMostSignificantBits());
+-      this.putLong(var1 + "Least", var2.getLeastSignificantBits());
++      this.tags.put(var1, NbtUtils.createUUID(var2));
+    }
+ 
+    public UUID getUUID(String var1) {
+-      return new UUID(this.getLong(var1 + "Most"), this.getLong(var1 + "Least"));
++      return NbtUtils.loadUUID(this.get(var1));
+    }
+ 
+    public boolean hasUUID(String var1) {
+-      return this.contains(var1 + "Most", 99) && this.contains(var1 + "Least", 99);
++      Tag var2 = this.get(var1);
++      return var2 != null && var2.getType() == IntArrayTag.TYPE && ((IntArrayTag)var2).getAsIntArray().length == 4;
+    }
+ 
+-   public void removeUUID(String var1) {
+-      this.remove(var1 + "Most");
+-      this.remove(var1 + "Least");
+-   }
+-
+    public void putFloat(String var1, float var2) {
+       this.tags.put(var1, FloatTag.valueOf(var2));
+    }
+ 
+    public void putDouble(String var1, double var2) {
+@@ -456,11 +427,11 @@
+       if (SIMPLE_VALUE.matcher(var0).matches()) {
+          return (new TextComponent(var0)).withStyle(SYNTAX_HIGHLIGHTING_KEY);
+       } else {
+          String var1 = StringTag.quoteAndEscape(var0);
+          String var2 = var1.substring(0, 1);
+-         Component var3 = (new TextComponent(var1.substring(1, var1.length() - 1))).withStyle(SYNTAX_HIGHLIGHTING_KEY);
++         MutableComponent var3 = (new TextComponent(var1.substring(1, var1.length() - 1))).withStyle(SYNTAX_HIGHLIGHTING_KEY);
+          return (new TextComponent(var2)).append(var3).append(var2);
+       }
+    }
+ 
+    public Component getPrettyDisplay(String var1, int var2) {
+@@ -477,12 +448,12 @@
+ 
+          if (!var1.isEmpty()) {
+             var3.append("\n");
+          }
+ 
+-         Component var7;
+-         for(Iterator var8 = ((Collection)var4).iterator(); var8.hasNext(); var3.append(var7)) {
++         MutableComponent var7;
++         for(Iterator var8 = ((Collection)var4).iterator(); var8.hasNext(); var3.append((Component)var7)) {
+             String var6 = (String)var8.next();
+             var7 = (new TextComponent(Strings.repeat(var1, var2 + 1))).append(handleEscapePretty(var6)).append(String.valueOf(':')).append(" ").append(((Tag)this.tags.get(var6)).getPrettyDisplay(var1, var2 + 1));
+             if (var8.hasNext()) {
+                var7.append(String.valueOf(',')).append(var1.isEmpty() ? " " : "\n");
+             }
+@@ -494,6 +465,51 @@
+ 
+          var3.append("}");
+          return var3;
+       }
+    }
++
++   protected Map<String, Tag> entries() {
++      return Collections.unmodifiableMap(this.tags);
++   }
++
++   static {
++      CODEC = Codec.PASSTHROUGH.comapFlatMap((var0) -> {
++         Tag var1 = (Tag)var0.convert(NbtOps.INSTANCE).getValue();
++         return var1 instanceof CompoundTag ? DataResult.success((CompoundTag)var1) : DataResult.error("Not a compound tag: " + var1);
++      }, (var0) -> {
++         return new Dynamic(NbtOps.INSTANCE, var0);
++      });
++      LOGGER = LogManager.getLogger();
++      SIMPLE_VALUE = Pattern.compile("[A-Za-z0-9._+-]+");
++      TYPE = new TagType<CompoundTag>() {
++         public CompoundTag load(DataInput var1, int var2, NbtAccounter var3) throws IOException {
++            var3.accountBits(384L);
++            if (var2 > 512) {
++               throw new RuntimeException("Tried to read NBT tag with too high complexity, depth > 512");
++            } else {
++               HashMap var4 = Maps.newHashMap();
++
++               byte var5;
++               while((var5 = CompoundTag.readNamedTagType(var1, var3)) != 0) {
++                  String var6 = CompoundTag.readNamedTagName(var1, var3);
++                  var3.accountBits((long)(224 + 16 * var6.length()));
++                  Tag var7 = CompoundTag.readNamedTagData(TagTypes.getType(var5), var6, var1, var2 + 1, var3);
++                  if (var4.put(var6, var7) != null) {
++                     var3.accountBits(288L);
++                  }
++               }
++
++               return new CompoundTag(var4);
++            }
++         }
++
++         public String getName() {
++            return "COMPOUND";
++         }
++
++         public String getPrettyName() {
++            return "TAG_Compound";
++         }
++      };
++   }
+ }

@@ -1,0 +1,28 @@
+--- net/minecraft/world/item/WritableBookItem.java
++++ net/minecraft/world/item/WritableBookItem.java
+@@ -21,22 +21,22 @@
+ 
+    public InteractionResult useOn(UseOnContext var1) {
+       Level var2 = var1.getLevel();
+       BlockPos var3 = var1.getClickedPos();
+       BlockState var4 = var2.getBlockState(var3);
+-      if (var4.getBlock() == Blocks.LECTERN) {
+-         return LecternBlock.tryPlaceBook(var2, var3, var4, var1.getItemInHand()) ? InteractionResult.SUCCESS : InteractionResult.PASS;
++      if (var4.is(Blocks.LECTERN)) {
++         return LecternBlock.tryPlaceBook(var2, var3, var4, var1.getItemInHand()) ? InteractionResult.sidedSuccess(var2.isClientSide) : InteractionResult.PASS;
+       } else {
+          return InteractionResult.PASS;
+       }
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+       ItemStack var4 = var2.getItemInHand(var3);
+       var2.openItemGui(var4, var3);
+       var2.awardStat(Stats.ITEM_USED.get(this));
+-      return InteractionResultHolder.success(var4);
++      return InteractionResultHolder.sidedSuccess(var4, var1.isClientSide());
+    }
+ 
+    public static boolean makeSureTagIsValid(@Nullable CompoundTag var0) {
+       if (var0 == null) {
+          return false;

@@ -1,0 +1,347 @@
+--- net/minecraft/network/chat/Component.java
++++ net/minecraft/network/chat/Component.java
+@@ -17,167 +17,104 @@
+ import java.io.StringReader;
+ import java.lang.reflect.Field;
+ import java.lang.reflect.Type;
+ import java.util.Iterator;
+ import java.util.List;
++import java.util.Optional;
+ import java.util.Map.Entry;
+-import java.util.function.Consumer;
+-import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+-import net.minecraft.ChatFormatting;
+ import net.minecraft.Util;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.util.LowerCaseEnumTypeAdapterFactory;
+ 
+-public interface Component extends Message, Iterable<Component> {
+-   Component setStyle(Style var1);
+-
++public interface Component extends Message, FormattedText {
+    Style getStyle();
+ 
+-   default Component append(String var1) {
+-      return this.append((Component)(new TextComponent(var1)));
+-   }
+-
+-   Component append(Component var1);
+-
+    String getContents();
+ 
+    default String getString() {
+       StringBuilder var1 = new StringBuilder();
+-      this.stream().forEach((var1x) -> {
+-         var1.append(var1x.getContents());
++      this.visit((var1x) -> {
++         var1.append(var1x);
++         return Optional.empty();
+       });
+       return var1.toString();
+    }
+ 
+    default String getString(int var1) {
+       StringBuilder var2 = new StringBuilder();
+-      Iterator var3 = this.stream().iterator();
+-
+-      while(var3.hasNext()) {
+-         int var4 = var1 - var2.length();
+-         if (var4 <= 0) {
+-            break;
++      this.visit((var2x) -> {
++         int var3 = var1 - var2.length();
++         if (var3 <= 0) {
++            return STOP_ITERATION;
++         } else {
++            var2.append(var2x.length() <= var3 ? var2x : var2x.substring(0, var3));
++            return Optional.empty();
+          }
+-
+-         String var5 = ((Component)var3.next()).getContents();
+-         var2.append(var5.length() <= var4 ? var5 : var5.substring(0, var4));
+-      }
+-
++      });
+       return var2.toString();
+    }
+ 
+-   default String getColoredString() {
+-      StringBuilder var1 = new StringBuilder();
+-      String var2 = "";
+-      Iterator var3 = this.stream().iterator();
+-
+-      while(var3.hasNext()) {
+-         Component var4 = (Component)var3.next();
+-         String var5 = var4.getContents();
+-         if (!var5.isEmpty()) {
+-            String var6 = var4.getStyle().getLegacyFormatCodes();
+-            if (!var6.equals(var2)) {
+-               if (!var2.isEmpty()) {
+-                  var1.append(ChatFormatting.RESET);
+-               }
+-
+-               var1.append(var6);
+-               var2 = var6;
+-            }
+-
+-            var1.append(var5);
+-         }
+-      }
+-
+-      if (!var2.isEmpty()) {
+-         var1.append(ChatFormatting.RESET);
+-      }
+-
+-      return var1.toString();
+-   }
+-
+    List<Component> getSiblings();
+ 
+-   Stream<Component> stream();
++   MutableComponent toMutable();
+ 
+-   default Stream<Component> flatStream() {
+-      return this.stream().map(Component::flattenStyle);
+-   }
++   MutableComponent mutableCopy();
+ 
+-   default Iterator<Component> iterator() {
+-      return this.flatStream().iterator();
+-   }
++   default <T> Optional<T> visit(FormattedText.StyledContentConsumer<T> var1, Style var2) {
++      Style var3 = this.getStyle().applyTo(var2);
++      Optional var4 = this.visitSelf(var1, var3);
++      if (var4.isPresent()) {
++         return var4;
++      } else {
++         Iterator var5 = this.getSiblings().iterator();
+ 
+-   Component copy();
++         Optional var7;
++         do {
++            if (!var5.hasNext()) {
++               return Optional.empty();
++            }
+ 
+-   default Component deepCopy() {
+-      Component var1 = this.copy();
+-      var1.setStyle(this.getStyle().copy());
+-      Iterator var2 = this.getSiblings().iterator();
++            Component var6 = (Component)var5.next();
++            var7 = var6.visit(var1, var3);
++         } while(!var7.isPresent());
+ 
+-      while(var2.hasNext()) {
+-         Component var3 = (Component)var2.next();
+-         var1.append(var3.deepCopy());
++         return var7;
+       }
+-
+-      return var1;
+    }
+ 
+-   default Component withStyle(Consumer<Style> var1) {
+-      var1.accept(this.getStyle());
+-      return this;
+-   }
++   default <T> Optional<T> visit(FormattedText.ContentConsumer<T> var1) {
++      Optional var2 = this.visitSelf(var1);
++      if (var2.isPresent()) {
++         return var2;
++      } else {
++         Iterator var3 = this.getSiblings().iterator();
+ 
+-   default Component withStyle(ChatFormatting... var1) {
+-      ChatFormatting[] var2 = var1;
+-      int var3 = var1.length;
++         Optional var5;
++         do {
++            if (!var3.hasNext()) {
++               return Optional.empty();
++            }
+ 
+-      for(int var4 = 0; var4 < var3; ++var4) {
+-         ChatFormatting var5 = var2[var4];
+-         this.withStyle(var5);
+-      }
++            Component var4 = (Component)var3.next();
++            var5 = var4.visit(var1);
++         } while(!var5.isPresent());
+ 
+-      return this;
++         return var5;
++      }
+    }
+ 
+-   default Component withStyle(ChatFormatting var1) {
+-      Style var2 = this.getStyle();
+-      if (var1.isColor()) {
+-         var2.setColor(var1);
+-      }
+-
+-      if (var1.isFormat()) {
+-         switch(var1) {
+-         case OBFUSCATED:
+-            var2.setObfuscated(true);
+-            break;
+-         case BOLD:
+-            var2.setBold(true);
+-            break;
+-         case STRIKETHROUGH:
+-            var2.setStrikethrough(true);
+-            break;
+-         case UNDERLINE:
+-            var2.setUnderlined(true);
+-            break;
+-         case ITALIC:
+-            var2.setItalic(true);
+-         }
+-      }
+-
+-      return this;
++   default <T> Optional<T> visitSelf(FormattedText.StyledContentConsumer<T> var1, Style var2) {
++      return var1.accept(var2, this.getContents());
+    }
+ 
+-   static Component flattenStyle(Component var0) {
+-      Component var1 = var0.copy();
+-      var1.setStyle(var0.getStyle().flatCopy());
+-      return var1;
++   default <T> Optional<T> visitSelf(FormattedText.ContentConsumer<T> var1) {
++      return var1.accept(this.getContents());
+    }
+ 
+-   public static class Serializer implements JsonDeserializer<Component>, JsonSerializer<Component> {
++   public static class Serializer implements JsonDeserializer<MutableComponent>, JsonSerializer<Component> {
+       private static final Gson GSON = (Gson)Util.make(() -> {
+          GsonBuilder var0 = new GsonBuilder();
+          var0.disableHtmlEscaping();
+          var0.registerTypeHierarchyAdapter(Component.class, new Component.Serializer());
+          var0.registerTypeHierarchyAdapter(Style.class, new Style.Serializer());
+@@ -206,26 +143,26 @@
+       });
+ 
+       public Serializer() {
+       }
+ 
+-      public Component deserialize(JsonElement var1, Type var2, JsonDeserializationContext var3) throws JsonParseException {
++      public MutableComponent deserialize(JsonElement var1, Type var2, JsonDeserializationContext var3) throws JsonParseException {
+          if (var1.isJsonPrimitive()) {
+             return new TextComponent(var1.getAsString());
+          } else if (!var1.isJsonObject()) {
+             if (var1.isJsonArray()) {
+                JsonArray var11 = var1.getAsJsonArray();
+-               Component var19 = null;
++               MutableComponent var19 = null;
+                Iterator var14 = var11.iterator();
+ 
+                while(var14.hasNext()) {
+                   JsonElement var17 = (JsonElement)var14.next();
+-                  Component var18 = this.deserialize(var17, var17.getClass(), var3);
++                  MutableComponent var18 = this.deserialize(var17, var17.getClass(), var3);
+                   if (var19 == null) {
+                      var19 = var18;
+                   } else {
+-                     var19.append(var18);
++                     var19.append((Component)var18);
+                   }
+                }
+ 
+                return var19;
+             } else {
+@@ -254,22 +191,19 @@
+                         }
+                      }
+ 
+                      var5 = new TranslatableComponent(var6, var8);
+                   } else {
+-                     var5 = new TranslatableComponent(var6, new Object[0]);
++                     var5 = new TranslatableComponent(var6);
+                   }
+                } else if (var4.has("score")) {
+                   JsonObject var12 = GsonHelper.getAsJsonObject(var4, "score");
+                   if (!var12.has("name") || !var12.has("objective")) {
+                      throw new JsonParseException("A score component needs a least a name and an objective");
+                   }
+ 
+                   var5 = new ScoreComponent(GsonHelper.getAsString(var12, "name"), GsonHelper.getAsString(var12, "objective"));
+-                  if (var12.has("value")) {
+-                     ((ScoreComponent)var5).setValue(GsonHelper.getAsString(var12, "value"));
+-                  }
+                } else if (var4.has("selector")) {
+                   var5 = new SelectorComponent(GsonHelper.getAsString(var4, "selector"));
+                } else if (var4.has("keybind")) {
+                   var5 = new KeybindComponent(GsonHelper.getAsString(var4, "keybind"));
+                } else {
+@@ -298,16 +232,16 @@
+                if (var13.size() <= 0) {
+                   throw new JsonParseException("Unexpected empty array of components");
+                }
+ 
+                for(int var16 = 0; var16 < var13.size(); ++var16) {
+-                  ((Component)var5).append(this.deserialize(var13.get(var16), var2, var3));
++                  ((MutableComponent)var5).append((Component)this.deserialize(var13.get(var16), var2, var3));
+                }
+             }
+ 
+-            ((Component)var5).setStyle((Style)var3.deserialize(var1, Style.class));
+-            return (Component)var5;
++            ((MutableComponent)var5).setStyle((Style)var3.deserialize(var1, Style.class));
++            return (MutableComponent)var5;
+          }
+       }
+ 
+       private void serializeStyle(Style var1, JsonObject var2, JsonSerializationContext var3) {
+          JsonElement var4 = var3.serialize(var1);
+@@ -365,11 +299,10 @@
+          } else if (var1 instanceof ScoreComponent) {
+             ScoreComponent var12 = (ScoreComponent)var1;
+             JsonObject var16 = new JsonObject();
+             var16.addProperty("name", var12.getName());
+             var16.addProperty("objective", var12.getObjective());
+-            var16.addProperty("value", var12.getContents());
+             var4.add("score", var16);
+          } else if (var1 instanceof SelectorComponent) {
+             SelectorComponent var13 = (SelectorComponent)var1;
+             var4.addProperty("selector", var13.getPattern());
+          } else if (var1 instanceof KeybindComponent) {
+@@ -409,29 +342,29 @@
+       public static JsonElement toJsonTree(Component var0) {
+          return GSON.toJsonTree(var0);
+       }
+ 
+       @Nullable
+-      public static Component fromJson(String var0) {
+-         return (Component)GsonHelper.fromJson(GSON, var0, Component.class, false);
++      public static MutableComponent fromJson(String var0) {
++         return (MutableComponent)GsonHelper.fromJson(GSON, var0, MutableComponent.class, false);
+       }
+ 
+       @Nullable
+-      public static Component fromJson(JsonElement var0) {
+-         return (Component)GSON.fromJson(var0, Component.class);
++      public static MutableComponent fromJson(JsonElement var0) {
++         return (MutableComponent)GSON.fromJson(var0, MutableComponent.class);
+       }
+ 
+       @Nullable
+-      public static Component fromJsonLenient(String var0) {
+-         return (Component)GsonHelper.fromJson(GSON, var0, Component.class, true);
++      public static MutableComponent fromJsonLenient(String var0) {
++         return (MutableComponent)GsonHelper.fromJson(GSON, var0, MutableComponent.class, true);
+       }
+ 
+-      public static Component fromJson(com.mojang.brigadier.StringReader var0) {
++      public static MutableComponent fromJson(com.mojang.brigadier.StringReader var0) {
+          try {
+             JsonReader var1 = new JsonReader(new StringReader(var0.getRemaining()));
+             var1.setLenient(false);
+-            Component var2 = (Component)GSON.getAdapter(Component.class).read(var1);
++            MutableComponent var2 = (MutableComponent)GSON.getAdapter(MutableComponent.class).read(var1);
+             var0.setCursor(var0.getCursor() + getPos(var1));
+             return var2;
+          } catch (StackOverflowError | IOException var3) {
+             throw new JsonParseException(var3);
+          }

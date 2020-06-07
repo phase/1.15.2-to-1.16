@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/ChunkPos.java
++++ net/minecraft/world/level/ChunkPos.java
+@@ -99,11 +99,11 @@
+    public String toString() {
+       return "[" + this.x + ", " + this.z + "]";
+    }
+ 
+    public BlockPos getWorldPosition() {
+-      return new BlockPos(this.x << 4, 0, this.z << 4);
++      return new BlockPos(this.getMinBlockX(), 0, this.getMinBlockZ());
+    }
+ 
+    public int getChessboardDistance(ChunkPos var1) {
+       return Math.max(Math.abs(this.x - var1.x), Math.abs(this.z - var1.z));
+    }

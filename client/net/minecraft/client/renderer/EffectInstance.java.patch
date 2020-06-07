@@ -1,0 +1,117 @@
+--- net/minecraft/client/renderer/EffectInstance.java
++++ net/minecraft/client/renderer/EffectInstance.java
+@@ -12,10 +12,11 @@
+ import com.mojang.blaze3d.shaders.Effect;
+ import com.mojang.blaze3d.shaders.Program;
+ import com.mojang.blaze3d.shaders.ProgramManager;
+ import com.mojang.blaze3d.shaders.Uniform;
+ import com.mojang.blaze3d.systems.RenderSystem;
++import it.unimi.dsi.fastutil.ints.IntArrayList;
+ import java.io.IOException;
+ import java.io.InputStreamReader;
+ import java.io.Reader;
+ import java.nio.charset.StandardCharsets;
+ import java.util.Iterator;
+@@ -43,11 +44,10 @@
+    private final List<Uniform> uniforms = Lists.newArrayList();
+    private final List<Integer> uniformLocations = Lists.newArrayList();
+    private final Map<String, Uniform> uniformMap = Maps.newHashMap();
+    private final int programId;
+    private final String name;
+-   private final boolean cull;
+    private boolean dirty;
+    private final BlendMode blend;
+    private final List<Integer> attributes;
+    private final List<String> attributeNames;
+    private final Program vertexProgram;
+@@ -119,11 +119,10 @@
+                }
+             }
+          }
+ 
+          this.blend = parseBlendNode(GsonHelper.getAsJsonObject(var5, "blend", (JsonObject)null));
+-         this.cull = GsonHelper.getAsBoolean(var5, "cull", true);
+          this.vertexProgram = getOrCreate(var1, Program.Type.VERTEX, var6);
+          this.fragmentProgram = getOrCreate(var1, Program.Type.FRAGMENT, var27);
+          this.programId = ProgramManager.createProgram();
+          ProgramManager.linkProgram(this);
+          this.updateLocations();
+@@ -255,16 +254,10 @@
+       if (this.programId != lastProgramId) {
+          ProgramManager.glUseProgram(this.programId);
+          lastProgramId = this.programId;
+       }
+ 
+-      if (this.cull) {
+-         RenderSystem.enableCull();
+-      } else {
+-         RenderSystem.disableCull();
+-      }
+-
+       for(int var1 = 0; var1 < this.samplerLocations.size(); ++var1) {
+          if (this.samplerMap.get(this.samplerNames.get(var1)) != null) {
+             RenderSystem.activeTexture('\u84c0' + var1);
+             RenderSystem.enableTexture();
+             Object var2 = this.samplerMap.get(this.samplerNames.get(var1));
+@@ -309,41 +302,41 @@
+       return (AbstractUniform)(var2 == null ? DUMMY_UNIFORM : var2);
+    }
+ 
+    private void updateLocations() {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+-      int var1 = 0;
++      IntArrayList var1 = new IntArrayList();
+ 
+-      String var3;
+-      int var4;
+-      for(int var2 = 0; var1 < this.samplerNames.size(); ++var2) {
+-         var3 = (String)this.samplerNames.get(var1);
+-         var4 = Uniform.glGetUniformLocation(this.programId, var3);
++      int var2;
++      for(var2 = 0; var2 < this.samplerNames.size(); ++var2) {
++         String var3 = (String)this.samplerNames.get(var2);
++         int var4 = Uniform.glGetUniformLocation(this.programId, var3);
+          if (var4 == -1) {
+-            LOGGER.warn("Shader {}could not find sampler named {} in the specified shader program.", this.name, var3);
++            LOGGER.warn("Shader {} could not find sampler named {} in the specified shader program.", this.name, var3);
+             this.samplerMap.remove(var3);
+-            this.samplerNames.remove(var2);
+-            --var2;
++            var1.add(var2);
+          } else {
+             this.samplerLocations.add(var4);
+          }
++      }
+ 
+-         ++var1;
++      for(var2 = var1.size() - 1; var2 >= 0; --var2) {
++         this.samplerNames.remove(var1.getInt(var2));
+       }
+ 
+-      Iterator var5 = this.uniforms.iterator();
++      Iterator var6 = this.uniforms.iterator();
+ 
+-      while(var5.hasNext()) {
+-         Uniform var6 = (Uniform)var5.next();
+-         var3 = var6.getName();
+-         var4 = Uniform.glGetUniformLocation(this.programId, var3);
+-         if (var4 == -1) {
+-            LOGGER.warn("Could not find uniform named {} in the specified shader program.", var3);
++      while(var6.hasNext()) {
++         Uniform var7 = (Uniform)var6.next();
++         String var8 = var7.getName();
++         int var5 = Uniform.glGetUniformLocation(this.programId, var8);
++         if (var5 == -1) {
++            LOGGER.warn("Could not find uniform named {} in the specified shader program.", var8);
+          } else {
+-            this.uniformLocations.add(var4);
+-            var6.setLocation(var4);
+-            this.uniformMap.put(var3, var6);
++            this.uniformLocations.add(var5);
++            var7.setLocation(var5);
++            this.uniformMap.put(var8, var7);
+          }
+       }
+ 
+    }
+ 

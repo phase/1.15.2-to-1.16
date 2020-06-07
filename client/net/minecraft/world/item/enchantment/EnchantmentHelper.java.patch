@@ -1,0 +1,97 @@
+--- net/minecraft/world/item/enchantment/EnchantmentHelper.java
++++ net/minecraft/world/item/enchantment/EnchantmentHelper.java
+@@ -8,10 +8,11 @@
+ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Random;
+ import java.util.Map.Entry;
++import java.util.function.Predicate;
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.core.Registry;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.ListTag;
+@@ -228,10 +229,14 @@
+ 
+    public static boolean hasFrostWalker(LivingEntity var0) {
+       return getEnchantmentLevel(Enchantments.FROST_WALKER, var0) > 0;
+    }
+ 
++   public static boolean hasSoulSpeed(LivingEntity var0) {
++      return getEnchantmentLevel(Enchantments.SOUL_SPEED, var0) > 0;
++   }
++
+    public static boolean hasBindingCurse(ItemStack var0) {
+       return getItemEnchantmentLevel(Enchantments.BINDING_CURSE, var0) > 0;
+    }
+ 
+    public static boolean hasVanishingCurse(ItemStack var0) {
+@@ -250,26 +255,33 @@
+       return getItemEnchantmentLevel(Enchantments.CHANNELING, var0) > 0;
+    }
+ 
+    @Nullable
+    public static Entry<EquipmentSlot, ItemStack> getRandomItemWith(Enchantment var0, LivingEntity var1) {
+-      Map var2 = var0.getSlotItems(var1);
+-      if (var2.isEmpty()) {
++      return getRandomItemWith(var0, var1, (var0x) -> {
++         return true;
++      });
++   }
++
++   @Nullable
++   public static Entry<EquipmentSlot, ItemStack> getRandomItemWith(Enchantment var0, LivingEntity var1, Predicate<ItemStack> var2) {
++      Map var3 = var0.getSlotItems(var1);
++      if (var3.isEmpty()) {
+          return null;
+       } else {
+-         ArrayList var3 = Lists.newArrayList();
+-         Iterator var4 = var2.entrySet().iterator();
++         ArrayList var4 = Lists.newArrayList();
++         Iterator var5 = var3.entrySet().iterator();
+ 
+-         while(var4.hasNext()) {
+-            Entry var5 = (Entry)var4.next();
+-            ItemStack var6 = (ItemStack)var5.getValue();
+-            if (!var6.isEmpty() && getItemEnchantmentLevel(var0, var6) > 0) {
+-               var3.add(var5);
++         while(var5.hasNext()) {
++            Entry var6 = (Entry)var5.next();
++            ItemStack var7 = (ItemStack)var6.getValue();
++            if (!var7.isEmpty() && getItemEnchantmentLevel(var0, var7) > 0 && var2.test(var7)) {
++               var4.add(var6);
+             }
+          }
+ 
+-         return var3.isEmpty() ? null : (Entry)var3.get(var1.getRandom().nextInt(var3.size()));
++         return var4.isEmpty() ? null : (Entry)var4.get(var1.getRandom().nextInt(var4.size()));
+       }
+    }
+ 
+    public static int getEnchantmentCost(Random var0, int var1, int var2, ItemStack var3) {
+       Item var4 = var3.getItem();
+@@ -375,16 +387,18 @@
+       while(true) {
+          while(true) {
+             Enchantment var7;
+             do {
+                do {
+-                  if (!var6.hasNext()) {
+-                     return var3;
+-                  }
++                  do {
++                     if (!var6.hasNext()) {
++                        return var3;
++                     }
+ 
+-                  var7 = (Enchantment)var6.next();
+-               } while(var7.isTreasureOnly() && !var2);
++                     var7 = (Enchantment)var6.next();
++                  } while(var7.isTreasureOnly() && !var2);
++               } while(!var7.isDiscoverable());
+             } while(!var7.category.canEnchant(var4) && !var5);
+ 
+             for(int var8 = var7.getMaxLevel(); var8 > var7.getMinLevel() - 1; --var8) {
+                if (var0 >= var7.getMinCost(var8) && var0 <= var7.getMaxCost(var8)) {
+                   var3.add(new EnchantmentInstance(var7, var8));

@@ -1,0 +1,29 @@
+--- net/minecraft/server/packs/resources/FallbackResourceManager.java
++++ net/minecraft/server/packs/resources/FallbackResourceManager.java
+@@ -13,10 +13,11 @@
+ import java.util.Collections;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Set;
+ import java.util.function.Predicate;
++import java.util.stream.Stream;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.packs.Pack;
+ import net.minecraft.server.packs.PackType;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+@@ -126,10 +127,14 @@
+ 
+       Collections.sort(var3);
+       return var3;
+    }
+ 
++   public Stream<Pack> listPacks() {
++      return this.fallbacks.stream();
++   }
++
+    static ResourceLocation getMetadataLocation(ResourceLocation var0) {
+       return new ResourceLocation(var0.getNamespace(), var0.getPath() + ".mcmeta");
+    }
+ 
+    static class LeakedResourceWarningInputStream extends FilterInputStream {

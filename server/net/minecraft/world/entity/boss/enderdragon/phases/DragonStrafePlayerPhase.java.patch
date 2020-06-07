@@ -1,0 +1,54 @@
+--- net/minecraft/world/entity/boss/enderdragon/phases/DragonStrafePlayerPhase.java
++++ net/minecraft/world/entity/boss/enderdragon/phases/DragonStrafePlayerPhase.java
+@@ -1,9 +1,9 @@
+ package net.minecraft.world.entity.boss.enderdragon.phases;
+ 
+ import javax.annotation.Nullable;
+-import net.minecraft.core.BlockPos;
++import net.minecraft.core.Vec3i;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.entity.projectile.DragonFireball;
+@@ -64,11 +64,14 @@
+                   double var14 = this.dragon.head.getY(0.5D) + 0.5D;
+                   double var16 = this.dragon.head.getZ() - var27.z * 1.0D;
+                   double var18 = this.attackTarget.getX() - var12;
+                   double var20 = this.attackTarget.getY(0.5D) - var14;
+                   double var22 = this.attackTarget.getZ() - var16;
+-                  this.dragon.level.levelEvent((Player)null, 1017, new BlockPos(this.dragon), 0);
++                  if (!this.dragon.isSilent()) {
++                     this.dragon.level.levelEvent((Player)null, 1017, this.dragon.blockPosition(), 0);
++                  }
++
+                   DragonFireball var24 = new DragonFireball(this.dragon.level, this.dragon, var18, var20, var22);
+                   var24.moveTo(var12, var14, var16, 0.0F, 0.0F);
+                   this.dragon.level.addFreshEntity(var24);
+                   this.fireballCharge = 0;
+                   if (this.currentPath != null) {
+@@ -124,19 +127,19 @@
+       this.navigateToNextPathNode();
+    }
+ 
+    private void navigateToNextPathNode() {
+       if (this.currentPath != null && !this.currentPath.isDone()) {
+-         Vec3 var1 = this.currentPath.currentPos();
++         Vec3i var1 = this.currentPath.currentPos();
+          this.currentPath.next();
+-         double var2 = var1.x;
+-         double var6 = var1.z;
++         double var2 = (double)var1.getX();
++         double var6 = (double)var1.getZ();
+ 
+          double var4;
+          do {
+-            var4 = var1.y + (double)(this.dragon.getRandom().nextFloat() * 20.0F);
+-         } while(var4 < var1.y);
++            var4 = (double)((float)var1.getY() + this.dragon.getRandom().nextFloat() * 20.0F);
++         } while(var4 < (double)var1.getY());
+ 
+          this.targetLocation = new Vec3(var2, var4, var6);
+       }
+ 
+    }

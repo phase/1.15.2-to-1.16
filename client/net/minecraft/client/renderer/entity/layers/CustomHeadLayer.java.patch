@@ -1,0 +1,34 @@
+--- net/minecraft/client/renderer/entity/layers/CustomHeadLayer.java
++++ net/minecraft/client/renderer/entity/layers/CustomHeadLayer.java
+@@ -25,19 +25,31 @@
+ import net.minecraft.world.level.block.AbstractSkullBlock;
+ import net.minecraft.world.level.block.entity.SkullBlockEntity;
+ import org.apache.commons.lang3.StringUtils;
+ 
+ public class CustomHeadLayer<T extends LivingEntity, M extends EntityModel<T> & HeadedModel> extends RenderLayer<T, M> {
++   private final float scaleX;
++   private final float scaleY;
++   private final float scaleZ;
++
+    public CustomHeadLayer(RenderLayerParent<T, M> var1) {
++      this(var1, 1.0F, 1.0F, 1.0F);
++   }
++
++   public CustomHeadLayer(RenderLayerParent<T, M> var1, float var2, float var3, float var4) {
+       super(var1);
++      this.scaleX = var2;
++      this.scaleY = var3;
++      this.scaleZ = var4;
+    }
+ 
+    public void render(PoseStack var1, MultiBufferSource var2, int var3, T var4, float var5, float var6, float var7, float var8, float var9, float var10) {
+       ItemStack var11 = var4.getItemBySlot(EquipmentSlot.HEAD);
+       if (!var11.isEmpty()) {
+          Item var12 = var11.getItem();
+          var1.pushPose();
++         var1.scale(this.scaleX, this.scaleY, this.scaleZ);
+          boolean var13 = var4 instanceof Villager || var4 instanceof ZombieVillager;
+          float var14;
+          if (var4.isBaby() && !(var4 instanceof Villager)) {
+             var14 = 2.0F;
+             float var15 = 1.4F;

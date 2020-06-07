@@ -1,0 +1,15 @@
+--- net/minecraft/client/resources/model/ModelBakery.java
++++ net/minecraft/client/resources/model/ModelBakery.java
+@@ -688,11 +688,11 @@
+          var0.name = "generation marker";
+       });
+       BLOCK_ENTITY_MARKER = (BlockModel)Util.make(BlockModel.fromString("{\"gui_light\": \"side\"}"), (var0) -> {
+          var0.name = "block entity marker";
+       });
+-      ITEM_FRAME_FAKE_DEFINITION = (new StateDefinition.Builder(Blocks.AIR)).add(BooleanProperty.create("map")).create(BlockState::new);
++      ITEM_FRAME_FAKE_DEFINITION = (new StateDefinition.Builder(Blocks.AIR)).add(BooleanProperty.create("map")).create(Block::defaultBlockState, BlockState::new);
+       ITEM_MODEL_GENERATOR = new ItemModelGenerator();
+       STATIC_DEFINITIONS = ImmutableMap.of(new ResourceLocation("item_frame"), ITEM_FRAME_FAKE_DEFINITION);
+    }
+ 
+    static class ModelGroupKey {

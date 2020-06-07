@@ -1,0 +1,120 @@
+--- net/minecraft/world/level/block/ChestBlock.java
++++ net/minecraft/world/level/block/ChestBlock.java
+@@ -20,10 +20,11 @@
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.MenuProvider;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.animal.Cat;
++import net.minecraft.world.entity.monster.piglin.PiglinAi;
+ import net.minecraft.world.entity.player.Inventory;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.inventory.AbstractContainerMenu;
+ import net.minecraft.world.inventory.ChestMenu;
+ import net.minecraft.world.item.BlockPlaceContext;
+@@ -33,10 +34,11 @@
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntityType;
+ import net.minecraft.world.level.block.entity.ChestBlockEntity;
+ import net.minecraft.world.level.block.entity.LidBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.ChestType;
+@@ -60,11 +62,11 @@
+    protected static final VoxelShape EAST_AABB;
+    protected static final VoxelShape AABB;
+    private static final DoubleBlockCombiner.Combiner<ChestBlockEntity, Optional<Container>> CHEST_COMBINER;
+    private static final DoubleBlockCombiner.Combiner<ChestBlockEntity, Optional<MenuProvider>> MENU_PROVIDER_COMBINER;
+ 
+-   protected ChestBlock(Block.Properties var1, Supplier<BlockEntityType<? extends ChestBlockEntity>> var2) {
++   protected ChestBlock(BlockBehaviour.Properties var1, Supplier<BlockEntityType<? extends ChestBlockEntity>> var2) {
+       super(var1, var2);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(TYPE, ChestType.SINGLE)).setValue(WATERLOGGED, false));
+    }
+ 
+    public static DoubleBlockCombiner.BlockType getBlockType(BlockState var0) {
+@@ -83,11 +85,11 @@
+    public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {
+       if ((Boolean)var1.getValue(WATERLOGGED)) {
+          var4.getLiquidTicks().scheduleTick(var5, Fluids.WATER, Fluids.WATER.getTickDelay(var4));
+       }
+ 
+-      if (var3.getBlock() == this && var2.getAxis().isHorizontal()) {
++      if (var3.is(this) && var2.getAxis().isHorizontal()) {
+          ChestType var7 = (ChestType)var3.getValue(TYPE);
+          if (var1.getValue(TYPE) == ChestType.SINGLE && var7 != ChestType.SINGLE && var1.getValue(FACING) == var3.getValue(FACING) && getConnectedDirection(var3) == var2.getOpposite()) {
+             return (BlockState)var1.setValue(TYPE, var7.getOpposite());
+          }
+       } else if (getConnectedDirection(var1) == var2) {
+@@ -150,11 +152,11 @@
+    }
+ 
+    @Nullable
+    private Direction candidatePartnerFacing(BlockPlaceContext var1, Direction var2) {
+       BlockState var3 = var1.getLevel().getBlockState(var1.getClickedPos().relative(var2));
+-      return var3.getBlock() == this && var3.getValue(TYPE) == ChestType.SINGLE ? (Direction)var3.getValue(FACING) : null;
++      return var3.is(this) && var3.getValue(TYPE) == ChestType.SINGLE ? (Direction)var3.getValue(FACING) : null;
+    }
+ 
+    public void setPlacedBy(Level var1, BlockPos var2, BlockState var3, LivingEntity var4, ItemStack var5) {
+       if (var5.hasCustomHoverName()) {
+          BlockEntity var6 = var1.getBlockEntity(var2);
+@@ -164,11 +166,11 @@
+       }
+ 
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var4.getBlock()) {
++      if (!var1.is(var4.getBlock())) {
+          BlockEntity var6 = var2.getBlockEntity(var3);
+          if (var6 instanceof Container) {
+             Containers.dropContents(var2, var3, (Container)var6);
+             var2.updateNeighbourForOutputSignal(var3, this);
+          }
+@@ -183,13 +185,14 @@
+       } else {
+          MenuProvider var7 = this.getMenuProvider(var1, var2, var3);
+          if (var7 != null) {
+             var4.openMenu(var7);
+             var4.awardStat(this.getOpenChestStat());
++            PiglinAi.angerNearbyPiglinsThatSee(var4);
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    protected Stat<ResourceLocation> getOpenChestStat() {
+       return Stats.CUSTOM.get(Stats.OPEN_CHEST);
+@@ -255,11 +258,11 @@
+       if (!var2.isEmpty()) {
+          Iterator var3 = var2.iterator();
+ 
+          while(var3.hasNext()) {
+             Cat var4 = (Cat)var3.next();
+-            if (var4.isSitting()) {
++            if (var4.isInSittingPose()) {
+                return true;
+             }
+          }
+       }
+ 
+@@ -329,11 +332,11 @@
+ 
+                public Component getDisplayName() {
+                   if (var1.hasCustomName()) {
+                      return var1.getDisplayName();
+                   } else {
+-                     return (Component)(var2.hasCustomName() ? var2.getDisplayName() : new TranslatableComponent("container.chestDouble", new Object[0]));
++                     return (Component)(var2.hasCustomName() ? var2.getDisplayName() : new TranslatableComponent("container.chestDouble"));
+                   }
+                }
+             });
+          }
+ 

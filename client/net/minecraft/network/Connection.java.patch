@@ -1,0 +1,41 @@
+--- net/minecraft/network/Connection.java
++++ net/minecraft/network/Connection.java
+@@ -91,11 +91,11 @@
+       this.channel.config().setAutoRead(true);
+       LOGGER.debug("Enabled auto read");
+    }
+ 
+    public void channelInactive(ChannelHandlerContext var1) throws Exception {
+-      this.disconnect(new TranslatableComponent("disconnect.endOfStream", new Object[0]));
++      this.disconnect(new TranslatableComponent("disconnect.endOfStream"));
+    }
+ 
+    public void exceptionCaught(ChannelHandlerContext var1, Throwable var2) {
+       if (var2 instanceof SkipPacketException) {
+          LOGGER.debug("Skipping packet due to errors", var2.getCause());
+@@ -103,11 +103,11 @@
+          boolean var3 = !this.handlingFault;
+          this.handlingFault = true;
+          if (this.channel.isOpen()) {
+             if (var2 instanceof TimeoutException) {
+                LOGGER.debug("Timeout", var2);
+-               this.disconnect(new TranslatableComponent("disconnect.timeout", new Object[0]));
++               this.disconnect(new TranslatableComponent("disconnect.timeout"));
+             } else {
+                TranslatableComponent var4 = new TranslatableComponent("disconnect.genericReason", new Object[]{"Internal Exception: " + var2});
+                if (var3) {
+                   LOGGER.debug("Failed to sent packet", var2);
+                   this.send(new ClientboundDisconnectPacket(var4), (var2x) -> {
+@@ -346,11 +346,11 @@
+          } else {
+             this.disconnectionHandled = true;
+             if (this.getDisconnectedReason() != null) {
+                this.getPacketListener().onDisconnect(this.getDisconnectedReason());
+             } else if (this.getPacketListener() != null) {
+-               this.getPacketListener().onDisconnect(new TranslatableComponent("multiplayer.disconnect.generic", new Object[0]));
++               this.getPacketListener().onDisconnect(new TranslatableComponent("multiplayer.disconnect.generic"));
+             }
+          }
+ 
+       }
+    }

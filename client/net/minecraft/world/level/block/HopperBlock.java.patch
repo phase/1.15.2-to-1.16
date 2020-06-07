@@ -1,0 +1,66 @@
+--- net/minecraft/world/level/block/HopperBlock.java
++++ net/minecraft/world/level/block/HopperBlock.java
+@@ -16,10 +16,11 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.Hopper;
+ import net.minecraft.world.level.block.entity.HopperBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+@@ -46,11 +47,11 @@
+    private static final VoxelShape EAST_INTERACTION_SHAPE;
+    private static final VoxelShape NORTH_INTERACTION_SHAPE;
+    private static final VoxelShape SOUTH_INTERACTION_SHAPE;
+    private static final VoxelShape WEST_INTERACTION_SHAPE;
+ 
+-   public HopperBlock(Block.Properties var1) {
++   public HopperBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.DOWN)).setValue(ENABLED, true));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+@@ -105,11 +106,11 @@
+       }
+ 
+    }
+ 
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var4.getBlock() != var1.getBlock()) {
++      if (!var4.is(var1.getBlock())) {
+          this.checkPoweredState(var2, var3, var1);
+       }
+    }
+ 
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
+@@ -120,11 +121,11 @@
+          if (var7 instanceof HopperBlockEntity) {
+             var4.openMenu((HopperBlockEntity)var7);
+             var4.awardStat(Stats.INSPECT_HOPPER);
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    public void neighborChanged(BlockState var1, Level var2, BlockPos var3, Block var4, BlockPos var5, boolean var6) {
+       this.checkPoweredState(var2, var3, var1);
+@@ -137,11 +138,11 @@
+       }
+ 
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var4.getBlock()) {
++      if (!var1.is(var4.getBlock())) {
+          BlockEntity var6 = var2.getBlockEntity(var3);
+          if (var6 instanceof HopperBlockEntity) {
+             Containers.dropContents(var2, (BlockPos)var3, (Container)((HopperBlockEntity)var6));
+             var2.updateNeighbourForOutputSignal(var3, this);
+          }

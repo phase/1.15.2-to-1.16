@@ -1,0 +1,34 @@
+--- net/minecraft/world/item/LeadItem.java
++++ net/minecraft/world/item/LeadItem.java
+@@ -2,10 +2,11 @@
+ 
+ import java.util.Iterator;
+ import java.util.List;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.tags.BlockTags;
++import net.minecraft.tags.Tag;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.Level;
+@@ -19,17 +20,17 @@
+ 
+    public InteractionResult useOn(UseOnContext var1) {
+       Level var2 = var1.getLevel();
+       BlockPos var3 = var1.getClickedPos();
+       Block var4 = var2.getBlockState(var3).getBlock();
+-      if (var4.is(BlockTags.FENCES)) {
++      if (var4.is((Tag)BlockTags.FENCES)) {
+          Player var5 = var1.getPlayer();
+          if (!var2.isClientSide && var5 != null) {
+             bindPlayerMobs(var5, var2, var3);
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       } else {
+          return InteractionResult.PASS;
+       }
+    }
+ 

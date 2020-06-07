@@ -1,0 +1,18 @@
+--- net/minecraft/world/entity/projectile/ThrowableItemProjectile.java
++++ net/minecraft/world/entity/projectile/ThrowableItemProjectile.java
+@@ -39,10 +39,15 @@
+ 
+    protected ItemStack getItemRaw() {
+       return (ItemStack)this.getEntityData().get(DATA_ITEM_STACK);
+    }
+ 
++   public ItemStack getItem() {
++      ItemStack var1 = this.getItemRaw();
++      return var1.isEmpty() ? new ItemStack(this.getDefaultItem()) : var1;
++   }
++
+    protected void defineSynchedData() {
+       this.getEntityData().define(DATA_ITEM_STACK, ItemStack.EMPTY);
+    }
+ 
+    public void addAdditionalSaveData(CompoundTag var1) {

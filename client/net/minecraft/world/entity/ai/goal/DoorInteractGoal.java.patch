@@ -1,0 +1,52 @@
+--- net/minecraft/world/entity/ai/goal/DoorInteractGoal.java
++++ net/minecraft/world/entity/ai/goal/DoorInteractGoal.java
+@@ -1,14 +1,12 @@
+ package net.minecraft.world.entity.ai.goal;
+ 
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+-import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.DoorBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+-import net.minecraft.world.level.material.Material;
+ import net.minecraft.world.level.pathfinder.Node;
+ import net.minecraft.world.level.pathfinder.Path;
+ 
+ public abstract class DoorInteractGoal extends Goal {
+    protected Mob mob;
+@@ -59,19 +57,19 @@
+          if (var2 != null && !var2.isDone() && var1.canOpenDoors()) {
+             for(int var3 = 0; var3 < Math.min(var2.getIndex() + 2, var2.getSize()); ++var3) {
+                Node var4 = var2.get(var3);
+                this.doorPos = new BlockPos(var4.x, var4.y + 1, var4.z);
+                if (this.mob.distanceToSqr((double)this.doorPos.getX(), this.mob.getY(), (double)this.doorPos.getZ()) <= 2.25D) {
+-                  this.hasDoor = isDoor(this.mob.level, this.doorPos);
++                  this.hasDoor = DoorBlock.isWoodenDoor(this.mob.level, this.doorPos);
+                   if (this.hasDoor) {
+                      return true;
+                   }
+                }
+             }
+ 
+-            this.doorPos = (new BlockPos(this.mob)).above();
+-            this.hasDoor = isDoor(this.mob.level, this.doorPos);
++            this.doorPos = this.mob.blockPosition().above();
++            this.hasDoor = DoorBlock.isWoodenDoor(this.mob.level, this.doorPos);
+             return this.hasDoor;
+          } else {
+             return false;
+          }
+       }
+@@ -94,11 +92,6 @@
+       if (var3 < 0.0F) {
+          this.passed = true;
+       }
+ 
+    }
+-
+-   public static boolean isDoor(Level var0, BlockPos var1) {
+-      BlockState var2 = var0.getBlockState(var1);
+-      return var2.getBlock() instanceof DoorBlock && var2.getMaterial() == Material.WOOD;
+-   }
+ }

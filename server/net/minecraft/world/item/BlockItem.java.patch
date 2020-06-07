@@ -1,0 +1,41 @@
+--- net/minecraft/world/item/BlockItem.java
++++ net/minecraft/world/item/BlockItem.java
+@@ -31,11 +31,11 @@
+       this.block = var1;
+    }
+ 
+    public InteractionResult useOn(UseOnContext var1) {
+       InteractionResult var2 = this.place(new BlockPlaceContext(var1));
+-      return var2 != InteractionResult.SUCCESS && this.isEdible() ? this.use(var1.level, var1.player, var1.hand).getResult() : var2;
++      return !var2.consumesAction() && this.isEdible() ? this.use(var1.level, var1.player, var1.hand).getResult() : var2;
+    }
+ 
+    public InteractionResult place(BlockPlaceContext var1) {
+       if (!var1.canPlace()) {
+          return InteractionResult.FAIL;
+@@ -66,11 +66,11 @@
+                }
+ 
+                SoundType var10 = var8.getSoundType();
+                var5.playSound(var6, var4, this.getPlaceSound(var8), SoundSource.BLOCKS, (var10.getVolume() + 1.0F) / 2.0F, var10.getPitch() * 0.8F);
+                var7.shrink(1);
+-               return InteractionResult.SUCCESS;
++               return InteractionResult.sidedSuccess(var5.isClientSide);
+             }
+          }
+       }
+    }
+ 
+@@ -156,11 +156,11 @@
+                var7.merge(var5);
+                var7.putInt("x", var2.getX());
+                var7.putInt("y", var2.getY());
+                var7.putInt("z", var2.getZ());
+                if (!var7.equals(var8)) {
+-                  var6.load(var7);
++                  var6.load(var0.getBlockState(var2), var7);
+                   var6.setChanged();
+                   return true;
+                }
+             }
+          }

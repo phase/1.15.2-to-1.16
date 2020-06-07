@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/HelpCommand.java
++++ net/minecraft/server/commands/HelpCommand.java
+@@ -13,11 +13,11 @@
+ import net.minecraft.commands.Commands;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
+ 
+ public class HelpCommand {
+-   private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.help.failed", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.help.failed"));
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("help").executes((var1) -> {
+          Map var2 = var0.getSmartUsage(var0.getRoot(), var1.getSource());
+          Iterator var3 = var2.values().iterator();

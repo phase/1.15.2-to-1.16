@@ -1,0 +1,44 @@
+--- net/minecraft/world/level/storage/loot/predicates/InvertedLootItemCondition.java
++++ net/minecraft/world/level/storage/loot/predicates/InvertedLootItemCondition.java
+@@ -2,11 +2,10 @@
+ 
+ import com.google.gson.JsonDeserializationContext;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSerializationContext;
+ import java.util.Set;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.world.level.storage.loot.LootContext;
+ import net.minecraft.world.level.storage.loot.ValidationContext;
+ import net.minecraft.world.level.storage.loot.parameters.LootContextParam;
+ 
+@@ -15,10 +14,14 @@
+ 
+    private InvertedLootItemCondition(LootItemCondition var1) {
+       this.term = var1;
+    }
+ 
++   public LootItemConditionType getType() {
++      return LootItemConditions.INVERTED;
++   }
++
+    public final boolean test(LootContext var1) {
+       return !this.term.test(var1);
+    }
+ 
+    public Set<LootContextParam<?>> getReferencedContextParams() {
+@@ -35,13 +38,12 @@
+       return () -> {
+          return var1;
+       };
+    }
+ 
+-   public static class Serializer extends LootItemCondition.Serializer<InvertedLootItemCondition> {
++   public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<InvertedLootItemCondition> {
+       public Serializer() {
+-         super(new ResourceLocation("inverted"), InvertedLootItemCondition.class);
+       }
+ 
+       public void serialize(JsonObject var1, InvertedLootItemCondition var2, JsonSerializationContext var3) {
+          var1.add("term", var3.serialize(var2.term));
+       }

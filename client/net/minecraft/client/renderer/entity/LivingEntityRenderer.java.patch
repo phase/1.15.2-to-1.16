@@ -1,0 +1,106 @@
+--- net/minecraft/client/renderer/entity/LivingEntityRenderer.java
++++ net/minecraft/client/renderer/entity/LivingEntityRenderer.java
+@@ -73,17 +73,17 @@
+          }
+ 
+          var9 = var8 - var7;
+       }
+ 
+-      float var19 = Mth.lerp(var3, var1.xRotO, var1.xRot);
++      float var21 = Mth.lerp(var3, var1.xRotO, var1.xRot);
+       float var12;
+       if (var1.getPose() == Pose.SLEEPING) {
+-         Direction var20 = var1.getBedOrientation();
+-         if (var20 != null) {
++         Direction var22 = var1.getBedOrientation();
++         if (var22 != null) {
+             var12 = var1.getEyeHeight(Pose.STANDING) - 0.1F;
+-            var4.translate((double)((float)(-var20.getStepX()) * var12), 0.0D, (double)((float)(-var20.getStepZ()) * var12));
++            var4.translate((double)((float)(-var22.getStepX()) * var12), 0.0D, (double)((float)(-var22.getStepZ()) * var12));
+          }
+       }
+ 
+       var11 = this.getBob(var1, var3);
+       this.setupRotations(var1, var4, var11, var7, var3);
+@@ -103,42 +103,44 @@
+             var12 = 1.0F;
+          }
+       }
+ 
+       this.model.prepareMobModel(var1, var13, var12, var3);
+-      this.model.setupAnim(var1, var13, var12, var11, var9, var19);
+-      boolean var14 = this.isBodyVisible(var1);
+-      boolean var15 = !var14 && !var1.isInvisibleTo(Minecraft.getInstance().player);
+-      RenderType var16 = this.getRenderType(var1, var14, var15);
+-      if (var16 != null) {
+-         VertexConsumer var17 = var5.getBuffer(var16);
+-         int var18 = getOverlayCoords(var1, this.getWhiteOverlayProgress(var1, var3));
+-         this.model.renderToBuffer(var4, var17, var6, var18, 1.0F, 1.0F, 1.0F, var15 ? 0.15F : 1.0F);
++      this.model.setupAnim(var1, var13, var12, var11, var9, var21);
++      Minecraft var14 = Minecraft.getInstance();
++      boolean var15 = this.isBodyVisible(var1);
++      boolean var16 = !var15 && !var1.isInvisibleTo(var14.player);
++      boolean var17 = var14.shouldEntityAppearGlowing(var1);
++      RenderType var18 = this.getRenderType(var1, var15, var16, var17);
++      if (var18 != null) {
++         VertexConsumer var19 = var5.getBuffer(var18);
++         int var20 = getOverlayCoords(var1, this.getWhiteOverlayProgress(var1, var3));
++         this.model.renderToBuffer(var4, var19, var6, var20, 1.0F, 1.0F, 1.0F, var16 ? 0.15F : 1.0F);
+       }
+ 
+       if (!var1.isSpectator()) {
+-         Iterator var21 = this.layers.iterator();
++         Iterator var23 = this.layers.iterator();
+ 
+-         while(var21.hasNext()) {
+-            RenderLayer var22 = (RenderLayer)var21.next();
+-            var22.render(var4, var5, var6, var1, var13, var12, var3, var11, var9, var19);
++         while(var23.hasNext()) {
++            RenderLayer var24 = (RenderLayer)var23.next();
++            var24.render(var4, var5, var6, var1, var13, var12, var3, var11, var9, var21);
+          }
+       }
+ 
+       var4.popPose();
+       super.render(var1, var2, var3, var4, var5, var6);
+    }
+ 
+    @Nullable
+-   protected RenderType getRenderType(T var1, boolean var2, boolean var3) {
+-      ResourceLocation var4 = this.getTextureLocation(var1);
++   protected RenderType getRenderType(T var1, boolean var2, boolean var3, boolean var4) {
++      ResourceLocation var5 = this.getTextureLocation(var1);
+       if (var3) {
+-         return RenderType.entityTranslucent(var4);
++         return RenderType.itemEntityTranslucentCull(var5);
+       } else if (var2) {
+-         return this.model.renderType(var4);
++         return this.model.renderType(var5);
+       } else {
+-         return var1.isGlowing() ? RenderType.outline(var4) : null;
++         return var4 ? RenderType.outline(var5) : null;
+       }
+    }
+ 
+    public static int getOverlayCoords(LivingEntity var0, float var1) {
+       return OverlayTexture.pack(OverlayTexture.u(var1), OverlayTexture.v(var0.hurtTime > 0 || var0.deathTime > 0));
+@@ -161,11 +163,19 @@
+       default:
+          return 0.0F;
+       }
+    }
+ 
++   protected boolean isShaking(T var1) {
++      return false;
++   }
++
+    protected void setupRotations(T var1, PoseStack var2, float var3, float var4, float var5) {
++      if (this.isShaking(var1)) {
++         var4 += (float)(Math.cos((double)var1.tickCount * 3.25D) * 3.141592653589793D * 0.4000000059604645D);
++      }
++
+       Pose var6 = var1.getPose();
+       if (var6 != Pose.SLEEPING) {
+          var2.mulPose(Vector3f.YP.rotationDegrees(180.0F - var4));
+       }
+ 

@@ -1,0 +1,368 @@
+--- net/minecraft/client/gui/screens/TitleScreen.java
++++ net/minecraft/client/gui/screens/TitleScreen.java
+@@ -1,36 +1,43 @@
+ package net.minecraft.client.gui.screens;
+ 
+ import com.google.common.util.concurrent.Runnables;
+ import com.mojang.blaze3d.platform.GlStateManager;
+ import com.mojang.blaze3d.systems.RenderSystem;
++import com.mojang.blaze3d.vertex.PoseStack;
++import java.io.IOException;
+ import java.util.Iterator;
+ import java.util.Random;
+ import java.util.concurrent.CompletableFuture;
+ import java.util.concurrent.Executor;
+ import javax.annotation.Nullable;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+ import net.minecraft.client.gui.components.AbstractWidget;
+ import net.minecraft.client.gui.components.Button;
+ import net.minecraft.client.gui.components.ImageButton;
++import net.minecraft.client.gui.components.toasts.SystemToast;
+ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+ import net.minecraft.client.gui.screens.multiplayer.SafetyScreen;
+ import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
+ import net.minecraft.client.renderer.CubeMap;
+ import net.minecraft.client.renderer.PanoramaRenderer;
+ import net.minecraft.client.renderer.texture.TextureManager;
+ import net.minecraft.client.resources.language.I18n;
++import net.minecraft.network.chat.CommonComponents;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.realms.RealmsBridge;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.util.Mth;
+-import net.minecraft.world.level.storage.LevelData;
+ import net.minecraft.world.level.storage.LevelStorageSource;
++import net.minecraft.world.level.storage.WorldData;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
+ 
+ public class TitleScreen extends Screen {
++   private static final Logger LOGGER = LogManager.getLogger();
+    public static final CubeMap CUBE_MAP = new CubeMap(new ResourceLocation("textures/gui/title/background/panorama"));
+    private static final ResourceLocation PANORAMA_OVERLAY = new ResourceLocation("textures/gui/title/background/panorama_overlay.png");
+    private static final ResourceLocation ACCESSIBILITY_TEXTURE = new ResourceLocation("textures/gui/accessibility.png");
+    private final boolean minceraftEasterEgg;
+    @Nullable
+@@ -49,11 +56,11 @@
+    public TitleScreen() {
+       this(false);
+    }
+ 
+    public TitleScreen(boolean var1) {
+-      super(new TranslatableComponent("narrator.screen.title", new Object[0]));
++      super(new TranslatableComponent("narrator.screen.title"));
+       this.panorama = new PanoramaRenderer(CUBE_MAP);
+       this.fading = var1;
+       this.minceraftEasterEgg = (double)(new Random()).nextFloat() < 1.0E-4D;
+    }
+ 
+@@ -95,20 +102,20 @@
+          this.createNormalMenuOptions(var2, 24);
+       }
+ 
+       this.addButton(new ImageButton(this.width / 2 - 124, var2 + 72 + 12, 20, 20, 0, 106, 20, Button.WIDGETS_LOCATION, 256, 256, (var1x) -> {
+          this.minecraft.setScreen(new LanguageSelectScreen(this, this.minecraft.options, this.minecraft.getLanguageManager()));
+-      }, I18n.get("narrator.button.language")));
+-      this.addButton(new Button(this.width / 2 - 100, var2 + 72 + 12, 98, 20, I18n.get("menu.options"), (var1x) -> {
++      }, new TranslatableComponent("narrator.button.language")));
++      this.addButton(new Button(this.width / 2 - 100, var2 + 72 + 12, 98, 20, new TranslatableComponent("menu.options"), (var1x) -> {
+          this.minecraft.setScreen(new OptionsScreen(this, this.minecraft.options));
+       }));
+-      this.addButton(new Button(this.width / 2 + 2, var2 + 72 + 12, 98, 20, I18n.get("menu.quit"), (var1x) -> {
++      this.addButton(new Button(this.width / 2 + 2, var2 + 72 + 12, 98, 20, new TranslatableComponent("menu.quit"), (var1x) -> {
+          this.minecraft.stop();
+       }));
+       this.addButton(new ImageButton(this.width / 2 + 104, var2 + 72 + 12, 20, 20, 0, 0, 20, ACCESSIBILITY_TEXTURE, 32, 64, (var1x) -> {
+          this.minecraft.setScreen(new AccessibilityOptionsScreen(this, this.minecraft.options));
+-      }, I18n.get("narrator.button.accessibility")));
++      }, new TranslatableComponent("narrator.button.accessibility")));
+       this.minecraft.setConnectedToRealms(false);
+       if (this.minecraft.options.realmsNotifications && !this.realmsNotificationsInitialized) {
+          RealmsBridge var3 = new RealmsBridge();
+          this.realmsNotificationsScreen = var3.getNotificationScreen(this);
+          this.realmsNotificationsInitialized = true;
+@@ -119,123 +126,183 @@
+       }
+ 
+    }
+ 
+    private void createNormalMenuOptions(int var1, int var2) {
+-      this.addButton(new Button(this.width / 2 - 100, var1, 200, 20, I18n.get("menu.singleplayer"), (var1x) -> {
++      this.addButton(new Button(this.width / 2 - 100, var1, 200, 20, new TranslatableComponent("menu.singleplayer"), (var1x) -> {
+          this.minecraft.setScreen(new SelectWorldScreen(this));
+       }));
+-      this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 1, 200, 20, I18n.get("menu.multiplayer"), (var1x) -> {
+-         if (this.minecraft.options.skipMultiplayerWarning) {
+-            this.minecraft.setScreen(new JoinMultiplayerScreen(this));
+-         } else {
+-            this.minecraft.setScreen(new SafetyScreen(this));
++      boolean var3 = this.minecraft.allowsMultiplayer();
++      Button.OnTooltip var4 = var3 ? Button.NO_TOOLTIP : (var1x, var2x, var3x, var4x) -> {
++         if (!var1x.active) {
++            this.renderTooltip(var2x, this.minecraft.font.split(new TranslatableComponent("title.multiplayer.disabled"), Math.max(this.width / 2 - 43, 170)), var3x, var4x);
+          }
+ 
+-      }));
+-      this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 2, 200, 20, I18n.get("menu.online"), (var1x) -> {
++      };
++      ((Button)this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 1, 200, 20, new TranslatableComponent("menu.multiplayer"), (var1x) -> {
++         Object var2 = this.minecraft.options.skipMultiplayerWarning ? new JoinMultiplayerScreen(this) : new SafetyScreen(this);
++         this.minecraft.setScreen((Screen)var2);
++      }, var4))).active = var3;
++      ((Button)this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 2, 200, 20, new TranslatableComponent("menu.online"), (var1x) -> {
+          this.realmsButtonClicked();
+-      }));
++      }, var4))).active = var3;
+    }
+ 
+    private void createDemoMenuOptions(int var1, int var2) {
+-      this.addButton(new Button(this.width / 2 - 100, var1, 200, 20, I18n.get("menu.playdemo"), (var1x) -> {
+-         this.minecraft.selectLevel("Demo_World", "Demo_World", MinecraftServer.DEMO_SETTINGS);
++      this.addButton(new Button(this.width / 2 - 100, var1, 200, 20, new TranslatableComponent("menu.playdemo"), (var1x) -> {
++         this.minecraft.selectLevel("Demo_World", MinecraftServer.DEMO_SETTINGS);
+       }));
+-      this.resetDemoButton = (Button)this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 1, 200, 20, I18n.get("menu.resetdemo"), (var1x) -> {
++      this.resetDemoButton = (Button)this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 1, 200, 20, new TranslatableComponent("menu.resetdemo"), (var1x) -> {
+          LevelStorageSource var2 = this.minecraft.getLevelSource();
+-         LevelData var3 = var2.getDataTagFor("Demo_World");
+-         if (var3 != null) {
+-            this.minecraft.setScreen(new ConfirmScreen(this::confirmDemo, new TranslatableComponent("selectWorld.deleteQuestion", new Object[0]), new TranslatableComponent("selectWorld.deleteWarning", new Object[]{var3.getLevelName()}), I18n.get("selectWorld.deleteButton"), I18n.get("gui.cancel")));
++
++         try {
++            LevelStorageSource.LevelStorageAccess var3 = var2.createAccess("Demo_World");
++            Throwable var4 = null;
++
++            try {
++               WorldData var5 = var3.getDataTag();
++               if (var5 != null) {
++                  this.minecraft.setScreen(new ConfirmScreen(this::confirmDemo, new TranslatableComponent("selectWorld.deleteQuestion"), new TranslatableComponent("selectWorld.deleteWarning", new Object[]{var5.getLevelName()}), new TranslatableComponent("selectWorld.deleteButton"), CommonComponents.GUI_CANCEL));
++               }
++            } catch (Throwable var14) {
++               var4 = var14;
++               throw var14;
++            } finally {
++               if (var3 != null) {
++                  if (var4 != null) {
++                     try {
++                        var3.close();
++                     } catch (Throwable var13) {
++                        var4.addSuppressed(var13);
++                     }
++                  } else {
++                     var3.close();
++                  }
++               }
++
++            }
++         } catch (IOException var16) {
++            SystemToast.onWorldAccessFailure(this.minecraft, "Demo_World");
++            LOGGER.warn("Failed to access demo world", var16);
+          }
+ 
+       }));
+-      LevelStorageSource var3 = this.minecraft.getLevelSource();
+-      LevelData var4 = var3.getDataTagFor("Demo_World");
+-      if (var4 == null) {
+-         this.resetDemoButton.active = false;
++
++      try {
++         LevelStorageSource.LevelStorageAccess var3 = this.minecraft.getLevelSource().createAccess("Demo_World");
++         Throwable var4 = null;
++
++         try {
++            WorldData var5 = var3.getDataTag();
++            if (var5 == null) {
++               this.resetDemoButton.active = false;
++            }
++         } catch (Throwable var14) {
++            var4 = var14;
++            throw var14;
++         } finally {
++            if (var3 != null) {
++               if (var4 != null) {
++                  try {
++                     var3.close();
++                  } catch (Throwable var13) {
++                     var4.addSuppressed(var13);
++                  }
++               } else {
++                  var3.close();
++               }
++            }
++
++         }
++      } catch (IOException var16) {
++         SystemToast.onWorldAccessFailure(this.minecraft, "Demo_World");
++         LOGGER.warn("Failed to read demo world data", var16);
+       }
+ 
+    }
+ 
+    private void realmsButtonClicked() {
+       RealmsBridge var1 = new RealmsBridge();
+       var1.switchToRealms(this);
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
++   public void render(PoseStack var1, int var2, int var3, float var4) {
+       if (this.fadeInStart == 0L && this.fading) {
+          this.fadeInStart = Util.getMillis();
+       }
+ 
+-      float var4 = this.fading ? (float)(Util.getMillis() - this.fadeInStart) / 1000.0F : 1.0F;
+-      fill(0, 0, this.width, this.height, -1);
+-      this.panorama.render(var3, Mth.clamp(var4, 0.0F, 1.0F));
+-      boolean var5 = true;
+-      int var6 = this.width / 2 - 137;
+-      boolean var7 = true;
++      float var5 = this.fading ? (float)(Util.getMillis() - this.fadeInStart) / 1000.0F : 1.0F;
++      fill(var1, 0, 0, this.width, this.height, -1);
++      this.panorama.render(var4, Mth.clamp(var5, 0.0F, 1.0F));
++      boolean var6 = true;
++      int var7 = this.width / 2 - 137;
++      boolean var8 = true;
+       this.minecraft.getTextureManager().bind(PANORAMA_OVERLAY);
+       RenderSystem.enableBlend();
+       RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+-      RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.fading ? (float)Mth.ceil(Mth.clamp(var4, 0.0F, 1.0F)) : 1.0F);
+-      blit(0, 0, this.width, this.height, 0.0F, 0.0F, 16, 128, 16, 128);
+-      float var8 = this.fading ? Mth.clamp(var4 - 1.0F, 0.0F, 1.0F) : 1.0F;
+-      int var9 = Mth.ceil(var8 * 255.0F) << 24;
+-      if ((var9 & -67108864) != 0) {
++      RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.fading ? (float)Mth.ceil(Mth.clamp(var5, 0.0F, 1.0F)) : 1.0F);
++      blit(var1, 0, 0, this.width, this.height, 0.0F, 0.0F, 16, 128, 16, 128);
++      float var9 = this.fading ? Mth.clamp(var5 - 1.0F, 0.0F, 1.0F) : 1.0F;
++      int var10 = Mth.ceil(var9 * 255.0F) << 24;
++      if ((var10 & -67108864) != 0) {
+          this.minecraft.getTextureManager().bind(MINECRAFT_LOGO);
+-         RenderSystem.color4f(1.0F, 1.0F, 1.0F, var8);
++         RenderSystem.color4f(1.0F, 1.0F, 1.0F, var9);
+          if (this.minceraftEasterEgg) {
+-            this.blit(var6 + 0, 30, 0, 0, 99, 44);
+-            this.blit(var6 + 99, 30, 129, 0, 27, 44);
+-            this.blit(var6 + 99 + 26, 30, 126, 0, 3, 44);
+-            this.blit(var6 + 99 + 26 + 3, 30, 99, 0, 26, 44);
+-            this.blit(var6 + 155, 30, 0, 45, 155, 44);
++            this.blitOutlineBlack(var7, 30, (var2x, var3x) -> {
++               this.blit(var1, var2x + 0, var3x, 0, 0, 99, 44);
++               this.blit(var1, var2x + 99, var3x, 129, 0, 27, 44);
++               this.blit(var1, var2x + 99 + 26, var3x, 126, 0, 3, 44);
++               this.blit(var1, var2x + 99 + 26 + 3, var3x, 99, 0, 26, 44);
++               this.blit(var1, var2x + 155, var3x, 0, 45, 155, 44);
++            });
+          } else {
+-            this.blit(var6 + 0, 30, 0, 0, 155, 44);
+-            this.blit(var6 + 155, 30, 0, 45, 155, 44);
++            this.blitOutlineBlack(var7, 30, (var2x, var3x) -> {
++               this.blit(var1, var2x + 0, var3x, 0, 0, 155, 44);
++               this.blit(var1, var2x + 155, var3x, 0, 45, 155, 44);
++            });
+          }
+ 
+          this.minecraft.getTextureManager().bind(MINECRAFT_EDITION);
+-         blit(var6 + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
++         blit(var1, var7 + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+          if (this.splash != null) {
+             RenderSystem.pushMatrix();
+             RenderSystem.translatef((float)(this.width / 2 + 90), 70.0F, 0.0F);
+             RenderSystem.rotatef(-20.0F, 0.0F, 0.0F, 1.0F);
+-            float var10 = 1.8F - Mth.abs(Mth.sin((float)(Util.getMillis() % 1000L) / 1000.0F * 6.2831855F) * 0.1F);
+-            var10 = var10 * 100.0F / (float)(this.font.width(this.splash) + 32);
+-            RenderSystem.scalef(var10, var10, var10);
+-            this.drawCenteredString(this.font, this.splash, 0, -8, 16776960 | var9);
++            float var11 = 1.8F - Mth.abs(Mth.sin((float)(Util.getMillis() % 1000L) / 1000.0F * 6.2831855F) * 0.1F);
++            var11 = var11 * 100.0F / (float)(this.font.width(this.splash) + 32);
++            RenderSystem.scalef(var11, var11, var11);
++            this.drawCenteredString(var1, this.font, this.splash, 0, -8, 16776960 | var10);
+             RenderSystem.popMatrix();
+          }
+ 
+-         String var13 = "Minecraft " + SharedConstants.getCurrentVersion().getName();
++         String var14 = "Minecraft " + SharedConstants.getCurrentVersion().getName();
+          if (this.minecraft.isDemo()) {
+-            var13 = var13 + " Demo";
++            var14 = var14 + " Demo";
+          } else {
+-            var13 = var13 + ("release".equalsIgnoreCase(this.minecraft.getVersionType()) ? "" : "/" + this.minecraft.getVersionType());
++            var14 = var14 + ("release".equalsIgnoreCase(this.minecraft.getVersionType()) ? "" : "/" + this.minecraft.getVersionType());
+          }
+ 
+          if (this.minecraft.isProbablyModded()) {
+-            var13 = var13 + I18n.get("menu.modded");
++            var14 = var14 + I18n.get("menu.modded");
+          }
+ 
+-         this.drawString(this.font, var13, 2, this.height - 10, 16777215 | var9);
+-         this.drawString(this.font, "Copyright Mojang AB. Do not distribute!", this.copyrightX, this.height - 10, 16777215 | var9);
+-         if (var1 > this.copyrightX && var1 < this.copyrightX + this.copyrightWidth && var2 > this.height - 10 && var2 < this.height) {
+-            fill(this.copyrightX, this.height - 1, this.copyrightX + this.copyrightWidth, this.height, 16777215 | var9);
++         this.drawString(var1, this.font, var14, 2, this.height - 10, 16777215 | var10);
++         this.drawString(var1, this.font, "Copyright Mojang AB. Do not distribute!", this.copyrightX, this.height - 10, 16777215 | var10);
++         if (var2 > this.copyrightX && var2 < this.copyrightX + this.copyrightWidth && var3 > this.height - 10 && var3 < this.height) {
++            fill(var1, this.copyrightX, this.height - 1, this.copyrightX + this.copyrightWidth, this.height, 16777215 | var10);
+          }
+ 
+-         Iterator var11 = this.buttons.iterator();
++         Iterator var12 = this.buttons.iterator();
+ 
+-         while(var11.hasNext()) {
+-            AbstractWidget var12 = (AbstractWidget)var11.next();
+-            var12.setAlpha(var8);
++         while(var12.hasNext()) {
++            AbstractWidget var13 = (AbstractWidget)var12.next();
++            var13.setAlpha(var9);
+          }
+ 
+-         super.render(var1, var2, var3);
+-         if (this.realmsNotificationsEnabled() && var8 >= 1.0F) {
+-            this.realmsNotificationsScreen.render(var1, var2, var3);
++         super.render(var1, var2, var3, var4);
++         if (this.realmsNotificationsEnabled() && var9 >= 1.0F) {
++            this.realmsNotificationsScreen.render(var1, var2, var3, var4);
+          }
+ 
+       }
+    }
+ 
+@@ -260,12 +327,37 @@
+ 
+    }
+ 
+    private void confirmDemo(boolean var1) {
+       if (var1) {
+-         LevelStorageSource var2 = this.minecraft.getLevelSource();
+-         var2.deleteLevel("Demo_World");
++         try {
++            LevelStorageSource.LevelStorageAccess var2 = this.minecraft.getLevelSource().createAccess("Demo_World");
++            Throwable var3 = null;
++
++            try {
++               var2.deleteLevel();
++            } catch (Throwable var13) {
++               var3 = var13;
++               throw var13;
++            } finally {
++               if (var2 != null) {
++                  if (var3 != null) {
++                     try {
++                        var2.close();
++                     } catch (Throwable var12) {
++                        var3.addSuppressed(var12);
++                     }
++                  } else {
++                     var2.close();
++                  }
++               }
++
++            }
++         } catch (IOException var15) {
++            SystemToast.onWorldDeleteFailure(this.minecraft, "Demo_World");
++            LOGGER.warn("Failed to delete demo world", var15);
++         }
+       }
+ 
+       this.minecraft.setScreen(this);
+    }
+ }

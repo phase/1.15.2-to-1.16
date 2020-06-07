@@ -1,0 +1,551 @@
+--- net/minecraft/server/network/ServerGamePacketListenerImpl.java
++++ net/minecraft/server/network/ServerGamePacketListenerImpl.java
+@@ -29,10 +29,11 @@
+ import net.minecraft.nbt.StringTag;
+ import net.minecraft.nbt.Tag;
+ import net.minecraft.network.Connection;
+ import net.minecraft.network.chat.ChatType;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.network.protocol.Packet;
+ import net.minecraft.network.protocol.PacketUtils;
+ import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
+@@ -60,10 +61,11 @@
+ import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+ import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
+ import net.minecraft.network.protocol.game.ServerboundEditBookPacket;
+ import net.minecraft.network.protocol.game.ServerboundEntityTagQuery;
+ import net.minecraft.network.protocol.game.ServerboundInteractPacket;
++import net.minecraft.network.protocol.game.ServerboundJigsawGeneratePacket;
+ import net.minecraft.network.protocol.game.ServerboundKeepAlivePacket;
+ import net.minecraft.network.protocol.game.ServerboundLockDifficultyPacket;
+ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+ import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
+ import net.minecraft.network.protocol.game.ServerboundPaddleBoatPacket;
+@@ -113,26 +115,29 @@
+ import net.minecraft.world.inventory.AnvilMenu;
+ import net.minecraft.world.inventory.BeaconMenu;
+ import net.minecraft.world.inventory.MerchantMenu;
+ import net.minecraft.world.inventory.RecipeBookMenu;
+ import net.minecraft.world.inventory.Slot;
++import net.minecraft.world.item.BlockItem;
++import net.minecraft.world.item.BucketItem;
++import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.item.WritableBookItem;
+ import net.minecraft.world.level.BaseCommandBlock;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.GameType;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelReader;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.CommandBlock;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.CommandBlockEntity;
+ import net.minecraft.world.level.block.entity.JigsawBlockEntity;
+ import net.minecraft.world.level.block.entity.SignBlockEntity;
+ import net.minecraft.world.level.block.entity.StructureBlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+-import net.minecraft.world.level.dimension.DimensionType;
+ import net.minecraft.world.phys.BlockHitResult;
+ import net.minecraft.world.phys.Vec3;
+ import org.apache.commons.lang3.StringUtils;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+@@ -187,14 +192,14 @@
+       this.player.zo = this.player.getZ();
+       this.player.doTick();
+       this.player.absMoveTo(this.firstGoodX, this.firstGoodY, this.firstGoodZ, this.player.yRot, this.player.xRot);
+       ++this.tickCount;
+       this.knownMovePacketCount = this.receivedMovePacketCount;
+-      if (this.clientIsFloating) {
++      if (this.clientIsFloating && !this.player.isSleeping()) {
+          if (++this.aboveGroundTickCount > 80) {
+             LOGGER.warn("{} was kicked for floating too long!", this.player.getName().getString());
+-            this.disconnect(new TranslatableComponent("multiplayer.disconnect.flying", new Object[0]));
++            this.disconnect(new TranslatableComponent("multiplayer.disconnect.flying"));
+             return;
+          }
+       } else {
+          this.clientIsFloating = false;
+          this.aboveGroundTickCount = 0;
+@@ -209,11 +214,11 @@
+          this.vehicleLastGoodY = this.lastVehicle.getY();
+          this.vehicleLastGoodZ = this.lastVehicle.getZ();
+          if (this.clientVehicleIsFloating && this.player.getRootVehicle().getControllingPassenger() == this.player) {
+             if (++this.aboveGroundVehicleTickCount > 80) {
+                LOGGER.warn("{} was kicked for floating a vehicle too long!", this.player.getName().getString());
+-               this.disconnect(new TranslatableComponent("multiplayer.disconnect.flying", new Object[0]));
++               this.disconnect(new TranslatableComponent("multiplayer.disconnect.flying"));
+                return;
+             }
+          } else {
+             this.clientVehicleIsFloating = false;
+             this.aboveGroundVehicleTickCount = 0;
+@@ -226,11 +231,11 @@
+ 
+       this.server.getProfiler().push("keepAlive");
+       long var1 = Util.getMillis();
+       if (var1 - this.keepAliveTime >= 15000L) {
+          if (this.keepAlivePending) {
+-            this.disconnect(new TranslatableComponent("disconnect.timeout", new Object[0]));
++            this.disconnect(new TranslatableComponent("disconnect.timeout"));
+          } else {
+             this.keepAlivePending = true;
+             this.keepAliveTime = var1;
+             this.keepAliveChallenge = var1;
+             this.send(new ClientboundKeepAlivePacket(this.keepAliveChallenge));
+@@ -245,11 +250,11 @@
+       if (this.dropSpamTickCount > 0) {
+          --this.dropSpamTickCount;
+       }
+ 
+       if (this.player.getLastActionTime() > 0L && this.server.getPlayerIdleTimeout() > 0 && Util.getMillis() - this.player.getLastActionTime() > (long)(this.server.getPlayerIdleTimeout() * 1000 * 60)) {
+-         this.disconnect(new TranslatableComponent("multiplayer.disconnect.idling", new Object[0]));
++         this.disconnect(new TranslatableComponent("multiplayer.disconnect.idling"));
+       }
+ 
+    }
+ 
+    public void resetPosition() {
+@@ -296,11 +301,11 @@
+    }
+ 
+    public void handleMoveVehicle(ServerboundMoveVehiclePacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (containsInvalidValues(var1)) {
+-         this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_vehicle_movement", new Object[0]));
++         this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_vehicle_movement"));
+       } else {
+          Entity var2 = this.player.getRootVehicle();
+          if (var2 != this.player && var2.getControllingPassenger() == this.player && var2 == this.lastVehicle) {
+             ServerLevel var3 = this.player.getLevel();
+             double var4 = var2.getX();
+@@ -337,11 +342,11 @@
+             var22 = var14 - var2.getZ();
+             var26 = var18 * var18 + var20 * var20 + var22 * var22;
+             boolean var31 = false;
+             if (var26 > 0.0625D) {
+                var31 = true;
+-               LOGGER.warn("{} moved wrongly!", var2.getName().getString());
++               LOGGER.warn("{} (vehicle of {}) moved wrongly! {}", var2.getName().getString(), this.player.getName().getString(), Math.sqrt(var26));
+             }
+ 
+             var2.absMoveTo(var10, var12, var14, var16, var17);
+             boolean var32 = var3.noCollision(var2, var2.getBoundingBox().deflate(0.0625D));
+             if (var28 && (var31 || !var32)) {
+@@ -422,13 +427,13 @@
+    }
+ 
+    public void handleSetCommandBlock(ServerboundSetCommandBlockPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (!this.server.isCommandBlockEnabled()) {
+-         this.player.sendMessage(new TranslatableComponent("advMode.notEnabled", new Object[0]));
++         this.player.sendMessage(new TranslatableComponent("advMode.notEnabled"), Util.NIL_UUID);
+       } else if (!this.player.canUseGameMasterBlocks()) {
+-         this.player.sendMessage(new TranslatableComponent("advMode.notAllowed", new Object[0]));
++         this.player.sendMessage(new TranslatableComponent("advMode.notAllowed"), Util.NIL_UUID);
+       } else {
+          BaseCommandBlock var2 = null;
+          CommandBlockEntity var3 = null;
+          BlockPos var4 = var1.getPos();
+          BlockEntity var5 = this.player.level.getBlockEntity(var4);
+@@ -471,34 +476,34 @@
+                var3.onModeSwitch();
+             }
+ 
+             var2.onUpdated();
+             if (!StringUtil.isNullOrEmpty(var6)) {
+-               this.player.sendMessage(new TranslatableComponent("advMode.setCommand.success", new Object[]{var6}));
++               this.player.sendMessage(new TranslatableComponent("advMode.setCommand.success", new Object[]{var6}), Util.NIL_UUID);
+             }
+          }
+ 
+       }
+    }
+ 
+    public void handleSetCommandMinecart(ServerboundSetCommandMinecartPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (!this.server.isCommandBlockEnabled()) {
+-         this.player.sendMessage(new TranslatableComponent("advMode.notEnabled", new Object[0]));
++         this.player.sendMessage(new TranslatableComponent("advMode.notEnabled"), Util.NIL_UUID);
+       } else if (!this.player.canUseGameMasterBlocks()) {
+-         this.player.sendMessage(new TranslatableComponent("advMode.notAllowed", new Object[0]));
++         this.player.sendMessage(new TranslatableComponent("advMode.notAllowed"), Util.NIL_UUID);
+       } else {
+          BaseCommandBlock var2 = var1.getCommandBlock(this.player.level);
+          if (var2 != null) {
+             var2.setCommand(var1.getCommand());
+             var2.setTrackOutput(var1.isTrackOutput());
+             if (!var1.isTrackOutput()) {
+                var2.setLastOutput((Component)null);
+             }
+ 
+             var2.onUpdated();
+-            this.player.sendMessage(new TranslatableComponent("advMode.setCommand.success", new Object[]{var1.getCommand()}));
++            this.player.sendMessage(new TranslatableComponent("advMode.setCommand.success", new Object[]{var1.getCommand()}), Util.NIL_UUID);
+          }
+ 
+       }
+    }
+ 
+@@ -568,11 +573,11 @@
+                   }
+                } else if (var1.getUpdateType() == StructureBlockEntity.UpdateType.SCAN_AREA) {
+                   if (var5.detectSize()) {
+                      this.player.displayClientMessage(new TranslatableComponent("structure_block.size_success", new Object[]{var6}), false);
+                   } else {
+-                     this.player.displayClientMessage(new TranslatableComponent("structure_block.size_failure", new Object[0]), false);
++                     this.player.displayClientMessage(new TranslatableComponent("structure_block.size_failure"), false);
+                   }
+                }
+             } else {
+                this.player.displayClientMessage(new TranslatableComponent("structure_block.invalid_structure_name", new Object[]{var1.getName()}), false);
+             }
+@@ -590,20 +595,35 @@
+          BlockPos var2 = var1.getPos();
+          BlockState var3 = this.player.level.getBlockState(var2);
+          BlockEntity var4 = this.player.level.getBlockEntity(var2);
+          if (var4 instanceof JigsawBlockEntity) {
+             JigsawBlockEntity var5 = (JigsawBlockEntity)var4;
+-            var5.setAttachementType(var1.getAttachementType());
+-            var5.setTargetPool(var1.getTargetPool());
++            var5.setName(var1.getName());
++            var5.setTarget(var1.getTarget());
++            var5.setPool(var1.getPool());
+             var5.setFinalState(var1.getFinalState());
++            var5.setJoint(var1.getJoint());
+             var5.setChanged();
+             this.player.level.sendBlockUpdated(var2, var3, var3, 3);
+          }
+ 
+       }
+    }
+ 
++   public void handleJigsawGenerate(ServerboundJigsawGeneratePacket var1) {
++      PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
++      if (this.player.canUseGameMasterBlocks()) {
++         BlockPos var2 = var1.getPos();
++         BlockEntity var3 = this.player.level.getBlockEntity(var2);
++         if (var3 instanceof JigsawBlockEntity) {
++            JigsawBlockEntity var4 = (JigsawBlockEntity)var3;
++            var4.generate(this.server.getLevel(this.player.level.dimension()), var1.levels(), var1.keepJigsaws());
++         }
++
++      }
++   }
++
+    public void handleSelectTrade(ServerboundSelectTradePacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       int var2 = var1.getItem();
+       AbstractContainerMenu var3 = this.player.containerMenu;
+       if (var3 instanceof MerchantMenu) {
+@@ -672,13 +692,13 @@
+    }
+ 
+    public void handleMovePlayer(ServerboundMovePlayerPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (containsInvalidValues(var1)) {
+-         this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_player_movement", new Object[0]));
++         this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_player_movement"));
+       } else {
+-         ServerLevel var2 = this.server.getLevel(this.player.dimension);
++         ServerLevel var2 = this.player.getLevel();
+          if (!this.player.wonGame) {
+             if (this.tickCount == 0) {
+                this.resetPosition();
+             }
+ 
+@@ -736,16 +756,15 @@
+                      var23 = var15 - this.lastGoodZ;
+                      if (var21 > 0.0D) {
+                         this.player.fallDistance = 0.0F;
+                      }
+ 
+-                     if (this.player.onGround && !var1.isOnGround() && var21 > 0.0D) {
++                     if (this.player.isOnGround() && !var1.isOnGround() && var21 > 0.0D) {
+                         this.player.jumpFromGround();
+                      }
+ 
+                      this.player.move(MoverType.PLAYER, new Vec3(var19, var21, var23));
+-                     this.player.onGround = var1.isOnGround();
+                      double var31 = var21;
+                      var19 = var11 - this.player.getX();
+                      var21 = var13 - this.player.getY();
+                      if (var21 > -0.5D || var21 < 0.5D) {
+                         var21 = 0.0D;
+@@ -758,23 +777,23 @@
+                         var33 = true;
+                         LOGGER.warn("{} moved wrongly!", this.player.getName().getString());
+                      }
+ 
+                      this.player.absMoveTo(var11, var13, var15, var17, var18);
+-                     this.player.checkMovementStatistics(this.player.getX() - var3, this.player.getY() - var5, this.player.getZ() - var7);
+                      if (!this.player.noPhysics && !this.player.isSleeping()) {
+                         boolean var34 = this.isPlayerCollidingWithAnything(var2);
+                         if (var35 && (var33 || !var34)) {
+                            this.teleport(var3, var5, var7, var17, var18);
+                            return;
+                         }
+                      }
+ 
+                      this.clientIsFloating = var31 >= -0.03125D && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR && !this.server.isFlightAllowed() && !this.player.abilities.mayfly && !this.player.hasEffect(MobEffects.LEVITATION) && !this.player.isFallFlying() && !var2.containsAnyBlocks(this.player.getBoundingBox().inflate(0.0625D).expandTowards(0.0D, -0.55D, 0.0D));
+-                     this.player.onGround = var1.isOnGround();
+                      this.player.getLevel().getChunkSource().move(this.player);
+                      this.player.doCheckFallDamage(this.player.getY() - var9, var1.isOnGround());
++                     this.player.setOnGround(var1.isOnGround());
++                     this.player.checkMovementStatistics(this.player.getX() - var3, this.player.getY() - var5, this.player.getZ() - var7);
+                      this.lastGoodX = this.player.getX();
+                      this.lastGoodY = this.player.getY();
+                      this.lastGoodZ = this.player.getZ();
+                   }
+                }
+@@ -816,10 +835,11 @@
+       case SWAP_HELD_ITEMS:
+          if (!this.player.isSpectator()) {
+             ItemStack var4 = this.player.getItemInHand(InteractionHand.OFF_HAND);
+             this.player.setItemInHand(InteractionHand.OFF_HAND, this.player.getItemInHand(InteractionHand.MAIN_HAND));
+             this.player.setItemInHand(InteractionHand.MAIN_HAND, var4);
++            this.player.stopUsingItem();
+          }
+ 
+          return;
+       case DROP_ITEM:
+          if (!this.player.isSpectator()) {
+@@ -844,36 +864,50 @@
+       default:
+          throw new IllegalArgumentException("Invalid player action");
+       }
+    }
+ 
++   private static boolean wasBlockPlacementAttempt(ServerPlayer var0, ItemStack var1) {
++      if (var1.isEmpty()) {
++         return false;
++      } else {
++         Item var2 = var1.getItem();
++         return (var2 instanceof BlockItem || var2 instanceof BucketItem) && !var0.getCooldowns().isOnCooldown(var2);
++      }
++   }
++
+    public void handleUseItemOn(ServerboundUseItemOnPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+-      ServerLevel var2 = this.server.getLevel(this.player.dimension);
++      ServerLevel var2 = this.player.getLevel();
+       InteractionHand var3 = var1.getHand();
+       ItemStack var4 = this.player.getItemInHand(var3);
+       BlockHitResult var5 = var1.getHitResult();
+       BlockPos var6 = var5.getBlockPos();
+       Direction var7 = var5.getDirection();
+       this.player.resetLastActionTime();
+-      if (var6.getY() >= this.server.getMaxBuildHeight() - 1 && (var7 == Direction.UP || var6.getY() >= this.server.getMaxBuildHeight())) {
+-         Component var9 = (new TranslatableComponent("build.tooHigh", new Object[]{this.server.getMaxBuildHeight()})).withStyle(ChatFormatting.RED);
+-         this.player.connection.send(new ClientboundChatPacket(var9, ChatType.GAME_INFO));
+-      } else if (this.awaitingPositionFromClient == null && this.player.distanceToSqr((double)var6.getX() + 0.5D, (double)var6.getY() + 0.5D, (double)var6.getZ() + 0.5D) < 64.0D && var2.mayInteract(this.player, var6)) {
+-         InteractionResult var8 = this.player.gameMode.useItemOn(this.player, var2, var4, var3, var5);
+-         if (var8.shouldSwing()) {
+-            this.player.swing(var3, true);
++      if (var6.getY() < this.server.getMaxBuildHeight()) {
++         if (this.awaitingPositionFromClient == null && this.player.distanceToSqr((double)var6.getX() + 0.5D, (double)var6.getY() + 0.5D, (double)var6.getZ() + 0.5D) < 64.0D && var2.mayInteract(this.player, var6)) {
++            InteractionResult var8 = this.player.gameMode.useItemOn(this.player, var2, var4, var3, var5);
++            if (var7 == Direction.UP && !var8.consumesAction() && var6.getY() >= this.server.getMaxBuildHeight() - 1 && wasBlockPlacementAttempt(this.player, var4)) {
++               MutableComponent var9 = (new TranslatableComponent("build.tooHigh", new Object[]{this.server.getMaxBuildHeight()})).withStyle(ChatFormatting.RED);
++               this.player.connection.send(new ClientboundChatPacket(var9, ChatType.GAME_INFO, Util.NIL_UUID));
++            } else if (var8.shouldSwing()) {
++               this.player.swing(var3, true);
++            }
+          }
++      } else {
++         MutableComponent var10 = (new TranslatableComponent("build.tooHigh", new Object[]{this.server.getMaxBuildHeight()})).withStyle(ChatFormatting.RED);
++         this.player.connection.send(new ClientboundChatPacket(var10, ChatType.GAME_INFO, Util.NIL_UUID));
+       }
+ 
+       this.player.connection.send(new ClientboundBlockUpdatePacket(var2, var6));
+       this.player.connection.send(new ClientboundBlockUpdatePacket(var2, var6.relative(var7)));
+    }
+ 
+    public void handleUseItem(ServerboundUseItemPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+-      ServerLevel var2 = this.server.getLevel(this.player.dimension);
++      ServerLevel var2 = this.player.getLevel();
+       InteractionHand var3 = var1.getHand();
+       ItemStack var4 = this.player.getItemInHand(var3);
+       this.player.resetLastActionTime();
+       if (!var4.isEmpty()) {
+          this.player.gameMode.useItem(this.player, var2, var4, var3);
+@@ -910,11 +944,11 @@
+    }
+ 
+    public void onDisconnect(Component var1) {
+       LOGGER.info("{} lost connection: {}", this.player.getName().getString(), var1.getString());
+       this.server.invalidateStatus();
+-      this.server.getPlayerList().broadcastMessage((new TranslatableComponent("multiplayer.player.left", new Object[]{this.player.getDisplayName()})).withStyle(ChatFormatting.YELLOW));
++      this.server.getPlayerList().broadcastMessage((new TranslatableComponent("multiplayer.player.left", new Object[]{this.player.getDisplayName()})).withStyle(ChatFormatting.YELLOW), ChatType.SYSTEM, Util.NIL_UUID);
+       this.player.disconnect();
+       this.server.getPlayerList().remove(this.player);
+       if (this.isSingleplayerOwner()) {
+          LOGGER.info("Stopping singleplayer server as player logged out");
+          this.server.halt(false);
+@@ -952,43 +986,46 @@
+    }
+ 
+    public void handleSetCarriedItem(ServerboundSetCarriedItemPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (var1.getSlot() >= 0 && var1.getSlot() < Inventory.getSelectionSize()) {
++         if (this.player.inventory.selected != var1.getSlot() && this.player.getUsedItemHand() == InteractionHand.MAIN_HAND) {
++            this.player.stopUsingItem();
++         }
++
+          this.player.inventory.selected = var1.getSlot();
+          this.player.resetLastActionTime();
+       } else {
+          LOGGER.warn("{} tried to set an invalid carried item", this.player.getName().getString());
+       }
+    }
+ 
+    public void handleChat(ServerboundChatPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (this.player.getChatVisibility() == ChatVisiblity.HIDDEN) {
+-         this.send(new ClientboundChatPacket((new TranslatableComponent("chat.cannotSend", new Object[0])).withStyle(ChatFormatting.RED)));
++         this.send(new ClientboundChatPacket((new TranslatableComponent("chat.cannotSend")).withStyle(ChatFormatting.RED), ChatType.SYSTEM, Util.NIL_UUID));
+       } else {
+          this.player.resetLastActionTime();
+-         String var2 = var1.getMessage();
+-         var2 = StringUtils.normalizeSpace(var2);
++         String var2 = StringUtils.normalizeSpace(var1.getMessage());
+ 
+          for(int var3 = 0; var3 < var2.length(); ++var3) {
+             if (!SharedConstants.isAllowedChatCharacter(var2.charAt(var3))) {
+-               this.disconnect(new TranslatableComponent("multiplayer.disconnect.illegal_characters", new Object[0]));
++               this.disconnect(new TranslatableComponent("multiplayer.disconnect.illegal_characters"));
+                return;
+             }
+          }
+ 
+          if (var2.startsWith("/")) {
+             this.handleCommand(var2);
+          } else {
+             TranslatableComponent var4 = new TranslatableComponent("chat.type.text", new Object[]{this.player.getDisplayName(), var2});
+-            this.server.getPlayerList().broadcastMessage(var4, false);
++            this.server.getPlayerList().broadcastMessage(var4, ChatType.CHAT, this.player.getUUID());
+          }
+ 
+          this.chatSpamTickCount += 20;
+          if (this.chatSpamTickCount > 200 && !this.server.getPlayerList().isOp(this.player.getGameProfile())) {
+-            this.disconnect(new TranslatableComponent("disconnect.spam", new Object[0]));
++            this.disconnect(new TranslatableComponent("disconnect.spam"));
+          }
+ 
+       }
+    }
+ 
+@@ -1056,35 +1093,30 @@
+ 
+    }
+ 
+    public void handleInteract(ServerboundInteractPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+-      ServerLevel var2 = this.server.getLevel(this.player.dimension);
++      ServerLevel var2 = this.player.getLevel();
+       Entity var3 = var1.getTarget(var2);
+       this.player.resetLastActionTime();
+       if (var3 != null) {
+-         boolean var4 = this.player.canSee(var3);
+-         double var5 = 36.0D;
+-         if (!var4) {
+-            var5 = 9.0D;
+-         }
+-
+-         if (this.player.distanceToSqr(var3) < var5) {
+-            InteractionHand var7;
++         double var4 = 36.0D;
++         if (this.player.distanceToSqr(var3) < 36.0D) {
++            InteractionHand var6;
+             if (var1.getAction() == ServerboundInteractPacket.Action.INTERACT) {
+-               var7 = var1.getHand();
+-               this.player.interactOn(var3, var7);
++               var6 = var1.getHand();
++               this.player.interactOn(var3, var6);
+             } else if (var1.getAction() == ServerboundInteractPacket.Action.INTERACT_AT) {
+-               var7 = var1.getHand();
+-               InteractionResult var8 = var3.interactAt(this.player, var1.getLocation(), var7);
+-               if (var8.shouldSwing()) {
+-                  this.player.swing(var7, true);
++               var6 = var1.getHand();
++               InteractionResult var7 = var3.interactAt(this.player, var1.getLocation(), var6);
++               if (var7.shouldSwing()) {
++                  this.player.swing(var6, true);
+                }
+             } else if (var1.getAction() == ServerboundInteractPacket.Action.ATTACK) {
+                if (var3 instanceof ItemEntity || var3 instanceof ExperienceOrb || var3 instanceof AbstractArrow || var3 == this.player) {
+-                  this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_entity_attacked", new Object[0]));
+-                  this.server.warn("Player " + this.player.getName().getString() + " tried to attack an invalid entity");
++                  this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_entity_attacked"));
++                  LOGGER.warn("Player {} tried to attack an invalid entity", this.player.getName().getString());
+                   return;
+                }
+ 
+                this.player.attack(var3);
+             }
+@@ -1099,18 +1131,18 @@
+       ServerboundClientCommandPacket.Action var2 = var1.getAction();
+       switch(var2) {
+       case PERFORM_RESPAWN:
+          if (this.player.wonGame) {
+             this.player.wonGame = false;
+-            this.player = this.server.getPlayerList().respawn(this.player, DimensionType.OVERWORLD, true);
+-            CriteriaTriggers.CHANGED_DIMENSION.trigger(this.player, DimensionType.THE_END, DimensionType.OVERWORLD);
++            this.player = this.server.getPlayerList().respawn(this.player, true);
++            CriteriaTriggers.CHANGED_DIMENSION.trigger(this.player, Level.END, Level.OVERWORLD);
+          } else {
+             if (this.player.getHealth() > 0.0F) {
+                return;
+             }
+ 
+-            this.player = this.server.getPlayerList().respawn(this.player, DimensionType.OVERWORLD, false);
++            this.player = this.server.getPlayerList().respawn(this.player, false);
+             if (this.server.isHardcore()) {
+                this.player.setGameMode(GameType.SPECTATOR);
+                ((GameRules.BooleanValue)this.player.getLevel().getGameRules().getRule(GameRules.RULE_SPECTATORSGENERATECHUNKS)).set(false, this.server);
+             }
+          }
+@@ -1231,22 +1263,22 @@
+    }
+ 
+    public void handleSignUpdate(ServerboundSignUpdatePacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       this.player.resetLastActionTime();
+-      ServerLevel var2 = this.server.getLevel(this.player.dimension);
++      ServerLevel var2 = this.player.getLevel();
+       BlockPos var3 = var1.getPos();
+       if (var2.hasChunkAt(var3)) {
+          BlockState var4 = var2.getBlockState(var3);
+          BlockEntity var5 = var2.getBlockEntity(var3);
+          if (!(var5 instanceof SignBlockEntity)) {
+             return;
+          }
+ 
+          SignBlockEntity var6 = (SignBlockEntity)var5;
+          if (!var6.isEditable() || var6.getPlayerWhoMayEdit() != this.player) {
+-            this.server.warn("Player " + this.player.getName().getString() + " just tried to change non-editable sign");
++            LOGGER.warn("Player {} just tried to change non-editable sign", this.player.getName().getString());
+             return;
+          }
+ 
+          String[] var7 = var1.getLines();
+ 
+@@ -1264,11 +1296,11 @@
+       if (this.keepAlivePending && var1.getId() == this.keepAliveChallenge) {
+          int var2 = (int)(Util.getMillis() - this.keepAliveTime);
+          this.player.latency = (this.player.latency * 3 + var2) / 4;
+          this.keepAlivePending = false;
+       } else if (!this.isSingleplayerOwner()) {
+-         this.disconnect(new TranslatableComponent("disconnect.timeout", new Object[0]));
++         this.disconnect(new TranslatableComponent("disconnect.timeout"));
+       }
+ 
+    }
+ 
+    public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket var1) {

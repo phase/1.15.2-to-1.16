@@ -1,0 +1,10 @@
+--- net/minecraft/realms/pluginapi/RealmsPlugin.java
++++ net/minecraft/realms/pluginapi/RealmsPlugin.java
+@@ -1,7 +1,0 @@
+-package net.minecraft.realms.pluginapi;
+-
+-import com.mojang.datafixers.util.Either;
+-
+-public interface RealmsPlugin {
+-   Either<LoadedRealmsPlugin, String> tryLoad(String var1);
+-}

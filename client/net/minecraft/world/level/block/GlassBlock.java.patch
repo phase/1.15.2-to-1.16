@@ -1,0 +1,13 @@
+--- net/minecraft/world/level/block/GlassBlock.java
++++ net/minecraft/world/level/block/GlassBlock.java
+@@ -1,7 +1,9 @@
+ package net.minecraft.world.level.block;
+ 
++import net.minecraft.world.level.block.state.BlockBehaviour;
++
+ public class GlassBlock extends AbstractGlassBlock {
+-   public GlassBlock(Block.Properties var1) {
++   public GlassBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ }

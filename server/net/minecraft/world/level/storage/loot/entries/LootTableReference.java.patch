@@ -1,0 +1,35 @@
+--- net/minecraft/world/level/storage/loot/entries/LootTableReference.java
++++ net/minecraft/world/level/storage/loot/entries/LootTableReference.java
+@@ -19,10 +19,14 @@
+    private LootTableReference(ResourceLocation var1, int var2, int var3, LootItemCondition[] var4, LootItemFunction[] var5) {
+       super(var2, var3, var4, var5);
+       this.name = var1;
+    }
+ 
++   public LootPoolEntryType getType() {
++      return LootPoolEntries.REFERENCE;
++   }
++
+    public void createItemStack(Consumer<ItemStack> var1, LootContext var2) {
+       LootTable var3 = var2.getLootTable(this.name);
+       var3.getRandomItemsRaw(var2, var1);
+    }
+ 
+@@ -47,15 +51,14 @@
+       });
+    }
+ 
+    public static class Serializer extends LootPoolSingletonContainer.Serializer<LootTableReference> {
+       public Serializer() {
+-         super(new ResourceLocation("loot_table"), LootTableReference.class);
+       }
+ 
+-      public void serialize(JsonObject var1, LootTableReference var2, JsonSerializationContext var3) {
+-         super.serialize(var1, (LootPoolSingletonContainer)var2, var3);
++      public void serializeCustom(JsonObject var1, LootTableReference var2, JsonSerializationContext var3) {
++         super.serializeCustom(var1, (LootPoolSingletonContainer)var2, var3);
+          var1.addProperty("name", var2.name.toString());
+       }
+ 
+       protected LootTableReference deserialize(JsonObject var1, JsonDeserializationContext var2, int var3, int var4, LootItemCondition[] var5, LootItemFunction[] var6) {
+          ResourceLocation var7 = new ResourceLocation(GsonHelper.getAsString(var1, "name"));

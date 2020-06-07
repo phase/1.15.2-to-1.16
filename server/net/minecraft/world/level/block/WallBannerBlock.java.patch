@@ -1,0 +1,26 @@
+--- net/minecraft/world/level/block/WallBannerBlock.java
++++ net/minecraft/world/level/block/WallBannerBlock.java
+@@ -9,21 +9,22 @@
+ import net.minecraft.world.item.DyeColor;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class WallBannerBlock extends AbstractBannerBlock {
+    public static final DirectionProperty FACING;
+    private static final Map<Direction, VoxelShape> SHAPES;
+ 
+-   public WallBannerBlock(DyeColor var1, Block.Properties var2) {
++   public WallBannerBlock(DyeColor var1, BlockBehaviour.Properties var2) {
+       super(var1, var2);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH));
+    }
+ 
+    public String getDescriptionId() {

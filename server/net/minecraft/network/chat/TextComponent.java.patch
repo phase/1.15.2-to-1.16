@@ -1,0 +1,50 @@
+--- net/minecraft/network/chat/TextComponent.java
++++ net/minecraft/network/chat/TextComponent.java
+@@ -1,24 +1,44 @@
+ package net.minecraft.network.chat;
+ 
++import javax.annotation.Nullable;
++import net.minecraft.locale.Language;
++
+ public class TextComponent extends BaseComponent {
++   public static final Component EMPTY = new TextComponent("");
+    private final String text;
++   @Nullable
++   private Language decomposedWith;
++   private String reorderedText;
+ 
+    public TextComponent(String var1) {
+       this.text = var1;
++      this.reorderedText = var1;
+    }
+ 
+    public String getText() {
+       return this.text;
+    }
+ 
+    public String getContents() {
+-      return this.text;
++      if (this.text.isEmpty()) {
++         return this.text;
++      } else {
++         Language var1 = Language.getInstance();
++         if (this.decomposedWith != var1) {
++            this.reorderedText = var1.reorder(this.text, false);
++            this.decomposedWith = var1;
++         }
++
++         return this.reorderedText;
++      }
+    }
+ 
+-   public TextComponent copy() {
+-      return new TextComponent(this.text);
++   public TextComponent toMutable() {
++      TextComponent var1 = new TextComponent(this.text);
++      var1.setStyle(this.getStyle());
++      return var1;
+    }
+ 
+    public boolean equals(Object var1) {
+       if (this == var1) {
+          return true;

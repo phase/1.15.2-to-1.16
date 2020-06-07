@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/timers/FunctionTagCallback.java
++++ net/minecraft/world/level/timers/FunctionTagCallback.java
+@@ -15,11 +15,11 @@
+       this.tagId = var1;
+    }
+ 
+    public void handle(MinecraftServer var1, TimerQueue<MinecraftServer> var2, long var3) {
+       ServerFunctionManager var5 = var1.getFunctions();
+-      Tag var6 = var5.getTags().getTagOrEmpty(this.tagId);
++      Tag var6 = var5.getTag(this.tagId);
+       Iterator var7 = var6.getValues().iterator();
+ 
+       while(var7.hasNext()) {
+          CommandFunction var8 = (CommandFunction)var7.next();
+          var5.execute(var8, var5.getGameLoopSender());

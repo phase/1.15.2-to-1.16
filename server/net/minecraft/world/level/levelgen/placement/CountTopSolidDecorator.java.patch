@@ -1,0 +1,30 @@
+--- net/minecraft/world/level/levelgen/placement/CountTopSolidDecorator.java
++++ net/minecraft/world/level/levelgen/placement/CountTopSolidDecorator.java
+@@ -1,24 +1,22 @@
+ package net.minecraft.world.level.levelgen.placement;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.Codec;
+ import java.util.Random;
+-import java.util.function.Function;
+ import java.util.stream.IntStream;
+ import java.util.stream.Stream;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ 
+ public class CountTopSolidDecorator extends FeatureDecorator<FrequencyDecoratorConfiguration> {
+-   public CountTopSolidDecorator(Function<Dynamic<?>, ? extends FrequencyDecoratorConfiguration> var1) {
++   public CountTopSolidDecorator(Codec<FrequencyDecoratorConfiguration> var1) {
+       super(var1);
+    }
+ 
+-   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, FrequencyDecoratorConfiguration var4, BlockPos var5) {
++   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator var2, Random var3, FrequencyDecoratorConfiguration var4, BlockPos var5) {
+       return IntStream.range(0, var4.count).mapToObj((var3x) -> {
+          int var4 = var3.nextInt(16) + var5.getX();
+          int var5x = var3.nextInt(16) + var5.getZ();
+          int var6 = var1.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, var4, var5x);
+          return new BlockPos(var4, var6, var5x);

@@ -1,0 +1,21 @@
+--- net/minecraft/client/main/GameConfig.java
++++ net/minecraft/client/main/GameConfig.java
+@@ -70,13 +70,17 @@
+ 
+    public static class GameData {
+       public final boolean demo;
+       public final String launchVersion;
+       public final String versionType;
++      public final boolean disableMultiplayer;
++      public final boolean disableChat;
+ 
+-      public GameData(boolean var1, String var2, String var3) {
++      public GameData(boolean var1, String var2, String var3, boolean var4, boolean var5) {
+          this.demo = var1;
+          this.launchVersion = var2;
+          this.versionType = var3;
++         this.disableMultiplayer = var4;
++         this.disableChat = var5;
+       }
+    }
+ }

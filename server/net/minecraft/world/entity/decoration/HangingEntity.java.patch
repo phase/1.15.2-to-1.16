@@ -1,0 +1,55 @@
+--- net/minecraft/world/entity/decoration/HangingEntity.java
++++ net/minecraft/world/entity/decoration/HangingEntity.java
+@@ -2,11 +2,10 @@
+ 
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+-import net.minecraft.core.Vec3i;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+@@ -88,16 +87,22 @@
+    private double offs(int var1) {
+       return var1 % 32 == 0 ? 0.5D : 0.0D;
+    }
+ 
+    public void tick() {
+-      if (this.checkInterval++ == 100 && !this.level.isClientSide) {
+-         this.checkInterval = 0;
+-         if (!this.removed && !this.survives()) {
+-            this.remove();
+-            this.dropItem((Entity)null);
++      if (!this.level.isClientSide) {
++         if (this.getY() < -64.0D) {
++            this.outOfWorld();
+          }
++
++         if (this.checkInterval++ == 100) {
++            this.checkInterval = 0;
++            if (!this.removed && !this.survives()) {
++               this.remove();
++               this.dropItem((Entity)null);
++            }
++         }
+       }
+ 
+    }
+ 
+    public boolean survives() {
+@@ -112,11 +117,11 @@
+ 
+          for(int var6 = 0; var6 < var1; ++var6) {
+             for(int var7 = 0; var7 < var2; ++var7) {
+                int var8 = (var1 - 1) / -2;
+                int var9 = (var2 - 1) / -2;
+-               var5.set((Vec3i)var3).move(var4, var6 + var8).move(Direction.UP, var7 + var9);
++               var5.set(var3).move(var4, var6 + var8).move(Direction.UP, var7 + var9);
+                BlockState var10 = this.level.getBlockState(var5);
+                if (!var10.getMaterial().isSolid() && !DiodeBlock.isDiode(var10)) {
+                   return false;
+                }
+             }

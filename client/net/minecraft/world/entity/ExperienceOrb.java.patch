@@ -1,0 +1,43 @@
+--- net/minecraft/world/entity/ExperienceOrb.java
++++ net/minecraft/world/entity/ExperienceOrb.java
+@@ -57,11 +57,11 @@
+          this.setUnderwaterMovement();
+       } else if (!this.isNoGravity()) {
+          this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.03D, 0.0D));
+       }
+ 
+-      if (this.level.getFluidState(new BlockPos(this)).is(FluidTags.LAVA)) {
++      if (this.level.getFluidState(this.blockPosition()).is(FluidTags.LAVA)) {
+          this.setDeltaMovement((double)((this.random.nextFloat() - this.random.nextFloat()) * 0.2F), 0.20000000298023224D, (double)((this.random.nextFloat() - this.random.nextFloat()) * 0.2F));
+          this.playSound(SoundEvents.GENERIC_BURN, 0.4F, 2.0F + this.random.nextFloat() * 0.4F);
+       }
+ 
+       if (!this.level.noCollision(this.getBoundingBox())) {
+@@ -115,14 +115,10 @@
+    }
+ 
+    protected void doWaterSplashEffect() {
+    }
+ 
+-   protected void burn(int var1) {
+-      this.hurt(DamageSource.IN_FIRE, (float)var1);
+-   }
+-
+    public boolean hurt(DamageSource var1, float var2) {
+       if (this.isInvulnerableTo(var1)) {
+          return false;
+       } else {
+          this.markHurt();
+@@ -150,11 +146,11 @@
+    public void playerTouch(Player var1) {
+       if (!this.level.isClientSide) {
+          if (this.throwTime == 0 && var1.takeXpDelay == 0) {
+             var1.takeXpDelay = 2;
+             var1.take(this, 1);
+-            Entry var2 = EnchantmentHelper.getRandomItemWith(Enchantments.MENDING, var1);
++            Entry var2 = EnchantmentHelper.getRandomItemWith(Enchantments.MENDING, var1, ItemStack::isDamaged);
+             if (var2 != null) {
+                ItemStack var3 = (ItemStack)var2.getValue();
+                if (!var3.isEmpty() && var3.isDamaged()) {
+                   int var4 = Math.min(this.xpToDurability(this.value), var3.getDamageValue());
+                   this.value -= this.durabilityToXp(var4);

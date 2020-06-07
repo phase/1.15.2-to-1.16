@@ -1,0 +1,20 @@
+--- net/minecraft/world/level/block/DropperBlock.java
++++ net/minecraft/world/level/block/DropperBlock.java
+@@ -11,15 +11,16 @@
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.DispenserBlockEntity;
+ import net.minecraft.world.level.block.entity.DropperBlockEntity;
+ import net.minecraft.world.level.block.entity.HopperBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ 
+ public class DropperBlock extends DispenserBlock {
+    private static final DispenseItemBehavior DISPENSE_BEHAVIOUR = new DefaultDispenseItemBehavior();
+ 
+-   public DropperBlock(Block.Properties var1) {
++   public DropperBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    protected DispenseItemBehavior getDispenseMethod(ItemStack var1) {
+       return DISPENSE_BEHAVIOUR;

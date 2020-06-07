@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/vehicle/MinecartHopper.java
++++ net/minecraft/world/entity/vehicle/MinecartHopper.java
+@@ -81,11 +81,11 @@
+    }
+ 
+    public void tick() {
+       super.tick();
+       if (!this.level.isClientSide && this.isAlive() && this.isEnabled()) {
+-         BlockPos var1 = new BlockPos(this);
++         BlockPos var1 = this.blockPosition();
+          if (var1.equals(this.lastPosition)) {
+             --this.cooldownTime;
+          } else {
+             this.setCooldown(0);
+          }

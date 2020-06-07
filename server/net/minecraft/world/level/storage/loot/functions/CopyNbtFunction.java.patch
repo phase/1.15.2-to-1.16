@@ -1,0 +1,41 @@
+--- net/minecraft/world/level/storage/loot/functions/CopyNbtFunction.java
++++ net/minecraft/world/level/storage/loot/functions/CopyNbtFunction.java
+@@ -21,11 +21,10 @@
+ import net.minecraft.advancements.critereon.NbtPredicate;
+ import net.minecraft.commands.arguments.NbtPathArgument;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.ListTag;
+ import net.minecraft.nbt.Tag;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.storage.loot.LootContext;
+@@ -45,10 +44,14 @@
+       super(var1);
+       this.source = var2;
+       this.operations = ImmutableList.copyOf((Collection)var3);
+    }
+ 
++   public LootItemFunctionType getType() {
++      return LootItemFunctions.COPY_NBT;
++   }
++
+    private static NbtPathArgument.NbtPath compileNbtPath(String var0) {
+       try {
+          return (new NbtPathArgument()).parse(new StringReader(var0));
+       } catch (CommandSyntaxException var2) {
+          throw new IllegalArgumentException("Failed to parse path " + var0, var2);
+@@ -74,11 +77,10 @@
+       return new CopyNbtFunction.Builder(var0);
+    }
+ 
+    public static class Serializer extends LootItemConditionalFunction.Serializer<CopyNbtFunction> {
+       public Serializer() {
+-         super(new ResourceLocation("copy_nbt"), CopyNbtFunction.class);
+       }
+ 
+       public void serialize(JsonObject var1, CopyNbtFunction var2, JsonSerializationContext var3) {
+          super.serialize(var1, (LootItemConditionalFunction)var2, var3);
+          var1.addProperty("source", var2.source.name);

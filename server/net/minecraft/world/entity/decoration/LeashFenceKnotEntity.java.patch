@@ -1,0 +1,27 @@
+--- net/minecraft/world/entity/decoration/LeashFenceKnotEntity.java
++++ net/minecraft/world/entity/decoration/LeashFenceKnotEntity.java
+@@ -8,10 +8,11 @@
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.protocol.Packet;
+ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.tags.BlockTags;
++import net.minecraft.tags.Tag;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityDimensions;
+ import net.minecraft.world.entity.EntityType;
+@@ -104,11 +105,11 @@
+          return true;
+       }
+    }
+ 
+    public boolean survives() {
+-      return this.level.getBlockState(this.pos).getBlock().is(BlockTags.FENCES);
++      return this.level.getBlockState(this.pos).getBlock().is((Tag)BlockTags.FENCES);
+    }
+ 
+    public static LeashFenceKnotEntity getOrCreateKnot(Level var0, BlockPos var1) {
+       int var2 = var1.getX();
+       int var3 = var1.getY();

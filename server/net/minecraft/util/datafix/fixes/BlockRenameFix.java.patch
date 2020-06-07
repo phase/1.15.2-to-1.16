@@ -1,0 +1,39 @@
+--- net/minecraft/util/datafix/fixes/BlockRenameFix.java
++++ net/minecraft/util/datafix/fixes/BlockRenameFix.java
+@@ -6,10 +6,11 @@
+ import com.mojang.datafixers.schemas.Schema;
+ import com.mojang.datafixers.types.Type;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.Function;
++import net.minecraft.util.datafix.schemas.NamespacedSchema;
+ 
+ public abstract class BlockRenameFix extends DataFix {
+    private final String name;
+ 
+    public BlockRenameFix(Schema var1, String var2) {
+@@ -17,22 +18,22 @@
+       this.name = var2;
+    }
+ 
+    public TypeRewriteRule makeRule() {
+       Type var1 = this.getInputSchema().getType(References.BLOCK_NAME);
+-      Type var2 = DSL.named(References.BLOCK_NAME.typeName(), DSL.namespacedString());
++      Type var2 = DSL.named(References.BLOCK_NAME.typeName(), NamespacedSchema.namespacedString());
+       if (!Objects.equals(var1, var2)) {
+          throw new IllegalStateException("block type is not what was expected.");
+       } else {
+          TypeRewriteRule var3 = this.fixTypeEverywhere(this.name + " for block", var2, (var1x) -> {
+             return (var1) -> {
+                return var1.mapSecond(this::fixBlock);
+             };
+          });
+          TypeRewriteRule var4 = this.fixTypeEverywhereTyped(this.name + " for block_state", this.getInputSchema().getType(References.BLOCK_STATE), (var1x) -> {
+             return var1x.update(DSL.remainderFinder(), (var1) -> {
+-               Optional var2 = var1.get("Name").asString();
++               Optional var2 = var1.get("Name").asString().result();
+                return var2.isPresent() ? var1.set("Name", var1.createString(this.fixBlock((String)var2.get()))) : var1;
+             });
+          });
+          return TypeRewriteRule.seq(var3, var4);
+       }

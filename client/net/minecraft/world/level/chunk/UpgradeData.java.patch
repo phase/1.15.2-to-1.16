@@ -1,0 +1,215 @@
+--- net/minecraft/world/level/chunk/UpgradeData.java
++++ net/minecraft/world/level/chunk/UpgradeData.java
+@@ -12,11 +12,10 @@
+ import java.util.Map;
+ import java.util.Set;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.core.Direction8;
+-import net.minecraft.core.Vec3i;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.Block;
+@@ -100,11 +99,11 @@
+          boolean var8 = var3.contains(Direction.SOUTH);
+          boolean var9 = var3.contains(Direction.NORTH);
+          boolean var10 = var3.size() == 1;
+          ChunkPos var11 = var0.getPos();
+          int var12 = var11.getMinBlockX() + (var10 && (var9 || var8) ? 1 : (var7 ? 0 : 15));
+-         int var13 = var11.getMinBlockX() + (!var10 || !var9 && !var8 ? (var7 ? 0 : 15) : 14);
++         int var13 = var11.getMinBlockX() + (var10 && (var9 || var8) ? 14 : (var7 ? 0 : 15));
+          int var14 = var11.getMinBlockZ() + (!var10 || !var6 && !var7 ? (var9 ? 0 : 15) : 1);
+          int var15 = var11.getMinBlockZ() + (!var10 || !var6 && !var7 ? (var9 ? 0 : 15) : 14);
+          Direction[] var16 = Direction.values();
+          BlockPos.MutableBlockPos var17 = new BlockPos.MutableBlockPos();
+          Iterator var18 = BlockPos.betweenClosed(var12, 0, var14, var13, var2.getMaxBuildHeight() - 1, var15).iterator();
+@@ -116,11 +115,11 @@
+             Direction[] var22 = var16;
+             int var23 = var16.length;
+ 
+             for(int var24 = 0; var24 < var23; ++var24) {
+                Direction var25 = var22[var24];
+-               var17.set((Vec3i)var19).move(var25);
++               var17.setWithOffset(var19, var25);
+                var21 = updateState(var21, var25, var2, var19, var17);
+             }
+ 
+             Block.updateOrDestroy(var20, var21, var2, var19, 18);
+          }
+@@ -131,98 +130,58 @@
+    private static BlockState updateState(BlockState var0, Direction var1, LevelAccessor var2, BlockPos var3, BlockPos var4) {
+       return ((UpgradeData.BlockFixer)MAP.getOrDefault(var0.getBlock(), UpgradeData.BlockFixers.DEFAULT)).updateShape(var0, var1, var2.getBlockState(var4), var2, var3, var4);
+    }
+ 
+    private void upgradeInside(LevelChunk var1) {
+-      BlockPos.PooledMutableBlockPos var2 = BlockPos.PooledMutableBlockPos.acquire();
+-      Throwable var3 = null;
++      BlockPos.MutableBlockPos var2 = new BlockPos.MutableBlockPos();
++      BlockPos.MutableBlockPos var3 = new BlockPos.MutableBlockPos();
++      ChunkPos var4 = var1.getPos();
++      Level var5 = var1.getLevel();
+ 
+-      try {
+-         BlockPos.PooledMutableBlockPos var4 = BlockPos.PooledMutableBlockPos.acquire();
+-         Throwable var5 = null;
++      int var6;
++      for(var6 = 0; var6 < 16; ++var6) {
++         LevelChunkSection var7 = var1.getSections()[var6];
++         int[] var8 = this.index[var6];
++         this.index[var6] = null;
++         if (var7 != null && var8 != null && var8.length > 0) {
++            Direction[] var9 = Direction.values();
++            PalettedContainer var10 = var7.getStates();
++            int[] var11 = var8;
++            int var12 = var8.length;
+ 
+-         try {
+-            ChunkPos var6 = var1.getPos();
+-            Level var7 = var1.getLevel();
++            for(int var13 = 0; var13 < var12; ++var13) {
++               int var14 = var11[var13];
++               int var15 = var14 & 15;
++               int var16 = var14 >> 8 & 15;
++               int var17 = var14 >> 4 & 15;
++               var2.set(var4.getMinBlockX() + var15, (var6 << 4) + var16, var4.getMinBlockZ() + var17);
++               BlockState var18 = (BlockState)var10.get(var14);
++               BlockState var19 = var18;
++               Direction[] var20 = var9;
++               int var21 = var9.length;
+ 
+-            int var8;
+-            for(var8 = 0; var8 < 16; ++var8) {
+-               LevelChunkSection var9 = var1.getSections()[var8];
+-               int[] var10 = this.index[var8];
+-               this.index[var8] = null;
+-               if (var9 != null && var10 != null && var10.length > 0) {
+-                  Direction[] var11 = Direction.values();
+-                  PalettedContainer var12 = var9.getStates();
+-                  int[] var13 = var10;
+-                  int var14 = var10.length;
+-
+-                  for(int var15 = 0; var15 < var14; ++var15) {
+-                     int var16 = var13[var15];
+-                     int var17 = var16 & 15;
+-                     int var18 = var16 >> 8 & 15;
+-                     int var19 = var16 >> 4 & 15;
+-                     var2.set(var6.getMinBlockX() + var17, (var8 << 4) + var18, var6.getMinBlockZ() + var19);
+-                     BlockState var20 = (BlockState)var12.get(var16);
+-                     BlockState var21 = var20;
+-                     Direction[] var22 = var11;
+-                     int var23 = var11.length;
+-
+-                     for(int var24 = 0; var24 < var23; ++var24) {
+-                        Direction var25 = var22[var24];
+-                        var4.set((Vec3i)var2).move(var25);
+-                        if (var2.getX() >> 4 == var6.x && var2.getZ() >> 4 == var6.z) {
+-                           var21 = updateState(var21, var25, var7, var2, var4);
+-                        }
+-                     }
+-
+-                     Block.updateOrDestroy(var20, var21, var7, var2, 18);
++               for(int var22 = 0; var22 < var21; ++var22) {
++                  Direction var23 = var20[var22];
++                  var3.setWithOffset(var2, var23);
++                  if (var2.getX() >> 4 == var4.x && var2.getZ() >> 4 == var4.z) {
++                     var19 = updateState(var19, var23, var5, var2, var3);
+                   }
+                }
+-            }
+ 
+-            for(var8 = 0; var8 < this.index.length; ++var8) {
+-               if (this.index[var8] != null) {
+-                  LOGGER.warn("Discarding update data for section {} for chunk ({} {})", var8, var6.x, var6.z);
+-               }
+-
+-               this.index[var8] = null;
++               Block.updateOrDestroy(var18, var19, var5, var2, 18);
+             }
++         }
++      }
+ 
+-         } catch (Throwable var47) {
+-            var5 = var47;
+-            throw var47;
+-         } finally {
+-            if (var4 != null) {
+-               if (var5 != null) {
+-                  try {
+-                     var4.close();
+-                  } catch (Throwable var46) {
+-                     var5.addSuppressed(var46);
+-                  }
+-               } else {
+-                  var4.close();
+-               }
+-            }
+-
++      for(var6 = 0; var6 < this.index.length; ++var6) {
++         if (this.index[var6] != null) {
++            LOGGER.warn("Discarding update data for section {} for chunk ({} {})", var6, var4.x, var4.z);
+          }
+-      } catch (Throwable var49) {
+-         var3 = var49;
+-         throw var49;
+-      } finally {
+-         if (var2 != null) {
+-            if (var3 != null) {
+-               try {
+-                  var2.close();
+-               } catch (Throwable var45) {
+-                  var3.addSuppressed(var45);
+-               }
+-            } else {
+-               var2.close();
+-            }
+-         }
+ 
++         this.index[var6] = null;
+       }
++
+    }
+ 
+    public boolean isEmpty() {
+       int[][] var1 = this.index;
+       int var2 = var1.length;
+@@ -275,11 +234,11 @@
+             return var1.updateShape(var2, var4.getBlockState(var6), var4, var5, var6);
+          }
+       },
+       CHEST(new Block[]{Blocks.CHEST, Blocks.TRAPPED_CHEST}) {
+          public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {
+-            if (var3.getBlock() == var1.getBlock() && var2.getAxis().isHorizontal() && var1.getValue(ChestBlock.TYPE) == ChestType.SINGLE && var3.getValue(ChestBlock.TYPE) == ChestType.SINGLE) {
++            if (var3.is(var1.getBlock()) && var2.getAxis().isHorizontal() && var1.getValue(ChestBlock.TYPE) == ChestType.SINGLE && var3.getValue(ChestBlock.TYPE) == ChestType.SINGLE) {
+                Direction var7 = (Direction)var1.getValue(ChestBlock.FACING);
+                if (var2.getAxis() != var7.getAxis() && var7 == var3.getValue(ChestBlock.FACING)) {
+                   ChestType var8 = var2 == var7.getClockWise() ? ChestType.LEFT : ChestType.RIGHT;
+                   var4.setBlock(var6, (BlockState)var3.setValue(ChestBlock.TYPE, var8.getOpposite()), 18);
+                   if (var7 == Direction.NORTH || var7 == Direction.EAST) {
+@@ -349,11 +308,11 @@
+                   Direction[] var11 = DIRECTIONS;
+                   int var12 = var11.length;
+ 
+                   for(int var13 = 0; var13 < var12; ++var13) {
+                      Direction var14 = var11[var13];
+-                     var2.set((Vec3i)var9).move(var14);
++                     var2.setWithOffset(var9, var14);
+                      BlockState var15 = var1.getBlockState(var2);
+                      if (var15.hasProperty(BlockStateProperties.DISTANCE) && (Integer)var10.getValue(BlockStateProperties.DISTANCE) > var4) {
+                         var7.add(var2.immutable());
+                      }
+                   }
+@@ -365,11 +324,11 @@
+       },
+       STEM_BLOCK(new Block[]{Blocks.MELON_STEM, Blocks.PUMPKIN_STEM}) {
+          public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {
+             if ((Integer)var1.getValue(StemBlock.AGE) == 7) {
+                StemGrownBlock var7 = ((StemBlock)var1.getBlock()).getFruit();
+-               if (var3.getBlock() == var7) {
++               if (var3.is(var7)) {
+                   return (BlockState)var7.getAttachedStem().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, var2);
+                }
+             }
+ 
+             return var1;

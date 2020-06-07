@@ -1,0 +1,74 @@
+--- net/minecraft/world/item/FlintAndSteelItem.java
++++ net/minecraft/world/item/FlintAndSteelItem.java
+@@ -5,16 +5,17 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
++import net.minecraft.tags.BlockTags;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.BaseFireBlock;
+ import net.minecraft.world.level.block.Blocks;
+-import net.minecraft.world.level.block.FireBlock;
+ import net.minecraft.world.level.block.NetherPortalBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ 
+ public class FlintAndSteelItem extends Item {
+@@ -34,44 +35,46 @@
+             var1.getItemInHand().hurtAndBreak(1, var2, (var1x) -> {
+                var1x.broadcastBreakEvent(var1.getHand());
+             });
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var3.isClientSide());
+       } else {
+          BlockPos var6 = var4.relative(var1.getClickedFace());
+          if (canUse(var3.getBlockState(var6), var3, var6)) {
+             var3.playSound(var2, var6, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.4F + 0.8F);
+-            BlockState var7 = ((FireBlock)Blocks.FIRE).getStateForPlacement(var3, var6);
++            BlockState var7 = BaseFireBlock.getState(var3, var6);
+             var3.setBlock(var6, var7, 11);
+             ItemStack var8 = var1.getItemInHand();
+             if (var2 instanceof ServerPlayer) {
+                CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer)var2, var6, var8);
+                var8.hurtAndBreak(1, var2, (var1x) -> {
+                   var1x.broadcastBreakEvent(var1.getHand());
+                });
+             }
+ 
+-            return InteractionResult.SUCCESS;
++            return InteractionResult.sidedSuccess(var3.isClientSide());
+          } else {
+             return InteractionResult.FAIL;
+          }
+       }
+    }
+ 
+    public static boolean canLightCampFire(BlockState var0) {
+-      return var0.getBlock() == Blocks.CAMPFIRE && !(Boolean)var0.getValue(BlockStateProperties.WATERLOGGED) && !(Boolean)var0.getValue(BlockStateProperties.LIT);
++      return var0.is(BlockTags.CAMPFIRES, (var0x) -> {
++         return var0x.hasProperty(BlockStateProperties.WATERLOGGED) && var0x.hasProperty(BlockStateProperties.LIT);
++      }) && !(Boolean)var0.getValue(BlockStateProperties.WATERLOGGED) && !(Boolean)var0.getValue(BlockStateProperties.LIT);
+    }
+ 
+    public static boolean canUse(BlockState var0, LevelAccessor var1, BlockPos var2) {
+-      BlockState var3 = ((FireBlock)Blocks.FIRE).getStateForPlacement(var1, var2);
++      BlockState var3 = BaseFireBlock.getState(var1, var2);
+       boolean var4 = false;
+       Iterator var5 = Direction.Plane.HORIZONTAL.iterator();
+ 
+       while(var5.hasNext()) {
+          Direction var6 = (Direction)var5.next();
+-         if (var1.getBlockState(var2.relative(var6)).getBlock() == Blocks.OBSIDIAN && ((NetherPortalBlock)Blocks.NETHER_PORTAL).isPortal(var1, var2) != null) {
++         if (var1.getBlockState(var2.relative(var6)).is(Blocks.OBSIDIAN) && NetherPortalBlock.isPortal(var1, var2) != null) {
+             var4 = true;
+          }
+       }
+ 
+       return var0.isAir() && (var3.canSurvive(var1, var2) || var4);

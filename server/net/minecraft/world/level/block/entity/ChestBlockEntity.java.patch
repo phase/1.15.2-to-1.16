@@ -1,0 +1,26 @@
+--- net/minecraft/world/level/block/entity/ChestBlockEntity.java
++++ net/minecraft/world/level/block/entity/ChestBlockEntity.java
+@@ -46,18 +46,18 @@
+    public int getContainerSize() {
+       return 27;
+    }
+ 
+    protected Component getDefaultName() {
+-      return new TranslatableComponent("container.chest", new Object[0]);
++      return new TranslatableComponent("container.chest");
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
+       this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+-      if (!this.tryLoadLootTable(var1)) {
+-         ContainerHelper.loadAllItems(var1, this.items);
++      if (!this.tryLoadLootTable(var2)) {
++         ContainerHelper.loadAllItems(var2, this.items);
+       }
+ 
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {

@@ -1,0 +1,15 @@
+--- net/minecraft/client/model/ParrotModel.java
++++ net/minecraft/client/model/ParrotModel.java
+@@ -182,11 +182,11 @@
+    }
+ 
+    private static ParrotModel.State getState(Parrot var0) {
+       if (var0.isPartyParrot()) {
+          return ParrotModel.State.PARTY;
+-      } else if (var0.isSitting()) {
++      } else if (var0.isInSittingPose()) {
+          return ParrotModel.State.SITTING;
+       } else {
+          return var0.isFlying() ? ParrotModel.State.FLYING : ParrotModel.State.STANDING;
+       }
+    }

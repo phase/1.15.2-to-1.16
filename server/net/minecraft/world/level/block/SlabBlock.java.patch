@@ -1,0 +1,40 @@
+--- net/minecraft/world/level/block/SlabBlock.java
++++ net/minecraft/world/level/block/SlabBlock.java
+@@ -6,10 +6,11 @@
+ import net.minecraft.tags.FluidTags;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.EnumProperty;
+@@ -26,11 +27,11 @@
+    public static final EnumProperty<SlabType> TYPE;
+    public static final BooleanProperty WATERLOGGED;
+    protected static final VoxelShape BOTTOM_AABB;
+    protected static final VoxelShape TOP_AABB;
+ 
+-   public SlabBlock(Block.Properties var1) {
++   public SlabBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.defaultBlockState().setValue(TYPE, SlabType.BOTTOM)).setValue(WATERLOGGED, false));
+    }
+ 
+    public boolean useShapeForLightOcclusion(BlockState var1) {
+@@ -55,11 +56,11 @@
+ 
+    @Nullable
+    public BlockState getStateForPlacement(BlockPlaceContext var1) {
+       BlockPos var2 = var1.getClickedPos();
+       BlockState var3 = var1.getLevel().getBlockState(var2);
+-      if (var3.getBlock() == this) {
++      if (var3.is(this)) {
+          return (BlockState)((BlockState)var3.setValue(TYPE, SlabType.DOUBLE)).setValue(WATERLOGGED, false);
+       } else {
+          FluidState var4 = var1.getLevel().getFluidState(var2);
+          BlockState var5 = (BlockState)((BlockState)this.defaultBlockState().setValue(TYPE, SlabType.BOTTOM)).setValue(WATERLOGGED, var4.getType() == Fluids.WATER);
+          Direction var6 = var1.getClickedFace();

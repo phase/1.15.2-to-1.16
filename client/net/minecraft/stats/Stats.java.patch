@@ -1,0 +1,49 @@
+--- net/minecraft/stats/Stats.java
++++ net/minecraft/stats/Stats.java
+@@ -33,10 +33,11 @@
+    public static final ResourceLocation BOAT_ONE_CM;
+    public static final ResourceLocation PIG_ONE_CM;
+    public static final ResourceLocation HORSE_ONE_CM;
+    public static final ResourceLocation AVIATE_ONE_CM;
+    public static final ResourceLocation SWIM_ONE_CM;
++   public static final ResourceLocation STRIDER_ONE_CM;
+    public static final ResourceLocation JUMP;
+    public static final ResourceLocation DROP;
+    public static final ResourceLocation DAMAGE_DEALT;
+    public static final ResourceLocation DAMAGE_DEALT_ABSORBED;
+    public static final ResourceLocation DAMAGE_DEALT_RESISTED;
+@@ -85,10 +86,12 @@
+    public static final ResourceLocation BELL_RING;
+    public static final ResourceLocation RAID_TRIGGER;
+    public static final ResourceLocation RAID_WIN;
+    public static final ResourceLocation INTERACT_WITH_ANVIL;
+    public static final ResourceLocation INTERACT_WITH_GRINDSTONE;
++   public static final ResourceLocation TARGET_HIT;
++   public static final ResourceLocation INTERACT_WITH_SMITHING_TABLE;
+ 
+    private static ResourceLocation makeCustomStat(String var0, StatFormatter var1) {
+       ResourceLocation var2 = new ResourceLocation(var0);
+       Registry.register(Registry.CUSTOM_STAT, (String)var0, var2);
+       CUSTOM.get(var2, var1);
+@@ -126,10 +129,11 @@
+       BOAT_ONE_CM = makeCustomStat("boat_one_cm", StatFormatter.DISTANCE);
+       PIG_ONE_CM = makeCustomStat("pig_one_cm", StatFormatter.DISTANCE);
+       HORSE_ONE_CM = makeCustomStat("horse_one_cm", StatFormatter.DISTANCE);
+       AVIATE_ONE_CM = makeCustomStat("aviate_one_cm", StatFormatter.DISTANCE);
+       SWIM_ONE_CM = makeCustomStat("swim_one_cm", StatFormatter.DISTANCE);
++      STRIDER_ONE_CM = makeCustomStat("strider_one_cm", StatFormatter.DISTANCE);
+       JUMP = makeCustomStat("jump", StatFormatter.DEFAULT);
+       DROP = makeCustomStat("drop", StatFormatter.DEFAULT);
+       DAMAGE_DEALT = makeCustomStat("damage_dealt", StatFormatter.DIVIDE_BY_TEN);
+       DAMAGE_DEALT_ABSORBED = makeCustomStat("damage_dealt_absorbed", StatFormatter.DIVIDE_BY_TEN);
+       DAMAGE_DEALT_RESISTED = makeCustomStat("damage_dealt_resisted", StatFormatter.DIVIDE_BY_TEN);
+@@ -178,7 +182,9 @@
+       BELL_RING = makeCustomStat("bell_ring", StatFormatter.DEFAULT);
+       RAID_TRIGGER = makeCustomStat("raid_trigger", StatFormatter.DEFAULT);
+       RAID_WIN = makeCustomStat("raid_win", StatFormatter.DEFAULT);
+       INTERACT_WITH_ANVIL = makeCustomStat("interact_with_anvil", StatFormatter.DEFAULT);
+       INTERACT_WITH_GRINDSTONE = makeCustomStat("interact_with_grindstone", StatFormatter.DEFAULT);
++      TARGET_HIT = makeCustomStat("target_hit", StatFormatter.DEFAULT);
++      INTERACT_WITH_SMITHING_TABLE = makeCustomStat("interact_with_smithing_table", StatFormatter.DEFAULT);
+    }
+ }

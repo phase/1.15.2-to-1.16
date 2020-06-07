@@ -1,0 +1,25 @@
+--- net/minecraft/client/resources/sounds/MinecartSoundInstance.java
++++ net/minecraft/client/resources/sounds/MinecartSoundInstance.java
+@@ -19,17 +19,21 @@
+       this.x = (float)var1.getX();
+       this.y = (float)var1.getY();
+       this.z = (float)var1.getZ();
+    }
+ 
++   public boolean canPlaySound() {
++      return !this.minecart.isSilent();
++   }
++
+    public boolean canStartSilent() {
+       return true;
+    }
+ 
+    public void tick() {
+       if (this.minecart.removed) {
+-         this.stopped = true;
++         this.stop();
+       } else {
+          this.x = (float)this.minecart.getX();
+          this.y = (float)this.minecart.getY();
+          this.z = (float)this.minecart.getZ();
+          float var1 = Mth.sqrt(Entity.getHorizontalDistanceSqr(this.minecart.getDeltaMovement()));

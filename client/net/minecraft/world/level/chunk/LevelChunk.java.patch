@@ -1,0 +1,192 @@
+--- net/minecraft/world/level/chunk/LevelChunk.java
++++ net/minecraft/world/level/chunk/LevelChunk.java
+@@ -37,19 +37,19 @@
+ import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.ChunkTickList;
+ import net.minecraft.world.level.EmptyTickList;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelType;
+ import net.minecraft.world.level.TickList;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.EntityBlock;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.levelgen.DebugLevelSource;
+ import net.minecraft.world.level.levelgen.Heightmap;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.level.levelgen.structure.StructureStart;
+ import net.minecraft.world.level.lighting.LevelLightEngine;
+ import net.minecraft.world.level.material.Fluid;
+ import net.minecraft.world.level.material.FluidState;
+ import net.minecraft.world.level.material.Fluids;
+@@ -67,12 +67,12 @@
+    private final Level level;
+    private final Map<Heightmap.Types, Heightmap> heightmaps;
+    private final UpgradeData upgradeData;
+    private final Map<BlockPos, BlockEntity> blockEntities;
+    private final ClassInstanceMultiMap<Entity>[] entitySections;
+-   private final Map<String, StructureStart> structureStarts;
+-   private final Map<String, LongSet> structuresRefences;
++   private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
++   private final Map<StructureFeature<?>, LongSet> structuresRefences;
+    private final ShortList[] postProcessing;
+    private TickList<Block> blockTicks;
+    private TickList<Fluid> liquidTicks;
+    private boolean lastSaveHadEntities;
+    private long lastSaveTime;
+@@ -188,11 +188,11 @@
+ 
+    public BlockState getBlockState(BlockPos var1) {
+       int var2 = var1.getX();
+       int var3 = var1.getY();
+       int var4 = var1.getZ();
+-      if (this.level.getGeneratorType() == LevelType.DEBUG_ALL_BLOCK_STATES) {
++      if (this.level.isDebug()) {
+          BlockState var9 = null;
+          if (var3 == 60) {
+             var9 = Blocks.BARRIER.defaultBlockState();
+          }
+ 
+@@ -281,11 +281,11 @@
+             var9.onRemove(this.level, var1, var2, var3);
+          } else if (var11 != var10 && var11 instanceof EntityBlock) {
+             this.level.removeBlockEntity(var1);
+          }
+ 
+-         if (var7.getBlockState(var4, var5 & 15, var6).getBlock() != var10) {
++         if (!var7.getBlockState(var4, var5 & 15, var6).is(var10)) {
+             return null;
+          } else {
+             BlockEntity var13;
+             if (var11 instanceof EntityBlock) {
+                var13 = this.getBlockEntity(var1, LevelChunk.EntityCreationType.CHECK);
+@@ -687,44 +687,44 @@
+    public void setLastSaveTime(long var1) {
+       this.lastSaveTime = var1;
+    }
+ 
+    @Nullable
+-   public StructureStart getStartForFeature(String var1) {
++   public StructureStart<?> getStartForFeature(StructureFeature<?> var1) {
+       return (StructureStart)this.structureStarts.get(var1);
+    }
+ 
+-   public void setStartForFeature(String var1, StructureStart var2) {
++   public void setStartForFeature(StructureFeature<?> var1, StructureStart<?> var2) {
+       this.structureStarts.put(var1, var2);
+    }
+ 
+-   public Map<String, StructureStart> getAllStarts() {
++   public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+       return this.structureStarts;
+    }
+ 
+-   public void setAllStarts(Map<String, StructureStart> var1) {
++   public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> var1) {
+       this.structureStarts.clear();
+       this.structureStarts.putAll(var1);
+    }
+ 
+-   public LongSet getReferencesForFeature(String var1) {
++   public LongSet getReferencesForFeature(StructureFeature<?> var1) {
+       return (LongSet)this.structuresRefences.computeIfAbsent(var1, (var0) -> {
+          return new LongOpenHashSet();
+       });
+    }
+ 
+-   public void addReferenceForFeature(String var1, long var2) {
++   public void addReferenceForFeature(StructureFeature<?> var1, long var2) {
+       ((LongSet)this.structuresRefences.computeIfAbsent(var1, (var0) -> {
+          return new LongOpenHashSet();
+       })).add(var2);
+    }
+ 
+-   public Map<String, LongSet> getAllReferences() {
++   public Map<StructureFeature<?>, LongSet> getAllReferences() {
+       return this.structuresRefences;
+    }
+ 
+-   public void setAllReferences(Map<String, LongSet> var1) {
++   public void setAllReferences(Map<StructureFeature<?>, LongSet> var1) {
+       this.structuresRefences.clear();
+       this.structuresRefences.putAll(var1);
+    }
+ 
+    public long getInhabitedTime() {
+@@ -766,28 +766,29 @@
+       this.upgradeData.upgrade(this);
+    }
+ 
+    @Nullable
+    private BlockEntity promotePendingBlockEntity(BlockPos var1, CompoundTag var2) {
++      BlockState var4 = this.getBlockState(var1);
+       BlockEntity var3;
+       if ("DUMMY".equals(var2.getString("id"))) {
+-         Block var4 = this.getBlockState(var1).getBlock();
+-         if (var4 instanceof EntityBlock) {
+-            var3 = ((EntityBlock)var4).newBlockEntity(this.level);
++         Block var5 = var4.getBlock();
++         if (var5 instanceof EntityBlock) {
++            var3 = ((EntityBlock)var5).newBlockEntity(this.level);
+          } else {
+             var3 = null;
+-            LOGGER.warn("Tried to load a DUMMY block entity @ {} but found not block entity block {} at location", var1, this.getBlockState(var1));
++            LOGGER.warn("Tried to load a DUMMY block entity @ {} but found not block entity block {} at location", var1, var4);
+          }
+       } else {
+-         var3 = BlockEntity.loadStatic(var2);
++         var3 = BlockEntity.loadStatic(var4, var2);
+       }
+ 
+       if (var3 != null) {
+          var3.setLevelAndPosition(this.level, var1);
+          this.addBlockEntity(var3);
+       } else {
+-         LOGGER.warn("Tried to load a block entity for block {} but failed at location {}", this.getBlockState(var1), var1);
++         LOGGER.warn("Tried to load a block entity for block {} but failed at location {}", var4, var1);
+       }
+ 
+       return var3;
+    }
+ 
+@@ -804,34 +805,34 @@
+          ((ProtoTickList)this.blockTicks).copyOut(this.level.getBlockTicks(), (var1) -> {
+             return this.getBlockState(var1).getBlock();
+          });
+          this.blockTicks = EmptyTickList.empty();
+       } else if (this.blockTicks instanceof ChunkTickList) {
+-         this.level.getBlockTicks().addAll(((ChunkTickList)this.blockTicks).ticks());
++         ((ChunkTickList)this.blockTicks).copyOut(this.level.getBlockTicks());
+          this.blockTicks = EmptyTickList.empty();
+       }
+ 
+       if (this.liquidTicks instanceof ProtoTickList) {
+          ((ProtoTickList)this.liquidTicks).copyOut(this.level.getLiquidTicks(), (var1) -> {
+             return this.getFluidState(var1).getType();
+          });
+          this.liquidTicks = EmptyTickList.empty();
+       } else if (this.liquidTicks instanceof ChunkTickList) {
+-         this.level.getLiquidTicks().addAll(((ChunkTickList)this.liquidTicks).ticks());
++         ((ChunkTickList)this.liquidTicks).copyOut(this.level.getLiquidTicks());
+          this.liquidTicks = EmptyTickList.empty();
+       }
+ 
+    }
+ 
+    public void packTicks(ServerLevel var1) {
+       if (this.blockTicks == EmptyTickList.empty()) {
+-         this.blockTicks = new ChunkTickList(Registry.BLOCK::getKey, var1.getBlockTicks().fetchTicksInChunk(this.chunkPos, true, false));
++         this.blockTicks = new ChunkTickList(Registry.BLOCK::getKey, var1.getBlockTicks().fetchTicksInChunk(this.chunkPos, true, false), var1.getGameTime());
+          this.setUnsaved(true);
+       }
+ 
+       if (this.liquidTicks == EmptyTickList.empty()) {
+-         this.liquidTicks = new ChunkTickList(Registry.FLUID::getKey, var1.getLiquidTicks().fetchTicksInChunk(this.chunkPos, true, false));
++         this.liquidTicks = new ChunkTickList(Registry.FLUID::getKey, var1.getLiquidTicks().fetchTicksInChunk(this.chunkPos, true, false), var1.getGameTime());
+          this.setUnsaved(true);
+       }
+ 
+    }
+ 

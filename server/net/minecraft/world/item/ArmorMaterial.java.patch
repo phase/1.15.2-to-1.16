@@ -1,0 +1,11 @@
+--- net/minecraft/world/item/ArmorMaterial.java
++++ net/minecraft/world/item/ArmorMaterial.java
+@@ -14,6 +14,8 @@
+    SoundEvent getEquipSound();
+ 
+    Ingredient getRepairIngredient();
+ 
+    float getToughness();
++
++   float getKnockbackResistance();
+ }

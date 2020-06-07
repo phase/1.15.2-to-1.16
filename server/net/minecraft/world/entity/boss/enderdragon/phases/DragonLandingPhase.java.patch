@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/boss/enderdragon/phases/DragonLandingPhase.java
++++ net/minecraft/world/entity/boss/enderdragon/phases/DragonLandingPhase.java
+@@ -36,11 +36,11 @@
+ 
+    }
+ 
+    public void doServerTick() {
+       if (this.targetLocation == null) {
+-         this.targetLocation = new Vec3(this.dragon.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EndPodiumFeature.END_PODIUM_LOCATION));
++         this.targetLocation = Vec3.atBottomCenterOf(this.dragon.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EndPodiumFeature.END_PODIUM_LOCATION));
+       }
+ 
+       if (this.targetLocation.distanceToSqr(this.dragon.getX(), this.dragon.getY(), this.dragon.getZ()) < 1.0D) {
+          ((DragonSittingFlamingPhase)this.dragon.getPhaseManager().getPhase(EnderDragonPhase.SITTING_FLAMING)).resetFlameCount();
+          this.dragon.getPhaseManager().setPhase(EnderDragonPhase.SITTING_SCANNING);

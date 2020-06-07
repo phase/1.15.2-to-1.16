@@ -1,0 +1,114 @@
+--- net/minecraft/world/entity/monster/ZombieVillager.java
++++ net/minecraft/world/entity/monster/ZombieVillager.java
+@@ -1,8 +1,9 @@
+ package net.minecraft.world.entity.monster;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.Dynamic;
+ import java.util.UUID;
+ import javax.annotation.Nullable;
+ import net.minecraft.advancements.CriteriaTriggers;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Registry;
+@@ -39,10 +40,11 @@
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.BedBlock;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
++import org.apache.logging.log4j.Logger;
+ 
+ public class ZombieVillager extends Zombie implements VillagerDataHolder {
+    private static final EntityDataAccessor<Boolean> DATA_CONVERTING_ID;
+    private static final EntityDataAccessor<VillagerData> DATA_VILLAGER_DATA;
+    private int villagerConversionTime;
+@@ -62,11 +64,16 @@
+       this.entityData.define(DATA_VILLAGER_DATA, new VillagerData(VillagerType.PLAINS, VillagerProfession.NONE, 1));
+    }
+ 
+    public void addAdditionalSaveData(CompoundTag var1) {
+       super.addAdditionalSaveData(var1);
+-      var1.put("VillagerData", (Tag)this.getVillagerData().serialize(NbtOps.INSTANCE));
++      DataResult var10000 = VillagerData.CODEC.encodeStart(NbtOps.INSTANCE, this.getVillagerData());
++      Logger var10001 = LOGGER;
++      var10001.getClass();
++      var10000.resultOrPartial(var10001::error).ifPresent((var1x) -> {
++         var1.put("VillagerData", var1x);
++      });
+       if (this.tradeOffers != null) {
+          var1.put("Offers", this.tradeOffers);
+       }
+ 
+       if (this.gossips != null) {
+@@ -82,11 +89,14 @@
+    }
+ 
+    public void readAdditionalSaveData(CompoundTag var1) {
+       super.readAdditionalSaveData(var1);
+       if (var1.contains("VillagerData", 10)) {
+-         this.setVillagerData(new VillagerData(new Dynamic(NbtOps.INSTANCE, var1.get("VillagerData"))));
++         DataResult var2 = VillagerData.CODEC.parse(new Dynamic(NbtOps.INSTANCE, var1.get("VillagerData")));
++         Logger var10001 = LOGGER;
++         var10001.getClass();
++         var2.resultOrPartial(var10001::error).ifPresent(this::setVillagerData);
+       }
+ 
+       if (var1.contains("Offers", 10)) {
+          this.tradeOffers = var1.getCompound("Offers");
+       }
+@@ -138,11 +148,11 @@
+    protected boolean convertsInWater() {
+       return false;
+    }
+ 
+    public boolean removeWhenFarAway(double var1) {
+-      return !this.isConverting();
++      return !this.isConverting() && this.villagerXp == 0;
+    }
+ 
+    public boolean isConverting() {
+       return (Boolean)this.getEntityData().get(DATA_CONVERTING_ID);
+    }
+@@ -196,11 +206,11 @@
+       if (this.tradeOffers != null) {
+          var2.setOffers(new MerchantOffers(this.tradeOffers));
+       }
+ 
+       var2.setVillagerXp(this.villagerXp);
+-      var2.finalizeSpawn(var1, var1.getCurrentDifficultyAt(new BlockPos(var2)), MobSpawnType.CONVERSION, (SpawnGroupData)null, (CompoundTag)null);
++      var2.finalizeSpawn(var1, var1.getCurrentDifficultyAt(var2.blockPosition()), MobSpawnType.CONVERSION, (SpawnGroupData)null, (CompoundTag)null);
+       if (this.isBaby()) {
+          var2.setAge(-24000);
+       }
+ 
+       this.remove();
+@@ -223,11 +233,14 @@
+             var1.onReputationEvent(ReputationEventType.ZOMBIE_VILLAGER_CURED, var10, var2);
+          }
+       }
+ 
+       var2.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 200, 0));
+-      var1.levelEvent((Player)null, 1027, new BlockPos(this), 0);
++      if (!this.isSilent()) {
++         var1.levelEvent((Player)null, 1027, this.blockPosition(), 0);
++      }
++
+    }
+ 
+    private int getConversionProgress() {
+       int var1 = 1;
+       if (this.random.nextFloat() < 0.01F) {
+@@ -285,11 +298,11 @@
+       this.gossips = var1;
+    }
+ 
+    @Nullable
+    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+-      this.setVillagerData(this.getVillagerData().setType(VillagerType.byBiome(var1.getBiome(new BlockPos(this)))));
++      this.setVillagerData(this.getVillagerData().setType(VillagerType.byBiome(var1.getBiome(this.blockPosition()))));
+       return super.finalizeSpawn(var1, var2, var3, var4, var5);
+    }
+ 
+    public void setVillagerData(VillagerData var1) {
+       VillagerData var2 = this.getVillagerData();

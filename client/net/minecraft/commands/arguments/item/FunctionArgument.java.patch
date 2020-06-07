@@ -1,0 +1,77 @@
+--- net/minecraft/commands/arguments/item/FunctionArgument.java
++++ net/minecraft/commands/arguments/item/FunctionArgument.java
+@@ -4,10 +4,11 @@
+ import com.mojang.brigadier.arguments.ArgumentType;
+ import com.mojang.brigadier.context.CommandContext;
+ import com.mojang.brigadier.exceptions.CommandSyntaxException;
+ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+ import com.mojang.datafixers.util.Either;
++import com.mojang.datafixers.util.Pair;
+ import java.util.Arrays;
+ import java.util.Collection;
+ import java.util.Collections;
+ import net.minecraft.commands.CommandFunction;
+ import net.minecraft.commands.CommandSourceStack;
+@@ -40,23 +41,23 @@
+             public Collection<CommandFunction> create(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException {
+                Tag var2x = FunctionArgument.getFunctionTag(var1, var2);
+                return var2x.getValues();
+             }
+ 
+-            public Either<CommandFunction, Tag<CommandFunction>> unwrap(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException {
+-               return Either.right(FunctionArgument.getFunctionTag(var1, var2));
++            public Pair<ResourceLocation, Either<CommandFunction, Tag<CommandFunction>>> unwrap(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException {
++               return Pair.of(var2, Either.right(FunctionArgument.getFunctionTag(var1, var2)));
+             }
+          };
+       } else {
+          var2 = ResourceLocation.read(var1);
+          return new FunctionArgument.Result() {
+             public Collection<CommandFunction> create(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException {
+                return Collections.singleton(FunctionArgument.getFunction(var1, var2));
+             }
+ 
+-            public Either<CommandFunction, Tag<CommandFunction>> unwrap(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException {
+-               return Either.left(FunctionArgument.getFunction(var1, var2));
++            public Pair<ResourceLocation, Either<CommandFunction, Tag<CommandFunction>>> unwrap(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException {
++               return Pair.of(var2, Either.left(FunctionArgument.getFunction(var1, var2)));
+             }
+          };
+       }
+    }
+ 
+@@ -65,11 +66,11 @@
+          return ERROR_UNKNOWN_FUNCTION.create(var1.toString());
+       });
+    }
+ 
+    private static Tag<CommandFunction> getFunctionTag(CommandContext<CommandSourceStack> var0, ResourceLocation var1) throws CommandSyntaxException {
+-      Tag var2 = ((CommandSourceStack)var0.getSource()).getServer().getFunctions().getTags().getTag(var1);
++      Tag var2 = ((CommandSourceStack)var0.getSource()).getServer().getFunctions().getTag(var1);
+       if (var2 == null) {
+          throw ERROR_UNKNOWN_TAG.create(var1.toString());
+       } else {
+          return var2;
+       }
+@@ -77,19 +78,19 @@
+ 
+    public static Collection<CommandFunction> getFunctions(CommandContext<CommandSourceStack> var0, String var1) throws CommandSyntaxException {
+       return ((FunctionArgument.Result)var0.getArgument(var1, FunctionArgument.Result.class)).create(var0);
+    }
+ 
+-   public static Either<CommandFunction, Tag<CommandFunction>> getFunctionOrTag(CommandContext<CommandSourceStack> var0, String var1) throws CommandSyntaxException {
++   public static Pair<ResourceLocation, Either<CommandFunction, Tag<CommandFunction>>> getFunctionOrTag(CommandContext<CommandSourceStack> var0, String var1) throws CommandSyntaxException {
+       return ((FunctionArgument.Result)var0.getArgument(var1, FunctionArgument.Result.class)).unwrap(var0);
+    }
+ 
+    public Collection<String> getExamples() {
+       return EXAMPLES;
+    }
+ 
+    public interface Result {
+       Collection<CommandFunction> create(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException;
+ 
+-      Either<CommandFunction, Tag<CommandFunction>> unwrap(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException;
++      Pair<ResourceLocation, Either<CommandFunction, Tag<CommandFunction>>> unwrap(CommandContext<CommandSourceStack> var1) throws CommandSyntaxException;
+    }
+ }

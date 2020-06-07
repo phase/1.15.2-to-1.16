@@ -1,0 +1,31 @@
+--- net/minecraft/world/level/levelgen/feature/RandomBooleanSelectorFeature.java
++++ net/minecraft/world/level/levelgen/feature/RandomBooleanSelectorFeature.java
+@@ -1,21 +1,20 @@
+ package net.minecraft.world.level.levelgen.feature;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.Codec;
+ import java.util.Random;
+-import java.util.function.Function;
+ import net.minecraft.core.BlockPos;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.StructureFeatureManager;
++import net.minecraft.world.level.WorldGenLevel;
+ import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
+ import net.minecraft.world.level.levelgen.feature.configurations.RandomBooleanFeatureConfiguration;
+ 
+ public class RandomBooleanSelectorFeature extends Feature<RandomBooleanFeatureConfiguration> {
+-   public RandomBooleanSelectorFeature(Function<Dynamic<?>, ? extends RandomBooleanFeatureConfiguration> var1) {
++   public RandomBooleanSelectorFeature(Codec<RandomBooleanFeatureConfiguration> var1) {
+       super(var1);
+    }
+ 
+-   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, RandomBooleanFeatureConfiguration var5) {
+-      boolean var6 = var3.nextBoolean();
+-      return var6 ? var5.featureTrue.place(var1, var2, var3, var4) : var5.featureFalse.place(var1, var2, var3, var4);
++   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, RandomBooleanFeatureConfiguration var6) {
++      boolean var7 = var4.nextBoolean();
++      return var7 ? var6.featureTrue.place(var1, var2, var3, var4, var5) : var6.featureFalse.place(var1, var2, var3, var4, var5);
+    }
+ }

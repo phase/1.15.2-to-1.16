@@ -1,0 +1,19 @@
+--- net/minecraft/realms/RealmsDefaultVertexFormat.java
++++ net/minecraft/realms/RealmsDefaultVertexFormat.java
+@@ -1,16 +1,0 @@
+-package net.minecraft.realms;
+-
+-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+-
+-public class RealmsDefaultVertexFormat {
+-   public static final RealmsVertexFormat POSITION_COLOR;
+-   public static final RealmsVertexFormat POSITION_TEX_COLOR;
+-
+-   public RealmsDefaultVertexFormat() {
+-   }
+-
+-   static {
+-      POSITION_COLOR = new RealmsVertexFormat(DefaultVertexFormat.POSITION_COLOR);
+-      POSITION_TEX_COLOR = new RealmsVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR);
+-   }
+-}

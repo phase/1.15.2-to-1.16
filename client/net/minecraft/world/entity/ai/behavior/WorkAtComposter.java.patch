@@ -1,0 +1,96 @@
+--- net/minecraft/world/entity/ai/behavior/WorkAtComposter.java
++++ net/minecraft/world/entity/ai/behavior/WorkAtComposter.java
+@@ -1,0 +1,93 @@
++package net.minecraft.world.entity.ai.behavior;
++
++import com.google.common.collect.ImmutableList;
++import java.util.List;
++import java.util.Optional;
++import net.minecraft.core.GlobalPos;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.SimpleContainer;
++import net.minecraft.world.entity.ai.memory.MemoryModuleType;
++import net.minecraft.world.entity.npc.Villager;
++import net.minecraft.world.item.Item;
++import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.Items;
++import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.block.ComposterBlock;
++import net.minecraft.world.level.block.state.BlockState;
++
++public class WorkAtComposter extends WorkAtPoi {
++   private static final List<Item> COMPOSTABLE_ITEMS;
++
++   public WorkAtComposter() {
++   }
++
++   protected void useWorkstation(ServerLevel var1, Villager var2) {
++      Optional var3 = var2.getBrain().getMemory(MemoryModuleType.JOB_SITE);
++      if (var3.isPresent()) {
++         GlobalPos var4 = (GlobalPos)var3.get();
++         BlockState var5 = var1.getBlockState(var4.pos());
++         if (var5.is(Blocks.COMPOSTER)) {
++            this.makeBread(var2);
++            this.compostItems(var1, var2, var4, var5);
++         }
++
++      }
++   }
++
++   private void compostItems(ServerLevel var1, Villager var2, GlobalPos var3, BlockState var4) {
++      if ((Integer)var4.getValue(ComposterBlock.LEVEL) == 8) {
++         var4 = ComposterBlock.extractProduce(var4, var1, var3.pos());
++      }
++
++      int var5 = 20;
++      boolean var6 = true;
++      int[] var7 = new int[COMPOSTABLE_ITEMS.size()];
++      SimpleContainer var8 = var2.getInventory();
++      int var9 = var8.getContainerSize();
++
++      for(int var10 = var9 - 1; var10 >= 0 && var5 > 0; --var10) {
++         ItemStack var11 = var8.getItem(var10);
++         int var12 = COMPOSTABLE_ITEMS.indexOf(var11.getItem());
++         if (var12 != -1) {
++            int var13 = var11.getCount();
++            int var14 = var7[var12] + var13;
++            var7[var12] = var14;
++            int var15 = Math.min(Math.min(var14 - 10, var5), var13);
++            if (var15 > 0) {
++               var5 -= var15;
++
++               for(int var16 = 0; var16 < var15; ++var16) {
++                  var4 = ComposterBlock.insertItem(var4, var1, var11, var3.pos());
++                  if ((Integer)var4.getValue(ComposterBlock.LEVEL) == 7) {
++                     return;
++                  }
++               }
++            }
++         }
++      }
++
++   }
++
++   private void makeBread(Villager var1) {
++      SimpleContainer var2 = var1.getInventory();
++      if (var2.countItem(Items.BREAD) <= 36) {
++         int var3 = var2.countItem(Items.WHEAT);
++         boolean var4 = true;
++         boolean var5 = true;
++         int var6 = Math.min(3, var3 / 3);
++         if (var6 != 0) {
++            int var7 = var6 * 3;
++            var2.removeItemType(Items.WHEAT, var7);
++            ItemStack var8 = var2.addItem(new ItemStack(Items.BREAD, var6));
++            if (!var8.isEmpty()) {
++               var1.spawnAtLocation(var8, 0.5F);
++            }
++
++         }
++      }
++   }
++
++   static {
++      COMPOSTABLE_ITEMS = ImmutableList.of(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS);
++   }
++}

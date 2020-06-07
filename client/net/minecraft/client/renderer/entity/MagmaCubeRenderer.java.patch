@@ -1,0 +1,26 @@
+--- net/minecraft/client/renderer/entity/MagmaCubeRenderer.java
++++ net/minecraft/client/renderer/entity/MagmaCubeRenderer.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.client.renderer.entity;
+ 
+ import com.mojang.blaze3d.vertex.PoseStack;
+ import net.minecraft.client.model.LavaSlimeModel;
++import net.minecraft.core.BlockPos;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.monster.MagmaCube;
+ 
+ public class MagmaCubeRenderer extends MobRenderer<MagmaCube, LavaSlimeModel<MagmaCube>> {
+@@ -11,11 +12,11 @@
+ 
+    public MagmaCubeRenderer(EntityRenderDispatcher var1) {
+       super(var1, new LavaSlimeModel(), 0.25F);
+    }
+ 
+-   protected int getBlockLightLevel(MagmaCube var1, float var2) {
++   protected int getBlockLightLevel(MagmaCube var1, BlockPos var2) {
+       return 15;
+    }
+ 
+    public ResourceLocation getTextureLocation(MagmaCube var1) {
+       return MAGMACUBE_LOCATION;

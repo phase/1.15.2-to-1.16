@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/animal/WaterAnimal.java
++++ net/minecraft/world/entity/animal/WaterAnimal.java
+@@ -52,11 +52,11 @@
+       int var1 = this.getAirSupply();
+       super.baseTick();
+       this.handleAirSupply(var1);
+    }
+ 
+-   public boolean isPushedByWater() {
++   public boolean isPushedByFluid() {
+       return false;
+    }
+ 
+    public boolean canBeLeashed(Player var1) {
+       return false;

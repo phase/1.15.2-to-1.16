@@ -1,0 +1,19 @@
+--- net/minecraft/world/entity/npc/WanderingTrader.java
++++ net/minecraft/world/entity/npc/WanderingTrader.java
+@@ -85,15 +85,11 @@
+       return false;
+    }
+ 
+    public boolean mobInteract(Player var1, InteractionHand var2) {
+       ItemStack var3 = var1.getItemInHand(var2);
+-      boolean var4 = var3.getItem() == Items.NAME_TAG;
+-      if (var4) {
+-         var3.interactEnemy(var1, this, var2);
+-         return true;
+-      } else if (var3.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading() && !this.isBaby()) {
++      if (var3.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading() && !this.isBaby()) {
+          if (var2 == InteractionHand.MAIN_HAND) {
+             var1.awardStat(Stats.TALKED_TO_VILLAGER);
+          }
+ 
+          if (this.getOffers().isEmpty()) {

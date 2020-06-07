@@ -1,0 +1,24 @@
+--- net/minecraft/world/entity/projectile/ThrownEgg.java
++++ net/minecraft/world/entity/projectile/ThrownEgg.java
+@@ -21,15 +21,17 @@
+ 
+    public ThrownEgg(Level var1, double var2, double var4, double var6) {
+       super(EntityType.EGG, var2, var4, var6, var1);
+    }
+ 
+-   protected void onHit(HitResult var1) {
+-      if (var1.getType() == HitResult.Type.ENTITY) {
+-         ((EntityHitResult)var1).getEntity().hurt(DamageSource.thrown(this, this.getOwner()), 0.0F);
+-      }
++   protected void onHitEntity(EntityHitResult var1) {
++      super.onHitEntity(var1);
++      var1.getEntity().hurt(DamageSource.thrown(this, this.getOwner()), 0.0F);
++   }
+ 
++   protected void onHit(HitResult var1) {
++      super.onHit(var1);
+       if (!this.level.isClientSide) {
+          if (this.random.nextInt(8) == 0) {
+             byte var2 = 1;
+             if (this.random.nextInt(32) == 0) {
+                var2 = 4;

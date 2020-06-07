@@ -1,0 +1,40 @@
+--- net/minecraft/client/renderer/LightTexture.java
++++ net/minecraft/client/renderer/LightTexture.java
+@@ -7,11 +7,10 @@
+ import net.minecraft.client.multiplayer.ClientLevel;
+ import net.minecraft.client.renderer.texture.DynamicTexture;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.world.effect.MobEffects;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.dimension.DimensionType;
+ 
+ public class LightTexture implements AutoCloseable {
+    private final DynamicTexture lightTexture;
+    private final NativeImage lightPixels;
+    private final ResourceLocation lightTextureLocation;
+@@ -106,11 +105,11 @@
+                   float var15 = var13 * ((var13 * 0.6F + 0.4F) * 0.6F + 0.4F);
+                   float var16 = var13 * (var13 * var13 * 0.6F + 0.4F);
+                   var9.set(var13, var15, var16);
+                   float var18;
+                   Vector3f var19;
+-                  if (var2.dimension.getType() == DimensionType.THE_END) {
++                  if (var2.dimensionType().isEnd()) {
+                      var9.lerp(new Vector3f(0.99F, 1.12F, 1.0F), 0.25F);
+                   } else {
+                      Vector3f var17 = var7.copy();
+                      var17.mul(var12);
+                      var9.add(var17);
+@@ -160,11 +159,11 @@
+       float var2 = 1.0F - var1;
+       return 1.0F - var2 * var2 * var2 * var2;
+    }
+ 
+    private float getBrightness(Level var1, int var2) {
+-      return var1.dimension.getBrightness(var2);
++      return var1.dimensionType().brightness(var2);
+    }
+ 
+    public static int pack(int var0, int var1) {
+       return var0 << 4 | var1 << 20;
+    }

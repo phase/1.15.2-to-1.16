@@ -1,0 +1,28 @@
+--- net/minecraft/world/level/BaseSpawner.java
++++ net/minecraft/world/level/BaseSpawner.java
+@@ -49,11 +49,11 @@
+ 
+       try {
+          return StringUtil.isNullOrEmpty(var1) ? null : new ResourceLocation(var1);
+       } catch (ResourceLocationException var4) {
+          BlockPos var3 = this.getPos();
+-         LOGGER.warn((String)"Invalid entity id '{}' at spawner {}:[{},{},{}]", (Object)var1, this.getLevel().dimension.getType(), var3.getX(), var3.getY(), var3.getZ());
++         LOGGER.warn((String)"Invalid entity id '{}' at spawner {}:[{},{},{}]", (Object)var1, this.getLevel().dimension().location(), var3.getX(), var3.getY(), var3.getZ());
+          return null;
+       }
+    }
+ 
+    public void setEntityId(EntityType<?> var1) {
+@@ -139,11 +139,11 @@
+                         if (!var17.checkSpawnRules(var1, MobSpawnType.SPAWNER) || !var17.checkSpawnObstruction(var1)) {
+                            break label97;
+                         }
+ 
+                         if (this.nextSpawnData.getTag().size() == 1 && this.nextSpawnData.getTag().contains("id", 8)) {
+-                           ((Mob)var15).finalizeSpawn(var1, var1.getCurrentDifficultyAt(new BlockPos(var15)), MobSpawnType.SPAWNER, (SpawnGroupData)null, (CompoundTag)null);
++                           ((Mob)var15).finalizeSpawn(var1, var1.getCurrentDifficultyAt(var15.blockPosition()), MobSpawnType.SPAWNER, (SpawnGroupData)null, (CompoundTag)null);
+                         }
+                      }
+ 
+                      this.addWithPassengers(var15);
+                      var1.levelEvent(2004, var2, 0);

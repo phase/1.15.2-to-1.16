@@ -1,0 +1,70 @@
+--- net/minecraft/world/level/block/AbstractFurnaceBlock.java
++++ net/minecraft/world/level/block/AbstractFurnaceBlock.java
+@@ -12,35 +12,34 @@
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
++import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+ import net.minecraft.world.phys.BlockHitResult;
++import net.minecraft.world.phys.Vec3;
+ 
+ public abstract class AbstractFurnaceBlock extends BaseEntityBlock {
+    public static final DirectionProperty FACING;
+    public static final BooleanProperty LIT;
+ 
+-   protected AbstractFurnaceBlock(Block.Properties var1) {
++   protected AbstractFurnaceBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(LIT, false));
+    }
+ 
+-   public int getLightEmission(BlockState var1) {
+-      return (Boolean)var1.getValue(LIT) ? super.getLightEmission(var1) : 0;
+-   }
+-
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
+       if (var2.isClientSide) {
+          return InteractionResult.SUCCESS;
+       } else {
+          this.openContainer(var2, var3, var4);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    protected abstract void openContainer(Level var1, BlockPos var2, Player var3);
+ 
+@@ -57,14 +56,15 @@
+       }
+ 
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var4.getBlock()) {
++      if (!var1.is(var4.getBlock())) {
+          BlockEntity var6 = var2.getBlockEntity(var3);
+          if (var6 instanceof AbstractFurnaceBlockEntity) {
+             Containers.dropContents(var2, (BlockPos)var3, (Container)((AbstractFurnaceBlockEntity)var6));
++            ((AbstractFurnaceBlockEntity)var6).getRecipesToAwardAndPopExperience(var2, Vec3.atCenterOf(var3));
+             var2.updateNeighbourForOutputSignal(var3, this);
+          }
+ 
+          super.onRemove(var1, var2, var3, var4, var5);
+       }
+@@ -94,8 +94,8 @@
+       var1.add(FACING, LIT);
+    }
+ 
+    static {
+       FACING = HorizontalDirectionalBlock.FACING;
+-      LIT = RedstoneTorchBlock.LIT;
++      LIT = BlockStateProperties.LIT;
+    }
+ }

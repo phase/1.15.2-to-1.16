@@ -1,0 +1,43 @@
+--- net/minecraft/client/renderer/Sheets.java
++++ net/minecraft/client/renderer/Sheets.java
+@@ -33,11 +33,11 @@
+    private static final RenderType SHIELD_SHEET_TYPE;
+    private static final RenderType SIGN_SHEET_TYPE;
+    private static final RenderType CHEST_SHEET_TYPE;
+    private static final RenderType SOLID_BLOCK_SHEET;
+    private static final RenderType CUTOUT_BLOCK_SHEET;
+-   private static final RenderType TRANSLUCENT_BLOCK_SHEET;
++   private static final RenderType TRANSLUCENT_ITEM_CULL_BLOCK_SHEET;
+    private static final RenderType TRANSLUCENT_CULL_BLOCK_SHEET;
+    public static final Material DEFAULT_SHULKER_TEXTURE_LOCATION;
+    public static final List<Material> SHULKER_TEXTURE_LOCATION;
+    public static final Map<WoodType, Material> SIGN_MATERIALS;
+    public static final Material[] BED_TEXTURES;
+@@ -82,12 +82,12 @@
+ 
+    public static RenderType cutoutBlockSheet() {
+       return CUTOUT_BLOCK_SHEET;
+    }
+ 
+-   public static RenderType translucentBlockSheet() {
+-      return TRANSLUCENT_BLOCK_SHEET;
++   public static RenderType translucentItemSheet() {
++      return TRANSLUCENT_ITEM_CULL_BLOCK_SHEET;
+    }
+ 
+    public static RenderType translucentCullBlockSheet() {
+       return TRANSLUCENT_CULL_BLOCK_SHEET;
+    }
+@@ -163,11 +163,11 @@
+       SHIELD_SHEET_TYPE = RenderType.entityNoOutline(SHIELD_SHEET);
+       SIGN_SHEET_TYPE = RenderType.entityCutoutNoCull(SIGN_SHEET);
+       CHEST_SHEET_TYPE = RenderType.entityCutout(CHEST_SHEET);
+       SOLID_BLOCK_SHEET = RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS);
+       CUTOUT_BLOCK_SHEET = RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS);
+-      TRANSLUCENT_BLOCK_SHEET = RenderType.entityTranslucent(TextureAtlas.LOCATION_BLOCKS);
++      TRANSLUCENT_ITEM_CULL_BLOCK_SHEET = RenderType.itemEntityTranslucentCull(TextureAtlas.LOCATION_BLOCKS);
+       TRANSLUCENT_CULL_BLOCK_SHEET = RenderType.entityTranslucentCull(TextureAtlas.LOCATION_BLOCKS);
+       DEFAULT_SHULKER_TEXTURE_LOCATION = new Material(SHULKER_SHEET, new ResourceLocation("entity/shulker/shulker"));
+       SHULKER_TEXTURE_LOCATION = (List)Stream.of("white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black").map((var0) -> {
+          return new Material(SHULKER_SHEET, new ResourceLocation("entity/shulker/shulker_" + var0));
+       }).collect(ImmutableList.toImmutableList());

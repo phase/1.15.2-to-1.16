@@ -1,0 +1,88 @@
+--- net/minecraft/world/level/chunk/ImposterProtoChunk.java
++++ net/minecraft/world/level/chunk/ImposterProtoChunk.java
+@@ -3,19 +3,21 @@
+ import it.unimi.dsi.fastutil.longs.LongSet;
+ import java.util.BitSet;
+ import java.util.Map;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
++import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.levelgen.GenerationStep;
+ import net.minecraft.world.level.levelgen.Heightmap;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.level.levelgen.structure.StructureStart;
+ import net.minecraft.world.level.lighting.LevelLightEngine;
+ import net.minecraft.world.level.material.Fluid;
+ import net.minecraft.world.level.material.FluidState;
+ import net.minecraft.world.level.material.Fluids;
+@@ -90,36 +92,36 @@
+ 
+    public void setLastSaveTime(long var1) {
+    }
+ 
+    @Nullable
+-   public StructureStart getStartForFeature(String var1) {
++   public StructureStart<?> getStartForFeature(StructureFeature<?> var1) {
+       return this.wrapped.getStartForFeature(var1);
+    }
+ 
+-   public void setStartForFeature(String var1, StructureStart var2) {
++   public void setStartForFeature(StructureFeature<?> var1, StructureStart<?> var2) {
+    }
+ 
+-   public Map<String, StructureStart> getAllStarts() {
++   public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+       return this.wrapped.getAllStarts();
+    }
+ 
+-   public void setAllStarts(Map<String, StructureStart> var1) {
++   public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> var1) {
+    }
+ 
+-   public LongSet getReferencesForFeature(String var1) {
++   public LongSet getReferencesForFeature(StructureFeature<?> var1) {
+       return this.wrapped.getReferencesForFeature(var1);
+    }
+ 
+-   public void addReferenceForFeature(String var1, long var2) {
++   public void addReferenceForFeature(StructureFeature<?> var1, long var2) {
+    }
+ 
+-   public Map<String, LongSet> getAllReferences() {
++   public Map<StructureFeature<?>, LongSet> getAllReferences() {
+       return this.wrapped.getAllReferences();
+    }
+ 
+-   public void setAllReferences(Map<String, LongSet> var1) {
++   public void setAllReferences(Map<StructureFeature<?>, LongSet> var1) {
+    }
+ 
+    public ChunkBiomeContainer getBiomes() {
+       return this.wrapped.getBiomes();
+    }
+@@ -172,13 +174,17 @@
+          return var0 == Fluids.EMPTY;
+       }, this.getPos());
+    }
+ 
+    public BitSet getCarvingMask(GenerationStep.Carving var1) {
+-      return this.wrapped.getCarvingMask(var1);
++      throw (UnsupportedOperationException)Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
+    }
+ 
++   public BitSet getOrCreateCarvingMask(GenerationStep.Carving var1) {
++      throw (UnsupportedOperationException)Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
++   }
++
+    public LevelChunk getWrapped() {
+       return this.wrapped;
+    }
+ 
+    public boolean isLightCorrect() {

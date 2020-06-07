@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/KickCommand.java
++++ net/minecraft/server/commands/KickCommand.java
+@@ -16,11 +16,11 @@
+ public class KickCommand {
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("kick").requires((var0x) -> {
+          return var0x.hasPermission(3);
+       })).then(((RequiredArgumentBuilder)Commands.argument("targets", EntityArgument.players()).executes((var0x) -> {
+-         return kickPlayers((CommandSourceStack)var0x.getSource(), EntityArgument.getPlayers(var0x, "targets"), new TranslatableComponent("multiplayer.disconnect.kicked", new Object[0]));
++         return kickPlayers((CommandSourceStack)var0x.getSource(), EntityArgument.getPlayers(var0x, "targets"), new TranslatableComponent("multiplayer.disconnect.kicked"));
+       })).then(Commands.argument("reason", MessageArgument.message()).executes((var0x) -> {
+          return kickPlayers((CommandSourceStack)var0x.getSource(), EntityArgument.getPlayers(var0x, "targets"), MessageArgument.getMessage(var0x, "reason"));
+       }))));
+    }
+ 

@@ -1,0 +1,19 @@
+--- net/minecraft/server/packs/resources/ProfiledReloadInstance.java
++++ net/minecraft/server/packs/resources/ProfiledReloadInstance.java
+@@ -20,14 +20,14 @@
+ 
+    public ProfiledReloadInstance(ResourceManager var1, List<PreparableReloadListener> var2, Executor var3, Executor var4, CompletableFuture<Unit> var5) {
+       super(var3, var4, var1, var2, (var1x, var2x, var3x, var4x, var5x) -> {
+          AtomicLong var6 = new AtomicLong();
+          AtomicLong var7 = new AtomicLong();
+-         ActiveProfiler var8 = new ActiveProfiler(Util.getNanos(), () -> {
++         ActiveProfiler var8 = new ActiveProfiler(Util.timeSource, () -> {
+             return 0;
+          }, false);
+-         ActiveProfiler var9 = new ActiveProfiler(Util.getNanos(), () -> {
++         ActiveProfiler var9 = new ActiveProfiler(Util.timeSource, () -> {
+             return 0;
+          }, false);
+          CompletableFuture var10 = var3x.reload(var1x, var2x, var8, var9, (var2) -> {
+             var4x.execute(() -> {
+                long var2x = Util.getNanos();

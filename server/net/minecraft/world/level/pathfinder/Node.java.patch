@@ -1,0 +1,17 @@
+--- net/minecraft/world/level/pathfinder/Node.java
++++ net/minecraft/world/level/pathfinder/Node.java
+@@ -70,10 +70,14 @@
+       float var3 = (float)Math.abs(var1.getY() - this.y);
+       float var4 = (float)Math.abs(var1.getZ() - this.z);
+       return var2 + var3 + var4;
+    }
+ 
++   public BlockPos asBlockPos() {
++      return new BlockPos(this.x, this.y, this.z);
++   }
++
+    public boolean equals(Object var1) {
+       if (!(var1 instanceof Node)) {
+          return false;
+       } else {
+          Node var2 = (Node)var1;

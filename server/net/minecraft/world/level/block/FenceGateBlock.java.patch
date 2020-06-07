@@ -1,0 +1,61 @@
+--- net/minecraft/world/level/block/FenceGateBlock.java
++++ net/minecraft/world/level/block/FenceGateBlock.java
+@@ -1,17 +1,19 @@
+ package net.minecraft.world.level.block;
+ 
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.tags.BlockTags;
++import net.minecraft.tags.Tag;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+@@ -33,11 +35,11 @@
+    protected static final VoxelShape Z_OCCLUSION_SHAPE;
+    protected static final VoxelShape X_OCCLUSION_SHAPE;
+    protected static final VoxelShape Z_OCCLUSION_SHAPE_LOW;
+    protected static final VoxelShape X_OCCLUSION_SHAPE_LOW;
+ 
+-   public FenceGateBlock(Block.Properties var1) {
++   public FenceGateBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(OPEN, false)).setValue(POWERED, false)).setValue(IN_WALL, false));
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+@@ -96,11 +98,11 @@
+       boolean var7 = var6 == Direction.Axis.Z && (this.isWall(var2.getBlockState(var3.west())) || this.isWall(var2.getBlockState(var3.east()))) || var6 == Direction.Axis.X && (this.isWall(var2.getBlockState(var3.north())) || this.isWall(var2.getBlockState(var3.south())));
+       return (BlockState)((BlockState)((BlockState)((BlockState)this.defaultBlockState().setValue(FACING, var5)).setValue(OPEN, var4)).setValue(POWERED, var4)).setValue(IN_WALL, var7);
+    }
+ 
+    private boolean isWall(BlockState var1) {
+-      return var1.getBlock().is(BlockTags.WALLS);
++      return var1.getBlock().is((Tag)BlockTags.WALLS);
+    }
+ 
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
+       if ((Boolean)var1.getValue(OPEN)) {
+          var1 = (BlockState)var1.setValue(OPEN, false);
+@@ -114,11 +116,11 @@
+          var1 = (BlockState)var1.setValue(OPEN, true);
+          var2.setBlock(var3, var1, 10);
+       }
+ 
+       var2.levelEvent(var4, (Boolean)var1.getValue(OPEN) ? 1008 : 1014, var3, 0);
+-      return InteractionResult.SUCCESS;
++      return InteractionResult.sidedSuccess(var2.isClientSide);
+    }
+ 
+    public void neighborChanged(BlockState var1, Level var2, BlockPos var3, Block var4, BlockPos var5, boolean var6) {
+       if (!var2.isClientSide) {
+          boolean var7 = var2.hasNeighborSignal(var3);

@@ -1,0 +1,119 @@
+--- net/minecraft/world/entity/animal/IronGolem.java
++++ net/minecraft/world/entity/animal/IronGolem.java
+@@ -19,24 +19,24 @@
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.Mob;
++import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
++import net.minecraft.world.entity.ai.attributes.Attributes;
++import net.minecraft.world.entity.ai.goal.GolemRandomStrollInVillageGoal;
+ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+-import net.minecraft.world.entity.ai.goal.MoveBackToVillage;
+-import net.minecraft.world.entity.ai.goal.MoveThroughVillageGoal;
++import net.minecraft.world.entity.ai.goal.MoveBackToVillageGoal;
+ import net.minecraft.world.entity.ai.goal.MoveTowardsTargetGoal;
+ import net.minecraft.world.entity.ai.goal.OfferFlowerGoal;
+ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+ import net.minecraft.world.entity.ai.goal.target.DefendVillageTargetGoal;
+ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+ import net.minecraft.world.entity.monster.Creeper;
+ import net.minecraft.world.entity.monster.Enemy;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.Level;
+@@ -56,16 +56,13 @@
+    }
+ 
+    protected void registerGoals() {
+       this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.0D, true));
+       this.goalSelector.addGoal(2, new MoveTowardsTargetGoal(this, 0.9D, 32.0F));
+-      this.goalSelector.addGoal(2, new MoveBackToVillage(this, 0.6D));
+-      this.goalSelector.addGoal(3, new MoveThroughVillageGoal(this, 0.6D, false, 4, () -> {
+-         return false;
+-      }));
++      this.goalSelector.addGoal(2, new MoveBackToVillageGoal(this, 0.6D, false));
++      this.goalSelector.addGoal(4, new GolemRandomStrollInVillageGoal(this, 0.6D));
+       this.goalSelector.addGoal(5, new OfferFlowerGoal(this));
+-      this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.6D));
+       this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
+       this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+       this.targetSelector.addGoal(1, new DefendVillageTargetGoal(this));
+       this.targetSelector.addGoal(2, new HurtByTargetGoal(this, new Class[0]));
+       this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Mob.class, 5, false, false, (var0) -> {
+@@ -76,16 +73,12 @@
+    protected void defineSynchedData() {
+       super.defineSynchedData();
+       this.entityData.define(DATA_FLAGS_ID, (byte)0);
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(100.0D);
+-      this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.25D);
+-      this.getAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0D);
+-      this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(15.0D);
++   public static AttributeSupplier.Builder createAttributes() {
++      return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 100.0D).add(Attributes.MOVEMENT_SPEED, 0.25D).add(Attributes.KNOCKBACK_RESISTANCE, 1.0D).add(Attributes.ATTACK_DAMAGE, 15.0D);
+    }
+ 
+    protected int decreaseAirSupply(int var1) {
+       return var1;
+    }
+@@ -137,18 +130,18 @@
+       super.readAdditionalSaveData(var1);
+       this.setPlayerCreated(var1.getBoolean("PlayerCreated"));
+    }
+ 
+    private float getAttackDamage() {
+-      return (float)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
++      return (float)this.getAttributeValue(Attributes.ATTACK_DAMAGE);
+    }
+ 
+    public boolean doHurtTarget(Entity var1) {
+       this.attackAnimationTick = 10;
+       this.level.broadcastEntityEvent(this, (byte)4);
+       float var2 = this.getAttackDamage();
+-      float var3 = var2 > 0.0F ? var2 / 2.0F + (float)this.random.nextInt((int)var2) : 0.0F;
++      float var3 = (int)var2 > 0 ? var2 / 2.0F + (float)this.random.nextInt((int)var2) : var2;
+       boolean var4 = var1.hurt(DamageSource.mobAttack(this), var3);
+       if (var4) {
+          var1.setDeltaMovement(var1.getDeltaMovement().add(0.0D, 0.4000000059604645D, 0.0D));
+          this.doEnchantDamageEffects(this, var1);
+       }
+@@ -233,25 +226,25 @@
+    public void die(DamageSource var1) {
+       super.die(var1);
+    }
+ 
+    public boolean checkSpawnObstruction(LevelReader var1) {
+-      BlockPos var2 = new BlockPos(this);
++      BlockPos var2 = this.blockPosition();
+       BlockPos var3 = var2.below();
+       BlockState var4 = var1.getBlockState(var3);
+       if (!var4.entityCanStandOn(var1, var3, this)) {
+          return false;
+       } else {
+          for(int var5 = 1; var5 < 3; ++var5) {
+             BlockPos var6 = var2.above(var5);
+             BlockState var7 = var1.getBlockState(var6);
+-            if (!NaturalSpawner.isValidEmptySpawnBlock(var1, var6, var7, var7.getFluidState())) {
++            if (!NaturalSpawner.isValidEmptySpawnBlock(var1, var6, var7, var7.getFluidState(), EntityType.IRON_GOLEM)) {
+                return false;
+             }
+          }
+ 
+-         return NaturalSpawner.isValidEmptySpawnBlock(var1, var2, var1.getBlockState(var2), Fluids.EMPTY.defaultFluidState()) && var1.isUnobstructed(this);
++         return NaturalSpawner.isValidEmptySpawnBlock(var1, var2, var1.getBlockState(var2), Fluids.EMPTY.defaultFluidState(), EntityType.IRON_GOLEM) && var1.isUnobstructed(this);
+       }
+    }
+ 
+    static {
+       DATA_FLAGS_ID = SynchedEntityData.defineId(IronGolem.class, EntityDataSerializers.BYTE);

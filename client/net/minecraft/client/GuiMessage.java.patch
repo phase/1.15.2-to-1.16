@@ -1,0 +1,28 @@
+--- net/minecraft/client/GuiMessage.java
++++ net/minecraft/client/GuiMessage.java
+@@ -1,21 +1,21 @@
+ package net.minecraft.client;
+ 
+-import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.FormattedText;
+ 
+ public class GuiMessage {
+    private final int addedTime;
+-   private final Component message;
++   private final FormattedText message;
+    private final int id;
+ 
+-   public GuiMessage(int var1, Component var2, int var3) {
++   public GuiMessage(int var1, FormattedText var2, int var3) {
+       this.message = var2;
+       this.addedTime = var1;
+       this.id = var3;
+    }
+ 
+-   public Component getMessage() {
++   public FormattedText getMessage() {
+       return this.message;
+    }
+ 
+    public int getAddedTime() {
+       return this.addedTime;

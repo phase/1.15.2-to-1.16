@@ -1,0 +1,45 @@
+--- net/minecraft/server/bossevents/CustomBossEvent.java
++++ net/minecraft/server/bossevents/CustomBossEvent.java
+@@ -72,11 +72,11 @@
+       this.setPercent(Mth.clamp((float)this.value / (float)var1, 0.0F, 1.0F));
+    }
+ 
+    public final Component getDisplayName() {
+       return ComponentUtils.wrapInSquareBrackets(this.getName()).withStyle((var1) -> {
+-         var1.setColor(this.getColor().getFormatting()).setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent(this.getTextId().toString()))).setInsertion(this.getTextId().toString());
++         return var1.withColor(this.getColor().getFormatting()).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent(this.getTextId().toString()))).withInsertion(this.getTextId().toString());
+       });
+    }
+ 
+    public boolean setPlayers(Collection<ServerPlayer> var1) {
+       HashSet var2 = Sets.newHashSet();
+@@ -162,11 +162,11 @@
+       ListTag var2 = new ListTag();
+       Iterator var3 = this.players.iterator();
+ 
+       while(var3.hasNext()) {
+          UUID var4 = (UUID)var3.next();
+-         var2.add(NbtUtils.createUUIDTag(var4));
++         var2.add(NbtUtils.createUUID(var4));
+       }
+ 
+       var1.put("Players", var2);
+       return var1;
+    }
+@@ -179,14 +179,14 @@
+       var2.setColor(BossEvent.BossBarColor.byName(var0.getString("Color")));
+       var2.setOverlay(BossEvent.BossBarOverlay.byName(var0.getString("Overlay")));
+       var2.setDarkenScreen(var0.getBoolean("DarkenScreen"));
+       var2.setPlayBossMusic(var0.getBoolean("PlayBossMusic"));
+       var2.setCreateWorldFog(var0.getBoolean("CreateWorldFog"));
+-      ListTag var3 = var0.getList("Players", 10);
++      ListTag var3 = var0.getList("Players", 11);
+ 
+       for(int var4 = 0; var4 < var3.size(); ++var4) {
+-         var2.addOfflinePlayer(NbtUtils.loadUUIDTag(var3.getCompound(var4)));
++         var2.addOfflinePlayer(NbtUtils.loadUUID(var3.get(var4)));
+       }
+ 
+       return var2;
+    }
+ 

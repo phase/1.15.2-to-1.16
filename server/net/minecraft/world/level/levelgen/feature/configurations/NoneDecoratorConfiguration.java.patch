@@ -1,0 +1,26 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/NoneDecoratorConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/NoneDecoratorConfiguration.java
+@@ -1,17 +1,13 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.Codec;
+ 
+ public class NoneDecoratorConfiguration implements DecoratorConfiguration {
++   public static final Codec<NoneDecoratorConfiguration> CODEC = Codec.unit(() -> {
++      return INSTANCE;
++   });
++   public static final NoneDecoratorConfiguration INSTANCE = new NoneDecoratorConfiguration();
++
+    public NoneDecoratorConfiguration() {
+    }
+-
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      return new Dynamic(var1, var1.emptyMap());
+-   }
+-
+-   public static NoneDecoratorConfiguration deserialize(Dynamic<?> var0) {
+-      return new NoneDecoratorConfiguration();
+-   }
+ }

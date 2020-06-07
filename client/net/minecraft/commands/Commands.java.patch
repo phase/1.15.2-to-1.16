@@ -1,0 +1,153 @@
+--- net/minecraft/commands/Commands.java
++++ net/minecraft/commands/Commands.java
+@@ -23,14 +23,16 @@
+ import net.minecraft.gametest.framework.TestCommand;
+ import net.minecraft.network.chat.ClickEvent;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.ComponentUtils;
+ import net.minecraft.network.chat.HoverEvent;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
+ import net.minecraft.server.commands.AdvancementCommands;
++import net.minecraft.server.commands.AttributeCommand;
+ import net.minecraft.server.commands.BanIpCommands;
+ import net.minecraft.server.commands.BanListCommands;
+ import net.minecraft.server.commands.BanPlayerCommands;
+ import net.minecraft.server.commands.BossBarCommands;
+ import net.minecraft.server.commands.ClearInventoryCommands;
+@@ -53,10 +55,11 @@
+ import net.minecraft.server.commands.GiveCommand;
+ import net.minecraft.server.commands.HelpCommand;
+ import net.minecraft.server.commands.KickCommand;
+ import net.minecraft.server.commands.KillCommand;
+ import net.minecraft.server.commands.ListPlayersCommand;
++import net.minecraft.server.commands.LocateBiomeCommand;
+ import net.minecraft.server.commands.LocateCommand;
+ import net.minecraft.server.commands.LootCommand;
+ import net.minecraft.server.commands.MsgCommand;
+ import net.minecraft.server.commands.OpCommand;
+ import net.minecraft.server.commands.PardonCommand;
+@@ -103,10 +106,11 @@
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final CommandDispatcher<CommandSourceStack> dispatcher = new CommandDispatcher();
+ 
+    public Commands(boolean var1) {
+       AdvancementCommands.register(this.dispatcher);
++      AttributeCommand.register(this.dispatcher);
+       ExecuteCommand.register(this.dispatcher);
+       BossBarCommands.register(this.dispatcher);
+       ClearInventoryCommands.register(this.dispatcher);
+       CloneCommands.register(this.dispatcher);
+       DataCommands.register(this.dispatcher);
+@@ -127,10 +131,11 @@
+       HelpCommand.register(this.dispatcher);
+       KickCommand.register(this.dispatcher);
+       KillCommand.register(this.dispatcher);
+       ListPlayersCommand.register(this.dispatcher);
+       LocateCommand.register(this.dispatcher);
++      LocateBiomeCommand.register(this.dispatcher);
+       LootCommand.register(this.dispatcher);
+       MsgCommand.register(this.dispatcher);
+       ParticleCommand.register(this.dispatcher);
+       PlaySoundCommand.register(this.dispatcher);
+       PublishCommand.register(this.dispatcher);
+@@ -192,11 +197,13 @@
+          var3.skip();
+       }
+ 
+       var1.getServer().getProfiler().push(var2);
+ 
++      byte var19;
+       try {
++         TextComponent var10000;
+          byte var18;
+          try {
+             int var4 = this.dispatcher.execute(var3, var1);
+             return var4;
+          } catch (CommandRuntimeException var13) {
+@@ -205,56 +212,58 @@
+             return var18;
+          } catch (CommandSyntaxException var14) {
+             var1.sendFailure(ComponentUtils.fromMessage(var14.getRawMessage()));
+             if (var14.getInput() != null && var14.getCursor() >= 0) {
+                int var17 = Math.min(var14.getInput().length(), var14.getCursor());
+-               Component var20 = (new TextComponent("")).withStyle(ChatFormatting.GRAY).withStyle((var1x) -> {
+-                  var1x.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, var2));
++               MutableComponent var20 = (new TextComponent("")).withStyle(ChatFormatting.GRAY).withStyle((var1x) -> {
++                  return var1x.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, var2));
+                });
+                if (var17 > 10) {
+                   var20.append("...");
+                }
+ 
+                var20.append(var14.getInput().substring(Math.max(0, var17 - 10), var17));
+                if (var17 < var14.getInput().length()) {
+-                  Component var21 = (new TextComponent(var14.getInput().substring(var17))).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.UNDERLINE});
+-                  var20.append(var21);
++                  MutableComponent var21 = (new TextComponent(var14.getInput().substring(var17))).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.UNDERLINE});
++                  var20.append((Component)var21);
+                }
+ 
+-               var20.append((new TranslatableComponent("command.context.here", new Object[0])).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.ITALIC}));
++               var20.append((Component)(new TranslatableComponent("command.context.here")).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.ITALIC}));
+                var1.sendFailure(var20);
+             }
++
++            var18 = 0;
++            return var18;
+          } catch (Exception var15) {
+-            TextComponent var10000 = new TextComponent;
+-            var10000.<init>(var15.getMessage() == null ? var15.getClass().getName() : var15.getMessage());
+-            TextComponent var5 = var10000;
+-            if (LOGGER.isDebugEnabled()) {
+-               LOGGER.error("Command exception: {}", var2, var15);
+-               StackTraceElement[] var6 = var15.getStackTrace();
++            var10000 = new TextComponent;
++         }
+ 
+-               for(int var7 = 0; var7 < Math.min(var6.length, 3); ++var7) {
+-                  var5.append("\n\n").append(var6[var7].getMethodName()).append("\n ").append(var6[var7].getFileName()).append(":").append(String.valueOf(var6[var7].getLineNumber()));
+-               }
+-            }
++         var10000.<init>(var15.getMessage() == null ? var15.getClass().getName() : var15.getMessage());
++         TextComponent var5 = var10000;
++         if (LOGGER.isDebugEnabled()) {
++            LOGGER.error("Command exception: {}", var2, var15);
++            StackTraceElement[] var6 = var15.getStackTrace();
+ 
+-            var1.sendFailure((new TranslatableComponent("command.failed", new Object[0])).withStyle((var1x) -> {
+-               var1x.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, var5));
+-            }));
+-            if (SharedConstants.IS_RUNNING_IN_IDE) {
+-               var1.sendFailure(new TextComponent(Util.describeError(var15)));
+-               LOGGER.error("'" + var2 + "' threw an exception", var15);
++            for(int var7 = 0; var7 < Math.min(var6.length, 3); ++var7) {
++               var5.append("\n\n").append(var6[var7].getMethodName()).append("\n ").append(var6[var7].getFileName()).append(":").append(String.valueOf(var6[var7].getLineNumber()));
+             }
++         }
+ 
+-            byte var19 = 0;
+-            return var19;
++         var1.sendFailure((new TranslatableComponent("command.failed")).withStyle((var1x) -> {
++            return var1x.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, var5));
++         }));
++         if (SharedConstants.IS_RUNNING_IN_IDE) {
++            var1.sendFailure(new TextComponent(Util.describeError(var15)));
++            LOGGER.error("'" + var2 + "' threw an exception", var15);
+          }
+ 
+-         var18 = 0;
+-         return var18;
++         var19 = 0;
+       } finally {
+          var1.getServer().getProfiler().pop();
+       }
++
++      return var19;
+    }
+ 
+    public void sendCommands(ServerPlayer var1) {
+       HashMap var2 = Maps.newHashMap();
+       RootCommandNode var3 = new RootCommandNode();

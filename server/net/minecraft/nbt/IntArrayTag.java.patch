@@ -1,0 +1,47 @@
+--- net/minecraft/nbt/IntArrayTag.java
++++ net/minecraft/nbt/IntArrayTag.java
+@@ -4,10 +4,11 @@
+ import java.io.DataOutput;
+ import java.io.IOException;
+ import java.util.Arrays;
+ import java.util.List;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import org.apache.commons.lang3.ArrayUtils;
+ 
+ public class IntArrayTag extends CollectionTag<IntTag> {
+    public static final TagType<IntArrayTag> TYPE = new TagType<IntArrayTag>() {
+@@ -108,15 +109,15 @@
+    public int[] getAsIntArray() {
+       return this.data;
+    }
+ 
+    public Component getPrettyDisplay(String var1, int var2) {
+-      Component var3 = (new TextComponent("I")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
+-      Component var4 = (new TextComponent("[")).append(var3).append(";");
++      MutableComponent var3 = (new TextComponent("I")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
++      MutableComponent var4 = (new TextComponent("[")).append(var3).append(";");
+ 
+       for(int var5 = 0; var5 < this.data.length; ++var5) {
+-         var4.append(" ").append((new TextComponent(String.valueOf(this.data[var5]))).withStyle(SYNTAX_HIGHLIGHTING_NUMBER));
++         var4.append(" ").append((Component)(new TextComponent(String.valueOf(this.data[var5]))).withStyle(SYNTAX_HIGHLIGHTING_NUMBER));
+          if (var5 != this.data.length - 1) {
+             var4.append(",");
+          }
+       }
+ 
+@@ -164,9 +165,13 @@
+       int var2 = this.data[var1];
+       this.data = ArrayUtils.remove(this.data, var1);
+       return IntTag.valueOf(var2);
+    }
+ 
++   public byte getElementType() {
++      return 3;
++   }
++
+    public void clear() {
+       this.data = new int[0];
+    }
+ }

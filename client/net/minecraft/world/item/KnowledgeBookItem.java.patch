@@ -1,0 +1,15 @@
+--- net/minecraft/world/item/KnowledgeBookItem.java
++++ net/minecraft/world/item/KnowledgeBookItem.java
+@@ -48,11 +48,11 @@
+ 
+             var2.awardRecipes(var7);
+             var2.awardStat(Stats.ITEM_USED.get(this));
+          }
+ 
+-         return InteractionResultHolder.success(var4);
++         return InteractionResultHolder.sidedSuccess(var4, var1.isClientSide());
+       } else {
+          LOGGER.error("Tag not valid: {}", var5);
+          return InteractionResultHolder.fail(var4);
+       }
+    }

@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/block/DoubleBlockCombiner.java
++++ net/minecraft/world/level/block/DoubleBlockCombiner.java
+@@ -24,11 +24,11 @@
+          if (var10) {
+             return new DoubleBlockCombiner.NeighborCombineResult.Single(var8);
+          } else {
+             BlockPos var12 = var6.relative((Direction)var2.apply(var4));
+             BlockState var13 = var5.getBlockState(var12);
+-            if (var13.getBlock() == var4.getBlock()) {
++            if (var13.is(var4.getBlock())) {
+                DoubleBlockCombiner.BlockType var14 = (DoubleBlockCombiner.BlockType)var1.apply(var13);
+                if (var14 != DoubleBlockCombiner.BlockType.SINGLE && var9 != var14 && var13.getValue(var3) == var4.getValue(var3)) {
+                   if (var7.test(var5, var12)) {
+                      return DoubleBlockCombiner.Combiner::acceptNone;
+                   }

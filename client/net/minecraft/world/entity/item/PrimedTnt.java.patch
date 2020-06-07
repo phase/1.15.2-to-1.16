@@ -1,0 +1,28 @@
+--- net/minecraft/world/entity/item/PrimedTnt.java
++++ net/minecraft/world/entity/item/PrimedTnt.java
+@@ -69,11 +69,11 @@
+          this.remove();
+          if (!this.level.isClientSide) {
+             this.explode();
+          }
+       } else {
+-         this.updateInWaterState();
++         this.updateInWaterStateAndDoFluidPushing();
+          if (this.level.isClientSide) {
+             this.level.addParticle(ParticleTypes.SMOKE, this.getX(), this.getY() + 0.5D, this.getZ(), 0.0D, 0.0D, 0.0D);
+          }
+       }
+ 
+@@ -96,11 +96,11 @@
+    public LivingEntity getOwner() {
+       return this.owner;
+    }
+ 
+    protected float getEyeHeight(Pose var1, EntityDimensions var2) {
+-      return 0.0F;
++      return 0.15F;
+    }
+ 
+    public void setFuse(int var1) {
+       this.entityData.set(DATA_FUSE_ID, var1);
+       this.life = var1;

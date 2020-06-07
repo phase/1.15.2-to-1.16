@@ -1,0 +1,79 @@
+--- net/minecraft/world/entity/ai/behavior/AcquirePoi.java
++++ net/minecraft/world/entity/ai/behavior/AcquirePoi.java
+@@ -1,8 +1,9 @@
+ package net.minecraft.world.entity.ai.behavior;
+ 
+ import com.google.common.collect.ImmutableMap;
++import com.google.common.collect.ImmutableMap.Builder;
+ import it.unimi.dsi.fastutil.longs.Long2LongMap;
+ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+ import java.util.function.Predicate;
+ import java.util.stream.Stream;
+ import net.minecraft.core.BlockPos;
+@@ -16,23 +17,38 @@
+ import net.minecraft.world.entity.ai.village.poi.PoiType;
+ import net.minecraft.world.level.pathfinder.Path;
+ 
+ public class AcquirePoi extends Behavior<PathfinderMob> {
+    private final PoiType poiType;
+-   private final MemoryModuleType<GlobalPos> memoryType;
++   private final MemoryModuleType<GlobalPos> memoryToAcquire;
+    private final boolean onlyIfAdult;
+    private long lastUpdate;
+-   private final Long2LongMap batchCache = new Long2LongOpenHashMap();
++   private final Long2LongMap batchCache;
+    private int triedCount;
+ 
+-   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, boolean var3) {
+-      super(ImmutableMap.of(var2, MemoryStatus.VALUE_ABSENT));
++   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, MemoryModuleType<GlobalPos> var3, boolean var4) {
++      super(constructEntryConditionMap(var2, var3));
++      this.batchCache = new Long2LongOpenHashMap();
+       this.poiType = var1;
+-      this.memoryType = var2;
+-      this.onlyIfAdult = var3;
++      this.memoryToAcquire = var3;
++      this.onlyIfAdult = var4;
+    }
+ 
++   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, boolean var3) {
++      this(var1, var2, var2, var3);
++   }
++
++   private static ImmutableMap<MemoryModuleType<?>, MemoryStatus> constructEntryConditionMap(MemoryModuleType<GlobalPos> var0, MemoryModuleType<GlobalPos> var1) {
++      Builder var2 = ImmutableMap.builder();
++      var2.put(var0, MemoryStatus.VALUE_ABSENT);
++      if (var1 != var0) {
++         var2.put(var1, MemoryStatus.VALUE_ABSENT);
++      }
++
++      return var2.build();
++   }
++
+    protected boolean checkExtraStartConditions(ServerLevel var1, PathfinderMob var2) {
+       if (this.onlyIfAdult && var2.isBaby()) {
+          return false;
+       } else {
+          return var1.getGameTime() - this.lastUpdate >= 20L;
+@@ -52,19 +68,19 @@
+          } else {
+             this.batchCache.put(var2, this.lastUpdate + 40L);
+             return true;
+          }
+       };
+-      Stream var7 = var5.findAll(this.poiType.getPredicate(), var6, new BlockPos(var2), 48, PoiManager.Occupancy.HAS_SPACE);
++      Stream var7 = var5.findAll(this.poiType.getPredicate(), var6, var2.blockPosition(), 48, PoiManager.Occupancy.HAS_SPACE);
+       Path var8 = var2.getNavigation().createPath(var7, this.poiType.getValidRange());
+       if (var8 != null && var8.canReach()) {
+          BlockPos var9 = var8.getTarget();
+          var5.getType(var9).ifPresent((var5x) -> {
+             var5.take(this.poiType.getPredicate(), (var1x) -> {
+                return var1x.equals(var9);
+             }, var9, 1);
+-            var2.getBrain().setMemory(this.memoryType, (Object)GlobalPos.of(var1.getDimension().getType(), var9));
++            var2.getBrain().setMemory(this.memoryToAcquire, (Object)GlobalPos.of(var1.dimension(), var9));
+             DebugPackets.sendPoiTicketCountPacket(var1, var9);
+          });
+       } else if (this.triedCount < 5) {
+          this.batchCache.long2LongEntrySet().removeIf((var1x) -> {
+             return var1x.getLongValue() < this.lastUpdate;

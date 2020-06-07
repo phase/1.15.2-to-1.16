@@ -1,0 +1,15 @@
+--- net/minecraft/client/model/BeeModel.java
++++ net/minecraft/client/model/BeeModel.java
+@@ -78,11 +78,11 @@
+       this.rightWing.xRot = 0.0F;
+       this.leftAntenna.xRot = 0.0F;
+       this.rightAntenna.xRot = 0.0F;
+       this.bone.xRot = 0.0F;
+       this.bone.y = 19.0F;
+-      boolean var7 = var1.onGround && var1.getDeltaMovement().lengthSqr() < 1.0E-7D;
++      boolean var7 = var1.isOnGround() && var1.getDeltaMovement().lengthSqr() < 1.0E-7D;
+       float var8;
+       if (var7) {
+          this.rightWing.yRot = -0.2618F;
+          this.rightWing.zRot = 0.0F;
+          this.leftWing.xRot = 0.0F;

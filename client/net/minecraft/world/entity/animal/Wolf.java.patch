@@ -1,0 +1,208 @@
+--- net/minecraft/world/entity/animal/Wolf.java
++++ net/minecraft/world/entity/animal/Wolf.java
+@@ -17,22 +17,25 @@
+ import net.minecraft.world.entity.AgableMob;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityDimensions;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.Pose;
+ import net.minecraft.world.entity.TamableAnimal;
++import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+ import net.minecraft.world.entity.ai.goal.BegGoal;
+ import net.minecraft.world.entity.ai.goal.BreedGoal;
+ import net.minecraft.world.entity.ai.goal.FloatGoal;
+ import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
+ import net.minecraft.world.entity.ai.goal.LeapAtTargetGoal;
+ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+-import net.minecraft.world.entity.ai.goal.SitGoal;
++import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
+ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+ import net.minecraft.world.entity.ai.goal.target.NonTameRandomTargetGoal;
+ import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
+@@ -40,11 +43,10 @@
+ import net.minecraft.world.entity.animal.horse.AbstractHorse;
+ import net.minecraft.world.entity.animal.horse.Llama;
+ import net.minecraft.world.entity.monster.AbstractSkeleton;
+ import net.minecraft.world.entity.monster.Creeper;
+ import net.minecraft.world.entity.monster.Ghast;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.entity.projectile.AbstractArrow;
+ import net.minecraft.world.item.DyeColor;
+ import net.minecraft.world.item.DyeItem;
+ import net.minecraft.world.item.Item;
+@@ -70,13 +72,12 @@
+       super(var1, var2);
+       this.setTame(false);
+    }
+ 
+    protected void registerGoals() {
+-      this.sitGoal = new SitGoal(this);
+       this.goalSelector.addGoal(1, new FloatGoal(this));
+-      this.goalSelector.addGoal(2, this.sitGoal);
++      this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
+       this.goalSelector.addGoal(3, new Wolf.WolfAvoidEntityGoal(this, Llama.class, 24.0F, 1.5D, 1.5D));
+       this.goalSelector.addGoal(4, new LeapAtTargetGoal(this, 0.4F));
+       this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
+       this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0D, 10.0F, 2.0F, false));
+       this.goalSelector.addGoal(7, new BreedGoal(this, 1.0D));
+@@ -90,20 +91,12 @@
+       this.targetSelector.addGoal(4, new NonTameRandomTargetGoal(this, Animal.class, false, PREY_SELECTOR));
+       this.targetSelector.addGoal(4, new NonTameRandomTargetGoal(this, Turtle.class, false, Turtle.BABY_ON_LAND_SELECTOR));
+       this.targetSelector.addGoal(5, new NearestAttackableTargetGoal(this, AbstractSkeleton.class, false));
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.30000001192092896D);
+-      if (this.isTame()) {
+-         this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(20.0D);
+-      } else {
+-         this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(8.0D);
+-      }
+-
+-      this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(2.0D);
++   public static AttributeSupplier.Builder createAttributes() {
++      return Mob.createMobAttributes().add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D).add(Attributes.MAX_HEALTH, 8.0D).add(Attributes.ATTACK_DAMAGE, 2.0D);
+    }
+ 
+    public void setTarget(@Nullable LivingEntity var1) {
+       super.setTarget(var1);
+       if (var1 == null) {
+@@ -255,73 +248,73 @@
+    protected float getStandingEyeHeight(Pose var1, EntityDimensions var2) {
+       return var2.height * 0.8F;
+    }
+ 
+    public int getMaxHeadXRot() {
+-      return this.isSitting() ? 20 : super.getMaxHeadXRot();
++      return this.isInSittingPose() ? 20 : super.getMaxHeadXRot();
+    }
+ 
+    public boolean hurt(DamageSource var1, float var2) {
+       if (this.isInvulnerableTo(var1)) {
+          return false;
+       } else {
+          Entity var3 = var1.getEntity();
+-         if (this.sitGoal != null) {
+-            this.sitGoal.wantToSit(false);
+-         }
+-
++         this.setOrderedToSit(false);
+          if (var3 != null && !(var3 instanceof Player) && !(var3 instanceof AbstractArrow)) {
+             var2 = (var2 + 1.0F) / 2.0F;
+          }
+ 
+          return super.hurt(var1, var2);
+       }
+    }
+ 
+    public boolean doHurtTarget(Entity var1) {
+-      boolean var2 = var1.hurt(DamageSource.mobAttack(this), (float)((int)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue()));
++      boolean var2 = var1.hurt(DamageSource.mobAttack(this), (float)((int)this.getAttributeValue(Attributes.ATTACK_DAMAGE)));
+       if (var2) {
+          this.doEnchantDamageEffects(this, var1);
+       }
+ 
+       return var2;
+    }
+ 
+    public void setTame(boolean var1) {
+       super.setTame(var1);
+       if (var1) {
+-         this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(20.0D);
++         this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(20.0D);
+          this.setHealth(20.0F);
+       } else {
+-         this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(8.0D);
++         this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(8.0D);
+       }
+ 
+-      this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
++      this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(4.0D);
+    }
+ 
+    public boolean mobInteract(Player var1, InteractionHand var2) {
+       ItemStack var3 = var1.getItemInHand(var2);
+       Item var4 = var3.getItem();
+       if (var3.getItem() instanceof SpawnEggItem) {
+          return super.mobInteract(var1, var2);
+       } else if (this.level.isClientSide) {
+-         return this.isOwnedBy(var1) || var4 == Items.BONE && !this.isAngry();
++         return this.isOwnedBy(var1) || var4 == Items.BONE && !this.isTame() && !this.isAngry();
+       } else {
+          if (this.isTame()) {
+-            if (var4.isEdible() && var4.getFoodProperties().isMeat() && this.getHealth() < this.getMaxHealth()) {
++            if (this.isFood(var3) && this.getHealth() < this.getMaxHealth()) {
+                if (!var1.abilities.instabuild) {
+                   var3.shrink(1);
+                }
+ 
+                this.heal((float)var4.getFoodProperties().getNutrition());
+                return true;
+             }
+ 
+             if (!(var4 instanceof DyeItem)) {
+                boolean var6 = super.mobInteract(var1, var2);
+-               if (!var6 || this.isBaby()) {
+-                  this.sitGoal.wantToSit(!this.isSitting());
++               if ((!var6 || this.isBaby()) && this.isOwnedBy(var1) && !this.isFood(var3)) {
++                  this.setOrderedToSit(!this.isOrderedToSit());
++                  this.jumping = false;
++                  this.navigation.stop();
++                  this.setTarget((LivingEntity)null);
+                }
+ 
+                return var6;
+             }
+ 
+@@ -332,27 +325,20 @@
+                   var3.shrink(1);
+                }
+ 
+                return true;
+             }
+-
+-            if (this.isOwnedBy(var1) && !this.isFood(var3)) {
+-               this.sitGoal.wantToSit(!this.isSitting());
+-               this.jumping = false;
+-               this.navigation.stop();
+-               this.setTarget((LivingEntity)null);
+-            }
+          } else if (var4 == Items.BONE && !this.isAngry()) {
+             if (!var1.abilities.instabuild) {
+                var3.shrink(1);
+             }
+ 
+             if (this.random.nextInt(3) == 0) {
+                this.tame(var1);
+                this.navigation.stop();
+                this.setTarget((LivingEntity)null);
+-               this.sitGoal.wantToSit(true);
++               this.setOrderedToSit(true);
+                this.level.broadcastEntityEvent(this, (byte)7);
+             } else {
+                this.level.broadcastEntityEvent(this, (byte)6);
+             }
+ 
+@@ -437,11 +423,11 @@
+          return false;
+       } else {
+          Wolf var2 = (Wolf)var1;
+          if (!var2.isTame()) {
+             return false;
+-         } else if (var2.isSitting()) {
++         } else if (var2.isInSittingPose()) {
+             return false;
+          } else {
+             return this.isInLove() && var2.isInLove();
+          }
+       }

@@ -1,0 +1,51 @@
+--- net/minecraft/world/level/block/FlowerPotBlock.java
++++ net/minecraft/world/level/block/FlowerPotBlock.java
+@@ -12,21 +12,23 @@
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.pathfinder.PathComputationType;
+ import net.minecraft.world.phys.BlockHitResult;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class FlowerPotBlock extends Block {
+    private static final Map<Block, Block> POTTED_BY_CONTENT = Maps.newHashMap();
+    protected static final VoxelShape SHAPE = Block.box(5.0D, 0.0D, 5.0D, 11.0D, 6.0D, 11.0D);
+    private final Block content;
+ 
+-   public FlowerPotBlock(Block var1, Block.Properties var2) {
++   public FlowerPotBlock(Block var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.content = var1;
+       POTTED_BY_CONTENT.put(var1, this);
+    }
+ 
+@@ -60,11 +62,11 @@
+             }
+ 
+             var2.setBlock(var3, Blocks.FLOWER_POT.defaultBlockState(), 3);
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       } else {
+          return InteractionResult.CONSUME;
+       }
+    }
+ 
+@@ -77,6 +79,10 @@
+    }
+ 
+    public Block getContent() {
+       return this.content;
+    }
++
++   public boolean isPathfindable(BlockState var1, BlockGetter var2, BlockPos var3, PathComputationType var4) {
++      return false;
++   }
+ }

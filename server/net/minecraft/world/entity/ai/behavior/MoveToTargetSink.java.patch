@@ -1,0 +1,107 @@
+--- net/minecraft/world/entity/ai/behavior/MoveToTargetSink.java
++++ net/minecraft/world/entity/ai/behavior/MoveToTargetSink.java
+@@ -19,25 +19,30 @@
+ public class MoveToTargetSink extends Behavior<Mob> {
+    @Nullable
+    private Path path;
+    @Nullable
+    private BlockPos lastTargetPos;
+-   private float speed;
++   private float speedModifier;
+    private int remainingDelay;
+ 
+    public MoveToTargetSink(int var1) {
+-      super(ImmutableMap.of(MemoryModuleType.PATH, MemoryStatus.VALUE_ABSENT, MemoryModuleType.WALK_TARGET, MemoryStatus.VALUE_PRESENT), var1);
++      super(ImmutableMap.of(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryStatus.REGISTERED, MemoryModuleType.PATH, MemoryStatus.VALUE_ABSENT, MemoryModuleType.WALK_TARGET, MemoryStatus.VALUE_PRESENT), var1);
+    }
+ 
+    protected boolean checkExtraStartConditions(ServerLevel var1, Mob var2) {
+       Brain var3 = var2.getBrain();
+       WalkTarget var4 = (WalkTarget)var3.getMemory(MemoryModuleType.WALK_TARGET).get();
+-      if (!this.reachedTarget(var2, var4) && this.tryComputePath(var2, var4, var1.getGameTime())) {
+-         this.lastTargetPos = var4.getTarget().getPos();
++      boolean var5 = this.reachedTarget(var2, var4);
++      if (!var5 && this.tryComputePath(var2, var4, var1.getGameTime())) {
++         this.lastTargetPos = var4.getTarget().currentBlockPosition();
+          return true;
+       } else {
+          var3.eraseMemory(MemoryModuleType.WALK_TARGET);
++         if (var5) {
++            var3.eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
++         }
++
+          return false;
+       }
+    }
+ 
+    protected boolean canStillUse(ServerLevel var1, Mob var2, long var3) {
+@@ -57,11 +62,11 @@
+       this.path = null;
+    }
+ 
+    protected void start(ServerLevel var1, Mob var2, long var3) {
+       var2.getBrain().setMemory(MemoryModuleType.PATH, (Object)this.path);
+-      var2.getNavigation().moveTo(this.path, (double)this.speed);
++      var2.getNavigation().moveTo(this.path, (double)this.speedModifier);
+       this.remainingDelay = var1.getRandom().nextInt(10);
+    }
+ 
+    protected void tick(ServerLevel var1, Mob var2, long var3) {
+       --this.remainingDelay;
+@@ -73,45 +78,47 @@
+             var6.setMemory(MemoryModuleType.PATH, (Object)var5);
+          }
+ 
+          if (var5 != null && this.lastTargetPos != null) {
+             WalkTarget var7 = (WalkTarget)var6.getMemory(MemoryModuleType.WALK_TARGET).get();
+-            if (var7.getTarget().getPos().distSqr(this.lastTargetPos) > 4.0D && this.tryComputePath(var2, var7, var1.getGameTime())) {
+-               this.lastTargetPos = var7.getTarget().getPos();
++            if (var7.getTarget().currentBlockPosition().distSqr(this.lastTargetPos) > 4.0D && this.tryComputePath(var2, var7, var1.getGameTime())) {
++               this.lastTargetPos = var7.getTarget().currentBlockPosition();
+                this.start(var1, var2, var3);
+             }
+ 
+          }
+       }
+    }
+ 
+    private boolean tryComputePath(Mob var1, WalkTarget var2, long var3) {
+-      BlockPos var5 = var2.getTarget().getPos();
++      BlockPos var5 = var2.getTarget().currentBlockPosition();
+       this.path = var1.getNavigation().createPath((BlockPos)var5, 0);
+-      this.speed = var2.getSpeed();
+-      if (!this.reachedTarget(var1, var2)) {
+-         Brain var6 = var1.getBrain();
++      this.speedModifier = var2.getSpeedModifier();
++      Brain var6 = var1.getBrain();
++      if (this.reachedTarget(var1, var2)) {
++         var6.eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
++      } else {
+          boolean var7 = this.path != null && this.path.canReach();
+          if (var7) {
+-            var6.setMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, Optional.empty());
++            var6.eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
+          } else if (!var6.hasMemoryValue(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE)) {
+             var6.setMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, (Object)var3);
+          }
+ 
+          if (this.path != null) {
+             return true;
+          }
+ 
+-         Vec3 var8 = RandomPos.getPosTowards((PathfinderMob)var1, 10, 7, new Vec3(var5));
++         Vec3 var8 = RandomPos.getPosTowards((PathfinderMob)var1, 10, 7, Vec3.atBottomCenterOf(var5));
+          if (var8 != null) {
+             this.path = var1.getNavigation().createPath(var8.x, var8.y, var8.z, 0);
+             return this.path != null;
+          }
+       }
+ 
+       return false;
+    }
+ 
+    private boolean reachedTarget(Mob var1, WalkTarget var2) {
+-      return var2.getTarget().getPos().distManhattan(new BlockPos(var1)) <= var2.getCloseEnoughDist();
++      return var2.getTarget().currentBlockPosition().distManhattan(var1.blockPosition()) <= var2.getCloseEnoughDist();
+    }
+ }

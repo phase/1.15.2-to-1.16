@@ -1,0 +1,15 @@
+--- net/minecraft/server/players/BanListEntry.java
++++ net/minecraft/server/players/BanListEntry.java
+@@ -21,11 +21,11 @@
+       this.expires = var4;
+       this.reason = var5 == null ? "Banned by an operator." : var5;
+    }
+ 
+    protected BanListEntry(T var1, JsonObject var2) {
+-      super(var1, var2);
++      super(var1);
+ 
+       Date var3;
+       try {
+          var3 = var2.has("created") ? DATE_FORMAT.parse(var2.get("created").getAsString()) : new Date();
+       } catch (ParseException var7) {

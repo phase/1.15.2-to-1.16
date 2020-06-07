@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/biome/SmallEndIslandsBiome.java
++++ net/minecraft/world/level/biome/SmallEndIslandsBiome.java
+@@ -9,11 +9,10 @@
+ import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
+ import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
+ 
+ public class SmallEndIslandsBiome extends Biome {
+    public SmallEndIslandsBiome() {
+-      super((new Biome.BiomeBuilder()).surfaceBuilder(SurfaceBuilder.DEFAULT, SurfaceBuilder.CONFIG_THEEND).precipitation(Biome.Precipitation.NONE).biomeCategory(Biome.BiomeCategory.THEEND).depth(0.1F).scale(0.2F).temperature(0.5F).downfall(0.5F).waterColor(4159204).waterFogColor(329011).parent((String)null));
++      super((new Biome.BiomeBuilder()).surfaceBuilder(SurfaceBuilder.DEFAULT, SurfaceBuilder.CONFIG_THEEND).precipitation(Biome.Precipitation.NONE).biomeCategory(Biome.BiomeCategory.THEEND).depth(0.1F).scale(0.2F).temperature(0.5F).downfall(0.5F).specialEffects((new BiomeSpecialEffects.Builder()).waterColor(4159204).waterFogColor(329011).fogColor(10518688).ambientMoodSound(AmbientMoodSettings.LEGACY_CAVE_SETTINGS).build()).parent((String)null));
+       this.addFeature(GenerationStep.Decoration.RAW_GENERATION, Feature.END_ISLAND.configured(FeatureConfiguration.NONE).decorated(FeatureDecorator.END_ISLAND.configured(DecoratorConfiguration.NONE)));
+-      BiomeDefaultFeatures.addEndCity(this);
+       this.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.ENDERMAN, 10, 4, 4));
+    }
+ }

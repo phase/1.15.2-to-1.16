@@ -1,0 +1,29 @@
+--- net/minecraft/world/level/storage/loot/functions/CopyBlockState.java
++++ net/minecraft/world/level/storage/loot/functions/CopyBlockState.java
+@@ -31,10 +31,14 @@
+       super(var1);
+       this.block = var2;
+       this.properties = var3;
+    }
+ 
++   public LootItemFunctionType getType() {
++      return LootItemFunctions.COPY_STATE;
++   }
++
+    public Set<LootContextParam<?>> getReferencedContextParams() {
+       return ImmutableSet.of(LootContextParams.BLOCK_STATE);
+    }
+ 
+    protected ItemStack run(ItemStack var1, LootContext var2) {
+@@ -68,11 +72,10 @@
+       return var1.getName(var2);
+    }
+ 
+    public static class Serializer extends LootItemConditionalFunction.Serializer<CopyBlockState> {
+       public Serializer() {
+-         super(new ResourceLocation("copy_state"), CopyBlockState.class);
+       }
+ 
+       public void serialize(JsonObject var1, CopyBlockState var2, JsonSerializationContext var3) {
+          super.serialize(var1, (LootItemConditionalFunction)var2, var3);
+          var1.addProperty("block", Registry.BLOCK.getKey(var2.block).toString());

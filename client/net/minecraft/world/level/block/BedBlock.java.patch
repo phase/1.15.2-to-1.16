@@ -1,0 +1,158 @@
+--- net/minecraft/world/level/block/BedBlock.java
++++ net/minecraft/world/level/block/BedBlock.java
+@@ -22,20 +22,19 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Explosion;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
+-import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.block.entity.BedBlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BedPart;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.EnumProperty;
+-import net.minecraft.world.level.material.MaterialColor;
+ import net.minecraft.world.level.material.PushReaction;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.BlockHitResult;
+ import net.minecraft.world.phys.Vec3;
+@@ -55,20 +54,16 @@
+    protected static final VoxelShape SOUTH_SHAPE;
+    protected static final VoxelShape WEST_SHAPE;
+    protected static final VoxelShape EAST_SHAPE;
+    private final DyeColor color;
+ 
+-   public BedBlock(DyeColor var1, Block.Properties var2) {
++   public BedBlock(DyeColor var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.color = var1;
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(PART, BedPart.FOOT)).setValue(OCCUPIED, false));
+    }
+ 
+-   public MaterialColor getMapColor(BlockState var1, BlockGetter var2, BlockPos var3) {
+-      return var1.getValue(PART) == BedPart.FOOT ? this.color.getMaterialColor() : MaterialColor.WOOL;
+-   }
+-
+    @Nullable
+    public static Direction getBedOrientation(BlockGetter var0, BlockPos var1) {
+       BlockState var2 = var0.getBlockState(var1);
+       return var2.getBlock() instanceof BedBlock ? (Direction)var2.getValue(FACING) : null;
+    }
+@@ -78,44 +73,46 @@
+          return InteractionResult.CONSUME;
+       } else {
+          if (var1.getValue(PART) != BedPart.HEAD) {
+             var3 = var3.relative((Direction)var1.getValue(FACING));
+             var1 = var2.getBlockState(var3);
+-            if (var1.getBlock() != this) {
++            if (!var1.is(this)) {
+                return InteractionResult.CONSUME;
+             }
+          }
+ 
+-         if (var2.dimension.mayRespawn() && var2.getBiome(var3) != Biomes.NETHER) {
+-            if ((Boolean)var1.getValue(OCCUPIED)) {
+-               if (!this.kickVillagerOutOfBed(var2, var3)) {
+-                  var4.displayClientMessage(new TranslatableComponent("block.minecraft.bed.occupied", new Object[0]), true);
+-               }
+-
+-               return InteractionResult.SUCCESS;
+-            } else {
+-               var4.startSleepInBed(var3).ifLeft((var1x) -> {
+-                  if (var1x != null) {
+-                     var4.displayClientMessage(var1x.getMessage(), true);
+-                  }
+-
+-               });
+-               return InteractionResult.SUCCESS;
+-            }
+-         } else {
++         if (!canSetSpawn(var2, var3)) {
+             var2.removeBlock(var3, false);
+             BlockPos var7 = var3.relative(((Direction)var1.getValue(FACING)).getOpposite());
+-            if (var2.getBlockState(var7).getBlock() == this) {
++            if (var2.getBlockState(var7).is(this)) {
+                var2.removeBlock(var7, false);
+             }
+ 
+-            var2.explode((Entity)null, DamageSource.netherBedExplosion(), (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);
++            var2.explode((Entity)null, DamageSource.badRespawnPointExplosion(), (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);
+             return InteractionResult.SUCCESS;
++         } else if ((Boolean)var1.getValue(OCCUPIED)) {
++            if (!this.kickVillagerOutOfBed(var2, var3)) {
++               var4.displayClientMessage(new TranslatableComponent("block.minecraft.bed.occupied"), true);
++            }
++
++            return InteractionResult.SUCCESS;
++         } else {
++            var4.startSleepInBed(var3).ifLeft((var1x) -> {
++               if (var1x != null) {
++                  var4.displayClientMessage(var1x.getMessage(), true);
++               }
++
++            });
++            return InteractionResult.SUCCESS;
+          }
+       }
+    }
+ 
++   public static boolean canSetSpawn(Level var0, BlockPos var1) {
++      return var0.dimensionType().isOverworld();
++   }
++
+    private boolean kickVillagerOutOfBed(Level var1, BlockPos var2) {
+       List var3 = var1.getEntitiesOfClass(Villager.class, new AABB(var2), LivingEntity::isSleeping);
+       if (var3.isEmpty()) {
+          return false;
+       } else {
+@@ -146,11 +143,11 @@
+ 
+    }
+ 
+    public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {
+       if (var2 == getNeighbourDirection((BedPart)var1.getValue(PART), (Direction)var1.getValue(FACING))) {
+-         return var3.getBlock() == this && var3.getValue(PART) != var1.getValue(PART) ? (BlockState)var1.setValue(OCCUPIED, var3.getValue(OCCUPIED)) : Blocks.AIR.defaultBlockState();
++         return var3.is(this) && var3.getValue(PART) != var1.getValue(PART) ? (BlockState)var1.setValue(OCCUPIED, var3.getValue(OCCUPIED)) : Blocks.AIR.defaultBlockState();
+       } else {
+          return super.updateShape(var1, var2, var3, var4, var5, var6);
+       }
+    }
+ 
+@@ -164,11 +161,11 @@
+ 
+    public void playerWillDestroy(Level var1, BlockPos var2, BlockState var3, Player var4) {
+       BedPart var5 = (BedPart)var3.getValue(PART);
+       BlockPos var6 = var2.relative(getNeighbourDirection(var5, (Direction)var3.getValue(FACING)));
+       BlockState var7 = var1.getBlockState(var6);
+-      if (var7.getBlock() == this && var7.getValue(PART) != var5) {
++      if (var7.is(this) && var7.getValue(PART) != var5) {
+          var1.setBlock(var6, Blocks.AIR.defaultBlockState(), 35);
+          var1.levelEvent(var4, 2001, var6, Block.getId(var7));
+          if (!var1.isClientSide && !var4.isCreative()) {
+             ItemStack var8 = var4.getMainHandItem();
+             dropResources(var3, var1, var2, (BlockEntity)null, var4, var8);
+@@ -241,16 +238,16 @@
+       }
+ 
+       return Optional.empty();
+    }
+ 
+-   protected static Optional<Vec3> getStandingLocationAtOrBelow(EntityType<?> var0, LevelReader var1, BlockPos var2) {
++   public static Optional<Vec3> getStandingLocationAtOrBelow(EntityType<?> var0, LevelReader var1, BlockPos var2) {
+       VoxelShape var3 = var1.getBlockState(var2).getCollisionShape(var1, var2);
+       if (var3.max(Direction.Axis.Y) > 0.4375D) {
+          return Optional.empty();
+       } else {
+-         BlockPos.MutableBlockPos var4 = new BlockPos.MutableBlockPos(var2);
++         BlockPos.MutableBlockPos var4 = var2.mutable();
+ 
+          while(var4.getY() >= 0 && var2.getY() - var4.getY() <= 2 && var1.getBlockState(var4).getCollisionShape(var1, var4).isEmpty()) {
+             var4.move(Direction.DOWN);
+          }
+ 

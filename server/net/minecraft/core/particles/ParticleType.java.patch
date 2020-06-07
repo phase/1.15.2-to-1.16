@@ -1,0 +1,23 @@
+--- net/minecraft/core/particles/ParticleType.java
++++ net/minecraft/core/particles/ParticleType.java
+@@ -1,8 +1,10 @@
+ package net.minecraft.core.particles;
+ 
+-public class ParticleType<T extends ParticleOptions> {
++import com.mojang.serialization.Codec;
++
++public abstract class ParticleType<T extends ParticleOptions> {
+    private final boolean overrideLimiter;
+    private final ParticleOptions.Deserializer<T> deserializer;
+ 
+    protected ParticleType(boolean var1, ParticleOptions.Deserializer<T> var2) {
+       this.overrideLimiter = var1;
+@@ -10,6 +12,8 @@
+    }
+ 
+    public ParticleOptions.Deserializer<T> getDeserializer() {
+       return this.deserializer;
+    }
++
++   public abstract Codec<T> codec();
+ }

@@ -1,0 +1,28 @@
+--- net/minecraft/client/resources/sounds/UnderwaterAmbientSoundInstances.java
++++ net/minecraft/client/resources/sounds/UnderwaterAmbientSoundInstances.java
+@@ -29,11 +29,11 @@
+             }
+ 
+             this.fade = Math.min(this.fade, 40);
+             this.volume = Math.max(0.0F, Math.min((float)this.fade / 40.0F, 1.0F));
+          } else {
+-            this.stopped = true;
++            this.stop();
+          }
+       }
+    }
+ 
+    public static class SubSound extends AbstractTickableSoundInstance {
+@@ -49,11 +49,11 @@
+          this.relative = true;
+       }
+ 
+       public void tick() {
+          if (this.player.removed || !this.player.isUnderWater()) {
+-            this.stopped = true;
++            this.stop();
+          }
+ 
+       }
+    }
+ }

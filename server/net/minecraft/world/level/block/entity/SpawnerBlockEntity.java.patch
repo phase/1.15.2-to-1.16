@@ -1,0 +1,19 @@
+--- net/minecraft/world/level/block/entity/SpawnerBlockEntity.java
++++ net/minecraft/world/level/block/entity/SpawnerBlockEntity.java
+@@ -36,13 +36,13 @@
+ 
+    public SpawnerBlockEntity() {
+       super(BlockEntityType.MOB_SPAWNER);
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
+-      this.spawner.load(var1);
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
++      this.spawner.load(var2);
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+       super.save(var1);
+       this.spawner.save(var1);

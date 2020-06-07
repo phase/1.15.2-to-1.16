@@ -1,0 +1,15 @@
+--- net/minecraft/world/phys/shapes/Shapes.java
++++ net/minecraft/world/phys/shapes/Shapes.java
+@@ -234,11 +234,11 @@
+                      }
+ 
+                      if (var27 < 3) {
+                         var11.set(var7, var25, var26, var24);
+                         BlockState var28 = var1.getBlockState(var11);
+-                        if ((var27 != 1 || var28.hasLargeCollisionShape()) && (var27 != 2 || var28.getBlock() == Blocks.MOVING_PISTON)) {
++                        if ((var27 != 1 || var28.hasLargeCollisionShape()) && (var27 != 2 || var28.is(Blocks.MOVING_PISTON))) {
+                            var2 = var28.getCollisionShape(var1, var11, var4).collide(var10, var0.move((double)(-var11.getX()), (double)(-var11.getY()), (double)(-var11.getZ())), var2);
+                            if (Math.abs(var2) < 1.0E-7D) {
+                               return 0.0D;
+                            }
+ 

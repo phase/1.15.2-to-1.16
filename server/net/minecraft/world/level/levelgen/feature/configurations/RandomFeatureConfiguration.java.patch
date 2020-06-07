@@ -1,0 +1,44 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/RandomFeatureConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/RandomFeatureConfiguration.java
+@@ -1,32 +1,24 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
+ import java.util.List;
+ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+ import net.minecraft.world.level.levelgen.feature.WeightedConfiguredFeature;
+ 
+ public class RandomFeatureConfiguration implements FeatureConfiguration {
++   public static final Codec<RandomFeatureConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.apply2(RandomFeatureConfiguration::new, WeightedConfiguredFeature.CODEC.listOf().fieldOf("features").forGetter((var0x) -> {
++         return var0x.features;
++      }), ConfiguredFeature.CODEC.fieldOf("default").forGetter((var0x) -> {
++         return var0x.defaultFeature;
++      }));
++   });
+    public final List<WeightedConfiguredFeature<?>> features;
+    public final ConfiguredFeature<?, ?> defaultFeature;
+ 
+    public RandomFeatureConfiguration(List<WeightedConfiguredFeature<?>> var1, ConfiguredFeature<?, ?> var2) {
+       this.features = var1;
+       this.defaultFeature = var2;
+    }
+-
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      Object var2 = var1.createList(this.features.stream().map((var1x) -> {
+-         return var1x.serialize(var1).getValue();
+-      }));
+-      Object var3 = this.defaultFeature.serialize(var1).getValue();
+-      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("features"), var2, var1.createString("default"), var3)));
+-   }
+-
+-   public static <T> RandomFeatureConfiguration deserialize(Dynamic<T> var0) {
+-      List var1 = var0.get("features").asList(WeightedConfiguredFeature::deserialize);
+-      ConfiguredFeature var2 = ConfiguredFeature.deserialize(var0.get("default").orElseEmptyMap());
+-      return new RandomFeatureConfiguration(var1, var2);
+-   }
+ }

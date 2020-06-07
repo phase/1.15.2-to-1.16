@@ -1,0 +1,349 @@
+--- net/minecraft/server/dedicated/DedicatedServer.java
++++ net/minecraft/server/dedicated/DedicatedServer.java
+@@ -1,63 +1,61 @@
+ package net.minecraft.server.dedicated;
+ 
+ import com.google.common.base.Strings;
+ import com.google.common.collect.Lists;
+-import com.google.gson.JsonObject;
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.authlib.GameProfileRepository;
+ import com.mojang.authlib.minecraft.MinecraftSessionService;
+-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+ import com.mojang.datafixers.DataFixer;
+ import java.io.BufferedReader;
+-import java.io.File;
+ import java.io.IOException;
+ import java.io.InputStreamReader;
+ import java.net.InetAddress;
+ import java.net.Proxy;
+ import java.nio.charset.StandardCharsets;
+ import java.util.Collections;
+ import java.util.List;
+ import java.util.Locale;
+ import java.util.Optional;
+-import java.util.Random;
+ import java.util.function.BooleanSupplier;
+ import java.util.regex.Pattern;
+ import javax.annotation.Nullable;
+ import net.minecraft.CrashReport;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+ import net.minecraft.commands.CommandSourceStack;
+-import net.minecraft.commands.Commands;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.NonNullList;
+ import net.minecraft.server.ConsoleInput;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.ServerInterface;
++import net.minecraft.server.ServerResources;
+ import net.minecraft.server.gui.MinecraftServerGui;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
++import net.minecraft.server.packs.repository.PackRepository;
++import net.minecraft.server.packs.repository.UnopenedPack;
+ import net.minecraft.server.players.GameProfileCache;
+ import net.minecraft.server.players.OldUsersConverter;
+ import net.minecraft.server.rcon.RconConsoleSource;
+ import net.minecraft.server.rcon.thread.QueryThreadGs4;
+ import net.minecraft.server.rcon.thread.RconThread;
+ import net.minecraft.util.Crypt;
+-import net.minecraft.util.GsonHelper;
+ import net.minecraft.util.Mth;
+-import net.minecraft.world.Difficulty;
++import net.minecraft.util.monitoring.jmx.MinecraftServerStatistics;
+ import net.minecraft.world.Snooper;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.CreativeModeTab;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelType;
+ import net.minecraft.world.level.block.entity.SkullBlockEntity;
+-import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.storage.LevelStorageSource;
++import net.minecraft.world.level.storage.WorldData;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class DedicatedServer extends MinecraftServer implements ServerInterface {
+    private static final Logger LOGGER = LogManager.getLogger();
+@@ -65,34 +63,17 @@
+    private final List<ConsoleInput> consoleInput = Collections.synchronizedList(Lists.newArrayList());
+    private QueryThreadGs4 queryThreadGs4;
+    private final RconConsoleSource rconConsoleSource;
+    private RconThread rconThread;
+    private final DedicatedServerSettings settings;
+-   private GameType gameType;
+    @Nullable
+    private MinecraftServerGui gui;
+ 
+-   public DedicatedServer(File var1, DedicatedServerSettings var2, DataFixer var3, YggdrasilAuthenticationService var4, MinecraftSessionService var5, GameProfileRepository var6, GameProfileCache var7, ChunkProgressListenerFactory var8, String var9) {
+-      super(var1, Proxy.NO_PROXY, var3, new Commands(true), var4, var5, var6, var7, var8, var9);
+-      this.settings = var2;
++   public DedicatedServer(LevelStorageSource.LevelStorageAccess var1, PackRepository<UnopenedPack> var2, ServerResources var3, WorldData var4, DedicatedServerSettings var5, DataFixer var6, MinecraftSessionService var7, GameProfileRepository var8, GameProfileCache var9, ChunkProgressListenerFactory var10) {
++      super(var1, var4, var2, Proxy.NO_PROXY, var6, var3, var7, var8, var9, var10);
++      this.settings = var5;
+       this.rconConsoleSource = new RconConsoleSource(this);
+-      Thread var10001 = new Thread("Server Infinisleeper") {
+-         {
+-            this.setDaemon(true);
+-            this.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(DedicatedServer.LOGGER));
+-            this.start();
+-         }
+-
+-         public void run() {
+-            while(true) {
+-               try {
+-                  Thread.sleep(2147483647L);
+-               } catch (InterruptedException var2) {
+-               }
+-            }
+-         }
+-      };
+    }
+ 
+    public boolean initServer() throws IOException {
+       Thread var1 = new Thread("Server console handler") {
+          public void run() {
+@@ -125,21 +106,19 @@
+          this.setUsesAuthentication(var2.onlineMode);
+          this.setPreventProxyConnections(var2.preventProxyConnections);
+          this.setLocalIp(var2.serverIp);
+       }
+ 
+-      this.setAnimals(var2.spawnAnimals);
+-      this.setNpcsEnabled(var2.spawnNpcs);
+       this.setPvpAllowed(var2.pvp);
+       this.setFlightAllowed(var2.allowFlight);
+       this.setResourcePack(var2.resourcePack, this.getPackHash());
+       this.setMotd(var2.motd);
+       this.setForceGameType(var2.forceGameMode);
+       super.setPlayerIdleTimeout((Integer)var2.playerIdleTimeout.get());
+       this.setEnforceWhitelist(var2.enforceWhitelist);
+-      this.gameType = var2.gamemode;
+-      LOGGER.info((String)"Default game type: {}", (Object)this.gameType);
++      this.worldData.setGameType(var2.gamemode);
++      LOGGER.info((String)"Default game type: {}", (Object)var2.gamemode);
+       InetAddress var3 = null;
+       if (!this.getLocalIp().isEmpty()) {
+          var3 = InetAddress.getByName(this.getLocalIp());
+       }
+ 
+@@ -151,13 +130,13 @@
+       this.setKeyPair(Crypt.generateKeyPair());
+       LOGGER.info((String)"Starting Minecraft server on {}:{}", (Object)(this.getLocalIp().isEmpty() ? "*" : this.getLocalIp()), (Object)this.getPort());
+ 
+       try {
+          this.getConnection().startTcpServerListener(var3, this.getPort());
+-      } catch (IOException var17) {
++      } catch (IOException var10) {
+          LOGGER.warn("**** FAILED TO BIND TO PORT!");
+-         LOGGER.warn((String)"The exception was: {}", (Object)var17.toString());
++         LOGGER.warn((String)"The exception was: {}", (Object)var10.toString());
+          LOGGER.warn("Perhaps a server is already running on that port?");
+          return false;
+       }
+ 
+       if (!this.usesAuthentication()) {
+@@ -172,43 +151,21 @@
+       }
+ 
+       if (!OldUsersConverter.serverReadyAfterUserconversion(this)) {
+          return false;
+       } else {
+-         this.setPlayerList(new DedicatedPlayerList(this));
++         this.setPlayerList(new DedicatedPlayerList(this, this.registryHolder, this.playerDataStorage));
+          long var4 = Util.getNanos();
+-         String var6 = var2.levelSeed;
+-         String var7 = var2.generatorSettings;
+-         long var8 = (new Random()).nextLong();
+-         if (!var6.isEmpty()) {
+-            try {
+-               long var10 = Long.parseLong(var6);
+-               if (var10 != 0L) {
+-                  var8 = var10;
+-               }
+-            } catch (NumberFormatException var16) {
+-               var8 = (long)var6.hashCode();
+-            }
+-         }
+-
+-         LevelType var18 = var2.levelType;
+          this.setMaxBuildHeight(var2.maxBuildHeight);
+          SkullBlockEntity.setProfileCache(this.getProfileCache());
+          SkullBlockEntity.setSessionService(this.getSessionService());
+          GameProfileCache.setUsesAuthentication(this.usesAuthentication());
+          LOGGER.info((String)"Preparing level \"{}\"", (Object)this.getLevelIdName());
+-         JsonObject var11 = new JsonObject();
+-         if (var18 == LevelType.FLAT) {
+-            var11.addProperty("flat_world_options", var7);
+-         } else if (!var7.isEmpty()) {
+-            var11 = GsonHelper.parse(var7);
+-         }
+-
+-         this.loadLevel(this.getLevelIdName(), this.getLevelIdName(), var8, var18, var11);
+-         long var12 = Util.getNanos() - var4;
+-         String var14 = String.format(Locale.ROOT, "%.3fs", (double)var12 / 1.0E9D);
+-         LOGGER.info((String)"Done ({})! For help, type \"help\"", (Object)var14);
++         this.loadLevel();
++         long var6 = Util.getNanos() - var4;
++         String var8 = String.format(Locale.ROOT, "%.3fs", (double)var6 / 1.0E9D);
++         LOGGER.info((String)"Done ({})! For help, type \"help\"", (Object)var8);
+          if (var2.announcePlayerAchievements != null) {
+             ((GameRules.BooleanValue)this.getGameRules().getRule(GameRules.RULE_ANNOUNCE_ADVANCEMENTS)).set(var2.announcePlayerAchievements, this);
+          }
+ 
+          if (var2.enableQuery) {
+@@ -222,22 +179,38 @@
+             this.rconThread = new RconThread(this);
+             this.rconThread.start();
+          }
+ 
+          if (this.getMaxTickLength() > 0L) {
+-            Thread var15 = new Thread(new ServerWatchdog(this));
+-            var15.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandlerWithName(LOGGER));
+-            var15.setName("Server Watchdog");
+-            var15.setDaemon(true);
+-            var15.start();
++            Thread var9 = new Thread(new ServerWatchdog(this));
++            var9.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandlerWithName(LOGGER));
++            var9.setName("Server Watchdog");
++            var9.setDaemon(true);
++            var9.start();
+          }
+ 
+          Items.AIR.fillItemCategory(CreativeModeTab.TAB_SEARCH, NonNullList.create());
++         if (var2.enableJmxMonitoring) {
++            MinecraftServerStatistics.registerJmxMonitoring(this);
++         }
++
+          return true;
+       }
+    }
+ 
++   public boolean isSpawningAnimals() {
++      return this.getProperties().spawnAnimals && super.isSpawningAnimals();
++   }
++
++   public boolean isSpawningMonsters() {
++      return this.settings.getProperties().spawnMonsters && super.isSpawningMonsters();
++   }
++
++   public boolean areNpcsEnabled() {
++      return this.settings.getProperties().spawnNpcs && super.areNpcsEnabled();
++   }
++
+    public String getPackHash() {
+       DedicatedServerProperties var1 = this.settings.getProperties();
+       String var2;
+       if (!var1.resourcePackSha1.isEmpty()) {
+          var2 = var1.resourcePackSha1;
+@@ -260,31 +233,18 @@
+       }
+ 
+       return var2;
+    }
+ 
+-   public void setDefaultGameMode(GameType var1) {
+-      super.setDefaultGameMode(var1);
+-      this.gameType = var1;
+-   }
+-
+    public DedicatedServerProperties getProperties() {
+       return this.settings.getProperties();
+    }
+ 
+-   public boolean canGenerateStructures() {
+-      return this.getProperties().generateStructures;
++   public void forceDifficulty() {
++      this.setDifficulty(this.getProperties().difficulty, true);
+    }
+ 
+-   public GameType getDefaultGameType() {
+-      return this.gameType;
+-   }
+-
+-   public Difficulty getDefaultDifficulty() {
+-      return this.getProperties().difficulty;
+-   }
+-
+    public boolean isHardcore() {
+       return this.getProperties().hardcore;
+    }
+ 
+    public CrashReport fillReport(CrashReport var1) {
+@@ -325,14 +285,10 @@
+ 
+    public boolean isNetherEnabled() {
+       return this.getProperties().allowNether;
+    }
+ 
+-   public boolean getSpawnMonsters() {
+-      return this.getProperties().spawnMonsters;
+-   }
+-
+    public void populateSnooper(Snooper var1) {
+       var1.setDynamicData("whitelist_enabled", this.getPlayerList().isUsingWhitelist());
+       var1.setDynamicData("whitelist_count", this.getPlayerList().getWhiteListNames().length);
+       super.populateSnooper(var1);
+    }
+@@ -398,12 +354,12 @@
+ 
+    public int getSpawnProtectionRadius() {
+       return this.getProperties().spawnProtection;
+    }
+ 
+-   public boolean isUnderSpawnProtection(Level var1, BlockPos var2, Player var3) {
+-      if (var1.dimension.getType() != DimensionType.OVERWORLD) {
++   public boolean isUnderSpawnProtection(ServerLevel var1, BlockPos var2, Player var3) {
++      if (var1.dimension() != Level.OVERWORLD) {
+          return false;
+       } else if (this.getPlayerList().getOps().isEmpty()) {
+          return false;
+       } else if (this.getPlayerList().isOp(var3.getGameProfile())) {
+          return false;
+@@ -416,10 +372,14 @@
+          int var7 = Math.max(var5, var6);
+          return var7 <= this.getSpawnProtectionRadius();
+       }
+    }
+ 
++   public boolean repliesToStatus() {
++      return this.getProperties().enableStatus;
++   }
++
+    public int getOperatorUserPermissionLevel() {
+       return this.getProperties().opPermissionLevel;
+    }
+ 
+    public int getFunctionCompilationLevel() {
+@@ -538,12 +498,24 @@
+       });
+    }
+ 
+    public void stopServer() {
+       super.stopServer();
+-      Util.shutdownBackgroundExecutor();
++      Util.shutdownExecutors();
+    }
+ 
+    public boolean isSingleplayerOwner(GameProfile var1) {
+       return false;
+    }
++
++   public int getScaledTrackingDistance(int var1) {
++      return this.getProperties().entityBroadcastRangePercentage * var1 / 100;
++   }
++
++   public String getLevelIdName() {
++      return this.storageSource.getLevelId();
++   }
++
++   public boolean forceSynchronousWrites() {
++      return this.settings.getProperties().syncChunkWrites;
++   }
+ }

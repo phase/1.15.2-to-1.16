@@ -1,0 +1,60 @@
+--- net/minecraft/advancements/critereon/StatePropertiesPredicate.java
++++ net/minecraft/advancements/critereon/StatePropertiesPredicate.java
+@@ -45,11 +45,11 @@
+ 
+    private StatePropertiesPredicate(List<StatePropertiesPredicate.PropertyMatcher> var1) {
+       this.properties = ImmutableList.copyOf((Collection)var1);
+    }
+ 
+-   public <S extends StateHolder<S>> boolean matches(StateDefinition<?, S> var1, S var2) {
++   public <S extends StateHolder<?, S>> boolean matches(StateDefinition<?, S> var1, S var2) {
+       Iterator var3 = this.properties.iterator();
+ 
+       StatePropertiesPredicate.PropertyMatcher var4;
+       do {
+          if (!var3.hasNext()) {
+@@ -150,11 +150,11 @@
+          super(var1);
+          this.minValue = var2;
+          this.maxValue = var3;
+       }
+ 
+-      protected <T extends Comparable<T>> boolean match(StateHolder<?> var1, Property<T> var2) {
++      protected <T extends Comparable<T>> boolean match(StateHolder<?, ?> var1, Property<T> var2) {
+          Comparable var3 = var1.getValue(var2);
+          Optional var4;
+          if (this.minValue != null) {
+             var4 = var2.getValue(this.minValue);
+             if (!var4.isPresent() || var3.compareTo(var4.get()) < 0) {
+@@ -192,11 +192,11 @@
+       public ExactPropertyMatcher(String var1, String var2) {
+          super(var1);
+          this.value = var2;
+       }
+ 
+-      protected <T extends Comparable<T>> boolean match(StateHolder<?> var1, Property<T> var2) {
++      protected <T extends Comparable<T>> boolean match(StateHolder<?, ?> var1, Property<T> var2) {
+          Comparable var3 = var1.getValue(var2);
+          Optional var4 = var2.getValue(this.value);
+          return var4.isPresent() && var3.compareTo(var4.get()) == 0;
+       }
+ 
+@@ -210,16 +210,16 @@
+ 
+       public PropertyMatcher(String var1) {
+          this.name = var1;
+       }
+ 
+-      public <S extends StateHolder<S>> boolean match(StateDefinition<?, S> var1, S var2) {
++      public <S extends StateHolder<?, S>> boolean match(StateDefinition<?, S> var1, S var2) {
+          Property var3 = var1.getProperty(this.name);
+          return var3 == null ? false : this.match(var2, var3);
+       }
+ 
+-      protected abstract <T extends Comparable<T>> boolean match(StateHolder<?> var1, Property<T> var2);
++      protected abstract <T extends Comparable<T>> boolean match(StateHolder<?, ?> var1, Property<T> var2);
+ 
+       public abstract JsonElement toJson();
+ 
+       public String getName() {
+          return this.name;

@@ -1,0 +1,29 @@
+--- net/minecraft/util/datafix/fixes/ItemIdFix.java
++++ net/minecraft/util/datafix/fixes/ItemIdFix.java
+@@ -8,10 +8,11 @@
+ import com.mojang.datafixers.schemas.Schema;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.util.Pair;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
++import net.minecraft.util.datafix.schemas.NamespacedSchema;
+ 
+ public class ItemIdFix extends DataFix {
+    private static final Int2ObjectMap<String> ITEM_NAMES = (Int2ObjectMap)DataFixUtils.make(new Int2ObjectOpenHashMap(), (var0) -> {
+       var0.put(1, "minecraft:stone");
+       var0.put(2, "minecraft:grass");
+@@ -338,12 +339,12 @@
+    public static String getItem(int var0) {
+       return (String)ITEM_NAMES.get(var0);
+    }
+ 
+    public TypeRewriteRule makeRule() {
+-      Type var1 = DSL.or(DSL.intType(), DSL.named(References.ITEM_NAME.typeName(), DSL.namespacedString()));
+-      Type var2 = DSL.named(References.ITEM_NAME.typeName(), DSL.namespacedString());
++      Type var1 = DSL.or(DSL.intType(), DSL.named(References.ITEM_NAME.typeName(), NamespacedSchema.namespacedString()));
++      Type var2 = DSL.named(References.ITEM_NAME.typeName(), NamespacedSchema.namespacedString());
+       OpticFinder var3 = DSL.fieldFinder("id", var1);
+       return this.fixTypeEverywhereTyped("ItemIdFix", this.getInputSchema().getType(References.ITEM_STACK), this.getOutputSchema().getType(References.ITEM_STACK), (var2x) -> {
+          return var2x.update(var3, var2, (var0) -> {
+             return (Pair)var0.map((var0x) -> {
+                return Pair.of(References.ITEM_NAME.typeName(), getItem(var0x));

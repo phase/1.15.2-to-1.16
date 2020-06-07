@@ -1,0 +1,93 @@
+--- net/minecraft/world/level/LevelReader.java
++++ net/minecraft/world/level/LevelReader.java
+@@ -8,11 +8,11 @@
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.biome.BiomeManager;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+ import net.minecraft.world.level.chunk.ChunkStatus;
+-import net.minecraft.world.level.dimension.Dimension;
++import net.minecraft.world.level.dimension.DimensionType;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.phys.AABB;
+ 
+ public interface LevelReader extends BlockAndTintGetter, CollisionGetter, BiomeManager.NoiseBiomeSource {
+    @Nullable
+@@ -42,13 +42,14 @@
+ 
+    Biome getUncachedNoiseBiome(int var1, int var2, int var3);
+ 
+    boolean isClientSide();
+ 
++   @Deprecated
+    int getSeaLevel();
+ 
+-   Dimension getDimension();
++   DimensionType dimensionType();
+ 
+    default BlockPos getHeightmapPos(Heightmap.Types var1, BlockPos var2) {
+       return new BlockPos(var2.getX(), this.getHeight(var1, var2.getX(), var2.getZ()), var2.getZ());
+    }
+ 
+@@ -76,11 +77,11 @@
+       }
+    }
+ 
+    @Deprecated
+    default float getBrightness(BlockPos var1) {
+-      return this.getDimension().getBrightness(this.getMaxLocalRawBrightness(var1));
++      return this.dimensionType().brightness(this.getMaxLocalRawBrightness(var1));
+    }
+ 
+    default int getDirectSignal(BlockPos var1, Direction var2) {
+       return this.getBlockState(var1).getDirectSignal(this, var1, var2);
+    }
+@@ -111,41 +112,21 @@
+       int var3 = Mth.ceil(var1.maxX);
+       int var4 = Mth.floor(var1.minY);
+       int var5 = Mth.ceil(var1.maxY);
+       int var6 = Mth.floor(var1.minZ);
+       int var7 = Mth.ceil(var1.maxZ);
+-      BlockPos.PooledMutableBlockPos var8 = BlockPos.PooledMutableBlockPos.acquire();
+-      Throwable var9 = null;
++      BlockPos.MutableBlockPos var8 = new BlockPos.MutableBlockPos();
+ 
+-      try {
+-         for(int var10 = var2; var10 < var3; ++var10) {
+-            for(int var11 = var4; var11 < var5; ++var11) {
+-               for(int var12 = var6; var12 < var7; ++var12) {
+-                  BlockState var13 = this.getBlockState(var8.set(var10, var11, var12));
+-                  if (!var13.getFluidState().isEmpty()) {
+-                     boolean var14 = true;
+-                     return var14;
+-                  }
++      for(int var9 = var2; var9 < var3; ++var9) {
++         for(int var10 = var4; var10 < var5; ++var10) {
++            for(int var11 = var6; var11 < var7; ++var11) {
++               BlockState var12 = this.getBlockState(var8.set(var9, var10, var11));
++               if (!var12.getFluidState().isEmpty()) {
++                  return true;
+                }
+             }
+          }
+-      } catch (Throwable var24) {
+-         var9 = var24;
+-         throw var24;
+-      } finally {
+-         if (var8 != null) {
+-            if (var9 != null) {
+-               try {
+-                  var8.close();
+-               } catch (Throwable var23) {
+-                  var9.addSuppressed(var23);
+-               }
+-            } else {
+-               var8.close();
+-            }
+-         }
+-
+       }
+ 
+       return false;
+    }
+ 

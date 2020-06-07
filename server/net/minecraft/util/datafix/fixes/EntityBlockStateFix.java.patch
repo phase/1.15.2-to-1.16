@@ -1,0 +1,74 @@
+--- net/minecraft/util/datafix/fixes/EntityBlockStateFix.java
++++ net/minecraft/util/datafix/fixes/EntityBlockStateFix.java
+@@ -2,21 +2,22 @@
+ 
+ import com.google.common.collect.Maps;
+ import com.mojang.datafixers.DSL;
+ import com.mojang.datafixers.DataFix;
+ import com.mojang.datafixers.DataFixUtils;
+-import com.mojang.datafixers.Dynamic;
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.Typed;
+ import com.mojang.datafixers.schemas.Schema;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.templates.Tag;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Dynamic;
+ import java.util.Map;
+ import java.util.Optional;
+ import java.util.function.Function;
++import net.minecraft.util.datafix.schemas.NamespacedSchema;
+ 
+ public class EntityBlockStateFix extends DataFix {
+    private static final Map<String, Integer> MAP = (Map)DataFixUtils.make(Maps.newHashMap(), (var0) -> {
+       var0.put("minecraft:air", 0);
+       var0.put("minecraft:stone", 1);
+@@ -290,11 +291,11 @@
+          return this.updateBlockToBlockState(var1x, "DisplayTile", "DisplayData", "DisplayState");
+       };
+       Function var4 = (var1x) -> {
+          return this.updateBlockToBlockState(var1x, "inTile", "inData", "inBlockState");
+       };
+-      Type var5 = DSL.and(DSL.optional((Type)DSL.field("inTile", DSL.named(References.BLOCK_NAME.typeName(), DSL.or(DSL.intType(), DSL.namespacedString())))), DSL.remainderType());
++      Type var5 = DSL.and(DSL.optional((Type)DSL.field("inTile", DSL.named(References.BLOCK_NAME.typeName(), DSL.or(DSL.intType(), NamespacedSchema.namespacedString())))), DSL.remainderType());
+       Function var6 = (var1x) -> {
+          return var1x.update(var5.finder(), DSL.remainderType(), Pair::getSecond);
+       };
+       return this.fixTypeEverywhereTyped("EntityBlockStateFix", var1.getType(References.ENTITY), var2.getType(References.ENTITY), (var4x) -> {
+          var4x = this.updateEntity(var4x, "minecraft:falling_block", this::updateFallingBlock);
+@@ -321,31 +322,31 @@
+          return var4x;
+       });
+    }
+ 
+    private Typed<?> updateFallingBlock(Typed<?> var1) {
+-      Type var2 = DSL.optional((Type)DSL.field("Block", DSL.named(References.BLOCK_NAME.typeName(), DSL.or(DSL.intType(), DSL.namespacedString()))));
++      Type var2 = DSL.optional((Type)DSL.field("Block", DSL.named(References.BLOCK_NAME.typeName(), DSL.or(DSL.intType(), NamespacedSchema.namespacedString()))));
+       Type var3 = DSL.optional((Type)DSL.field("BlockState", DSL.named(References.BLOCK_STATE.typeName(), DSL.remainderType())));
+       Dynamic var4 = (Dynamic)var1.get(DSL.remainderFinder());
+       return var1.update(var2.finder(), var3, (var1x) -> {
+          int var2 = (Integer)var1x.map((var0) -> {
+             return (Integer)((Either)var0.getSecond()).map((var0x) -> {
+                return var0x;
+             }, EntityBlockStateFix::getBlockId);
+          }, (var1) -> {
+-            Optional var2 = var4.get("TileID").asNumber();
++            Optional var2 = var4.get("TileID").asNumber().result();
+             return (Integer)var2.map(Number::intValue).orElseGet(() -> {
+                return var4.get("Tile").asByte((byte)0) & 255;
+             });
+          });
+          int var3 = var4.get("Data").asInt(0) & 15;
+          return Either.left(Pair.of(References.BLOCK_STATE.typeName(), BlockStateData.getTag(var2 << 4 | var3)));
+       }).set(DSL.remainderFinder(), (Object)var4.remove("Data").remove("TileID").remove("Tile"));
+    }
+ 
+    private Typed<?> updateBlockToBlockState(Typed<?> var1, String var2, String var3, String var4) {
+-      Tag.TagType var5 = DSL.field(var2, DSL.named(References.BLOCK_NAME.typeName(), DSL.or(DSL.intType(), DSL.namespacedString())));
++      Tag.TagType var5 = DSL.field(var2, DSL.named(References.BLOCK_NAME.typeName(), DSL.or(DSL.intType(), NamespacedSchema.namespacedString())));
+       Tag.TagType var6 = DSL.field(var4, DSL.named(References.BLOCK_STATE.typeName(), DSL.remainderType()));
+       Dynamic var7 = (Dynamic)var1.getOrCreate(DSL.remainderFinder());
+       return var1.update(var5.finder(), var6, (var2x) -> {
+          int var3x = (Integer)((Either)var2x.getSecond()).map((var0) -> {
+             return var0;

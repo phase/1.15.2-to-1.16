@@ -1,0 +1,47 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/ChanceRangeDecoratorConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/ChanceRangeDecoratorConfiguration.java
+@@ -1,12 +1,22 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
+ 
+ public class ChanceRangeDecoratorConfiguration implements DecoratorConfiguration {
++   public static final Codec<ChanceRangeDecoratorConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(Codec.FLOAT.fieldOf("chance").forGetter((var0x) -> {
++         return var0x.chance;
++      }), Codec.INT.fieldOf("bottom_offset").withDefault(0).forGetter((var0x) -> {
++         return var0x.bottomOffset;
++      }), Codec.INT.fieldOf("top_offset").withDefault(0).forGetter((var0x) -> {
++         return var0x.topOffset;
++      }), Codec.INT.fieldOf("top").withDefault(0).forGetter((var0x) -> {
++         return var0x.top;
++      })).apply(var0, ChanceRangeDecoratorConfiguration::new);
++   });
+    public final float chance;
+    public final int bottomOffset;
+    public final int topOffset;
+    public final int top;
+ 
+@@ -14,18 +24,6 @@
+       this.chance = var1;
+       this.bottomOffset = var2;
+       this.topOffset = var3;
+       this.top = var4;
+    }
+-
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("chance"), var1.createFloat(this.chance), var1.createString("bottom_offset"), var1.createInt(this.bottomOffset), var1.createString("top_offset"), var1.createInt(this.topOffset), var1.createString("top"), var1.createInt(this.top))));
+-   }
+-
+-   public static ChanceRangeDecoratorConfiguration deserialize(Dynamic<?> var0) {
+-      float var1 = var0.get("chance").asFloat(0.0F);
+-      int var2 = var0.get("bottom_offset").asInt(0);
+-      int var3 = var0.get("top_offset").asInt(0);
+-      int var4 = var0.get("top").asInt(0);
+-      return new ChanceRangeDecoratorConfiguration(var1, var2, var3, var4);
+-   }
+ }

@@ -1,0 +1,15 @@
+--- net/minecraft/client/model/CatModel.java
++++ net/minecraft/client/model/CatModel.java
+@@ -30,11 +30,11 @@
+          this.backLegR.x = -1.1F;
+          this.backLegR.y = 18.0F;
+       }
+ 
+       super.prepareMobModel(var1, var2, var3, var4);
+-      if (var1.isSitting()) {
++      if (var1.isInSittingPose()) {
+          this.body.xRot = 0.7853982F;
+          ModelPart var10000 = this.body;
+          var10000.y += -4.0F;
+          var10000 = this.body;
+          var10000.z += 5.0F;

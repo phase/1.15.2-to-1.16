@@ -1,0 +1,15 @@
+--- net/minecraft/client/particle/ParticleRenderType.java
++++ net/minecraft/client/particle/ParticleRenderType.java
+@@ -45,11 +45,11 @@
+    ParticleRenderType PARTICLE_SHEET_TRANSLUCENT = new ParticleRenderType() {
+       public void begin(BufferBuilder var1, TextureManager var2) {
+          RenderSystem.depthMask(true);
+          var2.bind(TextureAtlas.LOCATION_PARTICLES);
+          RenderSystem.enableBlend();
+-         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
++         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+          RenderSystem.alphaFunc(516, 0.003921569F);
+          var1.begin(7, DefaultVertexFormat.PARTICLE);
+       }
+ 
+       public void end(Tesselator var1) {

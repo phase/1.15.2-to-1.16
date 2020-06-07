@@ -1,0 +1,93 @@
+--- net/minecraft/world/entity/monster/Witch.java
++++ net/minecraft/world/entity/monster/Witch.java
+@@ -20,10 +20,12 @@
+ import net.minecraft.world.entity.EquipmentSlot;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.Pose;
+ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
++import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.goal.FloatGoal;
+ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+ import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
+ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+@@ -92,14 +94,12 @@
+ 
+    public boolean isDrinkingPotion() {
+       return (Boolean)this.getEntityData().get(DATA_USING_ITEM);
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(26.0D);
+-      this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.25D);
++   public static AttributeSupplier.Builder createAttributes() {
++      return Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 26.0D).add(Attributes.MOVEMENT_SPEED, 0.25D);
+    }
+ 
+    public void aiStep() {
+       if (!this.level.isClientSide && this.isAlive()) {
+          this.healRaidersGoal.decrementCooldown();
+@@ -124,11 +124,11 @@
+                         this.addEffect(new MobEffectInstance(var4));
+                      }
+                   }
+                }
+ 
+-               this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).removeModifier(SPEED_MODIFIER_DRINKING);
++               this.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SPEED_MODIFIER_DRINKING);
+             }
+          } else {
+             Potion var1 = null;
+             if (this.random.nextFloat() < 0.15F && this.isUnderLiquid(FluidTags.WATER) && !this.hasEffect(MobEffects.WATER_BREATHING)) {
+                var1 = Potions.WATER_BREATHING;
+@@ -142,14 +142,17 @@
+ 
+             if (var1 != null) {
+                this.setItemSlot(EquipmentSlot.MAINHAND, PotionUtils.setPotion(new ItemStack(Items.POTION), var1));
+                this.usingTime = this.getMainHandItem().getUseDuration();
+                this.setUsingItem(true);
+-               this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITCH_DRINK, this.getSoundSource(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
+-               AttributeInstance var2 = this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
++               if (!this.isSilent()) {
++                  this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITCH_DRINK, this.getSoundSource(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
++               }
++
++               AttributeInstance var2 = this.getAttribute(Attributes.MOVEMENT_SPEED);
+                var2.removeModifier(SPEED_MODIFIER_DRINKING);
+-               var2.addModifier(SPEED_MODIFIER_DRINKING);
++               var2.addTransientModifier(SPEED_MODIFIER_DRINKING);
+             }
+          }
+ 
+          if (this.random.nextFloat() < 7.5E-4F) {
+             this.level.broadcastEntityEvent(this, (byte)15);
+@@ -213,11 +216,14 @@
+ 
+          ThrownPotion var12 = new ThrownPotion(this.level, this);
+          var12.setItem(PotionUtils.setPotion(new ItemStack(Items.SPLASH_POTION), var11));
+          var12.xRot -= -20.0F;
+          var12.shoot(var4, var6 + (double)(var10 * 0.2F), var8, 0.75F, 8.0F);
+-         this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITCH_THROW, this.getSoundSource(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
++         if (!this.isSilent()) {
++            this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITCH_THROW, this.getSoundSource(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
++         }
++
+          this.level.addFreshEntity(var12);
+       }
+    }
+ 
+    protected float getStandingEyeHeight(Pose var1, EntityDimensions var2) {
+@@ -230,9 +236,9 @@
+    public boolean canBeLeader() {
+       return false;
+    }
+ 
+    static {
+-      SPEED_MODIFIER_DRINKING = (new AttributeModifier(SPEED_MODIFIER_DRINKING_UUID, "Drinking speed penalty", -0.25D, AttributeModifier.Operation.ADDITION)).setSerialize(false);
++      SPEED_MODIFIER_DRINKING = new AttributeModifier(SPEED_MODIFIER_DRINKING_UUID, "Drinking speed penalty", -0.25D, AttributeModifier.Operation.ADDITION);
+       DATA_USING_ITEM = SynchedEntityData.defineId(Witch.class, EntityDataSerializers.BOOLEAN);
+    }
+ }

@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/block/state/properties/WoodType.java
++++ net/minecraft/world/level/block/state/properties/WoodType.java
+@@ -10,10 +10,12 @@
+    public static final WoodType SPRUCE = register(new WoodType("spruce"));
+    public static final WoodType BIRCH = register(new WoodType("birch"));
+    public static final WoodType ACACIA = register(new WoodType("acacia"));
+    public static final WoodType JUNGLE = register(new WoodType("jungle"));
+    public static final WoodType DARK_OAK = register(new WoodType("dark_oak"));
++   public static final WoodType CRIMSON = register(new WoodType("crimson"));
++   public static final WoodType WARPED = register(new WoodType("warped"));
+    private final String name;
+ 
+    protected WoodType(String var1) {
+       this.name = var1;
+    }

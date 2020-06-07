@@ -1,0 +1,37 @@
+--- net/minecraft/world/level/pathfinder/Path.java
++++ net/minecraft/world/level/pathfinder/Path.java
+@@ -6,10 +6,11 @@
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.Vec3i;
+ import net.minecraft.network.FriendlyByteBuf;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class Path {
+@@ -83,15 +84,19 @@
+ 
+    public Vec3 currentPos(Entity var1) {
+       return this.getPos(var1, this.index);
+    }
+ 
+-   public Vec3 currentPos() {
+-      Node var1 = (Node)this.nodes.get(this.index);
+-      return new Vec3((double)var1.x, (double)var1.y, (double)var1.z);
++   public Vec3i currentPos() {
++      Node var1 = this.currentNode();
++      return new Vec3i(var1.x, var1.y, var1.z);
+    }
+ 
++   public Node currentNode() {
++      return (Node)this.nodes.get(this.index);
++   }
++
+    public boolean sameAs(@Nullable Path var1) {
+       if (var1 == null) {
+          return false;
+       } else if (var1.nodes.size() != this.nodes.size()) {
+          return false;

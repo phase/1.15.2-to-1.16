@@ -1,0 +1,21 @@
+--- net/minecraft/client/renderer/entity/FallingBlockRenderer.java
++++ net/minecraft/client/renderer/entity/FallingBlockRenderer.java
+@@ -23,16 +23,16 @@
+ 
+    public void render(FallingBlockEntity var1, float var2, float var3, PoseStack var4, MultiBufferSource var5, int var6) {
+       BlockState var7 = var1.getBlockState();
+       if (var7.getRenderShape() == RenderShape.MODEL) {
+          Level var8 = var1.getLevel();
+-         if (var7 != var8.getBlockState(new BlockPos(var1)) && var7.getRenderShape() != RenderShape.INVISIBLE) {
++         if (var7 != var8.getBlockState(var1.blockPosition()) && var7.getRenderShape() != RenderShape.INVISIBLE) {
+             var4.pushPose();
+             BlockPos var9 = new BlockPos(var1.getX(), var1.getBoundingBox().maxY, var1.getZ());
+             var4.translate(-0.5D, 0.0D, -0.5D);
+             BlockRenderDispatcher var10 = Minecraft.getInstance().getBlockRenderer();
+-            var10.getModelRenderer().tesselateBlock(var8, var10.getBlockModel(var7), var7, var9, var4, var5.getBuffer(ItemBlockRenderTypes.getChunkRenderType(var7)), false, new Random(), var7.getSeed(var1.getStartPos()), OverlayTexture.NO_OVERLAY);
++            var10.getModelRenderer().tesselateBlock(var8, var10.getBlockModel(var7), var7, var9, var4, var5.getBuffer(ItemBlockRenderTypes.getMovingBlockRenderType(var7)), false, new Random(), var7.getSeed(var1.getStartPos()), OverlayTexture.NO_OVERLAY);
+             var4.popPose();
+             super.render(var1, var2, var3, var4, var5, var6);
+          }
+       }
+    }

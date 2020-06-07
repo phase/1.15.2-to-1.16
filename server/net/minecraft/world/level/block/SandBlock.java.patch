@@ -1,0 +1,16 @@
+--- net/minecraft/world/level/block/SandBlock.java
++++ net/minecraft/world/level/block/SandBlock.java
+@@ -1,10 +1,12 @@
+ package net.minecraft.world.level.block;
+ 
++import net.minecraft.world.level.block.state.BlockBehaviour;
++
+ public class SandBlock extends FallingBlock {
+    private final int dustColor;
+ 
+-   public SandBlock(int var1, Block.Properties var2) {
++   public SandBlock(int var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.dustColor = var1;
+    }
+ }

@@ -1,0 +1,37 @@
+--- net/minecraft/world/level/levelgen/feature/HugeBrownMushroomFeature.java
++++ net/minecraft/world/level/levelgen/feature/HugeBrownMushroomFeature.java
+@@ -1,19 +1,17 @@
+ package net.minecraft.world.level.levelgen.feature;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.Codec;
+ import java.util.Random;
+-import java.util.function.Function;
+ import net.minecraft.core.BlockPos;
+-import net.minecraft.core.Vec3i;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.HugeMushroomBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.levelgen.feature.configurations.HugeMushroomFeatureConfiguration;
+ 
+ public class HugeBrownMushroomFeature extends AbstractHugeMushroomFeature {
+-   public HugeBrownMushroomFeature(Function<Dynamic<?>, ? extends HugeMushroomFeatureConfiguration> var1) {
++   public HugeBrownMushroomFeature(Codec<HugeMushroomFeatureConfiguration> var1) {
+       super(var1);
+    }
+ 
+    protected void makeCap(LevelAccessor var1, Random var2, BlockPos var3, int var4, BlockPos.MutableBlockPos var5, HugeMushroomFeatureConfiguration var6) {
+       int var7 = var6.foliageRadius;
+@@ -25,11 +23,11 @@
+             boolean var12 = var9 == -var7;
+             boolean var13 = var9 == var7;
+             boolean var14 = var10 || var11;
+             boolean var15 = var12 || var13;
+             if (!var14 || !var15) {
+-               var5.set((Vec3i)var3).move(var8, var4, var9);
++               var5.setWithOffset(var3, var8, var4, var9);
+                if (!var1.getBlockState(var5).isSolidRender(var1, var5)) {
+                   boolean var16 = var10 || var15 && var8 == 1 - var7;
+                   boolean var17 = var11 || var15 && var8 == var7 - 1;
+                   boolean var18 = var12 || var14 && var9 == 1 - var7;
+                   boolean var19 = var13 || var14 && var9 == var7 - 1;

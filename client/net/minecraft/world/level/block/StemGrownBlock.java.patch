@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/block/StemGrownBlock.java
++++ net/minecraft/world/level/block/StemGrownBlock.java
+@@ -1,9 +1,11 @@
+ package net.minecraft.world.level.block;
+ 
++import net.minecraft.world.level.block.state.BlockBehaviour;
++
+ public abstract class StemGrownBlock extends Block {
+-   public StemGrownBlock(Block.Properties var1) {
++   public StemGrownBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public abstract StemBlock getStem();
+ 

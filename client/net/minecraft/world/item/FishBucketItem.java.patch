@@ -1,0 +1,26 @@
+--- net/minecraft/world/item/FishBucketItem.java
++++ net/minecraft/world/item/FishBucketItem.java
+@@ -55,19 +55,19 @@
+             String var8 = "color.minecraft." + TropicalFish.getBaseColor(var6);
+             String var9 = "color.minecraft." + TropicalFish.getPatternColor(var6);
+ 
+             for(int var10 = 0; var10 < TropicalFish.COMMON_VARIANTS.length; ++var10) {
+                if (var6 == TropicalFish.COMMON_VARIANTS[var10]) {
+-                  var3.add((new TranslatableComponent(TropicalFish.getPredefinedName(var10), new Object[0])).withStyle(var7));
++                  var3.add((new TranslatableComponent(TropicalFish.getPredefinedName(var10))).withStyle(var7));
+                   return;
+                }
+             }
+ 
+-            var3.add((new TranslatableComponent(TropicalFish.getFishTypeName(var6), new Object[0])).withStyle(var7));
+-            TranslatableComponent var11 = new TranslatableComponent(var8, new Object[0]);
++            var3.add((new TranslatableComponent(TropicalFish.getFishTypeName(var6))).withStyle(var7));
++            TranslatableComponent var11 = new TranslatableComponent(var8);
+             if (!var8.equals(var9)) {
+-               var11.append(", ").append((Component)(new TranslatableComponent(var9, new Object[0])));
++               var11.append(", ").append((Component)(new TranslatableComponent(var9)));
+             }
+ 
+             var11.withStyle(var7);
+             var3.add(var11);
+          }

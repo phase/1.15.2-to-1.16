@@ -1,0 +1,50 @@
+--- net/minecraft/world/entity/ai/behavior/SleepInBed.java
++++ net/minecraft/world/entity/ai/behavior/SleepInBed.java
+@@ -1,16 +1,16 @@
+ package net.minecraft.world.entity.ai.behavior;
+ 
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.ImmutableMap;
+-import java.util.Objects;
+ import java.util.Optional;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.GlobalPos;
+ import net.minecraft.core.SerializableLong;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.tags.BlockTags;
++import net.minecraft.tags.Tag;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.ai.Brain;
+ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+ import net.minecraft.world.entity.ai.memory.MemoryStatus;
+ import net.minecraft.world.entity.schedule.Activity;
+@@ -28,20 +28,23 @@
+       if (var2.isPassenger()) {
+          return false;
+       } else {
+          Brain var3 = var2.getBrain();
+          GlobalPos var4 = (GlobalPos)var3.getMemory(MemoryModuleType.HOME).get();
+-         if (!Objects.equals(var1.getDimension().getType(), var4.dimension())) {
++         if (var1.dimension() != var4.dimension()) {
+             return false;
+          } else {
+             Optional var5 = var3.getMemory(MemoryModuleType.LAST_WOKEN);
+-            if (var5.isPresent() && var1.getGameTime() - ((SerializableLong)var5.get()).value() < 100L) {
+-               return false;
+-            } else {
+-               BlockState var6 = var1.getBlockState(var4.pos());
+-               return var4.pos().closerThan(var2.position(), 2.0D) && var6.getBlock().is(BlockTags.BEDS) && !(Boolean)var6.getValue(BedBlock.OCCUPIED);
++            if (var5.isPresent()) {
++               long var6 = var1.getGameTime() - ((SerializableLong)var5.get()).value();
++               if (var6 > 0L && var6 < 100L) {
++                  return false;
++               }
+             }
++
++            BlockState var8 = var1.getBlockState(var4.pos());
++            return var4.pos().closerThan(var2.position(), 2.0D) && var8.getBlock().is((Tag)BlockTags.BEDS) && !(Boolean)var8.getValue(BedBlock.OCCUPIED);
+          }
+       }
+    }
+ 
+    protected boolean canStillUse(ServerLevel var1, LivingEntity var2, long var3) {

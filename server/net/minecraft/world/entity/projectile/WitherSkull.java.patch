@@ -1,0 +1,77 @@
+--- net/minecraft/world/entity/projectile/WitherSkull.java
++++ net/minecraft/world/entity/projectile/WitherSkull.java
+@@ -42,43 +42,49 @@
+ 
+    public float getBlockExplosionResistance(Explosion var1, BlockGetter var2, BlockPos var3, BlockState var4, FluidState var5, float var6) {
+       return this.isDangerous() && WitherBoss.canDestroy(var4) ? Math.min(0.8F, var6) : var6;
+    }
+ 
+-   protected void onHit(HitResult var1) {
+-      super.onHit(var1);
++   protected void onHitEntity(EntityHitResult var1) {
++      super.onHitEntity(var1);
+       if (!this.level.isClientSide) {
+-         if (var1.getType() == HitResult.Type.ENTITY) {
+-            Entity var2 = ((EntityHitResult)var1).getEntity();
+-            if (this.owner != null) {
+-               if (var2.hurt(DamageSource.mobAttack(this.owner), 8.0F)) {
+-                  if (var2.isAlive()) {
+-                     this.doEnchantDamageEffects(this.owner, var2);
+-                  } else {
+-                     this.owner.heal(5.0F);
+-                  }
++         Entity var2 = var1.getEntity();
++         Entity var3 = this.getOwner();
++         if (var3 instanceof LivingEntity) {
++            LivingEntity var4 = (LivingEntity)var3;
++            if (var2.hurt(DamageSource.witherSkull(this, var4), 8.0F)) {
++               if (var2.isAlive()) {
++                  this.doEnchantDamageEffects(var4, var2);
++               } else {
++                  var4.heal(5.0F);
+                }
+-            } else {
+-               var2.hurt(DamageSource.MAGIC, 5.0F);
+             }
++         } else {
++            var2.hurt(DamageSource.MAGIC, 5.0F);
++         }
+ 
+-            if (var2 instanceof LivingEntity) {
+-               byte var3 = 0;
+-               if (this.level.getDifficulty() == Difficulty.NORMAL) {
+-                  var3 = 10;
+-               } else if (this.level.getDifficulty() == Difficulty.HARD) {
+-                  var3 = 40;
+-               }
++         if (var2 instanceof LivingEntity) {
++            byte var5 = 0;
++            if (this.level.getDifficulty() == Difficulty.NORMAL) {
++               var5 = 10;
++            } else if (this.level.getDifficulty() == Difficulty.HARD) {
++               var5 = 40;
++            }
+ 
+-               if (var3 > 0) {
+-                  ((LivingEntity)var2).addEffect(new MobEffectInstance(MobEffects.WITHER, 20 * var3, 1));
+-               }
++            if (var5 > 0) {
++               ((LivingEntity)var2).addEffect(new MobEffectInstance(MobEffects.WITHER, 20 * var5, 1));
+             }
+          }
+ 
+-         Explosion.BlockInteraction var4 = this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING) ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE;
+-         this.level.explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, false, var4);
++      }
++   }
++
++   protected void onHit(HitResult var1) {
++      super.onHit(var1);
++      if (!this.level.isClientSide) {
++         Explosion.BlockInteraction var2 = this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING) ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE;
++         this.level.explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, false, var2);
+          this.remove();
+       }
+ 
+    }
+ 

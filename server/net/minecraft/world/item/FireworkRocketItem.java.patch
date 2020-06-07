@@ -1,0 +1,34 @@
+--- net/minecraft/world/item/FireworkRocketItem.java
++++ net/minecraft/world/item/FireworkRocketItem.java
+@@ -20,16 +20,16 @@
+       Level var2 = var1.getLevel();
+       if (!var2.isClientSide) {
+          ItemStack var3 = var1.getItemInHand();
+          Vec3 var4 = var1.getClickLocation();
+          Direction var5 = var1.getClickedFace();
+-         FireworkRocketEntity var6 = new FireworkRocketEntity(var2, var4.x + (double)var5.getStepX() * 0.15D, var4.y + (double)var5.getStepY() * 0.15D, var4.z + (double)var5.getStepZ() * 0.15D, var3);
++         FireworkRocketEntity var6 = new FireworkRocketEntity(var2, var1.getPlayer(), var4.x + (double)var5.getStepX() * 0.15D, var4.y + (double)var5.getStepY() * 0.15D, var4.z + (double)var5.getStepZ() * 0.15D, var3);
+          var2.addFreshEntity(var6);
+          var3.shrink(1);
+       }
+ 
+-      return InteractionResult.SUCCESS;
++      return InteractionResult.sidedSuccess(var2.isClientSide);
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+       if (var2.isFallFlying()) {
+          ItemStack var4 = var2.getItemInHand(var3);
+@@ -38,11 +38,11 @@
+             if (!var2.abilities.instabuild) {
+                var4.shrink(1);
+             }
+          }
+ 
+-         return InteractionResultHolder.success(var2.getItemInHand(var3));
++         return InteractionResultHolder.sidedSuccess(var2.getItemInHand(var3), var1.isClientSide());
+       } else {
+          return InteractionResultHolder.pass(var2.getItemInHand(var3));
+       }
+    }
+ 

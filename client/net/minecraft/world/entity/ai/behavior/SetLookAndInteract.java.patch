@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/ai/behavior/SetLookAndInteract.java
++++ net/minecraft/world/entity/ai/behavior/SetLookAndInteract.java
+@@ -42,11 +42,11 @@
+       var5.getMemory(MemoryModuleType.VISIBLE_LIVING_ENTITIES).ifPresent((var3x) -> {
+          var3x.stream().filter((var2x) -> {
+             return var2x.distanceToSqr(var2) <= (double)this.interactionRangeSqr;
+          }).filter(this::isMatchingTarget).findFirst().ifPresent((var1) -> {
+             var5.setMemory(MemoryModuleType.INTERACTION_TARGET, (Object)var1);
+-            var5.setMemory(MemoryModuleType.LOOK_TARGET, (Object)(new EntityPosWrapper(var1)));
++            var5.setMemory(MemoryModuleType.LOOK_TARGET, (Object)(new EntityTracker(var1, true)));
+          });
+       });
+    }
+ 
+    private boolean isMatchingTarget(LivingEntity var1) {

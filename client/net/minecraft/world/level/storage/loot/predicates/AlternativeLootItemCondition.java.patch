@@ -1,0 +1,44 @@
+--- net/minecraft/world/level/storage/loot/predicates/AlternativeLootItemCondition.java
++++ net/minecraft/world/level/storage/loot/predicates/AlternativeLootItemCondition.java
+@@ -4,11 +4,10 @@
+ import com.google.gson.JsonDeserializationContext;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSerializationContext;
+ import java.util.List;
+ import java.util.function.Predicate;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.GsonHelper;
+ import net.minecraft.world.level.storage.loot.LootContext;
+ import net.minecraft.world.level.storage.loot.ValidationContext;
+ 
+ public class AlternativeLootItemCondition implements LootItemCondition {
+@@ -18,10 +17,14 @@
+    private AlternativeLootItemCondition(LootItemCondition[] var1) {
+       this.terms = var1;
+       this.composedPredicate = LootItemConditions.orConditions(var1);
+    }
+ 
++   public LootItemConditionType getType() {
++      return LootItemConditions.ALTERNATIVE;
++   }
++
+    public final boolean test(LootContext var1) {
+       return this.composedPredicate.test(var1);
+    }
+ 
+    public void validate(ValidationContext var1) {
+@@ -35,13 +38,12 @@
+ 
+    public static AlternativeLootItemCondition.Builder alternative(LootItemCondition.Builder... var0) {
+       return new AlternativeLootItemCondition.Builder(var0);
+    }
+ 
+-   public static class Serializer extends LootItemCondition.Serializer<AlternativeLootItemCondition> {
++   public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<AlternativeLootItemCondition> {
+       public Serializer() {
+-         super(new ResourceLocation("alternative"), AlternativeLootItemCondition.class);
+       }
+ 
+       public void serialize(JsonObject var1, AlternativeLootItemCondition var2, JsonSerializationContext var3) {
+          var1.add("terms", var3.serialize(var2.terms));
+       }

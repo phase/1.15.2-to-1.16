@@ -1,0 +1,15 @@
+--- net/minecraft/client/renderer/entity/ItemEntityRenderer.java
++++ net/minecraft/client/renderer/entity/ItemEntityRenderer.java
+@@ -51,11 +51,11 @@
+       int var11 = this.getRenderAmount(var7);
+       float var12 = 0.25F;
+       float var13 = Mth.sin(((float)var1.getAge() + var3) / 10.0F + var1.bobOffs) * 0.1F + 0.1F;
+       float var14 = var9.getTransforms().getTransform(ItemTransforms.TransformType.GROUND).scale.y();
+       var4.translate(0.0D, (double)(var13 + 0.25F * var14), 0.0D);
+-      float var15 = ((float)var1.getAge() + var3) / 20.0F + var1.bobOffs;
++      float var15 = var1.getSpin(var3);
+       var4.mulPose(Vector3f.YP.rotation(var15));
+       float var16 = var9.getTransforms().ground.scale.x();
+       float var17 = var9.getTransforms().ground.scale.y();
+       float var18 = var9.getTransforms().ground.scale.z();
+       float var20;

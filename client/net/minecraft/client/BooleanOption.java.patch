@@ -1,0 +1,28 @@
+--- net/minecraft/client/BooleanOption.java
++++ net/minecraft/client/BooleanOption.java
+@@ -2,11 +2,12 @@
+ 
+ import java.util.function.BiConsumer;
+ import java.util.function.Predicate;
+ import net.minecraft.client.gui.components.AbstractWidget;
+ import net.minecraft.client.gui.components.OptionButton;
+-import net.minecraft.client.resources.language.I18n;
++import net.minecraft.network.chat.CommonComponents;
++import net.minecraft.network.chat.Component;
+ 
+ public class BooleanOption extends Option {
+    private final Predicate<Options> getter;
+    private final BiConsumer<Options, Boolean> setter;
+ 
+@@ -38,9 +39,9 @@
+          this.toggle(var1);
+          var2x.setMessage(this.getMessage(var1));
+       });
+    }
+ 
+-   public String getMessage(Options var1) {
+-      return this.getCaption() + I18n.get(this.get(var1) ? "options.on" : "options.off");
++   public Component getMessage(Options var1) {
++      return this.createCaption().append(CommonComponents.optionStatus(this.get(var1)));
+    }
+ }

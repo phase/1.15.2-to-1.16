@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/ai/behavior/VillagerPanicTrigger.java
++++ net/minecraft/world/entity/ai/behavior/VillagerPanicTrigger.java
+@@ -26,11 +26,11 @@
+             var5.eraseMemory(MemoryModuleType.LOOK_TARGET);
+             var5.eraseMemory(MemoryModuleType.BREED_TARGET);
+             var5.eraseMemory(MemoryModuleType.INTERACTION_TARGET);
+          }
+ 
+-         var5.setActivity(Activity.PANIC);
++         var5.setActiveActivityIfPossible(Activity.PANIC);
+       }
+ 
+    }
+ 
+    protected void tick(ServerLevel var1, Villager var2, long var3) {

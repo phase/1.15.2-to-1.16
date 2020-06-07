@@ -1,0 +1,13 @@
+--- net/minecraft/client/resources/sounds/ElytraOnPlayerSoundInstance.java
++++ net/minecraft/client/resources/sounds/ElytraOnPlayerSoundInstance.java
+@@ -42,9 +42,9 @@
+          } else {
+             this.pitch = 1.0F;
+          }
+ 
+       } else {
+-         this.stopped = true;
++         this.stop();
+       }
+    }
+ }

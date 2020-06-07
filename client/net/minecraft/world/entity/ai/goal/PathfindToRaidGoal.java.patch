@@ -1,0 +1,32 @@
+--- net/minecraft/world/entity/ai/goal/PathfindToRaidGoal.java
++++ net/minecraft/world/entity/ai/goal/PathfindToRaidGoal.java
+@@ -20,26 +20,26 @@
+       this.mob = var1;
+       this.setFlags(EnumSet.of(Goal.Flag.MOVE));
+    }
+ 
+    public boolean canUse() {
+-      return this.mob.getTarget() == null && !this.mob.isVehicle() && this.mob.hasActiveRaid() && !this.mob.getCurrentRaid().isOver() && !((ServerLevel)this.mob.level).isVillage(new BlockPos(this.mob));
++      return this.mob.getTarget() == null && !this.mob.isVehicle() && this.mob.hasActiveRaid() && !this.mob.getCurrentRaid().isOver() && !((ServerLevel)this.mob.level).isVillage(this.mob.blockPosition());
+    }
+ 
+    public boolean canContinueToUse() {
+-      return this.mob.hasActiveRaid() && !this.mob.getCurrentRaid().isOver() && this.mob.level instanceof ServerLevel && !((ServerLevel)this.mob.level).isVillage(new BlockPos(this.mob));
++      return this.mob.hasActiveRaid() && !this.mob.getCurrentRaid().isOver() && this.mob.level instanceof ServerLevel && !((ServerLevel)this.mob.level).isVillage(this.mob.blockPosition());
+    }
+ 
+    public void tick() {
+       if (this.mob.hasActiveRaid()) {
+          Raid var1 = this.mob.getCurrentRaid();
+          if (this.mob.tickCount % 20 == 0) {
+             this.recruitNearby(var1);
+          }
+ 
+          if (!this.mob.isPathFinding()) {
+-            Vec3 var2 = RandomPos.getPosTowards(this.mob, 15, 4, new Vec3(var1.getCenter()));
++            Vec3 var2 = RandomPos.getPosTowards(this.mob, 15, 4, Vec3.atBottomCenterOf(var1.getCenter()));
+             if (var2 != null) {
+                this.mob.getNavigation().moveTo(var2.x, var2.y, var2.z, 1.0D);
+             }
+          }
+       }

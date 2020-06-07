@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/block/state/properties/IntegerProperty.java
++++ net/minecraft/world/level/block/state/properties/IntegerProperty.java
+@@ -4,11 +4,11 @@
+ import com.google.common.collect.Sets;
+ import java.util.Collection;
+ import java.util.HashSet;
+ import java.util.Optional;
+ 
+-public class IntegerProperty extends AbstractProperty<Integer> {
++public class IntegerProperty extends Property<Integer> {
+    private final ImmutableSet<Integer> values;
+ 
+    protected IntegerProperty(String var1, int var2, int var3) {
+       super(var1, Integer.class);
+       if (var2 < 0) {

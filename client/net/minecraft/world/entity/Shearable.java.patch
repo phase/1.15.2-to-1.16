@@ -1,0 +1,12 @@
+--- net/minecraft/world/entity/Shearable.java
++++ net/minecraft/world/entity/Shearable.java
+@@ -1,0 +1,9 @@
++package net.minecraft.world.entity;
++
++import net.minecraft.sounds.SoundSource;
++
++public interface Shearable {
++   void shear(SoundSource var1);
++
++   boolean readyForShearing();
++}

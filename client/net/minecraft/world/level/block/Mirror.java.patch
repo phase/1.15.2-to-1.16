@@ -1,0 +1,37 @@
+--- net/minecraft/world/level/block/Mirror.java
++++ net/minecraft/world/level/block/Mirror.java
+@@ -1,15 +1,19 @@
+ package net.minecraft.world.level.block;
+ 
++import com.mojang.math.OctahedralGroup;
+ import net.minecraft.core.Direction;
+ 
+ public enum Mirror {
+-   NONE,
+-   LEFT_RIGHT,
+-   FRONT_BACK;
++   NONE(OctahedralGroup.IDENTITY),
++   LEFT_RIGHT(OctahedralGroup.INVERT_Z),
++   FRONT_BACK(OctahedralGroup.INVERT_X);
+ 
+-   private Mirror() {
++   private final OctahedralGroup rotation;
++
++   private Mirror(OctahedralGroup var3) {
++      this.rotation = var3;
+    }
+ 
+    public int mirror(int var1, int var2) {
+       int var3 = var2 / 2;
+       int var4 = var1 > var3 ? var1 - var2 : var1;
+@@ -33,6 +37,10 @@
+          return var1.getOpposite();
+       } else {
+          return this == LEFT_RIGHT && var1.getAxis() == Direction.Axis.Z ? var1.getOpposite() : var1;
+       }
+    }
++
++   public OctahedralGroup rotation() {
++      return this.rotation;
++   }
+ }

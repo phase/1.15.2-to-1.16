@@ -1,0 +1,59 @@
+--- net/minecraft/util/datafix/schemas/V99.java
++++ net/minecraft/util/datafix/schemas/V99.java
+@@ -1,15 +1,15 @@
+ package net.minecraft.util.datafix.schemas;
+ 
+ import com.google.common.collect.Maps;
+ import com.mojang.datafixers.DSL;
+ import com.mojang.datafixers.DataFixUtils;
+-import com.mojang.datafixers.Dynamic;
+ import com.mojang.datafixers.schemas.Schema;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.templates.Hook;
+ import com.mojang.datafixers.types.templates.TypeTemplate;
++import com.mojang.serialization.Dynamic;
++import com.mojang.serialization.DynamicOps;
+ import java.util.HashMap;
+ import java.util.Map;
+ import java.util.Objects;
+ import java.util.function.Function;
+ import java.util.function.Supplier;
+@@ -241,34 +241,35 @@
+       });
+       var1.registerType(true, References.ENTITY_TREE, () -> {
+          return DSL.optionalFields("Riding", References.ENTITY_TREE.in(var1), References.ENTITY.in(var1));
+       });
+       var1.registerType(false, References.ENTITY_NAME, () -> {
+-         return DSL.constType(DSL.namespacedString());
++         return DSL.constType(NamespacedSchema.namespacedString());
+       });
+       var1.registerType(true, References.ENTITY, () -> {
+          return DSL.taggedChoiceLazy("id", DSL.string(), var2);
+       });
+       var1.registerType(true, References.ITEM_STACK, () -> {
+          return DSL.hook(DSL.optionalFields("id", DSL.or(DSL.constType(DSL.intType()), References.ITEM_NAME.in(var1)), "tag", DSL.optionalFields("EntityTag", References.ENTITY_TREE.in(var1), "BlockEntityTag", References.BLOCK_ENTITY.in(var1), "CanDestroy", DSL.list(References.BLOCK_NAME.in(var1)), "CanPlaceOn", DSL.list(References.BLOCK_NAME.in(var1)))), ADD_NAMES, Hook.HookFunction.IDENTITY);
+       });
+       var1.registerType(false, References.OPTIONS, DSL::remainder);
+       var1.registerType(false, References.BLOCK_NAME, () -> {
+-         return DSL.or(DSL.constType(DSL.intType()), DSL.constType(DSL.namespacedString()));
++         return DSL.or(DSL.constType(DSL.intType()), DSL.constType(NamespacedSchema.namespacedString()));
+       });
+       var1.registerType(false, References.ITEM_NAME, () -> {
+-         return DSL.constType(DSL.namespacedString());
++         return DSL.constType(NamespacedSchema.namespacedString());
+       });
+       var1.registerType(false, References.STATS, DSL::remainder);
+       var1.registerType(false, References.SAVED_DATA, () -> {
+          return DSL.optionalFields("data", DSL.optionalFields("Features", DSL.compoundList(References.STRUCTURE_FEATURE.in(var1)), "Objectives", DSL.list(References.OBJECTIVE.in(var1)), "Teams", DSL.list(References.TEAM.in(var1))));
+       });
+       var1.registerType(false, References.STRUCTURE_FEATURE, DSL::remainder);
+       var1.registerType(false, References.OBJECTIVE, DSL::remainder);
+       var1.registerType(false, References.TEAM, DSL::remainder);
+       var1.registerType(true, References.UNTAGGED_SPAWNER, DSL::remainder);
+       var1.registerType(false, References.POI_CHUNK, DSL::remainder);
++      var1.registerType(true, References.WORLD_GEN_SETTINGS, DSL::remainder);
+    }
+ 
+    protected static <T> T addNames(Dynamic<T> var0, Map<String, String> var1, String var2) {
+       return var0.update("tag", (var3) -> {
+          return var3.update("BlockEntityTag", (var2x) -> {

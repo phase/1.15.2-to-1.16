@@ -1,0 +1,27 @@
+--- net/minecraft/world/level/chunk/PalettedContainer.java
++++ net/minecraft/world/level/chunk/PalettedContainer.java
+@@ -3,10 +3,11 @@
+ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+ import java.util.Arrays;
+ import java.util.Objects;
+ import java.util.concurrent.locks.ReentrantLock;
+ import java.util.function.Function;
++import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+ import net.minecraft.core.IdMapper;
+@@ -201,11 +202,11 @@
+ 
+    public int getSerializedSize() {
+       return 1 + this.palette.getSerializedSize() + FriendlyByteBuf.getVarIntSize(this.storage.getSize()) + this.storage.getRaw().length * 8;
+    }
+ 
+-   public boolean maybeHas(T var1) {
++   public boolean maybeHas(Predicate<T> var1) {
+       return this.palette.maybeHas(var1);
+    }
+ 
+    public void count(PalettedContainer.CountConsumer<T> var1) {
+       Int2IntOpenHashMap var2 = new Int2IntOpenHashMap();

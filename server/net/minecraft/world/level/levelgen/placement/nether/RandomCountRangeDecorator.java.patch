@@ -1,0 +1,23 @@
+--- net/minecraft/world/level/levelgen/placement/nether/RandomCountRangeDecorator.java
++++ net/minecraft/world/level/levelgen/placement/nether/RandomCountRangeDecorator.java
+@@ -1,18 +1,17 @@
+ package net.minecraft.world.level.levelgen.placement.nether;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.Codec;
+ import java.util.Random;
+-import java.util.function.Function;
+ import java.util.stream.IntStream;
+ import java.util.stream.Stream;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.world.level.levelgen.feature.configurations.CountRangeDecoratorConfiguration;
+ import net.minecraft.world.level.levelgen.placement.SimpleFeatureDecorator;
+ 
+ public class RandomCountRangeDecorator extends SimpleFeatureDecorator<CountRangeDecoratorConfiguration> {
+-   public RandomCountRangeDecorator(Function<Dynamic<?>, ? extends CountRangeDecoratorConfiguration> var1) {
++   public RandomCountRangeDecorator(Codec<CountRangeDecoratorConfiguration> var1) {
+       super(var1);
+    }
+ 
+    public Stream<BlockPos> place(Random var1, CountRangeDecoratorConfiguration var2, BlockPos var3) {
+       int var4 = var1.nextInt(Math.max(var2.count, 1));

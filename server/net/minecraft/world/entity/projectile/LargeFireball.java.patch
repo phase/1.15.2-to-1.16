@@ -1,0 +1,41 @@
+--- net/minecraft/world/entity/projectile/LargeFireball.java
++++ net/minecraft/world/entity/projectile/LargeFireball.java
+@@ -23,23 +23,30 @@
+    }
+ 
+    protected void onHit(HitResult var1) {
+       super.onHit(var1);
+       if (!this.level.isClientSide) {
+-         if (var1.getType() == HitResult.Type.ENTITY) {
+-            Entity var2 = ((EntityHitResult)var1).getEntity();
+-            var2.hurt(DamageSource.fireball(this, this.owner), 6.0F);
+-            this.doEnchantDamageEffects(this.owner, var2);
+-         }
+-
+-         boolean var3 = this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+-         this.level.explode((Entity)null, this.getX(), this.getY(), this.getZ(), (float)this.explosionPower, var3, var3 ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE);
++         boolean var2 = this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
++         this.level.explode((Entity)null, this.getX(), this.getY(), this.getZ(), (float)this.explosionPower, var2, var2 ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE);
+          this.remove();
+       }
+ 
+    }
+ 
++   protected void onHitEntity(EntityHitResult var1) {
++      super.onHitEntity(var1);
++      if (!this.level.isClientSide) {
++         Entity var2 = var1.getEntity();
++         Entity var3 = this.getOwner();
++         var2.hurt(DamageSource.fireball(this, var3), 6.0F);
++         if (var3 instanceof LivingEntity) {
++            this.doEnchantDamageEffects((LivingEntity)var3, var2);
++         }
++
++      }
++   }
++
+    public void addAdditionalSaveData(CompoundTag var1) {
+       super.addAdditionalSaveData(var1);
+       var1.putInt("ExplosionPower", this.explosionPower);
+    }
+ 

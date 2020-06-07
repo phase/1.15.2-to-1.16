@@ -1,0 +1,51 @@
+--- net/minecraft/server/network/ServerLoginPacketListenerImpl.java
++++ net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+@@ -66,11 +66,11 @@
+             this.delayedAcceptPlayer = null;
+          }
+       }
+ 
+       if (this.tick++ == 600) {
+-         this.disconnect(new TranslatableComponent("multiplayer.disconnect.slow_login", new Object[0]));
++         this.disconnect(new TranslatableComponent("multiplayer.disconnect.slow_login"));
+       }
+ 
+    }
+ 
+    public Connection getConnection() {
+@@ -158,20 +158,20 @@
+                   } else if (ServerLoginPacketListenerImpl.this.server.isSingleplayer()) {
+                      ServerLoginPacketListenerImpl.LOGGER.warn("Failed to verify username but will let them in anyway!");
+                      ServerLoginPacketListenerImpl.this.gameProfile = ServerLoginPacketListenerImpl.this.createFakeProfile(var1);
+                      ServerLoginPacketListenerImpl.this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
+                   } else {
+-                     ServerLoginPacketListenerImpl.this.disconnect(new TranslatableComponent("multiplayer.disconnect.unverified_username", new Object[0]));
++                     ServerLoginPacketListenerImpl.this.disconnect(new TranslatableComponent("multiplayer.disconnect.unverified_username"));
+                      ServerLoginPacketListenerImpl.LOGGER.error((String)"Username '{}' tried to join with an invalid session", (Object)var1.getName());
+                   }
+                } catch (AuthenticationUnavailableException var3) {
+                   if (ServerLoginPacketListenerImpl.this.server.isSingleplayer()) {
+                      ServerLoginPacketListenerImpl.LOGGER.warn("Authentication servers are down but will let them in anyway!");
+                      ServerLoginPacketListenerImpl.this.gameProfile = ServerLoginPacketListenerImpl.this.createFakeProfile(var1);
+                      ServerLoginPacketListenerImpl.this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
+                   } else {
+-                     ServerLoginPacketListenerImpl.this.disconnect(new TranslatableComponent("multiplayer.disconnect.authservers_down", new Object[0]));
++                     ServerLoginPacketListenerImpl.this.disconnect(new TranslatableComponent("multiplayer.disconnect.authservers_down"));
+                      ServerLoginPacketListenerImpl.LOGGER.error("Couldn't verify username because servers are unavailable");
+                   }
+                }
+ 
+             }
+@@ -186,11 +186,11 @@
+          var3.start();
+       }
+    }
+ 
+    public void handleCustomQueryPacket(ServerboundCustomQueryPacket var1) {
+-      this.disconnect(new TranslatableComponent("multiplayer.disconnect.unexpected_query_response", new Object[0]));
++      this.disconnect(new TranslatableComponent("multiplayer.disconnect.unexpected_query_response"));
+    }
+ 
+    protected GameProfile createFakeProfile(GameProfile var1) {
+       UUID var2 = Player.createPlayerUUID(var1.getName());
+       return new GameProfile(var2, var1.getName());

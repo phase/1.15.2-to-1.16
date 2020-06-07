@@ -1,0 +1,41 @@
+--- net/minecraft/world/level/BaseSpawner.java
++++ net/minecraft/world/level/BaseSpawner.java
+@@ -50,11 +50,11 @@
+ 
+       try {
+          return StringUtil.isNullOrEmpty(var1) ? null : new ResourceLocation(var1);
+       } catch (ResourceLocationException var4) {
+          BlockPos var3 = this.getPos();
+-         LOGGER.warn("Invalid entity id '{}' at spawner {}:[{},{},{}]", var1, this.getLevel().dimension.getType(), var3.getX(), var3.getY(), var3.getZ());
++         LOGGER.warn("Invalid entity id '{}' at spawner {}:[{},{},{}]", var1, this.getLevel().dimension().location(), var3.getX(), var3.getY(), var3.getZ());
+          return null;
+       }
+    }
+ 
+    public void setEntityId(EntityType<?> var1) {
+@@ -140,11 +140,11 @@
+                         if (!var17.checkSpawnRules(var1, MobSpawnType.SPAWNER) || !var17.checkSpawnObstruction(var1)) {
+                            break label97;
+                         }
+ 
+                         if (this.nextSpawnData.getTag().size() == 1 && this.nextSpawnData.getTag().contains("id", 8)) {
+-                           ((Mob)var15).finalizeSpawn(var1, var1.getCurrentDifficultyAt(new BlockPos(var15)), MobSpawnType.SPAWNER, (SpawnGroupData)null, (CompoundTag)null);
++                           ((Mob)var15).finalizeSpawn(var1, var1.getCurrentDifficultyAt(var15.blockPosition()), MobSpawnType.SPAWNER, (SpawnGroupData)null, (CompoundTag)null);
+                         }
+                      }
+ 
+                      this.addWithPassengers(var15);
+                      var1.levelEvent(2004, var2, 0);
+@@ -261,11 +261,11 @@
+    @Nullable
+    public Entity getOrCreateDisplayEntity() {
+       if (this.displayEntity == null) {
+          this.displayEntity = EntityType.loadEntityRecursive(this.nextSpawnData.getTag(), this.getLevel(), Function.identity());
+          if (this.nextSpawnData.getTag().size() == 1 && this.nextSpawnData.getTag().contains("id", 8) && this.displayEntity instanceof Mob) {
+-            ((Mob)this.displayEntity).finalizeSpawn(this.getLevel(), this.getLevel().getCurrentDifficultyAt(new BlockPos(this.displayEntity)), MobSpawnType.SPAWNER, (SpawnGroupData)null, (CompoundTag)null);
++            ((Mob)this.displayEntity).finalizeSpawn(this.getLevel(), this.getLevel().getCurrentDifficultyAt(this.displayEntity.blockPosition()), MobSpawnType.SPAWNER, (SpawnGroupData)null, (CompoundTag)null);
+          }
+       }
+ 
+       return this.displayEntity;
+    }

@@ -1,0 +1,90 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/OreConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/OreConfiguration.java
+@@ -1,52 +1,56 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
+ import java.util.Arrays;
+ import java.util.Map;
+ import java.util.function.Predicate;
+ import java.util.stream.Collectors;
+-import net.minecraft.world.level.block.Block;
++import net.minecraft.util.StringRepresentable;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.predicate.BlockPredicate;
+ 
+ public class OreConfiguration implements FeatureConfiguration {
++   public static final Codec<OreConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(OreConfiguration.Predicates.CODEC.fieldOf("target").forGetter((var0x) -> {
++         return var0x.target;
++      }), BlockState.CODEC.fieldOf("state").forGetter((var0x) -> {
++         return var0x.state;
++      }), Codec.INT.fieldOf("size").withDefault(0).forGetter((var0x) -> {
++         return var0x.size;
++      })).apply(var0, OreConfiguration::new);
++   });
+    public final OreConfiguration.Predicates target;
+    public final int size;
+    public final BlockState state;
+ 
+    public OreConfiguration(OreConfiguration.Predicates var1, BlockState var2, int var3) {
+       this.size = var3;
+       this.state = var2;
+       this.target = var1;
+    }
+ 
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("size"), var1.createInt(this.size), var1.createString("target"), var1.createString(this.target.getName()), var1.createString("state"), BlockState.serialize(var1, this.state).getValue())));
+-   }
+-
+-   public static OreConfiguration deserialize(Dynamic<?> var0) {
+-      int var1 = var0.get("size").asInt(0);
+-      OreConfiguration.Predicates var2 = OreConfiguration.Predicates.byName(var0.get("target").asString(""));
+-      BlockState var3 = (BlockState)var0.get("state").map(BlockState::deserialize).orElse(Blocks.AIR.defaultBlockState());
+-      return new OreConfiguration(var2, var3, var1);
+-   }
+-
+-   public static enum Predicates {
++   public static enum Predicates implements StringRepresentable {
+       NATURAL_STONE("natural_stone", (var0) -> {
+          if (var0 == null) {
+             return false;
+          } else {
+-            Block var1 = var0.getBlock();
+-            return var1 == Blocks.STONE || var1 == Blocks.GRANITE || var1 == Blocks.DIORITE || var1 == Blocks.ANDESITE;
++            return var0.is(Blocks.STONE) || var0.is(Blocks.GRANITE) || var0.is(Blocks.DIORITE) || var0.is(Blocks.ANDESITE);
+          }
+       }),
+-      NETHERRACK("netherrack", new BlockPredicate(Blocks.NETHERRACK));
++      NETHERRACK("netherrack", new BlockPredicate(Blocks.NETHERRACK)),
++      NETHER_ORE_REPLACEABLES("nether_ore_replaceables", (var0) -> {
++         if (var0 == null) {
++            return false;
++         } else {
++            return var0.is(Blocks.NETHERRACK) || var0.is(Blocks.BASALT) || var0.is(Blocks.BLACKSTONE);
++         }
++      });
+ 
++      public static final Codec<OreConfiguration.Predicates> CODEC = StringRepresentable.fromEnum(OreConfiguration.Predicates::values, OreConfiguration.Predicates::byName);
+       private static final Map<String, OreConfiguration.Predicates> BY_NAME = (Map)Arrays.stream(values()).collect(Collectors.toMap(OreConfiguration.Predicates::getName, (var0) -> {
+          return var0;
+       }));
+       private final String name;
+       private final Predicate<BlockState> predicate;
+@@ -65,7 +69,11 @@
+       }
+ 
+       public Predicate<BlockState> getPredicate() {
+          return this.predicate;
+       }
++
++      public String getSerializedName() {
++         return this.name;
++      }
+    }
+ }

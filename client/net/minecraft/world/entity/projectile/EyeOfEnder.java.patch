@@ -1,0 +1,47 @@
+--- net/minecraft/world/entity/projectile/EyeOfEnder.java
++++ net/minecraft/world/entity/projectile/EyeOfEnder.java
+@@ -107,29 +107,12 @@
+       Vec3 var1 = this.getDeltaMovement();
+       double var2 = this.getX() + var1.x;
+       double var4 = this.getY() + var1.y;
+       double var6 = this.getZ() + var1.z;
+       float var8 = Mth.sqrt(getHorizontalDistanceSqr(var1));
+-      this.yRot = (float)(Mth.atan2(var1.x, var1.z) * 57.2957763671875D);
+-
+-      for(this.xRot = (float)(Mth.atan2(var1.y, (double)var8) * 57.2957763671875D); this.xRot - this.xRotO < -180.0F; this.xRotO -= 360.0F) {
+-      }
+-
+-      while(this.xRot - this.xRotO >= 180.0F) {
+-         this.xRotO += 360.0F;
+-      }
+-
+-      while(this.yRot - this.yRotO < -180.0F) {
+-         this.yRotO -= 360.0F;
+-      }
+-
+-      while(this.yRot - this.yRotO >= 180.0F) {
+-         this.yRotO += 360.0F;
+-      }
+-
+-      this.xRot = Mth.lerp(0.2F, this.xRotO, this.xRot);
+-      this.yRot = Mth.lerp(0.2F, this.yRotO, this.yRot);
++      this.xRot = Projectile.lerpRotation(this.xRotO, (float)(Mth.atan2(var1.y, (double)var8) * 57.2957763671875D));
++      this.yRot = Projectile.lerpRotation(this.yRotO, (float)(Mth.atan2(var1.x, var1.z) * 57.2957763671875D));
+       if (!this.level.isClientSide) {
+          double var9 = this.tx - var2;
+          double var11 = this.tz - var6;
+          float var13 = (float)Math.sqrt(var9 * var9 + var11 * var11);
+          float var14 = (float)Mth.atan2(var11, var9);
+@@ -161,11 +144,11 @@
+             this.playSound(SoundEvents.ENDER_EYE_DEATH, 1.0F, 1.0F);
+             this.remove();
+             if (this.surviveAfterDeath) {
+                this.level.addFreshEntity(new ItemEntity(this.level, this.getX(), this.getY(), this.getZ(), this.getItem()));
+             } else {
+-               this.level.levelEvent(2003, new BlockPos(this), 0);
++               this.level.levelEvent(2003, this.blockPosition(), 0);
+             }
+          }
+       } else {
+          this.setPosRaw(var2, var4, var6);
+       }

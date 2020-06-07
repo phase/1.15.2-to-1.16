@@ -1,0 +1,39 @@
+--- net/minecraft/core/particles/SimpleParticleType.java
++++ net/minecraft/core/particles/SimpleParticleType.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.core.particles;
+ 
+ import com.mojang.brigadier.StringReader;
+ import com.mojang.brigadier.exceptions.CommandSyntaxException;
++import com.mojang.serialization.Codec;
+ import net.minecraft.core.Registry;
+ import net.minecraft.network.FriendlyByteBuf;
+ 
+ public class SimpleParticleType extends ParticleType<SimpleParticleType> implements ParticleOptions {
+    private static final ParticleOptions.Deserializer<SimpleParticleType> DESERIALIZER = new ParticleOptions.Deserializer<SimpleParticleType>() {
+@@ -13,19 +14,24 @@
+ 
+       public SimpleParticleType fromNetwork(ParticleType<SimpleParticleType> var1, FriendlyByteBuf var2) {
+          return (SimpleParticleType)var1;
+       }
+    };
++   private final Codec<SimpleParticleType> codec = Codec.unit(this::getType);
+ 
+    protected SimpleParticleType(boolean var1) {
+       super(var1, DESERIALIZER);
+    }
+ 
+-   public ParticleType<SimpleParticleType> getType() {
++   public SimpleParticleType getType() {
+       return this;
+    }
+ 
++   public Codec<SimpleParticleType> codec() {
++      return this.codec;
++   }
++
+    public void writeToNetwork(FriendlyByteBuf var1) {
+    }
+ 
+    public String writeToString() {
+       return Registry.PARTICLE_TYPE.getKey(this).toString();

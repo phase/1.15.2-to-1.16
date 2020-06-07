@@ -1,0 +1,92 @@
+--- net/minecraft/world/entity/raid/Raider.java
++++ net/minecraft/world/entity/raid/Raider.java
+@@ -83,11 +83,11 @@
+       if (this.level instanceof ServerLevel && this.isAlive()) {
+          Raid var1 = this.getCurrentRaid();
+          if (this.canJoinRaid()) {
+             if (var1 == null) {
+                if (this.level.getGameTime() % 20L == 0L) {
+-                  Raid var2 = ((ServerLevel)this.level).getRaidAt(new BlockPos(this));
++                  Raid var2 = ((ServerLevel)this.level).getRaidAt(this.blockPosition());
+                   if (var2 != null && Raids.canJoinRaid(this, var2)) {
+                      var2.joinRaid(var2.getGroupsSpawned(), this, (BlockPos)null, true);
+                   }
+                }
+             } else {
+@@ -120,11 +120,11 @@
+             }
+ 
+             var3.removeFromRaid(this, false);
+          }
+ 
+-         if (this.isPatrolLeader() && var3 == null && ((ServerLevel)this.level).getRaidAt(new BlockPos(this)) == null) {
++         if (this.isPatrolLeader() && var3 == null && ((ServerLevel)this.level).getRaidAt(this.blockPosition()) == null) {
+             ItemStack var4 = this.getItemBySlot(EquipmentSlot.HEAD);
+             Player var5 = null;
+             if (var2 instanceof Player) {
+                var5 = (Player)var2;
+             } else if (var2 instanceof Wolf) {
+@@ -144,11 +144,11 @@
+                   var5.removeEffectNoUpdate(MobEffects.BAD_OMEN);
+                } else {
+                   var12 = var11 - 1;
+                }
+ 
+-               var12 = Mth.clamp(var12, 0, 5);
++               var12 = Mth.clamp(var12, 0, 4);
+                MobEffectInstance var9 = new MobEffectInstance(MobEffects.BAD_OMEN, 120000, var12, false, false, true);
+                if (!this.level.getGameRules().getBoolean(GameRules.RULE_DISABLE_RAIDS)) {
+                   var5.addEffect(var9);
+                }
+             }
+@@ -225,10 +225,11 @@
+          double var6 = (double)this.getEquipmentDropChance(var4);
+          if (!var5.isEmpty() && (double)Math.max(this.random.nextFloat() - 0.1F, 0.0F) < var6) {
+             this.spawnAtLocation(var5);
+          }
+ 
++         this.onItemPickup(var1);
+          this.setItemSlot(var4, var2);
+          this.take(var1, var2.getCount());
+          var1.remove();
+          this.getCurrentRaid().setLeader(this.getWave(), this);
+          this.setPatrolLeader(true);
+@@ -241,11 +242,11 @@
+    public boolean removeWhenFarAway(double var1) {
+       return this.getCurrentRaid() == null ? super.removeWhenFarAway(var1) : false;
+    }
+ 
+    public boolean requiresCustomPersistence() {
+-      return this.getCurrentRaid() != null;
++      return super.requiresCustomPersistence() || this.getCurrentRaid() != null;
+    }
+ 
+    public int getTicksOutsideRaid() {
+       return this.ticksOutsideRaid;
+    }
+@@ -301,11 +302,11 @@
+          return this.raider.hasActiveRaid() && !this.raider.getCurrentRaid().isOver();
+       }
+ 
+       private boolean hasSuitablePoi() {
+          ServerLevel var1 = (ServerLevel)this.raider.level;
+-         BlockPos var2 = new BlockPos(this.raider);
++         BlockPos var2 = this.raider.blockPosition();
+          Optional var3 = var1.getPoiManager().getRandom((var0) -> {
+             return var0 == PoiType.HOME;
+          }, this::hasNotVisited, PoiManager.Occupancy.ANY, var2, 48, this.raider.random);
+          if (!var3.isPresent()) {
+             return false;
+@@ -337,11 +338,11 @@
+          this.stuck = false;
+       }
+ 
+       public void tick() {
+          if (this.raider.getNavigation().isDone()) {
+-            Vec3 var1 = new Vec3(this.poiPos);
++            Vec3 var1 = Vec3.atBottomCenterOf(this.poiPos);
+             Vec3 var2 = RandomPos.getPosTowards(this.raider, 16, 7, var1, 0.3141592741012573D);
+             if (var2 == null) {
+                var2 = RandomPos.getPosTowards(this.raider, 8, 7, var1);
+             }
+ 

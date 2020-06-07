@@ -1,0 +1,53 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/DiskConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/DiskConfiguration.java
+@@ -1,15 +1,25 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.datafixers.util.Function4;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
+ import java.util.List;
+-import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class DiskConfiguration implements FeatureConfiguration {
++   public static final Codec<DiskConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(BlockState.CODEC.fieldOf("state").forGetter((var0x) -> {
++         return var0x.state;
++      }), Codec.INT.fieldOf("radius").withDefault((int)0).forGetter((var0x) -> {
++         return var0x.radius;
++      }), Codec.INT.fieldOf("y_size").withDefault((int)0).forGetter((var0x) -> {
++         return var0x.ySize;
++      }), BlockState.CODEC.listOf().fieldOf("targets").forGetter((var0x) -> {
++         return var0x.targets;
++      })).apply(var0, (Function4)(DiskConfiguration::new));
++   });
+    public final BlockState state;
+    public final int radius;
+    public final int ySize;
+    public final List<BlockState> targets;
+ 
+@@ -17,20 +27,6 @@
+       this.state = var1;
+       this.radius = var2;
+       this.ySize = var3;
+       this.targets = var4;
+    }
+-
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("state"), BlockState.serialize(var1, this.state).getValue(), var1.createString("radius"), var1.createInt(this.radius), var1.createString("y_size"), var1.createInt(this.ySize), var1.createString("targets"), var1.createList(this.targets.stream().map((var1x) -> {
+-         return BlockState.serialize(var1, var1x).getValue();
+-      })))));
+-   }
+-
+-   public static <T> DiskConfiguration deserialize(Dynamic<T> var0) {
+-      BlockState var1 = (BlockState)var0.get("state").map(BlockState::deserialize).orElse(Blocks.AIR.defaultBlockState());
+-      int var2 = var0.get("radius").asInt(0);
+-      int var3 = var0.get("y_size").asInt(0);
+-      List var4 = var0.get("targets").asList(BlockState::deserialize);
+-      return new DiskConfiguration(var1, var2, var3, var4);
+-   }
+ }

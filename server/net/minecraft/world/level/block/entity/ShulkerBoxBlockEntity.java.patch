@@ -1,0 +1,38 @@
+--- net/minecraft/world/level/block/entity/ShulkerBoxBlockEntity.java
++++ net/minecraft/world/level/block/entity/ShulkerBoxBlockEntity.java
+@@ -211,16 +211,16 @@
+       }
+ 
+    }
+ 
+    protected Component getDefaultName() {
+-      return new TranslatableComponent("container.shulkerBox", new Object[0]);
++      return new TranslatableComponent("container.shulkerBox");
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
+-      this.loadFromTag(var1);
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
++      this.loadFromTag(var2);
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+       super.save(var1);
+       return this.saveToTag(var1);
+@@ -268,10 +268,14 @@
+ 
+    protected AbstractContainerMenu createMenu(int var1, Inventory var2) {
+       return new ShulkerBoxMenu(var1, var2, this);
+    }
+ 
++   public boolean isClosed() {
++      return this.animationStatus == ShulkerBoxBlockEntity.AnimationStatus.CLOSED;
++   }
++
+    public static enum AnimationStatus {
+       CLOSED,
+       OPENING,
+       OPENED,
+       CLOSING;

@@ -1,0 +1,249 @@
+--- net/minecraft/world/entity/projectile/FireworkRocketEntity.java
++++ net/minecraft/world/entity/projectile/FireworkRocketEntity.java
+@@ -12,25 +12,25 @@
+ import net.minecraft.network.syncher.EntityDataAccessor;
+ import net.minecraft.network.syncher.EntityDataSerializers;
+ import net.minecraft.network.syncher.SynchedEntityData;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+-import net.minecraft.util.Mth;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.MoverType;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.ClipContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.phys.BlockHitResult;
++import net.minecraft.world.phys.EntityHitResult;
+ import net.minecraft.world.phys.HitResult;
+ import net.minecraft.world.phys.Vec3;
+ 
+-public class FireworkRocketEntity extends Entity implements Projectile {
++public class FireworkRocketEntity extends Projectile {
+    private static final EntityDataAccessor<ItemStack> DATA_ID_FIREWORKS_ITEM;
+    private static final EntityDataAccessor<OptionalInt> DATA_ATTACHED_TO_TARGET;
+    private static final EntityDataAccessor<Boolean> DATA_SHOT_AT_ANGLE;
+    private int life;
+    private int lifetime;
+@@ -38,16 +38,10 @@
+ 
+    public FireworkRocketEntity(EntityType<? extends FireworkRocketEntity> var1, Level var2) {
+       super(var1, var2);
+    }
+ 
+-   protected void defineSynchedData() {
+-      this.entityData.define(DATA_ID_FIREWORKS_ITEM, ItemStack.EMPTY);
+-      this.entityData.define(DATA_ATTACHED_TO_TARGET, OptionalInt.empty());
+-      this.entityData.define(DATA_SHOT_AT_ANGLE, false);
+-   }
+-
+    public FireworkRocketEntity(Level var1, double var2, double var4, double var6, ItemStack var8) {
+       super(EntityType.FIREWORK_ROCKET, var1);
+       this.life = 0;
+       this.setPos(var2, var4, var6);
+       int var9 = 1;
+@@ -58,21 +52,37 @@
+ 
+       this.setDeltaMovement(this.random.nextGaussian() * 0.001D, 0.05D, this.random.nextGaussian() * 0.001D);
+       this.lifetime = 10 * var9 + this.random.nextInt(6) + this.random.nextInt(7);
+    }
+ 
++   public FireworkRocketEntity(Level var1, Entity var2, double var3, double var5, double var7, ItemStack var9) {
++      this(var1, var3, var5, var7, var9);
++      this.setOwner(var2);
++   }
++
+    public FireworkRocketEntity(Level var1, ItemStack var2, LivingEntity var3) {
+-      this(var1, var3.getX(), var3.getY(), var3.getZ(), var2);
++      this(var1, var3, var3.getX(), var3.getY(), var3.getZ(), var2);
+       this.entityData.set(DATA_ATTACHED_TO_TARGET, OptionalInt.of(var3.getId()));
+       this.attachedToEntity = var3;
+    }
+ 
+    public FireworkRocketEntity(Level var1, ItemStack var2, double var3, double var5, double var7, boolean var9) {
+       this(var1, var3, var5, var7, var2);
+       this.entityData.set(DATA_SHOT_AT_ANGLE, var9);
+    }
+ 
++   public FireworkRocketEntity(Level var1, ItemStack var2, Entity var3, double var4, double var6, double var8, boolean var10) {
++      this(var1, var2, var4, var6, var8, var10);
++      this.setOwner(var3);
++   }
++
++   protected void defineSynchedData() {
++      this.entityData.define(DATA_ID_FIREWORKS_ITEM, ItemStack.EMPTY);
++      this.entityData.define(DATA_ATTACHED_TO_TARGET, OptionalInt.empty());
++      this.entityData.define(DATA_SHOT_AT_ANGLE, false);
++   }
++
+    public void tick() {
+       super.tick();
+       Vec3 var1;
+       if (this.isAttachedToEntity()) {
+          if (this.attachedToEntity == null) {
+@@ -100,42 +110,22 @@
+       } else {
+          if (!this.isShotAtAngle()) {
+             this.setDeltaMovement(this.getDeltaMovement().multiply(1.15D, 1.0D, 1.15D).add(0.0D, 0.04D, 0.0D));
+          }
+ 
+-         this.move(MoverType.SELF, this.getDeltaMovement());
++         var1 = this.getDeltaMovement();
++         this.move(MoverType.SELF, var1);
++         this.setDeltaMovement(var1);
+       }
+ 
+-      var1 = this.getDeltaMovement();
+-      HitResult var7 = ProjectileUtil.getHitResult(this, this.getBoundingBox().expandTowards(var1).inflate(1.0D), (var0) -> {
+-         return !var0.isSpectator() && var0.isAlive() && var0.isPickable();
+-      }, ClipContext.Block.COLLIDER, true);
++      HitResult var7 = ProjectileUtil.getHitResult(this, this::canHitEntity, ClipContext.Block.COLLIDER);
+       if (!this.noPhysics) {
+-         this.performHitChecks(var7);
++         this.onHit(var7);
+          this.hasImpulse = true;
+       }
+ 
+-      float var3 = Mth.sqrt(getHorizontalDistanceSqr(var1));
+-      this.yRot = (float)(Mth.atan2(var1.x, var1.z) * 57.2957763671875D);
+-
+-      for(this.xRot = (float)(Mth.atan2(var1.y, (double)var3) * 57.2957763671875D); this.xRot - this.xRotO < -180.0F; this.xRotO -= 360.0F) {
+-      }
+-
+-      while(this.xRot - this.xRotO >= 180.0F) {
+-         this.xRotO += 360.0F;
+-      }
+-
+-      while(this.yRot - this.yRotO < -180.0F) {
+-         this.yRotO -= 360.0F;
+-      }
+-
+-      while(this.yRot - this.yRotO >= 180.0F) {
+-         this.yRotO += 360.0F;
+-      }
+-
+-      this.xRot = Mth.lerp(0.2F, this.xRotO, this.xRot);
+-      this.yRot = Mth.lerp(0.2F, this.yRotO, this.yRot);
++      this.updateRotation();
+       if (this.life == 0 && !this.isSilent()) {
+          this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.AMBIENT, 3.0F, 1.0F);
+       }
+ 
+       ++this.life;
+@@ -153,27 +143,25 @@
+       this.level.broadcastEntityEvent(this, (byte)17);
+       this.dealExplosionDamage();
+       this.remove();
+    }
+ 
+-   protected void performHitChecks(HitResult var1) {
+-      if (var1.getType() == HitResult.Type.ENTITY && !this.level.isClientSide) {
++   protected void onHitEntity(EntityHitResult var1) {
++      super.onHitEntity(var1);
++      if (!this.level.isClientSide) {
+          this.explode();
+-      } else if (this.collision) {
+-         BlockPos var2;
+-         if (var1.getType() == HitResult.Type.BLOCK) {
+-            var2 = new BlockPos(((BlockHitResult)var1).getBlockPos());
+-         } else {
+-            var2 = new BlockPos(this);
+-         }
++      }
++   }
+ 
+-         this.level.getBlockState(var2).entityInside(this.level, var2, this);
+-         if (this.hasExplosion()) {
+-            this.explode();
+-         }
++   protected void onHitBlock(BlockHitResult var1) {
++      BlockPos var2 = new BlockPos(var1.getBlockPos());
++      this.level.getBlockState(var2).entityInside(this.level, var2, this);
++      if (!this.level.isClientSide() && this.hasExplosion()) {
++         this.explode();
+       }
+ 
++      super.onHitBlock(var1);
+    }
+ 
+    private boolean hasExplosion() {
+       ItemStack var1 = (ItemStack)this.entityData.get(DATA_ID_FIREWORKS_ITEM);
+       CompoundTag var2 = var1.isEmpty() ? null : var1.getTagElement("Fireworks");
+@@ -190,11 +178,11 @@
+          var1 = 5.0F + (float)(var4.size() * 2);
+       }
+ 
+       if (var1 > 0.0F) {
+          if (this.attachedToEntity != null) {
+-            this.attachedToEntity.hurt(DamageSource.FIREWORKS, 5.0F + (float)(var4.size() * 2));
++            this.attachedToEntity.hurt(DamageSource.fireworks(this, this.getOwner()), 5.0F + (float)(var4.size() * 2));
+          }
+ 
+          double var5 = 5.0D;
+          Vec3 var7 = this.position();
+          List var8 = this.level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(5.0D));
+@@ -223,11 +211,11 @@
+                }
+             }
+ 
+             if (var11) {
+                float var15 = var1 * (float)Math.sqrt((5.0D - (double)this.distanceTo(var10)) / 5.0D);
+-               var10.hurt(DamageSource.FIREWORKS, var15);
++               var10.hurt(DamageSource.fireworks(this, this.getOwner()), var15);
+             }
+          }
+       }
+    }
+ 
+@@ -238,10 +226,11 @@
+    public boolean isShotAtAngle() {
+       return (Boolean)this.entityData.get(DATA_SHOT_AT_ANGLE);
+    }
+ 
+    public void addAdditionalSaveData(CompoundTag var1) {
++      super.addAdditionalSaveData(var1);
+       var1.putInt("Life", this.life);
+       var1.putInt("LifeTime", this.lifetime);
+       ItemStack var2 = (ItemStack)this.entityData.get(DATA_ID_FIREWORKS_ITEM);
+       if (!var2.isEmpty()) {
+          var1.put("FireworksItem", var2.save(new CompoundTag()));
+@@ -249,10 +238,11 @@
+ 
+       var1.putBoolean("ShotAtAngle", (Boolean)this.entityData.get(DATA_SHOT_AT_ANGLE));
+    }
+ 
+    public void readAdditionalSaveData(CompoundTag var1) {
++      super.readAdditionalSaveData(var1);
+       this.life = var1.getInt("Life");
+       this.lifetime = var1.getInt("LifeTime");
+       ItemStack var2 = ItemStack.of(var1.getCompound("FireworksItem"));
+       if (!var2.isEmpty()) {
+          this.entityData.set(DATA_ID_FIREWORKS_ITEM, var2);
+@@ -270,24 +260,10 @@
+ 
+    public Packet<?> getAddEntityPacket() {
+       return new ClientboundAddEntityPacket(this);
+    }
+ 
+-   public void shoot(double var1, double var3, double var5, float var7, float var8) {
+-      float var9 = Mth.sqrt(var1 * var1 + var3 * var3 + var5 * var5);
+-      var1 /= (double)var9;
+-      var3 /= (double)var9;
+-      var5 /= (double)var9;
+-      var1 += this.random.nextGaussian() * 0.007499999832361937D * (double)var8;
+-      var3 += this.random.nextGaussian() * 0.007499999832361937D * (double)var8;
+-      var5 += this.random.nextGaussian() * 0.007499999832361937D * (double)var8;
+-      var1 *= (double)var7;
+-      var3 *= (double)var7;
+-      var5 *= (double)var7;
+-      this.setDeltaMovement(var1, var3, var5);
+-   }
+-
+    static {
+       DATA_ID_FIREWORKS_ITEM = SynchedEntityData.defineId(FireworkRocketEntity.class, EntityDataSerializers.ITEM_STACK);
+       DATA_ATTACHED_TO_TARGET = SynchedEntityData.defineId(FireworkRocketEntity.class, EntityDataSerializers.OPTIONAL_UNSIGNED_INT);
+       DATA_SHOT_AT_ANGLE = SynchedEntityData.defineId(FireworkRocketEntity.class, EntityDataSerializers.BOOLEAN);
+    }

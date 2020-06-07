@@ -1,0 +1,32 @@
+--- net/minecraft/world/level/chunk/ProtoTickList.java
++++ net/minecraft/world/level/chunk/ProtoTickList.java
+@@ -2,16 +2,14 @@
+ 
+ import it.unimi.dsi.fastutil.shorts.ShortList;
+ import it.unimi.dsi.fastutil.shorts.ShortListIterator;
+ import java.util.function.Function;
+ import java.util.function.Predicate;
+-import java.util.stream.Stream;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.nbt.ListTag;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.TickList;
+-import net.minecraft.world.level.TickNextTickData;
+ import net.minecraft.world.level.TickPriority;
+ import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+ 
+ public class ProtoTickList<T> implements TickList<T> {
+    protected final Predicate<T> ignore;
+@@ -67,12 +65,6 @@
+    }
+ 
+    public boolean willTickThisTick(BlockPos var1, T var2) {
+       return false;
+    }
+-
+-   public void addAll(Stream<TickNextTickData<T>> var1) {
+-      var1.forEach((var1x) -> {
+-         this.scheduleTick(var1x.pos, var1x.getType(), 0, var1x.priority);
+-      });
+-   }
+ }

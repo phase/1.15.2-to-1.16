@@ -1,0 +1,40 @@
+--- net/minecraft/world/level/block/BeaconBlock.java
++++ net/minecraft/world/level/block/BeaconBlock.java
+@@ -10,15 +10,16 @@
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.phys.BlockHitResult;
+ 
+ public class BeaconBlock extends BaseEntityBlock implements BeaconBeamBlock {
+-   public BeaconBlock(Block.Properties var1) {
++   public BeaconBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public DyeColor getColor() {
+       return DyeColor.WHITE;
+@@ -36,18 +37,14 @@
+          if (var7 instanceof BeaconBlockEntity) {
+             var4.openMenu((BeaconBlockEntity)var7);
+             var4.awardStat(Stats.INTERACT_WITH_BEACON);
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+-   public boolean isRedstoneConductor(BlockState var1, BlockGetter var2, BlockPos var3) {
+-      return false;
+-   }
+-
+    public RenderShape getRenderShape(BlockState var1) {
+       return RenderShape.MODEL;
+    }
+ 
+    public void setPlacedBy(Level var1, BlockPos var2, BlockState var3, LivingEntity var4, ItemStack var5) {

@@ -1,0 +1,29 @@
+--- net/minecraft/world/level/biome/BadlandsBiome.java
++++ net/minecraft/world/level/biome/BadlandsBiome.java
+@@ -1,22 +1,18 @@
+ package net.minecraft.world.level.biome;
+ 
++import com.google.common.collect.ImmutableList;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.MobCategory;
+-import net.minecraft.world.level.levelgen.feature.Feature;
+-import net.minecraft.world.level.levelgen.feature.MineshaftFeature;
+-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.MineshaftConfiguration;
+ import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
+ 
+ public final class BadlandsBiome extends Biome {
+    public BadlandsBiome() {
+-      super((new Biome.BiomeBuilder()).surfaceBuilder(SurfaceBuilder.BADLANDS, SurfaceBuilder.CONFIG_BADLANDS).precipitation(Biome.Precipitation.NONE).biomeCategory(Biome.BiomeCategory.MESA).depth(0.1F).scale(0.2F).temperature(2.0F).downfall(0.0F).waterColor(4159204).waterFogColor(329011).parent((String)null));
+-      this.addStructureStart(Feature.MINESHAFT.configured(new MineshaftConfiguration(0.004D, MineshaftFeature.Type.MESA)));
+-      this.addStructureStart(Feature.STRONGHOLD.configured(FeatureConfiguration.NONE));
++      super((new Biome.BiomeBuilder()).surfaceBuilder(SurfaceBuilder.BADLANDS, SurfaceBuilder.CONFIG_BADLANDS).precipitation(Biome.Precipitation.NONE).biomeCategory(Biome.BiomeCategory.MESA).depth(0.1F).scale(0.2F).temperature(2.0F).downfall(0.0F).specialEffects((new BiomeSpecialEffects.Builder()).waterColor(4159204).waterFogColor(329011).fogColor(12638463).ambientMoodSound(AmbientMoodSettings.LEGACY_CAVE_SETTINGS).build()).parent((String)null).optimalParameters(ImmutableList.of(new Biome.ClimateParameters(-0.25F, -0.5F, 0.5F, 0.2F, 1.0F))));
++      BiomeDefaultFeatures.addDefaultOverworldLandMesaStructures(this);
++      this.addStructureStart(BiomeDefaultFeatures.RUINED_PORTAL_STANDARD);
+       BiomeDefaultFeatures.addDefaultCarvers(this);
+-      BiomeDefaultFeatures.addStructureFeaturePlacement(this);
+       BiomeDefaultFeatures.addDefaultLakes(this);
+       BiomeDefaultFeatures.addDefaultMonsterRoom(this);
+       BiomeDefaultFeatures.addDefaultUndergroundVariety(this);
+       BiomeDefaultFeatures.addDefaultOres(this);
+       BiomeDefaultFeatures.addExtraGold(this);

@@ -1,0 +1,16 @@
+--- net/minecraft/util/datafix/fixes/SimpleEntityRenameFix.java
++++ net/minecraft/util/datafix/fixes/SimpleEntityRenameFix.java
+@@ -1,12 +1,12 @@
+ package net.minecraft.util.datafix.fixes;
+ 
+ import com.mojang.datafixers.DSL;
+-import com.mojang.datafixers.Dynamic;
+ import com.mojang.datafixers.Typed;
+ import com.mojang.datafixers.schemas.Schema;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Dynamic;
+ 
+ public abstract class SimpleEntityRenameFix extends EntityRenameFix {
+    public SimpleEntityRenameFix(String var1, Schema var2, boolean var3) {
+       super(var1, var2, var3);
+    }

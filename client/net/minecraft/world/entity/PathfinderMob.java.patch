@@ -1,0 +1,30 @@
+--- net/minecraft/world/entity/PathfinderMob.java
++++ net/minecraft/world/entity/PathfinderMob.java
+@@ -19,24 +19,24 @@
+    public float getWalkTargetValue(BlockPos var1, LevelReader var2) {
+       return 0.0F;
+    }
+ 
+    public boolean checkSpawnRules(LevelAccessor var1, MobSpawnType var2) {
+-      return this.getWalkTargetValue(new BlockPos(this), var1) >= 0.0F;
++      return this.getWalkTargetValue(this.blockPosition(), var1) >= 0.0F;
+    }
+ 
+    public boolean isPathFinding() {
+       return !this.getNavigation().isDone();
+    }
+ 
+    protected void tickLeash() {
+       super.tickLeash();
+       Entity var1 = this.getLeashHolder();
+       if (var1 != null && var1.level == this.level) {
+-         this.restrictTo(new BlockPos(var1), 5);
++         this.restrictTo(var1.blockPosition(), 5);
+          float var2 = this.distanceTo(var1);
+-         if (this instanceof TamableAnimal && ((TamableAnimal)this).isSitting()) {
++         if (this instanceof TamableAnimal && ((TamableAnimal)this).isInSittingPose()) {
+             if (var2 > 10.0F) {
+                this.dropLeash(true, true);
+             }
+ 
+             return;

@@ -1,0 +1,153 @@
+--- net/minecraft/world/level/levelgen/Heightmap.java
++++ net/minecraft/world/level/levelgen/Heightmap.java
+@@ -1,17 +1,20 @@
+ package net.minecraft.world.level.levelgen;
+ 
+ import com.google.common.collect.Maps;
++import com.mojang.serialization.Codec;
+ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+ import it.unimi.dsi.fastutil.objects.ObjectListIterator;
+ import java.util.Iterator;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.function.Predicate;
++import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.util.BitStorage;
++import net.minecraft.util.StringRepresentable;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.LeavesBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+ 
+@@ -34,60 +37,41 @@
+    public static void primeHeightmaps(ChunkAccess var0, Set<Heightmap.Types> var1) {
+       int var2 = var1.size();
+       ObjectArrayList var3 = new ObjectArrayList(var2);
+       ObjectListIterator var4 = var3.iterator();
+       int var5 = var0.getHighestSectionPosition() + 16;
+-      BlockPos.PooledMutableBlockPos var6 = BlockPos.PooledMutableBlockPos.acquire();
+-      Throwable var7 = null;
++      BlockPos.MutableBlockPos var6 = new BlockPos.MutableBlockPos();
+ 
+-      try {
++      for(int var7 = 0; var7 < 16; ++var7) {
+          for(int var8 = 0; var8 < 16; ++var8) {
+-            for(int var9 = 0; var9 < 16; ++var9) {
+-               Iterator var10 = var1.iterator();
++            Iterator var9 = var1.iterator();
+ 
+-               while(var10.hasNext()) {
+-                  Heightmap.Types var11 = (Heightmap.Types)var10.next();
+-                  var3.add(var0.getOrCreateHeightmapUnprimed(var11));
+-               }
++            while(var9.hasNext()) {
++               Heightmap.Types var10 = (Heightmap.Types)var9.next();
++               var3.add(var0.getOrCreateHeightmapUnprimed(var10));
++            }
+ 
+-               for(int var22 = var5 - 1; var22 >= 0; --var22) {
+-                  var6.set(var8, var22, var9);
+-                  BlockState var23 = var0.getBlockState(var6);
+-                  if (var23.getBlock() != Blocks.AIR) {
+-                     while(var4.hasNext()) {
+-                        Heightmap var12 = (Heightmap)var4.next();
+-                        if (var12.isOpaque.test(var23)) {
+-                           var12.setHeight(var8, var9, var22 + 1);
+-                           var4.remove();
+-                        }
++            for(int var12 = var5 - 1; var12 >= 0; --var12) {
++               var6.set(var7, var12, var8);
++               BlockState var13 = var0.getBlockState(var6);
++               if (!var13.is(Blocks.AIR)) {
++                  while(var4.hasNext()) {
++                     Heightmap var11 = (Heightmap)var4.next();
++                     if (var11.isOpaque.test(var13)) {
++                        var11.setHeight(var7, var8, var12 + 1);
++                        var4.remove();
+                      }
++                  }
+ 
+-                     if (var3.isEmpty()) {
+-                        break;
+-                     }
+-
+-                     var4.back(var2);
++                  if (var3.isEmpty()) {
++                     break;
+                   }
++
++                  var4.back(var2);
+                }
+             }
+          }
+-      } catch (Throwable var20) {
+-         var7 = var20;
+-         throw var20;
+-      } finally {
+-         if (var6 != null) {
+-            if (var7 != null) {
+-               try {
+-                  var6.close();
+-               } catch (Throwable var19) {
+-                  var7.addSuppressed(var19);
+-               }
+-            } else {
+-               var6.close();
+-            }
+-         }
+-
+       }
+ 
+    }
+ 
+    public boolean update(int var1, int var2, int var3, BlockState var4) {
+@@ -141,11 +125,11 @@
+ 
+    private static int getIndex(int var0, int var1) {
+       return var0 + var1 * 16;
+    }
+ 
+-   public static enum Types {
++   public static enum Types implements StringRepresentable {
+       WORLD_SURFACE_WG("WORLD_SURFACE_WG", Heightmap.Usage.WORLDGEN, Heightmap.NOT_AIR),
+       WORLD_SURFACE("WORLD_SURFACE", Heightmap.Usage.CLIENT, Heightmap.NOT_AIR),
+       OCEAN_FLOOR_WG("OCEAN_FLOOR_WG", Heightmap.Usage.WORLDGEN, Heightmap.MATERIAL_MOTION_BLOCKING),
+       OCEAN_FLOOR("OCEAN_FLOOR", Heightmap.Usage.LIVE_WORLD, Heightmap.MATERIAL_MOTION_BLOCKING),
+       MOTION_BLOCKING("MOTION_BLOCKING", Heightmap.Usage.CLIENT, (var0) -> {
+@@ -153,10 +137,11 @@
+       }),
+       MOTION_BLOCKING_NO_LEAVES("MOTION_BLOCKING_NO_LEAVES", Heightmap.Usage.LIVE_WORLD, (var0) -> {
+          return (var0.getMaterial().blocksMotion() || !var0.getFluidState().isEmpty()) && !(var0.getBlock() instanceof LeavesBlock);
+       });
+ 
++      public static final Codec<Heightmap.Types> CODEC = StringRepresentable.fromEnum(Heightmap.Types::values, Heightmap.Types::getFromKey);
+       private final String serializationKey;
+       private final Heightmap.Usage usage;
+       private final Predicate<BlockState> isOpaque;
+       private static final Map<String, Heightmap.Types> REVERSE_LOOKUP = (Map)Util.make(Maps.newHashMap(), (var0) -> {
+          Heightmap.Types[] var1 = values();
+@@ -185,17 +170,22 @@
+ 
+       public boolean keepAfterWorldgen() {
+          return this.usage != Heightmap.Usage.WORLDGEN;
+       }
+ 
++      @Nullable
+       public static Heightmap.Types getFromKey(String var0) {
+          return (Heightmap.Types)REVERSE_LOOKUP.get(var0);
+       }
+ 
+       public Predicate<BlockState> isOpaque() {
+          return this.isOpaque;
+       }
++
++      public String getSerializedName() {
++         return this.serializationKey;
++      }
+    }
+ 
+    public static enum Usage {
+       WORLDGEN,
+       LIVE_WORLD,

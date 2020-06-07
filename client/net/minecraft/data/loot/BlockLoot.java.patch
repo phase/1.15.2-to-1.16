@@ -1,0 +1,308 @@
+--- net/minecraft/data/loot/BlockLoot.java
++++ net/minecraft/data/loot/BlockLoot.java
+@@ -245,10 +245,12 @@
+       this.dropSelf(Blocks.STRIPPED_BIRCH_LOG);
+       this.dropSelf(Blocks.STRIPPED_JUNGLE_LOG);
+       this.dropSelf(Blocks.STRIPPED_ACACIA_LOG);
+       this.dropSelf(Blocks.STRIPPED_DARK_OAK_LOG);
+       this.dropSelf(Blocks.STRIPPED_OAK_LOG);
++      this.dropSelf(Blocks.STRIPPED_WARPED_STEM);
++      this.dropSelf(Blocks.STRIPPED_CRIMSON_STEM);
+       this.dropSelf(Blocks.OAK_WOOD);
+       this.dropSelf(Blocks.SPRUCE_WOOD);
+       this.dropSelf(Blocks.BIRCH_WOOD);
+       this.dropSelf(Blocks.JUNGLE_WOOD);
+       this.dropSelf(Blocks.ACACIA_WOOD);
+@@ -257,10 +259,12 @@
+       this.dropSelf(Blocks.STRIPPED_SPRUCE_WOOD);
+       this.dropSelf(Blocks.STRIPPED_BIRCH_WOOD);
+       this.dropSelf(Blocks.STRIPPED_JUNGLE_WOOD);
+       this.dropSelf(Blocks.STRIPPED_ACACIA_WOOD);
+       this.dropSelf(Blocks.STRIPPED_DARK_OAK_WOOD);
++      this.dropSelf(Blocks.STRIPPED_CRIMSON_HYPHAE);
++      this.dropSelf(Blocks.STRIPPED_WARPED_HYPHAE);
+       this.dropSelf(Blocks.SPONGE);
+       this.dropSelf(Blocks.WET_SPONGE);
+       this.dropSelf(Blocks.LAPIS_BLOCK);
+       this.dropSelf(Blocks.SANDSTONE);
+       this.dropSelf(Blocks.CHISELED_SANDSTONE);
+@@ -304,10 +308,11 @@
+       this.dropSelf(Blocks.GOLD_BLOCK);
+       this.dropSelf(Blocks.IRON_BLOCK);
+       this.dropSelf(Blocks.BRICKS);
+       this.dropSelf(Blocks.MOSSY_COBBLESTONE);
+       this.dropSelf(Blocks.OBSIDIAN);
++      this.dropSelf(Blocks.CRYING_OBSIDIAN);
+       this.dropSelf(Blocks.TORCH);
+       this.dropSelf(Blocks.OAK_STAIRS);
+       this.dropSelf(Blocks.REDSTONE_WIRE);
+       this.dropSelf(Blocks.DIAMOND_BLOCK);
+       this.dropSelf(Blocks.CRAFTING_TABLE);
+@@ -335,10 +340,14 @@
+       this.dropSelf(Blocks.JUKEBOX);
+       this.dropSelf(Blocks.OAK_FENCE);
+       this.dropSelf(Blocks.PUMPKIN);
+       this.dropSelf(Blocks.NETHERRACK);
+       this.dropSelf(Blocks.SOUL_SAND);
++      this.dropSelf(Blocks.SOUL_SOIL);
++      this.dropSelf(Blocks.BASALT);
++      this.dropSelf(Blocks.POLISHED_BASALT);
++      this.dropSelf(Blocks.SOUL_TORCH);
+       this.dropSelf(Blocks.CARVED_PUMPKIN);
+       this.dropSelf(Blocks.JACK_O_LANTERN);
+       this.dropSelf(Blocks.REPEATER);
+       this.dropSelf(Blocks.OAK_TRAPDOOR);
+       this.dropSelf(Blocks.SPRUCE_TRAPDOOR);
+@@ -465,10 +474,11 @@
+       this.dropSelf(Blocks.MAGMA_BLOCK);
+       this.dropSelf(Blocks.NETHER_WART_BLOCK);
+       this.dropSelf(Blocks.RED_NETHER_BRICKS);
+       this.dropSelf(Blocks.BONE_BLOCK);
+       this.dropSelf(Blocks.OBSERVER);
++      this.dropSelf(Blocks.TARGET);
+       this.dropSelf(Blocks.WHITE_GLAZED_TERRACOTTA);
+       this.dropSelf(Blocks.ORANGE_GLAZED_TERRACOTTA);
+       this.dropSelf(Blocks.MAGENTA_GLAZED_TERRACOTTA);
+       this.dropSelf(Blocks.LIGHT_BLUE_GLAZED_TERRACOTTA);
+       this.dropSelf(Blocks.YELLOW_GLAZED_TERRACOTTA);
+@@ -553,10 +563,57 @@
+       this.dropSelf(Blocks.DIORITE_WALL);
+       this.dropSelf(Blocks.LOOM);
+       this.dropSelf(Blocks.SCAFFOLDING);
+       this.dropSelf(Blocks.HONEY_BLOCK);
+       this.dropSelf(Blocks.HONEYCOMB_BLOCK);
++      this.dropSelf(Blocks.RESPAWN_ANCHOR);
++      this.dropSelf(Blocks.LODESTONE);
++      this.dropSelf(Blocks.WARPED_STEM);
++      this.dropSelf(Blocks.WARPED_HYPHAE);
++      this.dropSelf(Blocks.WARPED_FUNGUS);
++      this.dropSelf(Blocks.WARPED_WART_BLOCK);
++      this.dropSelf(Blocks.WARPED_ROOTS);
++      this.dropSelf(Blocks.CRIMSON_STEM);
++      this.dropSelf(Blocks.CRIMSON_HYPHAE);
++      this.dropSelf(Blocks.CRIMSON_FUNGUS);
++      this.dropSelf(Blocks.SHROOMLIGHT);
++      this.dropSelf(Blocks.CRIMSON_ROOTS);
++      this.dropSelf(Blocks.CRIMSON_PLANKS);
++      this.dropSelf(Blocks.WARPED_PLANKS);
++      this.dropSelf(Blocks.WARPED_PRESSURE_PLATE);
++      this.dropSelf(Blocks.WARPED_FENCE);
++      this.dropSelf(Blocks.WARPED_TRAPDOOR);
++      this.dropSelf(Blocks.WARPED_FENCE_GATE);
++      this.dropSelf(Blocks.WARPED_STAIRS);
++      this.dropSelf(Blocks.WARPED_BUTTON);
++      this.dropSelf(Blocks.WARPED_SIGN);
++      this.dropSelf(Blocks.CRIMSON_PRESSURE_PLATE);
++      this.dropSelf(Blocks.CRIMSON_FENCE);
++      this.dropSelf(Blocks.CRIMSON_TRAPDOOR);
++      this.dropSelf(Blocks.CRIMSON_FENCE_GATE);
++      this.dropSelf(Blocks.CRIMSON_STAIRS);
++      this.dropSelf(Blocks.CRIMSON_BUTTON);
++      this.dropSelf(Blocks.CRIMSON_SIGN);
++      this.dropSelf(Blocks.NETHERITE_BLOCK);
++      this.dropSelf(Blocks.ANCIENT_DEBRIS);
++      this.dropSelf(Blocks.BLACKSTONE);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE_BRICKS);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE_BRICK_STAIRS);
++      this.dropSelf(Blocks.BLACKSTONE_STAIRS);
++      this.dropSelf(Blocks.BLACKSTONE_WALL);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE_BRICK_WALL);
++      this.dropSelf(Blocks.CHISELED_POLISHED_BLACKSTONE);
++      this.dropSelf(Blocks.CRACKED_POLISHED_BLACKSTONE_BRICKS);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE_STAIRS);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE_PRESSURE_PLATE);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE_BUTTON);
++      this.dropSelf(Blocks.POLISHED_BLACKSTONE_WALL);
++      this.dropSelf(Blocks.CHISELED_NETHER_BRICKS);
++      this.dropSelf(Blocks.CRACKED_NETHER_BRICKS);
++      this.dropSelf(Blocks.QUARTZ_BRICKS);
++      this.dropSelf(Blocks.CHAIN);
+       this.dropOther(Blocks.FARMLAND, Blocks.DIRT);
+       this.dropOther(Blocks.TRIPWIRE, Items.STRING);
+       this.dropOther(Blocks.GRASS_PATH, Blocks.DIRT);
+       this.dropOther(Blocks.KELP_PLANT, Blocks.KELP);
+       this.dropOther(Blocks.BAMBOO_SAPLING, Blocks.BAMBOO);
+@@ -585,10 +642,16 @@
+          return createSingleItemTableWithSilkTouch(var0, Blocks.DEAD_FIRE_CORAL_BLOCK);
+       });
+       this.add(Blocks.HORN_CORAL_BLOCK, (var0) -> {
+          return createSingleItemTableWithSilkTouch(var0, Blocks.DEAD_HORN_CORAL_BLOCK);
+       });
++      this.add(Blocks.CRIMSON_NYLIUM, (var0) -> {
++         return createSingleItemTableWithSilkTouch(var0, Blocks.NETHERRACK);
++      });
++      this.add(Blocks.WARPED_NYLIUM, (var0) -> {
++         return createSingleItemTableWithSilkTouch(var0, Blocks.NETHERRACK);
++      });
+       this.add(Blocks.BOOKSHELF, (var0) -> {
+          return createSingleItemTableWithSilkTouch(var0, Items.BOOK, ConstantIntValue.exactly(3));
+       });
+       this.add(Blocks.CLAY, (var0) -> {
+          return createSingleItemTableWithSilkTouch(var0, Items.CLAY_BALL, ConstantIntValue.exactly(4));
+@@ -623,10 +686,14 @@
+       this.dropPottedContents(Blocks.POTTED_RED_MUSHROOM);
+       this.dropPottedContents(Blocks.POTTED_BROWN_MUSHROOM);
+       this.dropPottedContents(Blocks.POTTED_DEAD_BUSH);
+       this.dropPottedContents(Blocks.POTTED_CACTUS);
+       this.dropPottedContents(Blocks.POTTED_BAMBOO);
++      this.dropPottedContents(Blocks.POTTED_CRIMSON_FUNGUS);
++      this.dropPottedContents(Blocks.POTTED_WARPED_FUNGUS);
++      this.dropPottedContents(Blocks.POTTED_CRIMSON_ROOTS);
++      this.dropPottedContents(Blocks.POTTED_WARPED_ROOTS);
+       this.add(Blocks.ACACIA_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.BIRCH_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.BRICK_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.COBBLESTONE_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.DARK_OAK_SLAB, BlockLoot::createSlabItemTable);
+@@ -658,31 +725,24 @@
+       this.add(Blocks.GRANITE_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.ANDESITE_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.RED_NETHER_BRICK_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.POLISHED_ANDESITE_SLAB, BlockLoot::createSlabItemTable);
+       this.add(Blocks.DIORITE_SLAB, BlockLoot::createSlabItemTable);
+-      this.add(Blocks.ACACIA_DOOR, (var0) -> {
+-         return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
+-      });
+-      this.add(Blocks.BIRCH_DOOR, (var0) -> {
+-         return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
+-      });
+-      this.add(Blocks.DARK_OAK_DOOR, (var0) -> {
+-         return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
+-      });
+-      this.add(Blocks.IRON_DOOR, (var0) -> {
+-         return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
+-      });
+-      this.add(Blocks.JUNGLE_DOOR, (var0) -> {
+-         return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
+-      });
+-      this.add(Blocks.OAK_DOOR, (var0) -> {
+-         return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
+-      });
+-      this.add(Blocks.SPRUCE_DOOR, (var0) -> {
+-         return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
+-      });
++      this.add(Blocks.CRIMSON_SLAB, BlockLoot::createSlabItemTable);
++      this.add(Blocks.WARPED_SLAB, BlockLoot::createSlabItemTable);
++      this.add(Blocks.BLACKSTONE_SLAB, BlockLoot::createSlabItemTable);
++      this.add(Blocks.POLISHED_BLACKSTONE_BRICK_SLAB, BlockLoot::createSlabItemTable);
++      this.add(Blocks.POLISHED_BLACKSTONE_SLAB, BlockLoot::createSlabItemTable);
++      this.add(Blocks.ACACIA_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.BIRCH_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.DARK_OAK_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.IRON_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.JUNGLE_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.OAK_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.SPRUCE_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.WARPED_DOOR, BlockLoot::createDoorTable);
++      this.add(Blocks.CRIMSON_DOOR, BlockLoot::createDoorTable);
+       this.add(Blocks.BLACK_BED, (var0) -> {
+          return createSinglePropConditionTable(var0, BedBlock.PART, BedPart.HEAD);
+       });
+       this.add(Blocks.BLUE_BED, (var0) -> {
+          return createSinglePropConditionTable(var0, BedBlock.PART, BedPart.HEAD);
+@@ -769,10 +829,11 @@
+       this.add(Blocks.LECTERN, BlockLoot::createNameableBlockEntityTable);
+       this.add(Blocks.SMITHING_TABLE, BlockLoot::createNameableBlockEntityTable);
+       this.add(Blocks.STONECUTTER, BlockLoot::createNameableBlockEntityTable);
+       this.add(Blocks.BELL, BlockLoot::createSingleItemTable);
+       this.add(Blocks.LANTERN, BlockLoot::createSingleItemTable);
++      this.add(Blocks.SOUL_LANTERN, BlockLoot::createSingleItemTable);
+       this.add(Blocks.SHULKER_BOX, BlockLoot::createShulkerBoxDrop);
+       this.add(Blocks.BLACK_SHULKER_BOX, BlockLoot::createShulkerBoxDrop);
+       this.add(Blocks.BLUE_SHULKER_BOX, BlockLoot::createShulkerBoxDrop);
+       this.add(Blocks.BROWN_SHULKER_BOX, BlockLoot::createShulkerBoxDrop);
+       this.add(Blocks.CYAN_SHULKER_BOX, BlockLoot::createShulkerBoxDrop);
+@@ -803,11 +864,11 @@
+       this.add(Blocks.PURPLE_BANNER, BlockLoot::createBannerDrop);
+       this.add(Blocks.RED_BANNER, BlockLoot::createBannerDrop);
+       this.add(Blocks.WHITE_BANNER, BlockLoot::createBannerDrop);
+       this.add(Blocks.YELLOW_BANNER, BlockLoot::createBannerDrop);
+       this.add(Blocks.PLAYER_HEAD, (var0) -> {
+-         return LootTable.lootTable().withPool((LootPool.Builder)applyExplosionCondition(var0, LootPool.lootPool().setRolls(ConstantIntValue.exactly(1)).add(LootItem.lootTableItem(var0).apply(CopyNbtFunction.copyData(CopyNbtFunction.DataSource.BLOCK_ENTITY).copy("Owner", "SkullOwner")))));
++         return LootTable.lootTable().withPool((LootPool.Builder)applyExplosionCondition(var0, LootPool.lootPool().setRolls(ConstantIntValue.exactly(1)).add(LootItem.lootTableItem(var0).apply(CopyNbtFunction.copyData(CopyNbtFunction.DataSource.BLOCK_ENTITY).copy("SkullOwner", "SkullOwner")))));
+       });
+       this.add(Blocks.BEE_NEST, BlockLoot::createBeeNestDrop);
+       this.add(Blocks.BEEHIVE, BlockLoot::createBeeHiveDrop);
+       this.add(Blocks.BIRCH_LEAVES, (var0) -> {
+          return createLeavesDrops(var0, Blocks.BIRCH_SAPLING, NORMAL_LEAVES_SAPLING_CHANCES);
+@@ -854,19 +915,23 @@
+          return createOreDrop(var0, Items.QUARTZ);
+       });
+       this.add(Blocks.DIAMOND_ORE, (var0) -> {
+          return createOreDrop(var0, Items.DIAMOND);
+       });
++      this.add(Blocks.NETHER_GOLD_ORE, (var0) -> {
++         return createSilkTouchDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionDecay(var0, LootItem.lootTableItem(Items.GOLD_NUGGET).apply(SetItemCountFunction.setCount(RandomValueBounds.between(2.0F, 6.0F))).apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))));
++      });
+       this.add(Blocks.LAPIS_ORE, (var0) -> {
+          return createSilkTouchDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionDecay(var0, LootItem.lootTableItem(Items.LAPIS_LAZULI).apply(SetItemCountFunction.setCount(RandomValueBounds.between(4.0F, 9.0F))).apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))));
+       });
+       this.add(Blocks.COBWEB, (var0) -> {
+          return createSilkTouchOrShearsDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionCondition(var0, LootItem.lootTableItem(Items.STRING)));
+       });
+       this.add(Blocks.DEAD_BUSH, (var0) -> {
+          return createShearsDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionDecay(var0, LootItem.lootTableItem(Items.STICK).apply(SetItemCountFunction.setCount(RandomValueBounds.between(0.0F, 2.0F)))));
+       });
++      this.add(Blocks.NETHER_SPROUTS, BlockLoot::createShearsOnlyDrop);
+       this.add(Blocks.SEAGRASS, BlockLoot::createShearsOnlyDrop);
+       this.add(Blocks.VINE, BlockLoot::createShearsOnlyDrop);
+       this.add(Blocks.TALL_SEAGRASS, createShearsOnlyDrop(Blocks.SEAGRASS));
+       this.add(Blocks.LARGE_FERN, (var0) -> {
+          return createShearsDispatchTable(Blocks.FERN, ((LootPoolSingletonContainer.Builder)((LootPoolSingletonContainer.Builder)applyExplosionCondition(var0, LootItem.lootTableItem(Items.WHEAT_SEEDS))).when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(var0).setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(DoublePlantBlock.HALF, (Comparable)DoubleBlockHalf.LOWER)))).when(LootItemRandomChanceCondition.randomChance(0.125F)));
+@@ -911,10 +976,16 @@
+          return createSilkTouchDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionCondition(var0, ((LootPoolSingletonContainer.Builder)LootItem.lootTableItem(Items.FLINT).when(BonusLevelTableCondition.bonusLevelFlatChance(Enchantments.BLOCK_FORTUNE, 0.1F, 0.14285715F, 0.25F, 1.0F))).otherwise(LootItem.lootTableItem(var0))));
+       });
+       this.add(Blocks.CAMPFIRE, (var0) -> {
+          return createSilkTouchDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionCondition(var0, LootItem.lootTableItem(Items.CHARCOAL).apply(SetItemCountFunction.setCount(ConstantIntValue.exactly(2)))));
+       });
++      this.add(Blocks.GILDED_BLACKSTONE, (var0) -> {
++         return createSilkTouchDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionCondition(var0, ((LootPoolSingletonContainer.Builder)LootItem.lootTableItem(Items.GOLD_NUGGET).apply(SetItemCountFunction.setCount(RandomValueBounds.between(2.0F, 5.0F))).when(BonusLevelTableCondition.bonusLevelFlatChance(Enchantments.BLOCK_FORTUNE, 0.1F, 0.14285715F, 0.25F, 1.0F))).otherwise(LootItem.lootTableItem(var0))));
++      });
++      this.add(Blocks.SOUL_CAMPFIRE, (var0) -> {
++         return createSilkTouchDispatchTable(var0, (LootPoolEntryContainer.Builder)applyExplosionCondition(var0, LootItem.lootTableItem(Items.SOUL_SOIL).apply(SetItemCountFunction.setCount(ConstantIntValue.exactly(1)))));
++      });
+       this.dropWhenSilkTouch(Blocks.GLASS);
+       this.dropWhenSilkTouch(Blocks.WHITE_STAINED_GLASS);
+       this.dropWhenSilkTouch(Blocks.ORANGE_STAINED_GLASS);
+       this.dropWhenSilkTouch(Blocks.MAGENTA_STAINED_GLASS);
+       this.dropWhenSilkTouch(Blocks.LIGHT_BLUE_STAINED_GLASS);
+@@ -976,13 +1047,17 @@
+       this.otherWhenSilkTouch(Blocks.INFESTED_COBBLESTONE, Blocks.COBBLESTONE);
+       this.otherWhenSilkTouch(Blocks.INFESTED_STONE_BRICKS, Blocks.STONE_BRICKS);
+       this.otherWhenSilkTouch(Blocks.INFESTED_MOSSY_STONE_BRICKS, Blocks.MOSSY_STONE_BRICKS);
+       this.otherWhenSilkTouch(Blocks.INFESTED_CRACKED_STONE_BRICKS, Blocks.CRACKED_STONE_BRICKS);
+       this.otherWhenSilkTouch(Blocks.INFESTED_CHISELED_STONE_BRICKS, Blocks.CHISELED_STONE_BRICKS);
++      this.addNetherVinesDropTable(Blocks.WEEPING_VINES, Blocks.WEEPING_VINES_PLANT);
++      this.addNetherVinesDropTable(Blocks.TWISTING_VINES, Blocks.TWISTING_VINES_PLANT);
+       this.add(Blocks.CAKE, noDrop());
+       this.add(Blocks.FROSTED_ICE, noDrop());
+       this.add(Blocks.SPAWNER, noDrop());
++      this.add(Blocks.FIRE, noDrop());
++      this.add(Blocks.SOUL_FIRE, noDrop());
+       HashSet var6 = Sets.newHashSet();
+       Iterator var7 = Registry.BLOCK.iterator();
+ 
+       while(var7.hasNext()) {
+          Block var8 = (Block)var7.next();
+@@ -1000,10 +1075,20 @@
+       if (!this.map.isEmpty()) {
+          throw new IllegalStateException("Created block loot tables for non-blocks: " + this.map.keySet());
+       }
+    }
+ 
++   private void addNetherVinesDropTable(Block var1, Block var2) {
++      LootTable.Builder var3 = createSilkTouchOrShearsDispatchTable(var1, LootItem.lootTableItem(var1).when(BonusLevelTableCondition.bonusLevelFlatChance(Enchantments.BLOCK_FORTUNE, 0.33F, 0.55F, 0.77F, 1.0F)));
++      this.add(var1, var3);
++      this.add(var2, var3);
++   }
++
++   public static LootTable.Builder createDoorTable(Block var0) {
++      return createSinglePropConditionTable(var0, DoorBlock.HALF, DoubleBlockHalf.LOWER);
++   }
++
+    public void dropPottedContents(Block var1) {
+       this.add(var1, (var0) -> {
+          return createPotFlowerItemTable(((FlowerPotBlock)var0).getContent());
+       });
+    }

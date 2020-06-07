@@ -1,0 +1,69 @@
+--- net/minecraft/client/renderer/blockentity/SignRenderer.java
++++ net/minecraft/client/renderer/blockentity/SignRenderer.java
+@@ -4,19 +4,19 @@
+ import com.mojang.blaze3d.vertex.PoseStack;
+ import com.mojang.blaze3d.vertex.VertexConsumer;
+ import com.mojang.math.Vector3f;
+ import java.util.List;
+ import net.minecraft.client.gui.Font;
+-import net.minecraft.client.gui.components.ComponentRenderUtils;
+ import net.minecraft.client.model.Model;
+ import net.minecraft.client.model.geom.ModelPart;
+ import net.minecraft.client.renderer.MultiBufferSource;
+ import net.minecraft.client.renderer.RenderType;
+ import net.minecraft.client.renderer.Sheets;
+ import net.minecraft.client.resources.model.Material;
+ import net.minecraft.core.Direction;
+-import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.FormattedText;
++import net.minecraft.network.chat.Style;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.SignBlock;
+ import net.minecraft.world.level.block.StandingSignBlock;
+ import net.minecraft.world.level.block.WallSignBlock;
+ import net.minecraft.world.level.block.entity.SignBlockEntity;
+@@ -48,14 +48,14 @@
+          this.signModel.stick.visible = false;
+       }
+ 
+       var3.pushPose();
+       var3.scale(0.6666667F, -0.6666667F, -0.6666667F);
+-      Material var23 = getMaterial(var7.getBlock());
++      Material var24 = getMaterial(var7.getBlock());
+       SignRenderer.SignModel var10002 = this.signModel;
+       var10002.getClass();
+-      VertexConsumer var10 = var23.buffer(var4, var10002::renderType);
++      VertexConsumer var10 = var24.buffer(var4, var10002::renderType);
+       this.signModel.sign.render(var3, var10, var5, var6);
+       this.signModel.stick.render(var3, var10, var5, var6);
+       var3.popPose();
+       Font var11 = this.renderer.getFont();
+       float var12 = 0.010416667F;
+@@ -65,19 +65,20 @@
+       double var14 = 0.4D;
+       int var16 = (int)((double)NativeImage.getR(var13) * 0.4D);
+       int var17 = (int)((double)NativeImage.getG(var13) * 0.4D);
+       int var18 = (int)((double)NativeImage.getB(var13) * 0.4D);
+       int var19 = NativeImage.combine(0, var18, var17, var16);
++      boolean var20 = true;
+ 
+-      for(int var20 = 0; var20 < 4; ++var20) {
+-         String var21 = var1.getRenderMessage(var20, (var1x) -> {
+-            List var2 = ComponentRenderUtils.wrapComponents(var1x, 90, var11, false, true);
+-            return var2.isEmpty() ? "" : ((Component)var2.get(0)).getColoredString();
++      for(int var21 = 0; var21 < 4; ++var21) {
++         FormattedText var22 = var1.getRenderMessage(var21, (var1x) -> {
++            List var2 = var11.getSplitter().splitLines((FormattedText)var1x, 90, Style.EMPTY);
++            return var2.isEmpty() ? FormattedText.EMPTY : (FormattedText)var2.get(0);
+          });
+-         if (var21 != null) {
+-            float var22 = (float)(-var11.width(var21) / 2);
+-            var11.drawInBatch(var21, var22, (float)(var20 * 10 - var1.messages.length * 5), var19, false, var3.last().pose(), var4, false, 0, var5);
++         if (var22 != null) {
++            float var23 = (float)(-var11.width(var22) / 2);
++            var11.drawInBatch((FormattedText)var22, var23, (float)(var21 * 10 - 20), var19, false, var3.last().pose(), var4, false, 0, var5);
+          }
+       }
+ 
+       var3.popPose();
+    }

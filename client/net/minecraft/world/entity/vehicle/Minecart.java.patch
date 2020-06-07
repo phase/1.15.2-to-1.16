@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/vehicle/Minecart.java
++++ net/minecraft/world/entity/vehicle/Minecart.java
+@@ -16,11 +16,11 @@
+ 
+    public boolean interact(Player var1, InteractionHand var2) {
+       if (var1.isSecondaryUseActive()) {
+          return false;
+       } else if (this.isVehicle()) {
+-         return true;
++         return false;
+       } else {
+          if (!this.level.isClientSide) {
+             var1.startRiding(this);
+          }
+ 

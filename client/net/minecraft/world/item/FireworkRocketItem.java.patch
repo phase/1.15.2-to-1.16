@@ -1,0 +1,45 @@
+--- net/minecraft/world/item/FireworkRocketItem.java
++++ net/minecraft/world/item/FireworkRocketItem.java
+@@ -30,16 +30,16 @@
+       Level var2 = var1.getLevel();
+       if (!var2.isClientSide) {
+          ItemStack var3 = var1.getItemInHand();
+          Vec3 var4 = var1.getClickLocation();
+          Direction var5 = var1.getClickedFace();
+-         FireworkRocketEntity var6 = new FireworkRocketEntity(var2, var4.x + (double)var5.getStepX() * 0.15D, var4.y + (double)var5.getStepY() * 0.15D, var4.z + (double)var5.getStepZ() * 0.15D, var3);
++         FireworkRocketEntity var6 = new FireworkRocketEntity(var2, var1.getPlayer(), var4.x + (double)var5.getStepX() * 0.15D, var4.y + (double)var5.getStepY() * 0.15D, var4.z + (double)var5.getStepZ() * 0.15D, var3);
+          var2.addFreshEntity(var6);
+          var3.shrink(1);
+       }
+ 
+-      return InteractionResult.SUCCESS;
++      return InteractionResult.sidedSuccess(var2.isClientSide);
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+       if (var2.isFallFlying()) {
+          ItemStack var4 = var2.getItemInHand(var3);
+@@ -48,21 +48,21 @@
+             if (!var2.abilities.instabuild) {
+                var4.shrink(1);
+             }
+          }
+ 
+-         return InteractionResultHolder.success(var2.getItemInHand(var3));
++         return InteractionResultHolder.sidedSuccess(var2.getItemInHand(var3), var1.isClientSide());
+       } else {
+          return InteractionResultHolder.pass(var2.getItemInHand(var3));
+       }
+    }
+ 
+    public void appendHoverText(ItemStack var1, @Nullable Level var2, List<Component> var3, TooltipFlag var4) {
+       CompoundTag var5 = var1.getTagElement("Fireworks");
+       if (var5 != null) {
+          if (var5.contains("Flight", 99)) {
+-            var3.add((new TranslatableComponent("item.minecraft.firework_rocket.flight", new Object[0])).append(" ").append(String.valueOf(var5.getByte("Flight"))).withStyle(ChatFormatting.GRAY));
++            var3.add((new TranslatableComponent("item.minecraft.firework_rocket.flight")).append(" ").append(String.valueOf(var5.getByte("Flight"))).withStyle(ChatFormatting.GRAY));
+          }
+ 
+          ListTag var6 = var5.getList("Explosions", 10);
+          if (!var6.isEmpty()) {
+             for(int var7 = 0; var7 < var6.size(); ++var7) {

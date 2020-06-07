@@ -1,0 +1,28 @@
+--- net/minecraft/world/entity/ai/goal/LeapAtTargetGoal.java
++++ net/minecraft/world/entity/ai/goal/LeapAtTargetGoal.java
+@@ -24,11 +24,11 @@
+          if (this.target == null) {
+             return false;
+          } else {
+             double var1 = this.mob.distanceToSqr(this.target);
+             if (var1 >= 4.0D && var1 <= 16.0D) {
+-               if (!this.mob.onGround) {
++               if (!this.mob.isOnGround()) {
+                   return false;
+                } else {
+                   return this.mob.getRandom().nextInt(5) == 0;
+                }
+             } else {
+@@ -37,11 +37,11 @@
+          }
+       }
+    }
+ 
+    public boolean canContinueToUse() {
+-      return !this.mob.onGround;
++      return !this.mob.isOnGround();
+    }
+ 
+    public void start() {
+       Vec3 var1 = this.mob.getDeltaMovement();
+       Vec3 var2 = new Vec3(this.target.getX() - this.mob.getX(), 0.0D, this.target.getZ() - this.mob.getZ());

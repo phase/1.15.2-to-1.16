@@ -1,0 +1,123 @@
+--- net/minecraft/client/renderer/ItemBlockRenderTypes.java
++++ net/minecraft/client/renderer/ItemBlockRenderTypes.java
+@@ -20,10 +20,11 @@
+       var0.put(Blocks.GRASS_BLOCK, var1);
+       var0.put(Blocks.IRON_BARS, var1);
+       var0.put(Blocks.GLASS_PANE, var1);
+       var0.put(Blocks.TRIPWIRE_HOOK, var1);
+       var0.put(Blocks.HOPPER, var1);
++      var0.put(Blocks.CHAIN, var1);
+       var0.put(Blocks.JUNGLE_LEAVES, var1);
+       var0.put(Blocks.OAK_LEAVES, var1);
+       var0.put(Blocks.SPRUCE_LEAVES, var1);
+       var0.put(Blocks.ACACIA_LEAVES, var1);
+       var0.put(Blocks.BIRCH_LEAVES, var1);
+@@ -75,11 +76,14 @@
+       var0.put(Blocks.LILY_OF_THE_VALLEY, var2);
+       var0.put(Blocks.BROWN_MUSHROOM, var2);
+       var0.put(Blocks.RED_MUSHROOM, var2);
+       var0.put(Blocks.TORCH, var2);
+       var0.put(Blocks.WALL_TORCH, var2);
++      var0.put(Blocks.SOUL_TORCH, var2);
++      var0.put(Blocks.SOUL_WALL_TORCH, var2);
+       var0.put(Blocks.FIRE, var2);
++      var0.put(Blocks.SOUL_FIRE, var2);
+       var0.put(Blocks.SPAWNER, var2);
+       var0.put(Blocks.REDSTONE_WIRE, var2);
+       var0.put(Blocks.WHEAT, var2);
+       var0.put(Blocks.OAK_DOOR, var2);
+       var0.put(Blocks.LADDER, var2);
+@@ -94,10 +98,12 @@
+       var0.put(Blocks.SPRUCE_TRAPDOOR, var2);
+       var0.put(Blocks.BIRCH_TRAPDOOR, var2);
+       var0.put(Blocks.JUNGLE_TRAPDOOR, var2);
+       var0.put(Blocks.ACACIA_TRAPDOOR, var2);
+       var0.put(Blocks.DARK_OAK_TRAPDOOR, var2);
++      var0.put(Blocks.CRIMSON_TRAPDOOR, var2);
++      var0.put(Blocks.WARPED_TRAPDOOR, var2);
+       var0.put(Blocks.ATTACHED_PUMPKIN_STEM, var2);
+       var0.put(Blocks.ATTACHED_MELON_STEM, var2);
+       var0.put(Blocks.PUMPKIN_STEM, var2);
+       var0.put(Blocks.MELON_STEM, var2);
+       var0.put(Blocks.VINE, var2);
+@@ -190,12 +196,27 @@
+       var0.put(Blocks.BAMBOO, var2);
+       var0.put(Blocks.POTTED_BAMBOO, var2);
+       var0.put(Blocks.SCAFFOLDING, var2);
+       var0.put(Blocks.STONECUTTER, var2);
+       var0.put(Blocks.LANTERN, var2);
++      var0.put(Blocks.SOUL_LANTERN, var2);
+       var0.put(Blocks.CAMPFIRE, var2);
++      var0.put(Blocks.SOUL_CAMPFIRE, var2);
+       var0.put(Blocks.SWEET_BERRY_BUSH, var2);
++      var0.put(Blocks.WEEPING_VINES, var2);
++      var0.put(Blocks.WEEPING_VINES_PLANT, var2);
++      var0.put(Blocks.TWISTING_VINES, var2);
++      var0.put(Blocks.TWISTING_VINES_PLANT, var2);
++      var0.put(Blocks.NETHER_SPROUTS, var2);
++      var0.put(Blocks.CRIMSON_FUNGUS, var2);
++      var0.put(Blocks.WARPED_FUNGUS, var2);
++      var0.put(Blocks.CRIMSON_ROOTS, var2);
++      var0.put(Blocks.WARPED_ROOTS, var2);
++      var0.put(Blocks.POTTED_CRIMSON_FUNGUS, var2);
++      var0.put(Blocks.POTTED_WARPED_FUNGUS, var2);
++      var0.put(Blocks.POTTED_CRIMSON_ROOTS, var2);
++      var0.put(Blocks.POTTED_WARPED_ROOTS, var2);
+       RenderType var3 = RenderType.translucent();
+       var0.put(Blocks.ICE, var3);
+       var0.put(Blocks.NETHER_PORTAL, var3);
+       var0.put(Blocks.WHITE_STAINED_GLASS, var3);
+       var0.put(Blocks.ORANGE_STAINED_GLASS, var3);
+@@ -250,25 +271,43 @@
+          RenderType var2 = (RenderType)TYPE_BY_BLOCK.get(var1);
+          return var2 != null ? var2 : RenderType.solid();
+       }
+    }
+ 
+-   public static RenderType getRenderType(BlockState var0) {
+-      RenderType var1 = getChunkRenderType(var0);
+-      return var1 == RenderType.translucent() ? Sheets.translucentBlockSheet() : Sheets.cutoutBlockSheet();
++   public static RenderType getMovingBlockRenderType(BlockState var0) {
++      Block var1 = var0.getBlock();
++      if (var1 instanceof LeavesBlock) {
++         return renderCutout ? RenderType.cutoutMipped() : RenderType.solid();
++      } else {
++         RenderType var2 = (RenderType)TYPE_BY_BLOCK.get(var1);
++         if (var2 != null) {
++            return var2 == RenderType.translucent() ? RenderType.translucentMovingBlock() : var2;
++         } else {
++            return RenderType.solid();
++         }
++      }
+    }
+ 
+-   public static RenderType getRenderType(ItemStack var0) {
+-      Item var1 = var0.getItem();
+-      if (var1 instanceof BlockItem) {
+-         Block var2 = ((BlockItem)var1).getBlock();
+-         return getRenderType(var2.defaultBlockState());
++   public static RenderType getRenderType(BlockState var0, boolean var1) {
++      RenderType var2 = getChunkRenderType(var0);
++      if (var2 == RenderType.translucent()) {
++         return var1 ? Sheets.translucentCullBlockSheet() : Sheets.translucentItemSheet();
+       } else {
+-         return Sheets.translucentBlockSheet();
++         return Sheets.cutoutBlockSheet();
+       }
+    }
+ 
++   public static RenderType getRenderType(ItemStack var0, boolean var1) {
++      Item var2 = var0.getItem();
++      if (var2 instanceof BlockItem) {
++         Block var3 = ((BlockItem)var2).getBlock();
++         return getRenderType(var3.defaultBlockState(), var1);
++      } else {
++         return var1 ? Sheets.translucentCullBlockSheet() : Sheets.translucentItemSheet();
++      }
++   }
++
+    public static RenderType getRenderLayer(FluidState var0) {
+       RenderType var1 = (RenderType)TYPE_BY_FLUID.get(var0.getType());
+       return var1 != null ? var1 : RenderType.solid();
+    }
+ 

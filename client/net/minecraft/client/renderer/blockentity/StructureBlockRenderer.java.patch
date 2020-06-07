@@ -1,0 +1,15 @@
+--- net/minecraft/client/renderer/blockentity/StructureBlockRenderer.java
++++ net/minecraft/client/renderer/blockentity/StructureBlockRenderer.java
+@@ -109,11 +109,11 @@
+             }
+ 
+             var10 = (BlockPos)var9.next();
+             BlockState var11 = var6.getBlockState(var10);
+             var12 = var11.isAir();
+-            var13 = var11.getBlock() == Blocks.STRUCTURE_VOID;
++            var13 = var11.is(Blocks.STRUCTURE_VOID);
+          } while(!var12 && !var13);
+ 
+          float var14 = var12 ? 0.05F : 0.0F;
+          double var15 = (double)((float)(var10.getX() - var7.getX()) + 0.45F - var14);
+          double var17 = (double)((float)(var10.getY() - var7.getY()) + 0.45F - var14);

@@ -1,0 +1,13 @@
+--- net/minecraft/world/item/MilkBucketItem.java
++++ net/minecraft/world/item/MilkBucketItem.java
+@@ -39,9 +39,8 @@
+    public UseAnim getUseAnimation(ItemStack var1) {
+       return UseAnim.DRINK;
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+-      var2.startUsingItem(var3);
+-      return InteractionResultHolder.success(var2.getItemInHand(var3));
++      return ItemUtils.useDrink(var1, var2, var3);
+    }
+ }

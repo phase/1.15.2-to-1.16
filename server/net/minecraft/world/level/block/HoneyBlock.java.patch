@@ -1,0 +1,37 @@
+--- net/minecraft/world/level/block/HoneyBlock.java
++++ net/minecraft/world/level/block/HoneyBlock.java
+@@ -9,19 +9,20 @@
+ import net.minecraft.world.entity.item.PrimedTnt;
+ import net.minecraft.world.entity.vehicle.AbstractMinecart;
+ import net.minecraft.world.entity.vehicle.Boat;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class HoneyBlock extends HalfTransparentBlock {
+    protected static final VoxelShape SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 15.0D, 15.0D);
+ 
+-   public HoneyBlock(Block.Properties var1) {
++   public HoneyBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    private static boolean doesEntityDoHoneyBlockSlideEffects(Entity var0) {
+       return var0 instanceof LivingEntity || var0 instanceof AbstractMinecart || var0 instanceof PrimedTnt || var0 instanceof Boat;
+@@ -52,11 +53,11 @@
+ 
+       super.entityInside(var1, var2, var3, var4);
+    }
+ 
+    private boolean isSlidingDown(BlockPos var1, Entity var2) {
+-      if (var2.onGround) {
++      if (var2.isOnGround()) {
+          return false;
+       } else if (var2.getY() > (double)var1.getY() + 0.9375D - 1.0E-7D) {
+          return false;
+       } else if (var2.getDeltaMovement().y >= -0.08D) {
+          return false;

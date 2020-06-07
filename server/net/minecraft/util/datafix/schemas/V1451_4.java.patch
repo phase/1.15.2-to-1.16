@@ -1,0 +1,13 @@
+--- net/minecraft/util/datafix/schemas/V1451_4.java
++++ net/minecraft/util/datafix/schemas/V1451_4.java
+@@ -13,9 +13,9 @@
+    }
+ 
+    public void registerTypes(Schema var1, Map<String, Supplier<TypeTemplate>> var2, Map<String, Supplier<TypeTemplate>> var3) {
+       super.registerTypes(var1, var2, var3);
+       var1.registerType(false, References.BLOCK_NAME, () -> {
+-         return DSL.constType(DSL.namespacedString());
++         return DSL.constType(namespacedString());
+       });
+    }
+ }

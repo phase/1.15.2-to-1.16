@@ -1,0 +1,54 @@
+--- net/minecraft/client/renderer/debug/BeeDebugRenderer.java
++++ net/minecraft/client/renderer/debug/BeeDebugRenderer.java
+@@ -19,11 +19,11 @@
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.player.LocalPlayer;
+ import net.minecraft.client.renderer.MultiBufferSource;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Position;
+-import net.minecraft.network.protocol.game.DebugMobNameGenerator;
++import net.minecraft.network.protocol.game.DebugEntityNameGenerator;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.level.pathfinder.Path;
+ 
+ public class BeeDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
+    private final Minecraft minecraft;
+@@ -135,11 +135,11 @@
+          ((Set)var2).add(var1x.getUuid());
+       });
+       var1.entrySet().forEach((var0) -> {
+          BlockPos var1 = (BlockPos)var0.getKey();
+          Set var2 = (Set)var0.getValue();
+-         Set var3 = (Set)var2.stream().map(DebugMobNameGenerator::getMobName).collect(Collectors.toSet());
++         Set var3 = (Set)var2.stream().map(DebugEntityNameGenerator::getEntityName).collect(Collectors.toSet());
+          byte var4 = 1;
+          String var10000 = var3.toString();
+          int var6 = var4 + 1;
+          renderTextOverPos(var10000, var1, var4, -256);
+          renderTextOverPos("Flower", var1, var6++, -1);
+@@ -150,11 +150,11 @@
+ 
+    private static String getBeeUuidsAsString(Collection<UUID> var0) {
+       if (var0.isEmpty()) {
+          return "-";
+       } else {
+-         return var0.size() > 3 ? "" + var0.size() + " bees" : ((Set)var0.stream().map(DebugMobNameGenerator::getMobName).collect(Collectors.toSet())).toString();
++         return var0.size() > 3 ? "" + var0.size() + " bees" : ((Set)var0.stream().map(DebugEntityNameGenerator::getEntityName).collect(Collectors.toSet())).toString();
+       }
+    }
+ 
+    private static void addBeeToSetInMap(Map<BlockPos, Set<UUID>> var0, BeeDebugRenderer.BeeInfo var1, BlockPos var2) {
+       Object var3 = (Set)var0.get(var2);
+@@ -354,11 +354,11 @@
+       public UUID getUuid() {
+          return this.uuid;
+       }
+ 
+       public String getName() {
+-         return DebugMobNameGenerator.getMobName(this.uuid);
++         return DebugEntityNameGenerator.getEntityName(this.uuid);
+       }
+ 
+       public String toString() {
+          return this.getName();
+       }

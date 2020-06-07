@@ -1,0 +1,15 @@
+--- net/minecraft/advancements/critereon/WrappedMinMaxBounds.java
++++ net/minecraft/advancements/critereon/WrappedMinMaxBounds.java
+@@ -7,11 +7,11 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.network.chat.TranslatableComponent;
+ 
+ public class WrappedMinMaxBounds {
+    public static final WrappedMinMaxBounds ANY = new WrappedMinMaxBounds((Float)null, (Float)null);
+-   public static final SimpleCommandExceptionType ERROR_INTS_ONLY = new SimpleCommandExceptionType(new TranslatableComponent("argument.range.ints", new Object[0]));
++   public static final SimpleCommandExceptionType ERROR_INTS_ONLY = new SimpleCommandExceptionType(new TranslatableComponent("argument.range.ints"));
+    private final Float min;
+    private final Float max;
+ 
+    public WrappedMinMaxBounds(@Nullable Float var1, @Nullable Float var2) {
+       this.min = var1;

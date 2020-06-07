@@ -1,0 +1,88 @@
+--- net/minecraft/util/Mth.java
++++ net/minecraft/util/Mth.java
+@@ -54,14 +54,10 @@
+    public static long lfloor(double var0) {
+       long var2 = (long)var0;
+       return var0 < (double)var2 ? var2 - 1L : var2;
+    }
+ 
+-   public static int absFloor(double var0) {
+-      return (int)(var0 >= 0.0D ? var0 : -var0 + 1.0D);
+-   }
+-
+    public static float abs(float var0) {
+       return Math.abs(var0);
+    }
+ 
+    public static int abs(int var0) {
+@@ -244,37 +240,21 @@
+ 
+    public static int getInt(String var0, int var1) {
+       return NumberUtils.toInt(var0, var1);
+    }
+ 
+-   public static int getInt(String var0, int var1, int var2) {
+-      return Math.max(var2, getInt(var0, var1));
+-   }
+-
+-   public static double getDouble(String var0, double var1) {
+-      try {
+-         return Double.parseDouble(var0);
+-      } catch (Throwable var4) {
+-         return var1;
+-      }
+-   }
+-
+-   public static double getDouble(String var0, double var1, double var3) {
+-      return Math.max(var3, getDouble(var0, var1));
+-   }
+-
+    public static int smallestEncompassingPowerOfTwo(int var0) {
+       int var1 = var0 - 1;
+       var1 |= var1 >> 1;
+       var1 |= var1 >> 2;
+       var1 |= var1 >> 4;
+       var1 |= var1 >> 8;
+       var1 |= var1 >> 16;
+       return var1 + 1;
+    }
+ 
+-   private static boolean isPowerOfTwo(int var0) {
++   public static boolean isPowerOfTwo(int var0) {
+       return var0 != 0 && (var0 & var0 - 1) == 0;
+    }
+ 
+    public static int ceillog2(int var0) {
+       var0 = isPowerOfTwo(var0) ? var0 : smallestEncompassingPowerOfTwo(var0);
+@@ -336,11 +316,11 @@
+ 
+    public static UUID createInsecureUUID() {
+       return createInsecureUUID(RANDOM);
+    }
+ 
+-   public static double pct(double var0, double var2, double var4) {
++   public static double inverseLerp(double var0, double var2, double var4) {
+       return (var0 - var2) / (var4 - var2);
+    }
+ 
+    public static double atan2(double var0, double var2) {
+       double var4 = var2 * var2 + var0 * var0;
+@@ -551,10 +531,18 @@
+       }
+ 
+       return (float)var0;
+    }
+ 
++   public static float triangleWave(float var0, float var1) {
++      return (Math.abs(var0 % var1 - var1 * 0.5F) - var1 * 0.25F) / (var1 * 0.25F);
++   }
++
++   public static float square(float var0) {
++      return var0 * var0;
++   }
++
+    static {
+       for(int var0 = 0; var0 < 257; ++var0) {
+          double var1 = (double)var0 / 256.0D;
+          double var3 = Math.asin(var1);
+          COS_TAB[var0] = Math.cos(var3);

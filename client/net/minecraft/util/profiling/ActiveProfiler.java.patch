@@ -1,0 +1,58 @@
+--- net/minecraft/util/profiling/ActiveProfiler.java
++++ net/minecraft/util/profiling/ActiveProfiler.java
+@@ -9,10 +9,11 @@
+ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+ import java.time.Duration;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.function.IntSupplier;
++import java.util.function.LongSupplier;
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.apache.logging.log4j.util.Supplier;
+@@ -22,23 +23,25 @@
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final List<String> paths = Lists.newArrayList();
+    private final LongList startTimes = new LongArrayList();
+    private final Map<String, ActiveProfiler.PathEntry> entries = Maps.newHashMap();
+    private final IntSupplier getTickTime;
++   private final LongSupplier getRealTime;
+    private final long startTimeNano;
+    private final int startTimeTicks;
+    private String path = "";
+    private boolean started;
+    @Nullable
+    private ActiveProfiler.PathEntry currentEntry;
+    private final boolean warn;
+ 
+-   public ActiveProfiler(long var1, IntSupplier var3, boolean var4) {
+-      this.startTimeNano = var1;
+-      this.startTimeTicks = var3.getAsInt();
+-      this.getTickTime = var3;
+-      this.warn = var4;
++   public ActiveProfiler(LongSupplier var1, IntSupplier var2, boolean var3) {
++      this.startTimeNano = var1.getAsLong();
++      this.getRealTime = var1;
++      this.startTimeTicks = var2.getAsInt();
++      this.getTickTime = var2;
++      this.warn = var3;
+    }
+ 
+    public void startTick() {
+       if (this.started) {
+          LOGGER.error("Profiler tick already started - missing endTick()?");
+@@ -137,11 +140,11 @@
+    public void incrementCounter(java.util.function.Supplier<String> var1) {
+       this.getCurrentEntry().counters.addTo(var1.get(), 1L);
+    }
+ 
+    public ProfileResults getResults() {
+-      return new FilledProfileResults(this.entries, this.startTimeNano, this.startTimeTicks, Util.getNanos(), this.getTickTime.getAsInt());
++      return new FilledProfileResults(this.entries, this.startTimeNano, this.startTimeTicks, this.getRealTime.getAsLong(), this.getTickTime.getAsInt());
+    }
+ 
+    static class PathEntry implements ProfilerPathEntry {
+       private long duration;
+       private long count;

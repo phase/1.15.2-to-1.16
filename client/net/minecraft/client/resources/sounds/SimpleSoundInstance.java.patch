@@ -1,0 +1,25 @@
+--- net/minecraft/client/resources/sounds/SimpleSoundInstance.java
++++ net/minecraft/client/resources/sounds/SimpleSoundInstance.java
+@@ -24,10 +24,22 @@
+ 
+    public static SimpleSoundInstance forRecord(SoundEvent var0, float var1, float var2, float var3) {
+       return new SimpleSoundInstance(var0, SoundSource.RECORDS, 4.0F, 1.0F, false, 0, SoundInstance.Attenuation.LINEAR, var1, var2, var3);
+    }
+ 
++   public static SimpleSoundInstance forLocalAmbience(SoundEvent var0, float var1, float var2) {
++      return new SimpleSoundInstance(var0.getLocation(), SoundSource.AMBIENT, var2, var1, false, 0, SoundInstance.Attenuation.NONE, 0.0F, 0.0F, 0.0F, true);
++   }
++
++   public static SimpleSoundInstance forAmbientAddition(SoundEvent var0) {
++      return forLocalAmbience(var0, 1.0F, 1.0F);
++   }
++
++   public static SimpleSoundInstance forAmbientMood(SoundEvent var0, float var1, float var2, float var3) {
++      return new SimpleSoundInstance(var0, SoundSource.AMBIENT, 1.0F, 1.0F, false, 0, SoundInstance.Attenuation.LINEAR, var1, var2, var3);
++   }
++
+    public SimpleSoundInstance(SoundEvent var1, SoundSource var2, float var3, float var4, float var5, float var6, float var7) {
+       this(var1, var2, var3, var4, false, 0, SoundInstance.Attenuation.LINEAR, var5, var6, var7);
+    }
+ 
+    private SimpleSoundInstance(SoundEvent var1, SoundSource var2, float var3, float var4, boolean var5, int var6, SoundInstance.Attenuation var7, float var8, float var9, float var10) {

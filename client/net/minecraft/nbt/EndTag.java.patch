@@ -1,0 +1,12 @@
+--- net/minecraft/nbt/EndTag.java
++++ net/minecraft/nbt/EndTag.java
+@@ -48,8 +48,8 @@
+    public EndTag copy() {
+       return this;
+    }
+ 
+    public Component getPrettyDisplay(String var1, int var2) {
+-      return new TextComponent("");
++      return TextComponent.EMPTY;
+    }
+ }

@@ -1,0 +1,42 @@
+--- net/minecraft/client/renderer/ItemInHandRenderer.java
++++ net/minecraft/client/renderer/ItemInHandRenderer.java
+@@ -3,11 +3,10 @@
+ import com.google.common.base.MoreObjects;
+ import com.mojang.blaze3d.vertex.PoseStack;
+ import com.mojang.blaze3d.vertex.VertexConsumer;
+ import com.mojang.math.Matrix4f;
+ import com.mojang.math.Vector3f;
+-import java.util.Objects;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.player.AbstractClientPlayer;
+ import net.minecraft.client.player.LocalPlayer;
+ import net.minecraft.client.renderer.block.model.ItemTransforms;
+ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+@@ -410,17 +409,25 @@
+       this.oMainHandHeight = this.mainHandHeight;
+       this.oOffHandHeight = this.offHandHeight;
+       LocalPlayer var1 = this.minecraft.player;
+       ItemStack var2 = var1.getMainHandItem();
+       ItemStack var3 = var1.getOffhandItem();
++      if (ItemStack.matches(this.mainHandItem, var2)) {
++         this.mainHandItem = var2;
++      }
++
++      if (ItemStack.matches(this.offHandItem, var3)) {
++         this.offHandItem = var3;
++      }
++
+       if (var1.isHandsBusy()) {
+          this.mainHandHeight = Mth.clamp(this.mainHandHeight - 0.4F, 0.0F, 1.0F);
+          this.offHandHeight = Mth.clamp(this.offHandHeight - 0.4F, 0.0F, 1.0F);
+       } else {
+          float var4 = var1.getAttackStrengthScale(1.0F);
+-         this.mainHandHeight += Mth.clamp((Objects.equals(this.mainHandItem, var2) ? var4 * var4 * var4 : 0.0F) - this.mainHandHeight, -0.4F, 0.4F);
+-         this.offHandHeight += Mth.clamp((float)(Objects.equals(this.offHandItem, var3) ? 1 : 0) - this.offHandHeight, -0.4F, 0.4F);
++         this.mainHandHeight += Mth.clamp((this.mainHandItem == var2 ? var4 * var4 * var4 : 0.0F) - this.mainHandHeight, -0.4F, 0.4F);
++         this.offHandHeight += Mth.clamp((float)(this.offHandItem == var3 ? 1 : 0) - this.offHandHeight, -0.4F, 0.4F);
+       }
+ 
+       if (this.mainHandHeight < 0.1F) {
+          this.mainHandItem = var2;
+       }

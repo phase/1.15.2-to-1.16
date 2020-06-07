@@ -1,0 +1,40 @@
+--- net/minecraft/client/renderer/entity/ShulkerRenderer.java
++++ net/minecraft/client/renderer/entity/ShulkerRenderer.java
+@@ -40,12 +40,12 @@
+    public boolean shouldRender(Shulker var1, Frustum var2, double var3, double var5, double var7) {
+       if (super.shouldRender((Mob)var1, var2, var3, var5, var7)) {
+          return true;
+       } else {
+          if (var1.getClientSideTeleportInterpolation() > 0 && var1.hasValidInterpolationPositions()) {
+-            Vec3 var9 = new Vec3(var1.getAttachPosition());
+-            Vec3 var10 = new Vec3(var1.getOldAttachPosition());
++            Vec3 var9 = Vec3.atLowerCornerOf(var1.getAttachPosition());
++            Vec3 var10 = Vec3.atLowerCornerOf(var1.getOldAttachPosition());
+             if (var2.isVisible(new AABB(var10.x, var10.y, var10.z, var9.x, var9.y, var9.z))) {
+                return true;
+             }
+          }
+ 
+@@ -56,21 +56,16 @@
+    public ResourceLocation getTextureLocation(Shulker var1) {
+       return var1.getColor() == null ? DEFAULT_TEXTURE_LOCATION : TEXTURE_LOCATION[var1.getColor().getId()];
+    }
+ 
+    protected void setupRotations(Shulker var1, PoseStack var2, float var3, float var4, float var5) {
+-      super.setupRotations(var1, var2, var3, var4, var5);
++      super.setupRotations(var1, var2, var3, var4 + 180.0F, var5);
+       var2.translate(0.0D, 0.5D, 0.0D);
+       var2.mulPose(var1.getAttachFace().getOpposite().getRotation());
+       var2.translate(0.0D, -0.5D, 0.0D);
+    }
+ 
+-   protected void scale(Shulker var1, PoseStack var2, float var3) {
+-      float var4 = 0.999F;
+-      var2.scale(0.999F, 0.999F, 0.999F);
+-   }
+-
+    static {
+       DEFAULT_TEXTURE_LOCATION = new ResourceLocation("textures/" + Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION.texture().getPath() + ".png");
+       TEXTURE_LOCATION = (ResourceLocation[])Sheets.SHULKER_TEXTURE_LOCATION.stream().map((var0) -> {
+          return new ResourceLocation("textures/" + var0.texture().getPath() + ".png");
+       }).toArray((var0) -> {

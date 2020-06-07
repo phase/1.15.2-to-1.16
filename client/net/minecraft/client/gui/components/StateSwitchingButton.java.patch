@@ -1,0 +1,59 @@
+--- net/minecraft/client/gui/components/StateSwitchingButton.java
++++ net/minecraft/client/gui/components/StateSwitchingButton.java
+@@ -1,9 +1,11 @@
+ package net.minecraft.client.gui.components;
+ 
+ import com.mojang.blaze3d.systems.RenderSystem;
++import com.mojang.blaze3d.vertex.PoseStack;
+ import net.minecraft.client.Minecraft;
++import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.resources.ResourceLocation;
+ 
+ public class StateSwitchingButton extends AbstractWidget {
+    protected ResourceLocation resourceLocation;
+    protected boolean isStateTriggered;
+@@ -11,11 +13,11 @@
+    protected int yTexStart;
+    protected int xDiffTex;
+    protected int yDiffTex;
+ 
+    public StateSwitchingButton(int var1, int var2, int var3, int var4, boolean var5) {
+-      super(var1, var2, var3, var4, "");
++      super(var1, var2, var3, var4, TextComponent.EMPTY);
+       this.isStateTriggered = var5;
+    }
+ 
+    public void initTextureValues(int var1, int var2, int var3, int var4, ResourceLocation var5) {
+       this.xTexStart = var1;
+@@ -36,23 +38,23 @@
+    public void setPosition(int var1, int var2) {
+       this.x = var1;
+       this.y = var2;
+    }
+ 
+-   public void renderButton(int var1, int var2, float var3) {
+-      Minecraft var4 = Minecraft.getInstance();
+-      var4.getTextureManager().bind(this.resourceLocation);
++   public void renderButton(PoseStack var1, int var2, int var3, float var4) {
++      Minecraft var5 = Minecraft.getInstance();
++      var5.getTextureManager().bind(this.resourceLocation);
+       RenderSystem.disableDepthTest();
+-      int var5 = this.xTexStart;
+-      int var6 = this.yTexStart;
++      int var6 = this.xTexStart;
++      int var7 = this.yTexStart;
+       if (this.isStateTriggered) {
+-         var5 += this.xDiffTex;
++         var6 += this.xDiffTex;
+       }
+ 
+       if (this.isHovered()) {
+-         var6 += this.yDiffTex;
++         var7 += this.yDiffTex;
+       }
+ 
+-      this.blit(this.x, this.y, var5, var6, this.width, this.height);
++      this.blit(var1, this.x, this.y, var6, var7, this.width, this.height);
+       RenderSystem.enableDepthTest();
+    }
+ }

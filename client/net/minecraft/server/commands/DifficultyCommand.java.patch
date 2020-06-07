@@ -1,0 +1,27 @@
+--- net/minecraft/server/commands/DifficultyCommand.java
++++ net/minecraft/server/commands/DifficultyCommand.java
+@@ -7,11 +7,10 @@
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.world.Difficulty;
+-import net.minecraft.world.level.dimension.DimensionType;
+ 
+ public class DifficultyCommand {
+    private static final DynamicCommandExceptionType ERROR_ALREADY_DIFFICULT = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.difficulty.failure", new Object[]{var0});
+    });
+@@ -37,11 +36,11 @@
+       }));
+    }
+ 
+    public static int setDifficulty(CommandSourceStack var0, Difficulty var1) throws CommandSyntaxException {
+       MinecraftServer var2 = var0.getServer();
+-      if (var2.getLevel(DimensionType.OVERWORLD).getDifficulty() == var1) {
++      if (var2.getWorldData().getDifficulty() == var1) {
+          throw ERROR_ALREADY_DIFFICULT.create(var1.getKey());
+       } else {
+          var2.setDifficulty(var1, true);
+          var0.sendSuccess(new TranslatableComponent("commands.difficulty.success", new Object[]{var1.getDisplayName()}), true);
+          return 0;

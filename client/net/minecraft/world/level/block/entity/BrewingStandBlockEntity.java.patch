@@ -1,0 +1,37 @@
+--- net/minecraft/world/level/block/entity/BrewingStandBlockEntity.java
++++ net/minecraft/world/level/block/entity/BrewingStandBlockEntity.java
+@@ -66,11 +66,11 @@
+          }
+       };
+    }
+ 
+    protected Component getDefaultName() {
+-      return new TranslatableComponent("container.brewing", new Object[0]);
++      return new TranslatableComponent("container.brewing");
+    }
+ 
+    public int getContainerSize() {
+       return this.items.size();
+    }
+@@ -190,16 +190,16 @@
+ 
+       this.items.set(3, var1);
+       this.level.levelEvent(1035, var4, 0);
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
+       this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+-      ContainerHelper.loadAllItems(var1, this.items);
+-      this.brewTime = var1.getShort("BrewTime");
+-      this.fuel = var1.getByte("Fuel");
++      ContainerHelper.loadAllItems(var2, this.items);
++      this.brewTime = var2.getShort("BrewTime");
++      this.fuel = var2.getByte("Fuel");
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+       super.save(var1);
+       var1.putShort("BrewTime", (short)this.brewTime);

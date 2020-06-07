@@ -1,0 +1,25 @@
+--- net/minecraft/world/level/block/CoralPlantBlock.java
++++ net/minecraft/world/level/block/CoralPlantBlock.java
+@@ -5,20 +5,21 @@
+ import net.minecraft.core.Direction;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.material.Fluids;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class CoralPlantBlock extends BaseCoralPlantTypeBlock {
+    private final Block deadBlock;
+    protected static final VoxelShape SHAPE = Block.box(2.0D, 0.0D, 2.0D, 14.0D, 15.0D, 14.0D);
+ 
+-   protected CoralPlantBlock(Block var1, Block.Properties var2) {
++   protected CoralPlantBlock(Block var1, BlockBehaviour.Properties var2) {
+       super(var2);
+       this.deadBlock = var1;
+    }
+ 
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {

@@ -1,0 +1,33 @@
+--- net/minecraft/world/level/storage/loot/predicates/LootItemBlockStatePropertyCondition.java
++++ net/minecraft/world/level/storage/loot/predicates/LootItemBlockStatePropertyCondition.java
+@@ -23,10 +23,14 @@
+    private LootItemBlockStatePropertyCondition(Block var1, StatePropertiesPredicate var2) {
+       this.block = var1;
+       this.properties = var2;
+    }
+ 
++   public LootItemConditionType getType() {
++      return LootItemConditions.BLOCK_STATE_PROPERTY;
++   }
++
+    public Set<LootContextParam<?>> getReferencedContextParams() {
+       return ImmutableSet.of(LootContextParams.BLOCK_STATE);
+    }
+ 
+    public boolean test(LootContext var1) {
+@@ -36,13 +40,12 @@
+ 
+    public static LootItemBlockStatePropertyCondition.Builder hasBlockStateProperties(Block var0) {
+       return new LootItemBlockStatePropertyCondition.Builder(var0);
+    }
+ 
+-   public static class Serializer extends LootItemCondition.Serializer<LootItemBlockStatePropertyCondition> {
+-      protected Serializer() {
+-         super(new ResourceLocation("block_state_property"), LootItemBlockStatePropertyCondition.class);
++   public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<LootItemBlockStatePropertyCondition> {
++      public Serializer() {
+       }
+ 
+       public void serialize(JsonObject var1, LootItemBlockStatePropertyCondition var2, JsonSerializationContext var3) {
+          var1.addProperty("block", Registry.BLOCK.getKey(var2.block).toString());
+          var1.add("properties", var2.properties.serializeToJson());

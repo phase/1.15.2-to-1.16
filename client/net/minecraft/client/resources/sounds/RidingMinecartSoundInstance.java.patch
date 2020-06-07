@@ -1,0 +1,28 @@
+--- net/minecraft/client/resources/sounds/RidingMinecartSoundInstance.java
++++ net/minecraft/client/resources/sounds/RidingMinecartSoundInstance.java
+@@ -19,10 +19,14 @@
+       this.looping = true;
+       this.delay = 0;
+       this.volume = 0.0F;
+    }
+ 
++   public boolean canPlaySound() {
++      return !this.minecart.isSilent();
++   }
++
+    public boolean canStartSilent() {
+       return true;
+    }
+ 
+    public void tick() {
+@@ -33,9 +37,9 @@
+          } else {
+             this.volume = 0.0F;
+          }
+ 
+       } else {
+-         this.stopped = true;
++         this.stop();
+       }
+    }
+ }

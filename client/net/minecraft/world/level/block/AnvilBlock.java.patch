@@ -1,0 +1,103 @@
+--- net/minecraft/world/level/block/AnvilBlock.java
++++ net/minecraft/world/level/block/AnvilBlock.java
+@@ -14,10 +14,11 @@
+ import net.minecraft.world.inventory.AnvilMenu;
+ import net.minecraft.world.inventory.ContainerLevelAccess;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+ import net.minecraft.world.phys.BlockHitResult;
+@@ -36,11 +37,11 @@
+    private static final VoxelShape Z_TOP;
+    private static final VoxelShape X_AXIS_AABB;
+    private static final VoxelShape Z_AXIS_AABB;
+    private static final TranslatableComponent CONTAINER_TITLE;
+ 
+-   public AnvilBlock(Block.Properties var1) {
++   public AnvilBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH));
+    }
+ 
+    public BlockState getStateForPlacement(BlockPlaceContext var1) {
+@@ -51,11 +52,11 @@
+       if (var2.isClientSide) {
+          return InteractionResult.SUCCESS;
+       } else {
+          var4.openMenu(var1.getMenuProvider(var2, var3));
+          var4.awardStat(Stats.INTERACT_WITH_ANVIL);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.CONSUME;
+       }
+    }
+ 
+    @Nullable
+    public MenuProvider getMenuProvider(BlockState var1, Level var2, BlockPos var3) {
+@@ -71,25 +72,30 @@
+ 
+    protected void falling(FallingBlockEntity var1) {
+       var1.setHurtsEntities(true);
+    }
+ 
+-   public void onLand(Level var1, BlockPos var2, BlockState var3, BlockState var4) {
+-      var1.levelEvent(1031, var2, 0);
++   public void onLand(Level var1, BlockPos var2, BlockState var3, BlockState var4, FallingBlockEntity var5) {
++      if (!var5.isSilent()) {
++         var1.levelEvent(1031, var2, 0);
++      }
++
+    }
+ 
+-   public void onBroken(Level var1, BlockPos var2) {
+-      var1.levelEvent(1029, var2, 0);
++   public void onBroken(Level var1, BlockPos var2, FallingBlockEntity var3) {
++      if (!var3.isSilent()) {
++         var1.levelEvent(1029, var2, 0);
++      }
++
+    }
+ 
+    @Nullable
+    public static BlockState damage(BlockState var0) {
+-      Block var1 = var0.getBlock();
+-      if (var1 == Blocks.ANVIL) {
++      if (var0.is(Blocks.ANVIL)) {
+          return (BlockState)Blocks.CHIPPED_ANVIL.defaultBlockState().setValue(FACING, var0.getValue(FACING));
+       } else {
+-         return var1 == Blocks.CHIPPED_ANVIL ? (BlockState)Blocks.DAMAGED_ANVIL.defaultBlockState().setValue(FACING, var0.getValue(FACING)) : null;
++         return var0.is(Blocks.CHIPPED_ANVIL) ? (BlockState)Blocks.DAMAGED_ANVIL.defaultBlockState().setValue(FACING, var0.getValue(FACING)) : null;
+       }
+    }
+ 
+    public BlockState rotate(BlockState var1, Rotation var2) {
+       return (BlockState)var1.setValue(FACING, var2.rotate((Direction)var1.getValue(FACING)));
+@@ -101,10 +107,14 @@
+ 
+    public boolean isPathfindable(BlockState var1, BlockGetter var2, BlockPos var3, PathComputationType var4) {
+       return false;
+    }
+ 
++   public int getDustColor(BlockState var1, BlockGetter var2, BlockPos var3) {
++      return var1.getMapColor(var2, var3).col;
++   }
++
+    static {
+       FACING = HorizontalDirectionalBlock.FACING;
+       BASE = Block.box(2.0D, 0.0D, 2.0D, 14.0D, 4.0D, 14.0D);
+       X_LEG1 = Block.box(3.0D, 4.0D, 4.0D, 13.0D, 5.0D, 12.0D);
+       X_LEG2 = Block.box(4.0D, 5.0D, 6.0D, 12.0D, 10.0D, 10.0D);
+@@ -112,8 +122,8 @@
+       Z_LEG1 = Block.box(4.0D, 4.0D, 3.0D, 12.0D, 5.0D, 13.0D);
+       Z_LEG2 = Block.box(6.0D, 5.0D, 4.0D, 10.0D, 10.0D, 12.0D);
+       Z_TOP = Block.box(3.0D, 10.0D, 0.0D, 13.0D, 16.0D, 16.0D);
+       X_AXIS_AABB = Shapes.or(BASE, X_LEG1, X_LEG2, X_TOP);
+       Z_AXIS_AABB = Shapes.or(BASE, Z_LEG1, Z_LEG2, Z_TOP);
+-      CONTAINER_TITLE = new TranslatableComponent("container.repair", new Object[0]);
++      CONTAINER_TITLE = new TranslatableComponent("container.repair");
+    }
+ }

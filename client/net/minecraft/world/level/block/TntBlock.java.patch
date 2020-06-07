@@ -1,0 +1,70 @@
+--- net/minecraft/world/level/block/TntBlock.java
++++ net/minecraft/world/level/block/TntBlock.java
+@@ -8,32 +8,33 @@
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.item.PrimedTnt;
+ import net.minecraft.world.entity.player.Player;
+-import net.minecraft.world.entity.projectile.AbstractArrow;
++import net.minecraft.world.entity.projectile.Projectile;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.Explosion;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.phys.BlockHitResult;
+ 
+ public class TntBlock extends Block {
+    public static final BooleanProperty UNSTABLE;
+ 
+-   public TntBlock(Block.Properties var1) {
++   public TntBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)this.defaultBlockState().setValue(UNSTABLE, false));
+    }
+ 
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var4.getBlock() != var1.getBlock()) {
++      if (!var4.is(var1.getBlock())) {
+          if (var2.hasNeighborSignal(var3)) {
+             explode(var2, var3);
+             var2.removeBlock(var3, false);
+          }
+ 
+@@ -92,22 +93,21 @@
+             } else {
+                var7.shrink(1);
+             }
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       }
+    }
+ 
+-   public void onProjectileHit(Level var1, BlockState var2, BlockHitResult var3, Entity var4) {
+-      if (!var1.isClientSide && var4 instanceof AbstractArrow) {
+-         AbstractArrow var5 = (AbstractArrow)var4;
+-         Entity var6 = var5.getOwner();
+-         if (var5.isOnFire()) {
+-            BlockPos var7 = var3.getBlockPos();
+-            explode(var1, var7, var6 instanceof LivingEntity ? (LivingEntity)var6 : null);
+-            var1.removeBlock(var7, false);
++   public void onProjectileHit(Level var1, BlockState var2, BlockHitResult var3, Projectile var4) {
++      if (!var1.isClientSide) {
++         Entity var5 = var4.getOwner();
++         if (var4.isOnFire()) {
++            BlockPos var6 = var3.getBlockPos();
++            explode(var1, var6, var5 instanceof LivingEntity ? (LivingEntity)var5 : null);
++            var1.removeBlock(var6, false);
+          }
+       }
+ 
+    }
+ 

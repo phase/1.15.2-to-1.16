@@ -1,0 +1,306 @@
+--- net/minecraft/client/renderer/RenderStateShard.java
++++ net/minecraft/client/renderer/RenderStateShard.java
+@@ -29,11 +29,13 @@
+       RenderSystem.defaultBlendFunc();
+    });
+    protected static final RenderStateShard.TransparencyStateShard LIGHTNING_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("lightning_transparency", () -> {
+       RenderSystem.enableBlend();
+       RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
++      Minecraft.getInstance().levelRenderer.getWeatherTarget().bindWrite(false);
+    }, () -> {
++      Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+       RenderSystem.disableBlend();
+       RenderSystem.defaultBlendFunc();
+    });
+    protected static final RenderStateShard.TransparencyStateShard GLINT_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("glint_transparency", () -> {
+       RenderSystem.enableBlend();
+@@ -49,14 +51,22 @@
+       RenderSystem.disableBlend();
+       RenderSystem.defaultBlendFunc();
+    });
+    protected static final RenderStateShard.TransparencyStateShard TRANSLUCENT_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
+       RenderSystem.enableBlend();
+-      RenderSystem.defaultBlendFunc();
++      RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+    }, () -> {
+       RenderSystem.disableBlend();
+    });
++   protected static final RenderStateShard.TransparencyStateShard ITEM_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("item_transparency", () -> {
++      RenderSystem.enableBlend();
++      RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
++      Minecraft.getInstance().levelRenderer.getItemEntityTarget().bindWrite(false);
++   }, () -> {
++      Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
++      RenderSystem.disableBlend();
++   });
+    protected static final RenderStateShard.AlphaStateShard NO_ALPHA = new RenderStateShard.AlphaStateShard(0.0F);
+    protected static final RenderStateShard.AlphaStateShard DEFAULT_ALPHA = new RenderStateShard.AlphaStateShard(0.003921569F);
+    protected static final RenderStateShard.AlphaStateShard MIDWAY_ALPHA = new RenderStateShard.AlphaStateShard(0.5F);
+    protected static final RenderStateShard.ShadeModelStateShard FLAT_SHADE = new RenderStateShard.ShadeModelStateShard(false);
+    protected static final RenderStateShard.ShadeModelStateShard SMOOTH_SHADE = new RenderStateShard.ShadeModelStateShard(true);
+@@ -81,16 +91,20 @@
+    protected static final RenderStateShard.WriteMaskStateShard COLOR_DEPTH_WRITE;
+    protected static final RenderStateShard.WriteMaskStateShard COLOR_WRITE;
+    protected static final RenderStateShard.WriteMaskStateShard DEPTH_WRITE;
+    protected static final RenderStateShard.LayeringStateShard NO_LAYERING;
+    protected static final RenderStateShard.LayeringStateShard POLYGON_OFFSET_LAYERING;
+-   protected static final RenderStateShard.LayeringStateShard PROJECTION_LAYERING;
++   protected static final RenderStateShard.LayeringStateShard VIEW_OFFSET_Z_LAYERING;
+    protected static final RenderStateShard.FogStateShard NO_FOG;
+    protected static final RenderStateShard.FogStateShard FOG;
+    protected static final RenderStateShard.FogStateShard BLACK_FOG;
+    protected static final RenderStateShard.OutputStateShard MAIN_TARGET;
+    protected static final RenderStateShard.OutputStateShard OUTLINE_TARGET;
++   protected static final RenderStateShard.OutputStateShard TRANSLUCENT_TARGET;
++   protected static final RenderStateShard.OutputStateShard PARTICLES_TARGET;
++   protected static final RenderStateShard.OutputStateShard WEATHER_TARGET;
++   protected static final RenderStateShard.OutputStateShard CLOUDS_TARGET;
+    protected static final RenderStateShard.LineStateShard DEFAULT_LINE;
+ 
+    public RenderStateShard(String var1, Runnable var2, Runnable var3) {
+       this.name = var1;
+       this.setupState = var2;
+@@ -118,10 +132,14 @@
+ 
+    public int hashCode() {
+       return this.name.hashCode();
+    }
+ 
++   public String toString() {
++      return this.name;
++   }
++
+    private static void setupGlintTexturing(float var0) {
+       RenderSystem.matrixMode(5890);
+       RenderSystem.pushMatrix();
+       RenderSystem.loadIdentity();
+       long var1 = Util.getMillis() * 8L;
+@@ -165,13 +183,13 @@
+       NO_OVERLAY = new RenderStateShard.OverlayStateShard(false);
+       DIFFUSE_LIGHTING = new RenderStateShard.DiffuseLightingStateShard(true);
+       NO_DIFFUSE_LIGHTING = new RenderStateShard.DiffuseLightingStateShard(false);
+       CULL = new RenderStateShard.CullStateShard(true);
+       NO_CULL = new RenderStateShard.CullStateShard(false);
+-      NO_DEPTH_TEST = new RenderStateShard.DepthTestStateShard(519);
+-      EQUAL_DEPTH_TEST = new RenderStateShard.DepthTestStateShard(514);
+-      LEQUAL_DEPTH_TEST = new RenderStateShard.DepthTestStateShard(515);
++      NO_DEPTH_TEST = new RenderStateShard.DepthTestStateShard("always", 519);
++      EQUAL_DEPTH_TEST = new RenderStateShard.DepthTestStateShard("==", 514);
++      LEQUAL_DEPTH_TEST = new RenderStateShard.DepthTestStateShard("<=", 515);
+       COLOR_DEPTH_WRITE = new RenderStateShard.WriteMaskStateShard(true, true);
+       COLOR_WRITE = new RenderStateShard.WriteMaskStateShard(true, false);
+       DEPTH_WRITE = new RenderStateShard.WriteMaskStateShard(false, true);
+       NO_LAYERING = new RenderStateShard.LayeringStateShard("no_layering", () -> {
+       }, () -> {
+@@ -181,20 +199,14 @@
+          RenderSystem.enablePolygonOffset();
+       }, () -> {
+          RenderSystem.polygonOffset(0.0F, 0.0F);
+          RenderSystem.disablePolygonOffset();
+       });
+-      PROJECTION_LAYERING = new RenderStateShard.LayeringStateShard("projection_layering", () -> {
+-         RenderSystem.matrixMode(5889);
++      VIEW_OFFSET_Z_LAYERING = new RenderStateShard.LayeringStateShard("view_offset_z_layering", () -> {
+          RenderSystem.pushMatrix();
+-         RenderSystem.scalef(1.0F, 1.0F, 0.999F);
+-         RenderSystem.matrixMode(5888);
+-      }, () -> {
+-         RenderSystem.matrixMode(5889);
+-         RenderSystem.popMatrix();
+-         RenderSystem.matrixMode(5888);
+-      });
++         RenderSystem.scalef(0.99975586F, 0.99975586F, 0.99975586F);
++      }, RenderSystem::popMatrix);
+       NO_FOG = new RenderStateShard.FogStateShard("no_fog", () -> {
+       }, () -> {
+       });
+       FOG = new RenderStateShard.FogStateShard("fog", () -> {
+          FogRenderer.levelFogColor();
+@@ -215,18 +227,38 @@
+       OUTLINE_TARGET = new RenderStateShard.OutputStateShard("outline_target", () -> {
+          Minecraft.getInstance().levelRenderer.entityTarget().bindWrite(false);
+       }, () -> {
+          Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+       });
++      TRANSLUCENT_TARGET = new RenderStateShard.OutputStateShard("translucent_target", () -> {
++         Minecraft.getInstance().levelRenderer.getTranslucentTarget().bindWrite(false);
++      }, () -> {
++         Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
++      });
++      PARTICLES_TARGET = new RenderStateShard.OutputStateShard("particles_target", () -> {
++         Minecraft.getInstance().levelRenderer.getParticlesTarget().bindWrite(false);
++      }, () -> {
++         Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
++      });
++      WEATHER_TARGET = new RenderStateShard.OutputStateShard("weather_target", () -> {
++         Minecraft.getInstance().levelRenderer.getWeatherTarget().bindWrite(false);
++      }, () -> {
++         Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
++      });
++      CLOUDS_TARGET = new RenderStateShard.OutputStateShard("clouds_target", () -> {
++         Minecraft.getInstance().levelRenderer.getCloudsTarget().bindWrite(false);
++      }, () -> {
++         Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
++      });
+       DEFAULT_LINE = new RenderStateShard.LineStateShard(OptionalDouble.of(1.0D));
+    }
+ 
+    public static class LineStateShard extends RenderStateShard {
+       private final OptionalDouble width;
+ 
+       public LineStateShard(OptionalDouble var1) {
+-         super("alpha", () -> {
++         super("line_width", () -> {
+             if (!Objects.equals(var1, OptionalDouble.of(1.0D))) {
+                if (var1.isPresent()) {
+                   RenderSystem.lineWidth((float)var1.getAsDouble());
+                } else {
+                   RenderSystem.lineWidth(Math.max(2.5F, (float)Minecraft.getInstance().getWindow().getWidth() / 1920.0F * 2.5F));
+@@ -253,10 +285,14 @@
+       }
+ 
+       public int hashCode() {
+          return Objects.hash(new Object[]{super.hashCode(), this.width});
+       }
++
++      public String toString() {
++         return this.name + '[' + (this.width.isPresent() ? this.width.getAsDouble() : "window_scale") + ']';
++      }
+    }
+ 
+    public static class OutputStateShard extends RenderStateShard {
+       public OutputStateShard(String var1, Runnable var2, Runnable var3) {
+          super(var1, var2, var3);
+@@ -315,30 +351,36 @@
+       }
+ 
+       public int hashCode() {
+          return Objects.hash(new Object[]{this.writeColor, this.writeDepth});
+       }
++
++      public String toString() {
++         return this.name + "[writeColor=" + this.writeColor + ", writeDepth=" + this.writeDepth + ']';
++      }
+    }
+ 
+    public static class DepthTestStateShard extends RenderStateShard {
++      private final String functionName;
+       private final int function;
+ 
+-      public DepthTestStateShard(int var1) {
++      public DepthTestStateShard(String var1, int var2) {
+          super("depth_test", () -> {
+-            if (var1 != 519) {
++            if (var2 != 519) {
+                RenderSystem.enableDepthTest();
+-               RenderSystem.depthFunc(var1);
++               RenderSystem.depthFunc(var2);
+             }
+ 
+          }, () -> {
+-            if (var1 != 519) {
++            if (var2 != 519) {
+                RenderSystem.disableDepthTest();
+                RenderSystem.depthFunc(515);
+             }
+ 
+          });
+-         this.function = var1;
++         this.functionName = var1;
++         this.function = var2;
+       }
+ 
+       public boolean equals(Object var1) {
+          if (this == var1) {
+             return true;
+@@ -351,22 +393,26 @@
+       }
+ 
+       public int hashCode() {
+          return Integer.hashCode(this.function);
+       }
++
++      public String toString() {
++         return this.name + '[' + this.functionName + ']';
++      }
+    }
+ 
+    public static class CullStateShard extends RenderStateShard.BooleanStateShard {
+       public CullStateShard(boolean var1) {
+          super("cull", () -> {
+-            if (var1) {
+-               RenderSystem.enableCull();
++            if (!var1) {
++               RenderSystem.disableCull();
+             }
+ 
+          }, () -> {
+-            if (var1) {
+-               RenderSystem.disableCull();
++            if (!var1) {
++               RenderSystem.enableCull();
+             }
+ 
+          }, var1);
+       }
+    }
+@@ -439,10 +485,14 @@
+       }
+ 
+       public int hashCode() {
+          return Boolean.hashCode(this.enabled);
+       }
++
++      public String toString() {
++         return this.name + '[' + this.enabled + ']';
++      }
+    }
+ 
+    public static final class PortalTexturingStateShard extends RenderStateShard.TexturingStateShard {
+       private final int iteration;
+ 
+@@ -568,10 +618,14 @@
+ 
+       public int hashCode() {
+          return this.texture.hashCode();
+       }
+ 
++      public String toString() {
++         return this.name + '[' + this.texture + "(blur=" + this.blur + ", mipmap=" + this.mipmap + ")]";
++      }
++
+       protected Optional<ResourceLocation> texture() {
+          return this.texture;
+       }
+    }
+ 
+@@ -599,10 +653,14 @@
+       }
+ 
+       public int hashCode() {
+          return Boolean.hashCode(this.smooth);
+       }
++
++      public String toString() {
++         return this.name + '[' + (this.smooth ? "smooth" : "flat") + ']';
++      }
+    }
+ 
+    public static class AlphaStateShard extends RenderStateShard {
+       private final float cutoff;
+ 
+@@ -637,10 +695,14 @@
+       }
+ 
+       public int hashCode() {
+          return Objects.hash(new Object[]{super.hashCode(), this.cutoff});
+       }
++
++      public String toString() {
++         return this.name + '[' + this.cutoff + ']';
++      }
+    }
+ 
+    public static class TransparencyStateShard extends RenderStateShard {
+       public TransparencyStateShard(String var1, Runnable var2, Runnable var3) {
+          super(var1, var2, var3);

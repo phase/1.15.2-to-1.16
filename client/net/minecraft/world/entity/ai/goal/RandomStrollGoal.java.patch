@@ -1,0 +1,38 @@
+--- net/minecraft/world/entity/ai/goal/RandomStrollGoal.java
++++ net/minecraft/world/entity/ai/goal/RandomStrollGoal.java
+@@ -12,28 +12,34 @@
+    protected double wantedY;
+    protected double wantedZ;
+    protected final double speedModifier;
+    protected int interval;
+    protected boolean forceTrigger;
++   private boolean checkNoActionTime;
+ 
+    public RandomStrollGoal(PathfinderMob var1, double var2) {
+       this(var1, var2, 120);
+    }
+ 
+    public RandomStrollGoal(PathfinderMob var1, double var2, int var4) {
++      this(var1, var2, var4, true);
++   }
++
++   public RandomStrollGoal(PathfinderMob var1, double var2, int var4, boolean var5) {
+       this.mob = var1;
+       this.speedModifier = var2;
+       this.interval = var4;
++      this.checkNoActionTime = var5;
+       this.setFlags(EnumSet.of(Goal.Flag.MOVE));
+    }
+ 
+    public boolean canUse() {
+       if (this.mob.isVehicle()) {
+          return false;
+       } else {
+          if (!this.forceTrigger) {
+-            if (this.mob.getNoActionTime() >= 100) {
++            if (this.checkNoActionTime && this.mob.getNoActionTime() >= 100) {
+                return false;
+             }
+ 
+             if (this.mob.getRandom().nextInt(this.interval) != 0) {
+                return false;

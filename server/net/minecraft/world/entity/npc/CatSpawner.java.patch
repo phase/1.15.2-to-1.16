@@ -1,0 +1,47 @@
+--- net/minecraft/world/entity/npc/CatSpawner.java
++++ net/minecraft/world/entity/npc/CatSpawner.java
+@@ -11,17 +11,18 @@
+ import net.minecraft.world.entity.SpawnGroupData;
+ import net.minecraft.world.entity.SpawnPlacements;
+ import net.minecraft.world.entity.ai.village.poi.PoiManager;
+ import net.minecraft.world.entity.ai.village.poi.PoiType;
+ import net.minecraft.world.entity.animal.Cat;
++import net.minecraft.world.level.CustomSpawner;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.NaturalSpawner;
+-import net.minecraft.world.level.levelgen.feature.Feature;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.phys.AABB;
+ 
+-public class CatSpawner {
++public class CatSpawner implements CustomSpawner {
+    private int nextTick;
+ 
+    public CatSpawner() {
+    }
+ 
+@@ -37,20 +38,20 @@
+                return 0;
+             } else {
+                Random var5 = var1.random;
+                int var6 = (8 + var5.nextInt(24)) * (var5.nextBoolean() ? -1 : 1);
+                int var7 = (8 + var5.nextInt(24)) * (var5.nextBoolean() ? -1 : 1);
+-               BlockPos var8 = (new BlockPos(var4)).offset(var6, 0, var7);
++               BlockPos var8 = var4.blockPosition().offset(var6, 0, var7);
+                if (!var1.hasChunksAt(var8.getX() - 10, var8.getY() - 10, var8.getZ() - 10, var8.getX() + 10, var8.getY() + 10, var8.getZ() + 10)) {
+                   return 0;
+                } else {
+                   if (NaturalSpawner.isSpawnPositionOk(SpawnPlacements.Type.ON_GROUND, var1, var8, EntityType.CAT)) {
+-                     if (var1.closeToVillage(var8, 2)) {
++                     if (var1.isCloseToVillage(var8, 2)) {
+                         return this.spawnInVillage(var1, var8);
+                      }
+ 
+-                     if (Feature.SWAMP_HUT.isInsideFeature(var1, var8)) {
++                     if (var1.structureFeatureManager().getStructureAt(var8, true, StructureFeature.SWAMP_HUT).isValid()) {
+                         return this.spawnInHut(var1, var8);
+                      }
+                   }
+ 
+                   return 0;

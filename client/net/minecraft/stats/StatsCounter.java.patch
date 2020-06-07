@@ -1,0 +1,16 @@
+--- net/minecraft/stats/StatsCounter.java
++++ net/minecraft/stats/StatsCounter.java
+@@ -11,11 +11,12 @@
+    public StatsCounter() {
+       this.stats.defaultReturnValue(0);
+    }
+ 
+    public void increment(Player var1, Stat<?> var2, int var3) {
+-      this.setValue(var1, var2, this.getValue(var2) + var3);
++      int var4 = (int)Math.min((long)this.getValue(var2) + (long)var3, 2147483647L);
++      this.setValue(var1, var2, var4);
+    }
+ 
+    public void setValue(Player var1, Stat<?> var2, int var3) {
+       this.stats.put(var2, var3);
+    }

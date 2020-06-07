@@ -1,0 +1,25 @@
+--- net/minecraft/world/entity/ai/navigation/WallClimberNavigation.java
++++ net/minecraft/world/entity/ai/navigation/WallClimberNavigation.java
+@@ -17,20 +17,20 @@
+       this.pathToPosition = var1;
+       return super.createPath(var1, var2);
+    }
+ 
+    public Path createPath(Entity var1, int var2) {
+-      this.pathToPosition = new BlockPos(var1);
++      this.pathToPosition = var1.blockPosition();
+       return super.createPath(var1, var2);
+    }
+ 
+    public boolean moveTo(Entity var1, double var2) {
+       Path var4 = this.createPath((Entity)var1, 0);
+       if (var4 != null) {
+          return this.moveTo(var4, var2);
+       } else {
+-         this.pathToPosition = new BlockPos(var1);
++         this.pathToPosition = var1.blockPosition();
+          this.speedModifier = var2;
+          return true;
+       }
+    }
+ 

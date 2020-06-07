@@ -1,0 +1,17 @@
+--- net/minecraft/world/level/BlockAndTintGetter.java
++++ net/minecraft/world/level/BlockAndTintGetter.java
+@@ -1,11 +1,14 @@
+ package net.minecraft.world.level;
+ 
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
+ import net.minecraft.world.level.lighting.LevelLightEngine;
+ 
+ public interface BlockAndTintGetter extends BlockGetter {
++   float getShade(Direction var1, boolean var2);
++
+    LevelLightEngine getLightEngine();
+ 
+    int getBlockTint(BlockPos var1, ColorResolver var2);
+ 
+    default int getBrightness(LightLayer var1, BlockPos var2) {

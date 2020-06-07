@@ -1,0 +1,16 @@
+--- net/minecraft/world/item/PotionItem.java
++++ net/minecraft/world/item/PotionItem.java
+@@ -75,12 +75,11 @@
+    public UseAnim getUseAnimation(ItemStack var1) {
+       return UseAnim.DRINK;
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+-      var2.startUsingItem(var3);
+-      return InteractionResultHolder.success(var2.getItemInHand(var3));
++      return ItemUtils.useDrink(var1, var2, var3);
+    }
+ 
+    public String getDescriptionId(ItemStack var1) {
+       return PotionUtils.getPotion(var1).getName(this.getDescriptionId() + ".effect.");
+    }

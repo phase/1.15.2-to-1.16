@@ -1,0 +1,43 @@
+--- net/minecraft/world/level/block/BeetrootBlock.java
++++ net/minecraft/world/level/block/BeetrootBlock.java
+@@ -3,10 +3,11 @@
+ import java.util.Random;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+@@ -14,11 +15,11 @@
+ 
+ public class BeetrootBlock extends CropBlock {
+    public static final IntegerProperty AGE;
+    private static final VoxelShape[] SHAPE_BY_AGE;
+ 
+-   public BeetrootBlock(Block.Properties var1) {
++   public BeetrootBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public IntegerProperty getAgeProperty() {
+       return AGE;
+@@ -26,13 +27,13 @@
+ 
+    public int getMaxAge() {
+       return 3;
+    }
+ 
+-   public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
++   public void randomTick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+       if (var4.nextInt(3) != 0) {
+-         super.tick(var1, var2, var3, var4);
++         super.randomTick(var1, var2, var3, var4);
+       }
+ 
+    }
+ 
+    protected int getBonemealAgeIncrease(Level var1) {

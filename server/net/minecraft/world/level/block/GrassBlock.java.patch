@@ -1,0 +1,42 @@
+--- net/minecraft/world/level/block/GrassBlock.java
++++ net/minecraft/world/level/block/GrassBlock.java
+@@ -4,17 +4,18 @@
+ import java.util.Random;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.levelgen.feature.AbstractFlowerFeature;
+ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+ import net.minecraft.world.level.levelgen.feature.configurations.DecoratedFeatureConfiguration;
+ 
+ public class GrassBlock extends SpreadingSnowyDirtBlock implements BonemealableBlock {
+-   public GrassBlock(Block.Properties var1) {
++   public GrassBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public boolean isValidBonemealTarget(BlockGetter var1, BlockPos var2, BlockState var3, boolean var4) {
+       return var1.getBlockState(var2.above()).isAir();
+@@ -32,17 +33,17 @@
+       for(int var7 = 0; var7 < 128; ++var7) {
+          BlockPos var8 = var5;
+ 
+          for(int var9 = 0; var9 < var7 / 16; ++var9) {
+             var8 = var8.offset(var2.nextInt(3) - 1, (var2.nextInt(3) - 1) * var2.nextInt(3) / 2, var2.nextInt(3) - 1);
+-            if (var1.getBlockState(var8.below()).getBlock() != this || var1.getBlockState(var8).isCollisionShapeFullBlock(var1, var8)) {
++            if (!var1.getBlockState(var8.below()).is(this) || var1.getBlockState(var8).isCollisionShapeFullBlock(var1, var8)) {
+                continue label48;
+             }
+          }
+ 
+          BlockState var13 = var1.getBlockState(var8);
+-         if (var13.getBlock() == var6.getBlock() && var2.nextInt(10) == 0) {
++         if (var13.is(var6.getBlock()) && var2.nextInt(10) == 0) {
+             ((BonemealableBlock)var6.getBlock()).performBonemeal(var1, var2, var8, var13);
+          }
+ 
+          if (var13.isAir()) {
+             BlockState var10;

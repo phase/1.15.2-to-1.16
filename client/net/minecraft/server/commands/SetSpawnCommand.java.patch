@@ -1,0 +1,44 @@
+--- net/minecraft/server/commands/SetSpawnCommand.java
++++ net/minecraft/server/commands/SetSpawnCommand.java
+@@ -10,10 +10,11 @@
+ import net.minecraft.commands.Commands;
+ import net.minecraft.commands.arguments.EntityArgument;
+ import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.network.chat.TranslatableComponent;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.level.ServerPlayer;
+ 
+ public class SetSpawnCommand {
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("spawnpoint").requires((var0x) -> {
+@@ -26,21 +27,23 @@
+          return setSpawn((CommandSourceStack)var0x.getSource(), EntityArgument.getPlayers(var0x, "targets"), BlockPosArgument.getOrLoadBlockPos(var0x, "pos"));
+       }))));
+    }
+ 
+    private static int setSpawn(CommandSourceStack var0, Collection<ServerPlayer> var1, BlockPos var2) {
+-      Iterator var3 = var1.iterator();
++      ResourceKey var3 = var0.getLevel().dimension();
++      Iterator var4 = var1.iterator();
+ 
+-      while(var3.hasNext()) {
+-         ServerPlayer var4 = (ServerPlayer)var3.next();
+-         var4.setRespawnPosition(var2, true, false);
++      while(var4.hasNext()) {
++         ServerPlayer var5 = (ServerPlayer)var4.next();
++         var5.setRespawnPosition(var3, var2, true, false);
+       }
+ 
++      String var6 = var3.location().toString();
+       if (var1.size() == 1) {
+-         var0.sendSuccess(new TranslatableComponent("commands.spawnpoint.success.single", new Object[]{var2.getX(), var2.getY(), var2.getZ(), ((ServerPlayer)var1.iterator().next()).getDisplayName()}), true);
++         var0.sendSuccess(new TranslatableComponent("commands.spawnpoint.success.single", new Object[]{var2.getX(), var2.getY(), var2.getZ(), var6, ((ServerPlayer)var1.iterator().next()).getDisplayName()}), true);
+       } else {
+-         var0.sendSuccess(new TranslatableComponent("commands.spawnpoint.success.multiple", new Object[]{var2.getX(), var2.getY(), var2.getZ(), var1.size()}), true);
++         var0.sendSuccess(new TranslatableComponent("commands.spawnpoint.success.multiple", new Object[]{var2.getX(), var2.getY(), var2.getZ(), var6, var1.size()}), true);
+       }
+ 
+       return var1.size();
+    }
+ }

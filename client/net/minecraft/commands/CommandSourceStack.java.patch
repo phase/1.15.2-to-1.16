@@ -1,0 +1,101 @@
+--- net/minecraft/commands/CommandSourceStack.java
++++ net/minecraft/commands/CommandSourceStack.java
+@@ -7,33 +7,38 @@
+ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+ import com.mojang.brigadier.suggestion.Suggestions;
+ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+ import java.util.Collection;
+ import java.util.Iterator;
++import java.util.Set;
+ import java.util.concurrent.CompletableFuture;
+ import java.util.function.BinaryOperator;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.ChatFormatting;
++import net.minecraft.Util;
+ import net.minecraft.commands.arguments.EntityAnchorArgument;
+ import net.minecraft.core.Registry;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.GameRules;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.phys.Vec2;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class CommandSourceStack implements SharedSuggestionProvider {
+-   public static final SimpleCommandExceptionType ERROR_NOT_PLAYER = new SimpleCommandExceptionType(new TranslatableComponent("permissions.requires.player", new Object[0]));
+-   public static final SimpleCommandExceptionType ERROR_NOT_ENTITY = new SimpleCommandExceptionType(new TranslatableComponent("permissions.requires.entity", new Object[0]));
++   public static final SimpleCommandExceptionType ERROR_NOT_PLAYER = new SimpleCommandExceptionType(new TranslatableComponent("permissions.requires.player"));
++   public static final SimpleCommandExceptionType ERROR_NOT_ENTITY = new SimpleCommandExceptionType(new TranslatableComponent("permissions.requires.entity"));
+    private final CommandSource source;
+    private final Vec3 worldPosition;
+    private final ServerLevel level;
+    private final int permissionLevel;
+    private final String textName;
+@@ -175,41 +180,41 @@
+       return this.anchor;
+    }
+ 
+    public void sendSuccess(Component var1, boolean var2) {
+       if (this.source.acceptsSuccess() && !this.silent) {
+-         this.source.sendMessage(var1);
++         this.source.sendMessage(var1, Util.NIL_UUID);
+       }
+ 
+       if (var2 && this.source.shouldInformAdmins() && !this.silent) {
+          this.broadcastToAdmins(var1);
+       }
+ 
+    }
+ 
+    private void broadcastToAdmins(Component var1) {
+-      Component var2 = (new TranslatableComponent("chat.type.admin", new Object[]{this.getDisplayName(), var1})).withStyle(new ChatFormatting[]{ChatFormatting.GRAY, ChatFormatting.ITALIC});
++      MutableComponent var2 = (new TranslatableComponent("chat.type.admin", new Object[]{this.getDisplayName(), var1})).withStyle(new ChatFormatting[]{ChatFormatting.GRAY, ChatFormatting.ITALIC});
+       if (this.server.getGameRules().getBoolean(GameRules.RULE_SENDCOMMANDFEEDBACK)) {
+          Iterator var3 = this.server.getPlayerList().getPlayers().iterator();
+ 
+          while(var3.hasNext()) {
+             ServerPlayer var4 = (ServerPlayer)var3.next();
+             if (var4 != this.source && this.server.getPlayerList().isOp(var4.getGameProfile())) {
+-               var4.sendMessage(var2);
++               var4.sendMessage(var2, Util.NIL_UUID);
+             }
+          }
+       }
+ 
+       if (this.source != this.server && this.server.getGameRules().getBoolean(GameRules.RULE_LOGADMINCOMMANDS)) {
+-         this.server.sendMessage(var2);
++         this.server.sendMessage(var2, Util.NIL_UUID);
+       }
+ 
+    }
+ 
+    public void sendFailure(Component var1) {
+       if (this.source.acceptsFailure() && !this.silent) {
+-         this.source.sendMessage((new TextComponent("")).append(var1).withStyle(ChatFormatting.RED));
++         this.source.sendMessage((new TextComponent("")).append(var1).withStyle(ChatFormatting.RED), Util.NIL_UUID);
+       }
+ 
+    }
+ 
+    public void onCommandComplete(CommandContext<CommandSourceStack> var1, boolean var2, int var3) {
+@@ -236,6 +241,10 @@
+    }
+ 
+    public CompletableFuture<Suggestions> customSuggestion(CommandContext<SharedSuggestionProvider> var1, SuggestionsBuilder var2) {
+       return null;
+    }
++
++   public Set<ResourceKey<Level>> levels() {
++      return this.server.levelKeys();
++   }
+ }

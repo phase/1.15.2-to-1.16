@@ -1,0 +1,53 @@
+--- net/minecraft/world/entity/monster/PatrollingMonster.java
++++ net/minecraft/world/entity/monster/PatrollingMonster.java
+@@ -54,11 +54,11 @@
+ 
+       this.patrolLeader = var1.getBoolean("PatrolLeader");
+       this.patrolling = var1.getBoolean("Patrolling");
+    }
+ 
+-   public double getRidingHeight() {
++   public double getMyRidingOffset() {
+       return -0.45D;
+    }
+ 
+    public boolean canBeLeader() {
+       return true;
+@@ -115,11 +115,11 @@
+    public boolean canJoinPatrol() {
+       return true;
+    }
+ 
+    public void findPatrolTarget() {
+-      this.patrolTarget = (new BlockPos(this)).offset(-500 + this.random.nextInt(1000), 0, -500 + this.random.nextInt(1000));
++      this.patrolTarget = this.blockPosition().offset(-500 + this.random.nextInt(1000), 0, -500 + this.random.nextInt(1000));
+       this.patrolling = true;
+    }
+ 
+    protected boolean isPatrolling() {
+       return this.patrolling;
+@@ -162,11 +162,11 @@
+             if (this.mob.isPatrolling() && var3.isEmpty()) {
+                this.mob.setPatrolling(false);
+             } else if (var1 && this.mob.getPatrolTarget().closerThan(this.mob.position(), 10.0D)) {
+                this.mob.findPatrolTarget();
+             } else {
+-               Vec3 var4 = new Vec3(this.mob.getPatrolTarget());
++               Vec3 var4 = Vec3.atBottomCenterOf(this.mob.getPatrolTarget());
+                Vec3 var5 = this.mob.position();
+                Vec3 var6 = var5.subtract(var4);
+                var4 = var6.yRot(90.0F).scale(0.4D).add(var4);
+                Vec3 var7 = var4.subtract(var5).normalize().scale(10.0D).add(var5);
+                BlockPos var8 = new BlockPos(var7);
+@@ -193,10 +193,10 @@
+          });
+       }
+ 
+       private boolean moveRandomly() {
+          Random var1 = this.mob.getRandom();
+-         BlockPos var2 = this.mob.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (new BlockPos(this.mob)).offset(-8 + var1.nextInt(16), 0, -8 + var1.nextInt(16)));
++         BlockPos var2 = this.mob.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, this.mob.blockPosition().offset(-8 + var1.nextInt(16), 0, -8 + var1.nextInt(16)));
+          return this.mob.getNavigation().moveTo((double)var2.getX(), (double)var2.getY(), (double)var2.getZ(), this.speedModifier);
+       }
+    }
+ }

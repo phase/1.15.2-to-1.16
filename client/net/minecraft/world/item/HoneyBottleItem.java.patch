@@ -1,0 +1,13 @@
+--- net/minecraft/world/item/HoneyBottleItem.java
++++ net/minecraft/world/item/HoneyBottleItem.java
+@@ -59,9 +59,8 @@
+    public SoundEvent getEatingSound() {
+       return SoundEvents.HONEY_DRINK;
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+-      var2.startUsingItem(var3);
+-      return InteractionResultHolder.success(var2.getItemInHand(var3));
++      return ItemUtils.useDrink(var1, var2, var3);
+    }
+ }

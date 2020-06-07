@@ -1,0 +1,147 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/TreeConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/TreeConfiguration.java
+@@ -1,70 +1,111 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.google.common.collect.ImmutableMap;
+-import com.google.common.collect.Lists;
+-import com.google.common.collect.ImmutableMap.Builder;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.google.common.collect.ImmutableList;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
+ import java.util.List;
+-import net.minecraft.core.Registry;
+-import net.minecraft.resources.ResourceLocation;
++import net.minecraft.world.level.levelgen.Heightmap;
++import net.minecraft.world.level.levelgen.feature.featuresize.FeatureSize;
++import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacer;
+ import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
+-import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProviderType;
+ import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecorator;
+-import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecoratorType;
++import net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacer;
+ 
+ public class TreeConfiguration implements FeatureConfiguration {
++   public static final Codec<TreeConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(BlockStateProvider.CODEC.fieldOf("trunk_provider").forGetter((var0x) -> {
++         return var0x.trunkProvider;
++      }), BlockStateProvider.CODEC.fieldOf("leaves_provider").forGetter((var0x) -> {
++         return var0x.leavesProvider;
++      }), FoliagePlacer.CODEC.fieldOf("foliage_placer").forGetter((var0x) -> {
++         return var0x.foliagePlacer;
++      }), TrunkPlacer.CODEC.fieldOf("trunk_placer").forGetter((var0x) -> {
++         return var0x.trunkPlacer;
++      }), FeatureSize.CODEC.fieldOf("minimum_size").forGetter((var0x) -> {
++         return var0x.minimumSize;
++      }), TreeDecorator.CODEC.listOf().fieldOf("decorators").forGetter((var0x) -> {
++         return var0x.decorators;
++      }), Codec.INT.fieldOf("max_water_depth").withDefault(0).forGetter((var0x) -> {
++         return var0x.maxWaterDepth;
++      }), Codec.BOOL.fieldOf("ignore_vines").withDefault(false).forGetter((var0x) -> {
++         return var0x.ignoreVines;
++      }), Heightmap.Types.CODEC.fieldOf("heightmap").forGetter((var0x) -> {
++         return var0x.heightmap;
++      })).apply(var0, TreeConfiguration::new);
++   });
+    public final BlockStateProvider trunkProvider;
+    public final BlockStateProvider leavesProvider;
+    public final List<TreeDecorator> decorators;
+-   public final int baseHeight;
+    public transient boolean fromSapling;
++   public final FoliagePlacer foliagePlacer;
++   public final TrunkPlacer trunkPlacer;
++   public final FeatureSize minimumSize;
++   public final int maxWaterDepth;
++   public final boolean ignoreVines;
++   public final Heightmap.Types heightmap;
+ 
+-   protected TreeConfiguration(BlockStateProvider var1, BlockStateProvider var2, List<TreeDecorator> var3, int var4) {
++   protected TreeConfiguration(BlockStateProvider var1, BlockStateProvider var2, FoliagePlacer var3, TrunkPlacer var4, FeatureSize var5, List<TreeDecorator> var6, int var7, boolean var8, Heightmap.Types var9) {
+       this.trunkProvider = var1;
+       this.leavesProvider = var2;
+-      this.decorators = var3;
+-      this.baseHeight = var4;
++      this.decorators = var6;
++      this.foliagePlacer = var3;
++      this.minimumSize = var5;
++      this.trunkPlacer = var4;
++      this.maxWaterDepth = var7;
++      this.ignoreVines = var8;
++      this.heightmap = var9;
+    }
+ 
+    public void setFromSapling() {
+       this.fromSapling = true;
+    }
+ 
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      Builder var2 = ImmutableMap.builder();
+-      var2.put(var1.createString("trunk_provider"), this.trunkProvider.serialize(var1)).put(var1.createString("leaves_provider"), this.leavesProvider.serialize(var1)).put(var1.createString("decorators"), var1.createList(this.decorators.stream().map((var1x) -> {
+-         return var1x.serialize(var1);
+-      }))).put(var1.createString("base_height"), var1.createInt(this.baseHeight));
+-      return new Dynamic(var1, var1.createMap(var2.build()));
++   public TreeConfiguration withDecorators(List<TreeDecorator> var1) {
++      return new TreeConfiguration(this.trunkProvider, this.leavesProvider, this.foliagePlacer, this.trunkPlacer, this.minimumSize, var1, this.maxWaterDepth, this.ignoreVines, this.heightmap);
+    }
+ 
+-   public static <T> TreeConfiguration deserialize(Dynamic<T> var0) {
+-      BlockStateProviderType var1 = (BlockStateProviderType)Registry.BLOCKSTATE_PROVIDER_TYPES.get(new ResourceLocation((String)var0.get("trunk_provider").get("type").asString().orElseThrow(RuntimeException::new)));
+-      BlockStateProviderType var2 = (BlockStateProviderType)Registry.BLOCKSTATE_PROVIDER_TYPES.get(new ResourceLocation((String)var0.get("leaves_provider").get("type").asString().orElseThrow(RuntimeException::new)));
+-      return new TreeConfiguration(var1.deserialize(var0.get("trunk_provider").orElseEmptyMap()), var2.deserialize(var0.get("leaves_provider").orElseEmptyMap()), var0.get("decorators").asList((var0x) -> {
+-         return ((TreeDecoratorType)Registry.TREE_DECORATOR_TYPES.get(new ResourceLocation((String)var0x.get("type").asString().orElseThrow(RuntimeException::new)))).deserialize(var0x);
+-      }), var0.get("base_height").asInt(0));
+-   }
+-
+    public static class TreeConfigurationBuilder {
+       public final BlockStateProvider trunkProvider;
+       public final BlockStateProvider leavesProvider;
+-      private List<TreeDecorator> decorators = Lists.newArrayList();
+-      private int baseHeight = 0;
++      private final FoliagePlacer foliagePlacer;
++      private final TrunkPlacer trunkPlacer;
++      private final FeatureSize minimumSize;
++      private List<TreeDecorator> decorators = ImmutableList.of();
++      private int maxWaterDepth;
++      private boolean ignoreVines;
++      private Heightmap.Types heightmap;
+ 
+-      public TreeConfigurationBuilder(BlockStateProvider var1, BlockStateProvider var2) {
++      public TreeConfigurationBuilder(BlockStateProvider var1, BlockStateProvider var2, FoliagePlacer var3, TrunkPlacer var4, FeatureSize var5) {
++         this.heightmap = Heightmap.Types.OCEAN_FLOOR;
+          this.trunkProvider = var1;
+          this.leavesProvider = var2;
++         this.foliagePlacer = var3;
++         this.trunkPlacer = var4;
++         this.minimumSize = var5;
+       }
+ 
+-      public TreeConfiguration.TreeConfigurationBuilder baseHeight(int var1) {
+-         this.baseHeight = var1;
++      public TreeConfiguration.TreeConfigurationBuilder decorators(List<TreeDecorator> var1) {
++         this.decorators = var1;
+          return this;
+       }
+ 
++      public TreeConfiguration.TreeConfigurationBuilder maxWaterDepth(int var1) {
++         this.maxWaterDepth = var1;
++         return this;
++      }
++
++      public TreeConfiguration.TreeConfigurationBuilder ignoreVines() {
++         this.ignoreVines = true;
++         return this;
++      }
++
++      public TreeConfiguration.TreeConfigurationBuilder heightmap(Heightmap.Types var1) {
++         this.heightmap = var1;
++         return this;
++      }
++
+       public TreeConfiguration build() {
+-         return new TreeConfiguration(this.trunkProvider, this.leavesProvider, this.decorators, this.baseHeight);
++         return new TreeConfiguration(this.trunkProvider, this.leavesProvider, this.foliagePlacer, this.trunkPlacer, this.minimumSize, this.decorators, this.maxWaterDepth, this.ignoreVines, this.heightmap);
+       }
+    }
+ }

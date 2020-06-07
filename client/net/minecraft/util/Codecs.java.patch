@@ -1,0 +1,32 @@
+--- net/minecraft/util/Codecs.java
++++ net/minecraft/util/Codecs.java
+@@ -1,0 +1,29 @@
++package net.minecraft.util;
++
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import java.util.function.Function;
++
++public class Codecs {
++   private static Function<Integer, DataResult<Integer>> checkRange(int var0, int var1) {
++      return (var2) -> {
++         return var2 >= var0 && var2 <= var1 ? DataResult.success(var2) : DataResult.error("Value " + var2 + " outside of range [" + var0 + ":" + var1 + "]", var2);
++      };
++   }
++
++   public static Codec<Integer> intRange(int var0, int var1) {
++      Function var2 = checkRange(var0, var1);
++      return Codec.INT.flatXmap(var2, var2);
++   }
++
++   private static Function<Double, DataResult<Double>> checkRange(double var0, double var2) {
++      return (var4) -> {
++         return var4 >= var0 && var4 <= var2 ? DataResult.success(var4) : DataResult.error("Value " + var4 + " outside of range [" + var0 + ":" + var2 + "]", var4);
++      };
++   }
++
++   public static Codec<Double> doubleRange(double var0, double var2) {
++      Function var4 = checkRange(var0, var2);
++      return Codec.DOUBLE.flatXmap(var4, var4);
++   }
++}

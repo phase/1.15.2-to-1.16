@@ -1,0 +1,42 @@
+--- net/minecraft/client/model/PlayerModel.java
++++ net/minecraft/client/model/PlayerModel.java
+@@ -7,10 +7,11 @@
+ import com.mojang.blaze3d.vertex.VertexConsumer;
+ import java.util.List;
+ import java.util.Random;
+ import net.minecraft.client.model.geom.ModelPart;
+ import net.minecraft.client.renderer.RenderType;
++import net.minecraft.world.entity.EquipmentSlot;
+ import net.minecraft.world.entity.HumanoidArm;
+ import net.minecraft.world.entity.LivingEntity;
+ 
+ public class PlayerModel<T extends LivingEntity> extends HumanoidModel<T> {
+    private List<ModelPart> cubes = Lists.newArrayList();
+@@ -90,14 +91,24 @@
+       this.leftPants.copyFrom(this.leftLeg);
+       this.rightPants.copyFrom(this.rightLeg);
+       this.leftSleeve.copyFrom(this.leftArm);
+       this.rightSleeve.copyFrom(this.rightArm);
+       this.jacket.copyFrom(this.body);
+-      if (var1.isCrouching()) {
+-         this.cloak.y = 2.0F;
++      if (var1.getItemBySlot(EquipmentSlot.CHEST).isEmpty()) {
++         if (var1.isCrouching()) {
++            this.cloak.z = 1.4F;
++            this.cloak.y = 1.85F;
++         } else {
++            this.cloak.z = 0.0F;
++            this.cloak.y = 0.0F;
++         }
++      } else if (var1.isCrouching()) {
++         this.cloak.z = 0.3F;
++         this.cloak.y = 0.8F;
+       } else {
+-         this.cloak.y = 0.0F;
++         this.cloak.z = -1.1F;
++         this.cloak.y = -0.85F;
+       }
+ 
+    }
+ 
+    public void setAllVisible(boolean var1) {

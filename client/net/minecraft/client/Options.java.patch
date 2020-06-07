@@ -1,0 +1,203 @@
+--- net/minecraft/client/Options.java
++++ net/minecraft/client/Options.java
+@@ -6,19 +6,18 @@
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Sets;
+ import com.google.common.io.Files;
+ import com.google.gson.Gson;
++import com.google.gson.reflect.TypeToken;
+ import com.mojang.blaze3d.platform.InputConstants;
+ import com.mojang.blaze3d.platform.VideoMode;
+ import java.io.BufferedReader;
+ import java.io.File;
+ import java.io.FileOutputStream;
+ import java.io.OutputStreamWriter;
+ import java.io.PrintWriter;
+-import java.lang.reflect.ParameterizedType;
+-import java.lang.reflect.Type;
+ import java.nio.charset.StandardCharsets;
+ import java.util.Iterator;
+ import java.util.LinkedHashSet;
+ import java.util.List;
+ import java.util.Map;
+@@ -44,34 +43,25 @@
+ import org.apache.logging.log4j.Logger;
+ 
+ public class Options {
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Gson GSON = new Gson();
+-   private static final Type RESOURCE_PACK_TYPE = new ParameterizedType() {
+-      public Type[] getActualTypeArguments() {
+-         return new Type[]{String.class};
+-      }
+-
+-      public Type getRawType() {
+-         return List.class;
+-      }
+-
+-      public Type getOwnerType() {
+-         return null;
+-      }
++   private static final TypeToken<List<String>> RESOURCE_PACK_TYPE = new TypeToken<List<String>>() {
+    };
+    private static final Splitter OPTION_SPLITTER = Splitter.on(':').limit(2);
+    public double sensitivity = 0.5D;
+    public int renderDistance = -1;
++   public float entityDistanceScaling = 1.0F;
+    public int framerateLimit = 120;
+    public CloudStatus renderClouds;
+    public boolean fancyGraphics;
+    public AmbientOcclusionStatus ambientOcclusion;
+    public List<String> resourcePacks;
+    public List<String> incompatibleResourcePacks;
+    public ChatVisiblity chatVisibility;
+    public double chatOpacity;
++   public double chatLineSpacing;
+    public double textBackgroundOpacity;
+    @Nullable
+    public String fullscreenVideoModeString;
+    public boolean hideServerAddress;
+    public boolean advancedItemTooltips;
+@@ -83,10 +73,11 @@
+    public boolean heldItemTooltips;
+    public double chatScale;
+    public double chatWidth;
+    public double chatHeightUnfocused;
+    public double chatHeightFocused;
++   public double chatDelay;
+    public int mipmapLevels;
+    private final Map<SoundSource, Float> sourceVolumes;
+    public boolean useNativeTransport;
+    public AttackIndicatorStatus attackIndicator;
+    public TutorialSteps tutorialStep;
+@@ -164,19 +155,21 @@
+       this.ambientOcclusion = AmbientOcclusionStatus.MAX;
+       this.resourcePacks = Lists.newArrayList();
+       this.incompatibleResourcePacks = Lists.newArrayList();
+       this.chatVisibility = ChatVisiblity.FULL;
+       this.chatOpacity = 1.0D;
++      this.chatLineSpacing = 0.0D;
+       this.textBackgroundOpacity = 0.5D;
+       this.pauseOnLostFocus = true;
+       this.modelParts = Sets.newHashSet(PlayerModelPart.values());
+       this.mainHand = HumanoidArm.RIGHT;
+       this.heldItemTooltips = true;
+       this.chatScale = 1.0D;
+       this.chatWidth = 1.0D;
+       this.chatHeightUnfocused = 0.44366195797920227D;
+       this.chatHeightFocused = 1.0D;
++      this.chatDelay = 0.0D;
+       this.mipmapLevels = 4;
+       this.sourceVolumes = Maps.newEnumMap(SoundSource.class);
+       this.useNativeTransport = true;
+       this.attackIndicator = AttackIndicatorStatus.CROSSHAIR;
+       this.tutorialStep = TutorialSteps.MOVEMENT;
+@@ -397,10 +390,14 @@
+ 
+                if ("renderDistance".equals(var4)) {
+                   this.renderDistance = Integer.parseInt(var5);
+                }
+ 
++               if ("entityDistanceScaling".equals(var4)) {
++                  this.entityDistanceScaling = Float.parseFloat(var5);
++               }
++
+                if ("guiScale".equals(var4)) {
+                   this.guiScale = Integer.parseInt(var5);
+                }
+ 
+                if ("particles".equals(var4)) {
+@@ -478,10 +475,14 @@
+ 
+                if ("chatOpacity".equals(var4)) {
+                   this.chatOpacity = (double)readFloat(var5);
+                }
+ 
++               if ("chatLineSpacing".equals(var4)) {
++                  this.chatLineSpacing = (double)readFloat(var5);
++               }
++
+                if ("textBackgroundOpacity".equals(var4)) {
+                   this.textBackgroundOpacity = (double)readFloat(var5);
+                }
+ 
+                if ("backgroundForChatOnly".equals(var4)) {
+@@ -518,10 +519,14 @@
+ 
+                if ("chatHeightFocused".equals(var4)) {
+                   this.chatHeightFocused = (double)readFloat(var5);
+                }
+ 
++               if ("chatDelay".equals(var4)) {
++                  this.chatDelay = (double)readFloat(var5);
++               }
++
+                if ("chatHeightUnfocused".equals(var4)) {
+                   this.chatHeightUnfocused = (double)readFloat(var5);
+                }
+ 
+                if ("chatScale".equals(var4)) {
+@@ -657,10 +662,11 @@
+             var1.println("toggleSprint:" + this.toggleSprint);
+             var1.println("mouseSensitivity:" + this.sensitivity);
+             var1.println("fov:" + (this.fov - 70.0D) / 40.0D);
+             var1.println("gamma:" + this.gamma);
+             var1.println("renderDistance:" + this.renderDistance);
++            var1.println("entityDistanceScaling:" + this.entityDistanceScaling);
+             var1.println("guiScale:" + this.guiScale);
+             var1.println("particles:" + this.particles.getId());
+             var1.println("maxFps:" + this.framerateLimit);
+             var1.println("difficulty:" + this.difficulty.getId());
+             var1.println("fancyGraphics:" + this.fancyGraphics);
+@@ -681,10 +687,11 @@
+             var1.println("incompatibleResourcePacks:" + GSON.toJson(this.incompatibleResourcePacks));
+             var1.println("lastServer:" + this.lastMpIp);
+             var1.println("lang:" + this.languageCode);
+             var1.println("chatVisibility:" + this.chatVisibility.getId());
+             var1.println("chatOpacity:" + this.chatOpacity);
++            var1.println("chatLineSpacing:" + this.chatLineSpacing);
+             var1.println("textBackgroundOpacity:" + this.textBackgroundOpacity);
+             var1.println("backgroundForChatOnly:" + this.backgroundForChatOnly);
+             if (this.minecraft.getWindow().getPreferredFullscreenVideoMode().isPresent()) {
+                var1.println("fullscreenResolution:" + ((VideoMode)this.minecraft.getWindow().getPreferredFullscreenVideoMode().get()).write());
+             }
+@@ -694,10 +701,11 @@
+             var1.println("pauseOnLostFocus:" + this.pauseOnLostFocus);
+             var1.println("overrideWidth:" + this.overrideWidth);
+             var1.println("overrideHeight:" + this.overrideHeight);
+             var1.println("heldItemTooltips:" + this.heldItemTooltips);
+             var1.println("chatHeightFocused:" + this.chatHeightFocused);
++            var1.println("chatDelay: " + this.chatDelay);
+             var1.println("chatHeightUnfocused:" + this.chatHeightUnfocused);
+             var1.println("chatScale:" + this.chatScale);
+             var1.println("chatWidth:" + this.chatWidth);
+             var1.println("mipmapLevels:" + this.mipmapLevels);
+             var1.println("useNativeTransport:" + this.useNativeTransport);
+@@ -810,12 +818,11 @@
+ 
+    public boolean useNativeTransport() {
+       return this.useNativeTransport;
+    }
+ 
+-   public void loadResourcePacks(PackRepository<UnopenedResourcePack> var1) {
+-      var1.reload();
++   public void loadSelectedResourcePacks(PackRepository<UnopenedResourcePack> var1) {
+       LinkedHashSet var2 = Sets.newLinkedHashSet();
+       Iterator var3 = this.resourcePacks.iterator();
+ 
+       while(true) {
+          while(var3.hasNext()) {
+@@ -833,11 +840,11 @@
+                var3.remove();
+             } else if (var5.getCompatibility().isCompatible() && this.incompatibleResourcePacks.contains(var4)) {
+                LOGGER.info("Removed resource pack {} from incompatibility list because it's now compatible", var4);
+                this.incompatibleResourcePacks.remove(var4);
+             } else {
+-               var2.add(var5);
++               var2.add(var5.getId());
+             }
+          }
+ 
+          var1.setSelected(var2);
+          return;

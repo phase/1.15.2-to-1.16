@@ -1,0 +1,14 @@
+--- net/minecraft/util/datafix/fixes/EntityZombieSplitFix.java
++++ net/minecraft/util/datafix/fixes/EntityZombieSplitFix.java
+@@ -1,10 +1,10 @@
+ package net.minecraft.util.datafix.fixes;
+ 
+-import com.mojang.datafixers.Dynamic;
+ import com.mojang.datafixers.schemas.Schema;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Dynamic;
+ import java.util.Objects;
+ 
+ public class EntityZombieSplitFix extends SimpleEntityRenameFix {
+    public EntityZombieSplitFix(Schema var1, boolean var2) {
+       super("EntityZombieSplitFix", var1, var2);

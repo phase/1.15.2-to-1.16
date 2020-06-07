@@ -1,0 +1,26 @@
+--- net/minecraft/client/renderer/entity/VexRenderer.java
++++ net/minecraft/client/renderer/entity/VexRenderer.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.client.renderer.entity;
+ 
+ import com.mojang.blaze3d.vertex.PoseStack;
+ import net.minecraft.client.model.VexModel;
++import net.minecraft.core.BlockPos;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.world.entity.monster.Vex;
+ 
+ public class VexRenderer extends HumanoidMobRenderer<Vex, VexModel> {
+    private static final ResourceLocation VEX_LOCATION = new ResourceLocation("textures/entity/illager/vex.png");
+@@ -11,11 +12,11 @@
+ 
+    public VexRenderer(EntityRenderDispatcher var1) {
+       super(var1, new VexModel(), 0.3F);
+    }
+ 
+-   protected int getBlockLightLevel(Vex var1, float var2) {
++   protected int getBlockLightLevel(Vex var1, BlockPos var2) {
+       return 15;
+    }
+ 
+    public ResourceLocation getTextureLocation(Vex var1) {
+       return var1.isCharging() ? VEX_CHARGING_LOCATION : VEX_LOCATION;

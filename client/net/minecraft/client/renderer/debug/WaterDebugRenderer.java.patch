@@ -1,0 +1,15 @@
+--- net/minecraft/client/renderer/debug/WaterDebugRenderer.java
++++ net/minecraft/client/renderer/debug/WaterDebugRenderer.java
+@@ -17,11 +17,11 @@
+    public WaterDebugRenderer(Minecraft var1) {
+       this.minecraft = var1;
+    }
+ 
+    public void render(PoseStack var1, MultiBufferSource var2, double var3, double var5, double var7) {
+-      BlockPos var9 = this.minecraft.player.getCommandSenderBlockPosition();
++      BlockPos var9 = this.minecraft.player.blockPosition();
+       Level var10 = this.minecraft.player.level;
+       RenderSystem.enableBlend();
+       RenderSystem.defaultBlendFunc();
+       RenderSystem.color4f(0.0F, 1.0F, 0.0F, 0.75F);
+       RenderSystem.disableTexture();

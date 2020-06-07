@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/ai/goal/target/OwnerHurtTargetGoal.java
++++ net/minecraft/world/entity/ai/goal/target/OwnerHurtTargetGoal.java
+@@ -16,11 +16,11 @@
+       this.tameAnimal = var1;
+       this.setFlags(EnumSet.of(Goal.Flag.TARGET));
+    }
+ 
+    public boolean canUse() {
+-      if (this.tameAnimal.isTame() && !this.tameAnimal.isSitting()) {
++      if (this.tameAnimal.isTame() && !this.tameAnimal.isOrderedToSit()) {
+          LivingEntity var1 = this.tameAnimal.getOwner();
+          if (var1 == null) {
+             return false;
+          } else {
+             this.ownerLastHurt = var1.getLastHurtMob();

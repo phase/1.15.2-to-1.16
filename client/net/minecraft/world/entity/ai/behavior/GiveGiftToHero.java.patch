@@ -1,0 +1,68 @@
+--- net/minecraft/world/entity/ai/behavior/GiveGiftToHero.java
++++ net/minecraft/world/entity/ai/behavior/GiveGiftToHero.java
+@@ -10,10 +10,11 @@
+ import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.effect.MobEffects;
++import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+ import net.minecraft.world.entity.ai.memory.MemoryStatus;
+ import net.minecraft.world.entity.npc.Villager;
+ import net.minecraft.world.entity.npc.VillagerProfession;
+@@ -80,11 +81,11 @@
+          if (var3 - this.timeSinceStart > 20L) {
+             this.throwGift(var2, var5);
+             this.giftGivenDuringThisRun = true;
+          }
+       } else {
+-         BehaviorUtils.walkToEntity(var2, var5, 5);
++         BehaviorUtils.setWalkAndLookTargetMemories(var2, (Entity)var5, 0.5F, 5);
+       }
+ 
+    }
+ 
+    protected void stop(ServerLevel var1, Villager var2, long var3) {
+@@ -98,11 +99,11 @@
+       List var3 = this.getItemToThrow(var1);
+       Iterator var4 = var3.iterator();
+ 
+       while(var4.hasNext()) {
+          ItemStack var5 = (ItemStack)var4.next();
+-         BehaviorUtils.throwItem(var1, var5, var2);
++         BehaviorUtils.throwItem(var1, var5, var2.position());
+       }
+ 
+    }
+ 
+    private List<ItemStack> getItemToThrow(Villager var1) {
+@@ -110,11 +111,11 @@
+          return ImmutableList.of(new ItemStack(Items.POPPY));
+       } else {
+          VillagerProfession var2 = var1.getVillagerData().getProfession();
+          if (gifts.containsKey(var2)) {
+             LootTable var3 = var1.level.getServer().getLootTables().get((ResourceLocation)gifts.get(var2));
+-            LootContext.Builder var4 = (new LootContext.Builder((ServerLevel)var1.level)).withParameter(LootContextParams.BLOCK_POS, new BlockPos(var1)).withParameter(LootContextParams.THIS_ENTITY, var1).withRandom(var1.getRandom());
++            LootContext.Builder var4 = (new LootContext.Builder((ServerLevel)var1.level)).withParameter(LootContextParams.BLOCK_POS, var1.blockPosition()).withParameter(LootContextParams.THIS_ENTITY, var1).withRandom(var1.getRandom());
+             return var3.getRandomItems(var4.create(LootContextParamSets.GIFT));
+          } else {
+             return ImmutableList.of(new ItemStack(Items.WHEAT_SEEDS));
+          }
+       }
+@@ -131,12 +132,12 @@
+    private boolean isHero(Player var1) {
+       return var1.hasEffect(MobEffects.HERO_OF_THE_VILLAGE);
+    }
+ 
+    private boolean isWithinThrowingDistance(Villager var1, Player var2) {
+-      BlockPos var3 = new BlockPos(var2);
+-      BlockPos var4 = new BlockPos(var1);
++      BlockPos var3 = var2.blockPosition();
++      BlockPos var4 = var1.blockPosition();
+       return var4.closerThan(var3, 5.0D);
+    }
+ 
+    private static int calculateTimeUntilNextGift(ServerLevel var0) {
+       return 600 + var0.random.nextInt(6001);

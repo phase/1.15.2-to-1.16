@@ -1,0 +1,51 @@
+--- net/minecraft/world/scores/Team.java
++++ net/minecraft/world/scores/Team.java
+@@ -4,10 +4,11 @@
+ import java.util.Collection;
+ import java.util.Map;
+ import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
+ 
+ public abstract class Team {
+    public Team() {
+    }
+@@ -20,11 +21,11 @@
+       }
+    }
+ 
+    public abstract String getName();
+ 
+-   public abstract Component getFormattedName(Component var1);
++   public abstract MutableComponent getFormattedName(Component var1);
+ 
+    public abstract boolean isAllowFriendlyFire();
+ 
+    public abstract Collection<String> getPlayers();
+ 
+@@ -55,11 +56,11 @@
+          this.name = var3;
+          this.id = var4;
+       }
+ 
+       public Component getDisplayName() {
+-         return new TranslatableComponent("team.collision." + this.name, new Object[0]);
++         return new TranslatableComponent("team.collision." + this.name);
+       }
+    }
+ 
+    public static enum Visibility {
+       ALWAYS("always", 0),
+@@ -84,9 +85,9 @@
+          this.name = var3;
+          this.id = var4;
+       }
+ 
+       public Component getDisplayName() {
+-         return new TranslatableComponent("team.visibility." + this.name, new Object[0]);
++         return new TranslatableComponent("team.visibility." + this.name);
+       }
+    }
+ }

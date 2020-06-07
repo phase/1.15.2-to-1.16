@@ -1,0 +1,26 @@
+--- net/minecraft/client/renderer/entity/ArmorStandRenderer.java
++++ net/minecraft/client/renderer/entity/ArmorStandRenderer.java
+@@ -43,18 +43,18 @@
+       float var4 = var1.isCrouching() ? 32.0F : 64.0F;
+       return var2 >= (double)(var4 * var4) ? false : var1.isCustomNameVisible();
+    }
+ 
+    @Nullable
+-   protected RenderType getRenderType(ArmorStand var1, boolean var2, boolean var3) {
++   protected RenderType getRenderType(ArmorStand var1, boolean var2, boolean var3, boolean var4) {
+       if (!var1.isMarker()) {
+-         return super.getRenderType(var1, var2, var3);
++         return super.getRenderType(var1, var2, var3, var4);
+       } else {
+-         ResourceLocation var4 = this.getTextureLocation(var1);
++         ResourceLocation var5 = this.getTextureLocation(var1);
+          if (var3) {
+-            return RenderType.entityTranslucent(var4, false);
++            return RenderType.entityTranslucent(var5, false);
+          } else {
+-            return var2 ? RenderType.entityCutoutNoCull(var4, false) : null;
++            return var2 ? RenderType.entityCutoutNoCull(var5, false) : null;
+          }
+       }
+    }
+ }

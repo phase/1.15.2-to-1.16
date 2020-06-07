@@ -1,0 +1,15 @@
+--- net/minecraft/nbt/ListTag.java
++++ net/minecraft/nbt/ListTag.java
+@@ -320,11 +320,11 @@
+             return var3;
+          }
+       }
+    }
+ 
+-   public int getElementType() {
++   public byte getElementType() {
+       return this.type;
+    }
+ 
+    public void clear() {
+       this.list.clear();

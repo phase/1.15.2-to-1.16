@@ -1,0 +1,11 @@
+--- net/minecraft/world/item/ArmorMaterial.java
++++ net/minecraft/world/item/ArmorMaterial.java
+@@ -16,6 +16,8 @@
+    Ingredient getRepairIngredient();
+ 
+    String getName();
+ 
+    float getToughness();
++
++   float getKnockbackResistance();
+ }

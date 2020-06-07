@@ -1,0 +1,82 @@
+--- net/minecraft/world/level/block/TurtleEggBlock.java
++++ net/minecraft/world/level/block/TurtleEggBlock.java
+@@ -16,10 +16,11 @@
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.IntegerProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+@@ -29,11 +30,11 @@
+    private static final VoxelShape ONE_EGG_AABB = Block.box(3.0D, 0.0D, 3.0D, 12.0D, 7.0D, 12.0D);
+    private static final VoxelShape MULTIPLE_EGGS_AABB = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 7.0D, 15.0D);
+    public static final IntegerProperty HATCH;
+    public static final IntegerProperty EGGS;
+ 
+-   public TurtleEggBlock(Block.Properties var1) {
++   public TurtleEggBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(HATCH, 0)).setValue(EGGS, 1));
+    }
+ 
+    public void stepOn(Level var1, BlockPos var2, Entity var3) {
+@@ -70,11 +71,11 @@
+          var1.levelEvent(2001, var2, Block.getId(var3));
+       }
+ 
+    }
+ 
+-   public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
++   public void randomTick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+       if (this.shouldUpdateHatchLevel(var2) && this.onSand(var2, var3)) {
+          int var5 = (Integer)var1.getValue(HATCH);
+          if (var5 < 2) {
+             var2.playSound((Player)null, var3, SoundEvents.TURTLE_EGG_CRACK, SoundSource.BLOCKS, 0.7F, 0.9F + var4.nextFloat() * 0.2F);
+             var2.setBlock(var3, (BlockState)var1.setValue(HATCH, var5 + 1), 2);
+@@ -94,11 +95,11 @@
+       }
+ 
+    }
+ 
+    private boolean onSand(BlockGetter var1, BlockPos var2) {
+-      return var1.getBlockState(var2.below()).getBlock() == Blocks.SAND;
++      return var1.getBlockState(var2.below()).is(Blocks.SAND);
+    }
+ 
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+       if (this.onSand(var2, var3) && !var2.isClientSide) {
+          var2.levelEvent(2005, var3, 0);
+@@ -125,11 +126,11 @@
+    }
+ 
+    @Nullable
+    public BlockState getStateForPlacement(BlockPlaceContext var1) {
+       BlockState var2 = var1.getLevel().getBlockState(var1.getClickedPos());
+-      return var2.getBlock() == this ? (BlockState)var2.setValue(EGGS, Math.min(4, (Integer)var2.getValue(EGGS) + 1)) : super.getStateForPlacement(var1);
++      return var2.is(this) ? (BlockState)var2.setValue(EGGS, Math.min(4, (Integer)var2.getValue(EGGS) + 1)) : super.getStateForPlacement(var1);
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return (Integer)var1.getValue(EGGS) > 1 ? MULTIPLE_EGGS_AABB : ONE_EGG_AABB;
+    }
+@@ -139,12 +140,14 @@
+    }
+ 
+    private boolean canDestroyEgg(Level var1, Entity var2) {
+       if (var2 instanceof Turtle) {
+          return false;
++      } else if (!(var2 instanceof LivingEntity)) {
++         return false;
+       } else {
+-         return var2 instanceof LivingEntity && !(var2 instanceof Player) ? var1.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING) : true;
++         return var2 instanceof Player || var1.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+       }
+    }
+ 
+    static {
+       HATCH = BlockStateProperties.HATCH;

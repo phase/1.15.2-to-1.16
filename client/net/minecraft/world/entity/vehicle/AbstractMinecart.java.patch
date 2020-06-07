@@ -1,0 +1,215 @@
+--- net/minecraft/world/entity/vehicle/AbstractMinecart.java
++++ net/minecraft/world/entity/vehicle/AbstractMinecart.java
+@@ -1,8 +1,11 @@
+ package net.minecraft.world.entity.vehicle;
+ 
++import com.google.common.collect.ImmutableList;
++import com.google.common.collect.ImmutableMap;
+ import com.google.common.collect.Maps;
++import com.google.common.collect.UnmodifiableIterator;
+ import com.mojang.datafixers.util.Pair;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+ import javax.annotation.Nullable;
+@@ -19,23 +22,27 @@
+ import net.minecraft.network.syncher.SynchedEntityData;
+ import net.minecraft.tags.BlockTags;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
++import net.minecraft.world.entity.EntityDimensions;
+ import net.minecraft.world.entity.EntitySelector;
+ import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.MoverType;
++import net.minecraft.world.entity.Pose;
+ import net.minecraft.world.entity.animal.IronGolem;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.BaseRailBlock;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.PoweredRailBlock;
++import net.minecraft.world.level.block.TrapDoorBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.RailShape;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.Vec3;
+ 
+@@ -44,10 +51,11 @@
+    private static final EntityDataAccessor<Integer> DATA_ID_HURTDIR;
+    private static final EntityDataAccessor<Float> DATA_ID_DAMAGE;
+    private static final EntityDataAccessor<Integer> DATA_ID_DISPLAY_BLOCK;
+    private static final EntityDataAccessor<Integer> DATA_ID_DISPLAY_OFFSET;
+    private static final EntityDataAccessor<Boolean> DATA_ID_CUSTOM_DISPLAY;
++   private static final ImmutableMap<Pose, ImmutableList<Integer>> POSE_DISMOUNT_HEIGHTS;
+    private boolean flipped;
+    private static final Map<RailShape, Pair<Vec3i, Vec3i>> EXITS;
+    private int lSteps;
+    private double lx;
+    private double ly;
+@@ -108,14 +116,76 @@
+ 
+    public boolean isPushable() {
+       return true;
+    }
+ 
+-   public double getRideHeight() {
++   public double getPassengersRidingOffset() {
+       return 0.0D;
+    }
+ 
++   public Vec3 getDismountLocationForPassenger(LivingEntity var1) {
++      Direction var2 = this.getMotionDirection();
++      if (var2.getAxis() == Direction.Axis.Y) {
++         return super.getDismountLocationForPassenger(var1);
++      } else {
++         int[][] var3 = DismountHelper.offsetsForDirection(var2);
++         BlockPos var4 = this.blockPosition();
++         BlockPos.MutableBlockPos var5 = new BlockPos.MutableBlockPos();
++         ImmutableList var6 = var1.getDismountPoses();
++         UnmodifiableIterator var7 = var6.iterator();
++
++         while(var7.hasNext()) {
++            Pose var8 = (Pose)var7.next();
++            EntityDimensions var9 = var1.getDimensions(var8);
++            float var10 = Math.min(var9.width, 1.0F) / 2.0F;
++            UnmodifiableIterator var11 = ((ImmutableList)POSE_DISMOUNT_HEIGHTS.get(var8)).iterator();
++
++            while(var11.hasNext()) {
++               int var12 = (Integer)var11.next();
++               int[][] var13 = var3;
++               int var14 = var3.length;
++
++               for(int var15 = 0; var15 < var14; ++var15) {
++                  int[] var16 = var13[var15];
++                  var5.set(var4.getX() + var16[0], var4.getY() + var12, var4.getZ() + var16[1]);
++                  double var17 = this.level.getRelativeFloorHeight(var5, (var0) -> {
++                     if (var0.is(BlockTags.CLIMBABLE)) {
++                        return true;
++                     } else {
++                        return var0.getBlock() instanceof TrapDoorBlock && (Boolean)var0.getValue(TrapDoorBlock.OPEN);
++                     }
++                  });
++                  if (DismountHelper.isFloorValid(var17)) {
++                     AABB var19 = new AABB((double)(-var10), var17, (double)(-var10), (double)var10, var17 + (double)var9.height, (double)var10);
++                     Vec3 var20 = Vec3.upFromBottomCenterOf(var5, var17);
++                     if (DismountHelper.canDismountTo(this.level, var1, var19.move(var20))) {
++                        var1.setPose(var8);
++                        return var20;
++                     }
++                  }
++               }
++            }
++         }
++
++         double var21 = this.getBoundingBox().maxY;
++         var5.set((double)var4.getX(), var21, (double)var4.getZ());
++         UnmodifiableIterator var22 = var6.iterator();
++
++         while(var22.hasNext()) {
++            Pose var23 = (Pose)var22.next();
++            double var24 = (double)var1.getDimensions(var23).height;
++            double var25 = (double)var5.getY() + this.level.getRelativeCeilingHeight(var5, var21 - (double)var5.getY() + var24);
++            if (var21 + var24 <= var25) {
++               var1.setPose(var23);
++               break;
++            }
++         }
++
++         return super.getDismountLocationForPassenger(var1);
++      }
++   }
++
+    public boolean hurt(DamageSource var1, float var2) {
+       if (!this.level.isClientSide && !this.removed) {
+          if (this.isInvulnerableTo(var1)) {
+             return false;
+          } else {
+@@ -138,10 +208,15 @@
+       } else {
+          return true;
+       }
+    }
+ 
++   protected float getBlockSpeedFactor() {
++      BlockState var1 = this.level.getBlockState(this.blockPosition());
++      return var1.is(BlockTags.RAILS) ? 1.0F : super.getBlockSpeedFactor();
++   }
++
+    public void destroy(DamageSource var1) {
+       this.remove();
+       if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+          ItemStack var2 = new ItemStack(Items.MINECART);
+          if (this.hasCustomName()) {
+@@ -213,13 +288,13 @@
+             --var2;
+          }
+ 
+          BlockPos var4 = new BlockPos(var1, var2, var3);
+          BlockState var5 = this.level.getBlockState(var4);
+-         if (var5.is(BlockTags.RAILS)) {
++         if (BaseRailBlock.isRail(var5)) {
+             this.moveAlongTrack(var4, var5);
+-            if (var5.getBlock() == Blocks.ACTIVATOR_RAIL) {
++            if (var5.is(Blocks.ACTIVATOR_RAIL)) {
+                this.activateMinecart(var1, var2, var3, (Boolean)var5.getValue(PoweredRailBlock.POWERED));
+             }
+          } else {
+             this.comeOffTrack();
+          }
+@@ -263,11 +338,11 @@
+                   var13.push(this);
+                }
+             }
+          }
+ 
+-         this.updateInWaterState();
++         this.updateInWaterStateAndDoFluidPushing();
+       }
+    }
+ 
+    protected double getMaxSpeed() {
+       return 0.4D;
+@@ -470,11 +545,11 @@
+       if (this.level.getBlockState(new BlockPos(var9, var10 - 1, var11)).is(BlockTags.RAILS)) {
+          --var10;
+       }
+ 
+       BlockState var12 = this.level.getBlockState(new BlockPos(var9, var10, var11));
+-      if (var12.is(BlockTags.RAILS)) {
++      if (BaseRailBlock.isRail(var12)) {
+          RailShape var13 = (RailShape)var12.getValue(((BaseRailBlock)var12.getBlock()).getShapeProperty());
+          var3 = (double)var10;
+          if (var13.isAscending()) {
+             var3 = (double)(var10 + 1);
+          }
+@@ -509,11 +584,11 @@
+       if (this.level.getBlockState(new BlockPos(var7, var8 - 1, var9)).is(BlockTags.RAILS)) {
+          --var8;
+       }
+ 
+       BlockState var10 = this.level.getBlockState(new BlockPos(var7, var8, var9));
+-      if (var10.is(BlockTags.RAILS)) {
++      if (BaseRailBlock.isRail(var10)) {
+          RailShape var11 = (RailShape)var10.getValue(((BaseRailBlock)var10.getBlock()).getShapeProperty());
+          Pair var12 = exits(var11);
+          Vec3i var13 = (Vec3i)var12.getFirst();
+          Vec3i var14 = (Vec3i)var12.getSecond();
+          double var15 = (double)var7 + 0.5D + (double)var13.getX() * 0.5D;
+@@ -722,10 +797,11 @@
+       DATA_ID_HURTDIR = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.INT);
+       DATA_ID_DAMAGE = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.FLOAT);
+       DATA_ID_DISPLAY_BLOCK = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.INT);
+       DATA_ID_DISPLAY_OFFSET = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.INT);
+       DATA_ID_CUSTOM_DISPLAY = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.BOOLEAN);
++      POSE_DISMOUNT_HEIGHTS = ImmutableMap.of(Pose.STANDING, ImmutableList.of(0, 1, -1), Pose.CROUCHING, ImmutableList.of(0, 1, -1), Pose.SWIMMING, ImmutableList.of(0, 1));
+       EXITS = (Map)Util.make(Maps.newEnumMap(RailShape.class), (var0) -> {
+          Vec3i var1 = Direction.WEST.getNormal();
+          Vec3i var2 = Direction.EAST.getNormal();
+          Vec3i var3 = Direction.NORTH.getNormal();
+          Vec3i var4 = Direction.SOUTH.getNormal();

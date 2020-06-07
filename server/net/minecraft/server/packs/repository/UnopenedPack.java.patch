@@ -1,0 +1,28 @@
+--- net/minecraft/server/packs/repository/UnopenedPack.java
++++ net/minecraft/server/packs/repository/UnopenedPack.java
+@@ -90,11 +90,11 @@
+       this(var1, var2, var3, new TextComponent(var4.getName()), var5.getDescription(), PackCompatibility.forFormat(var5.getPackFormat()), var6, false);
+    }
+ 
+    public Component getChatLink(boolean var1) {
+       return ComponentUtils.wrapInSquareBrackets(new TextComponent(this.id)).withStyle((var2) -> {
+-         var2.setColor(var1 ? ChatFormatting.GREEN : ChatFormatting.RED).setInsertion(StringArgumentType.escapeIfRequired(this.id)).setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (new TextComponent("")).append(this.title).append("\n").append(this.description)));
++         return var2.withColor(var1 ? ChatFormatting.GREEN : ChatFormatting.RED).withInsertion(StringArgumentType.escapeIfRequired(this.id)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (new TextComponent("")).append(this.title).append("\n").append(this.description)));
+       });
+    }
+ 
+    public PackCompatibility getCompatibility() {
+       return this.compatibility;
+@@ -137,11 +137,11 @@
+ 
+    public void close() {
+    }
+ 
+    static {
+-      BROKEN_ASSETS_FALLBACK = new PackMetadataSection((new TranslatableComponent("resourcePack.broken_assets", new Object[0])).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.ITALIC}), SharedConstants.getCurrentVersion().getPackVersion());
++      BROKEN_ASSETS_FALLBACK = new PackMetadataSection((new TranslatableComponent("resourcePack.broken_assets")).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.ITALIC}), SharedConstants.getCurrentVersion().getPackVersion());
+    }
+ 
+    public static enum Position {
+       TOP,
+       BOTTOM;

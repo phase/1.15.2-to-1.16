@@ -1,0 +1,39 @@
+--- net/minecraft/client/gui/screens/InBedChatScreen.java
++++ net/minecraft/client/gui/screens/InBedChatScreen.java
+@@ -1,21 +1,21 @@
+ package net.minecraft.client.gui.screens;
+ 
+ import net.minecraft.client.gui.components.Button;
+ import net.minecraft.client.multiplayer.ClientPacketListener;
+-import net.minecraft.client.resources.language.I18n;
++import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.network.protocol.Packet;
+ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+ 
+ public class InBedChatScreen extends ChatScreen {
+    public InBedChatScreen() {
+       super("");
+    }
+ 
+    protected void init() {
+       super.init();
+-      this.addButton(new Button(this.width / 2 - 100, this.height - 40, 200, 20, I18n.get("multiplayer.stopSleeping"), (var1) -> {
++      this.addButton(new Button(this.width / 2 - 100, this.height - 40, 200, 20, new TranslatableComponent("multiplayer.stopSleeping"), (var1) -> {
+          this.sendWakeUp();
+       }));
+    }
+ 
+    public void onClose() {
+@@ -26,11 +26,11 @@
+       if (var1 == 256) {
+          this.sendWakeUp();
+       } else if (var1 == 257 || var1 == 335) {
+          String var4 = this.input.getValue().trim();
+          if (!var4.isEmpty()) {
+-            this.minecraft.player.chat(var4);
++            this.sendMessage(var4);
+          }
+ 
+          this.input.setValue("");
+          this.minecraft.gui.getChat().resetChatScroll();
+          return true;

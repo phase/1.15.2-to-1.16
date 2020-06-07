@@ -1,0 +1,106 @@
+--- net/minecraft/client/resources/ClientPackSource.java
++++ net/minecraft/client/resources/ClientPackSource.java
+@@ -13,19 +13,22 @@
+ import java.util.Iterator;
+ import java.util.Locale;
+ import java.util.Map;
+ import java.util.concurrent.CompletableFuture;
+ import java.util.concurrent.locks.ReentrantLock;
++import java.util.function.Supplier;
+ import java.util.regex.Pattern;
+ import javax.annotation.Nullable;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.screens.ProgressScreen;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.packs.FileResourcePack;
++import net.minecraft.server.packs.FolderResourcePack;
++import net.minecraft.server.packs.Pack;
+ import net.minecraft.server.packs.VanillaPack;
+ import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
+ import net.minecraft.server.packs.repository.PackCompatibility;
+ import net.minecraft.server.packs.repository.RepositorySource;
+ import net.minecraft.server.packs.repository.UnopenedPack;
+@@ -66,24 +69,11 @@
+ 
+       if (this.serverPack != null) {
+          var1.put("server", this.serverPack);
+       }
+ 
+-      File var4 = this.assetIndex.getFile(new ResourceLocation("resourcepacks/programmer_art.zip"));
+-      if (var4 != null && var4.isFile()) {
+-         UnopenedPack var5 = UnopenedPack.create("programer_art", false, () -> {
+-            return new FileResourcePack(var4) {
+-               public String getName() {
+-                  return "Programmer Art";
+-               }
+-            };
+-         }, var2, UnopenedPack.Position.TOP);
+-         if (var5 != null) {
+-            var1.put("programer_art", var5);
+-         }
+-      }
+-
++      this.addProgrammerArtPack(var1, var2);
+    }
+ 
+    public VanillaPack getVanillaPack() {
+       return this.vanillaPack;
+    }
+@@ -294,10 +284,53 @@
+          return Util.failedFuture(new RuntimeException(String.format("Invalid resourcepack at %s: %s", var1, var4)));
+       } else {
+          LOGGER.info("Applying server pack {}", var1);
+          this.serverPack = new UnopenedResourcePack("server", true, () -> {
+             return new FileResourcePack(var1);
+-         }, new TranslatableComponent("resourcePack.server.name", new Object[0]), var2.getDescription(), PackCompatibility.forFormat(var2.getPackFormat()), UnopenedPack.Position.TOP, true, var3);
++         }, new TranslatableComponent("resourcePack.server.name"), var2.getDescription(), PackCompatibility.forFormat(var2.getPackFormat()), UnopenedPack.Position.TOP, true, var3);
+          return Minecraft.getInstance().delayTextureReload();
+       }
+    }
++
++   private <T extends UnopenedPack> void addProgrammerArtPack(Map<String, T> var1, UnopenedPack.UnopenedPackConstructor<T> var2) {
++      File var3 = this.assetIndex.getFile(new ResourceLocation("resourcepacks/programmer_art.zip"));
++      if (var3 == null || !var3.isFile() || !addProgrammerArtPack(var1, var2, () -> {
++         return createProgrammerArtZipPack(var3);
++      })) {
++         if (SharedConstants.IS_RUNNING_IN_IDE) {
++            File var4 = this.assetIndex.getRootFile("../resourcepacks/programmer_art");
++            if (var4 != null && var4.isDirectory()) {
++               addProgrammerArtPack(var1, var2, () -> {
++                  return createProgrammerArtDirPack(var4);
++               });
++            }
++         }
++
++      }
++   }
++
++   private static <T extends UnopenedPack> boolean addProgrammerArtPack(Map<String, T> var0, UnopenedPack.UnopenedPackConstructor<T> var1, Supplier<Pack> var2) {
++      UnopenedPack var3 = UnopenedPack.create("programer_art", false, var2, var1, UnopenedPack.Position.TOP);
++      if (var3 != null) {
++         var0.put("programer_art", var3);
++         return true;
++      } else {
++         return false;
++      }
++   }
++
++   private static FolderResourcePack createProgrammerArtDirPack(File var0) {
++      return new FolderResourcePack(var0) {
++         public String getName() {
++            return "Programmer Art";
++         }
++      };
++   }
++
++   private static Pack createProgrammerArtZipPack(File var0) {
++      return new FileResourcePack(var0) {
++         public String getName() {
++            return "Programmer Art";
++         }
++      };
++   }
+ }

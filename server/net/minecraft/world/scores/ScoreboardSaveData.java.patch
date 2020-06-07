@@ -1,0 +1,53 @@
+--- net/minecraft/world/scores/ScoreboardSaveData.java
++++ net/minecraft/world/scores/ScoreboardSaveData.java
+@@ -5,10 +5,11 @@
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.ListTag;
+ import net.minecraft.nbt.StringTag;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.world.level.saveddata.SavedData;
+ import net.minecraft.world.scores.criteria.ObjectiveCriteria;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+@@ -53,11 +54,11 @@
+          if (var4.length() > 16) {
+             var4 = var4.substring(0, 16);
+          }
+ 
+          PlayerTeam var5 = this.scoreboard.addPlayerTeam(var4);
+-         Component var6 = Component.Serializer.fromJson(var3.getString("DisplayName"));
++         MutableComponent var6 = Component.Serializer.fromJson(var3.getString("DisplayName"));
+          if (var6 != null) {
+             var5.setDisplayName(var6);
+          }
+ 
+          if (var3.contains("TeamColor", 8)) {
+@@ -70,11 +71,11 @@
+ 
+          if (var3.contains("SeeFriendlyInvisibles", 99)) {
+             var5.setSeeFriendlyInvisibles(var3.getBoolean("SeeFriendlyInvisibles"));
+          }
+ 
+-         Component var7;
++         MutableComponent var7;
+          if (var3.contains("MemberNamePrefix", 8)) {
+             var7 = Component.Serializer.fromJson(var3.getString("MemberNamePrefix"));
+             if (var7 != null) {
+                var5.setPlayerPrefix(var7);
+             }
+@@ -139,11 +140,11 @@
+             String var3x = var3.getString("Name");
+             if (var3x.length() > 16) {
+                var3x = var3x.substring(0, 16);
+             }
+ 
+-            Component var4 = Component.Serializer.fromJson(var3.getString("DisplayName"));
++            MutableComponent var4 = Component.Serializer.fromJson(var3.getString("DisplayName"));
+             ObjectiveCriteria.RenderType var5 = ObjectiveCriteria.RenderType.byId(var3.getString("RenderType"));
+             this.scoreboard.addObjective(var3x, var2x, var4, var5);
+          });
+       }
+ 

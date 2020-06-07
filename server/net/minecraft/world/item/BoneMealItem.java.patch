@@ -1,0 +1,75 @@
+--- net/minecraft/world/item/BoneMealItem.java
++++ net/minecraft/world/item/BoneMealItem.java
+@@ -3,10 +3,11 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.tags.BlockTags;
++import net.minecraft.tags.Tag;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.block.BaseCoralWallFanBlock;
+@@ -27,20 +28,20 @@
+       if (growCrop(var1.getItemInHand(), var2, var3)) {
+          if (!var2.isClientSide) {
+             var2.levelEvent(2005, var3, 0);
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       } else {
+          BlockState var5 = var2.getBlockState(var3);
+          boolean var6 = var5.isFaceSturdy(var2, var3, var1.getClickedFace());
+          if (var6 && growWaterPlant(var1.getItemInHand(), var2, var4, var1.getClickedFace())) {
+             if (!var2.isClientSide) {
+                var2.levelEvent(2005, var4, 0);
+             }
+ 
+-            return InteractionResult.SUCCESS;
++            return InteractionResult.sidedSuccess(var2.isClientSide);
+          } else {
+             return InteractionResult.PASS;
+          }
+       }
+    }
+@@ -64,11 +65,11 @@
+ 
+       return false;
+    }
+ 
+    public static boolean growWaterPlant(ItemStack var0, Level var1, BlockPos var2, @Nullable Direction var3) {
+-      if (var1.getBlockState(var2).getBlock() == Blocks.WATER && var1.getFluidState(var2).getAmount() == 8) {
++      if (var1.getBlockState(var2).is(Blocks.WATER) && var1.getFluidState(var2).getAmount() == 8) {
+          if (!(var1 instanceof ServerLevel)) {
+             return true;
+          } else {
+             label80:
+             for(int var4 = 0; var4 < 128; ++var4) {
+@@ -91,21 +92,21 @@
+                   } else if (random.nextInt(4) == 0) {
+                      var7 = ((Block)BlockTags.UNDERWATER_BONEMEALS.getRandomElement(random)).defaultBlockState();
+                   }
+                }
+ 
+-               if (var7.getBlock().is(BlockTags.WALL_CORALS)) {
++               if (var7.getBlock().is((Tag)BlockTags.WALL_CORALS)) {
+                   for(var8 = 0; !var7.canSurvive(var1, var5) && var8 < 4; ++var8) {
+                      var7 = (BlockState)var7.setValue(BaseCoralWallFanBlock.FACING, Direction.Plane.HORIZONTAL.getRandomDirection(random));
+                   }
+                }
+ 
+                if (var7.canSurvive(var1, var5)) {
+                   BlockState var9 = var1.getBlockState(var5);
+-                  if (var9.getBlock() == Blocks.WATER && var1.getFluidState(var5).getAmount() == 8) {
++                  if (var9.is(Blocks.WATER) && var1.getFluidState(var5).getAmount() == 8) {
+                      var1.setBlock(var5, var7, 3);
+-                  } else if (var9.getBlock() == Blocks.SEAGRASS && random.nextInt(10) == 0) {
++                  } else if (var9.is(Blocks.SEAGRASS) && random.nextInt(10) == 0) {
+                      ((BonemealableBlock)Blocks.SEAGRASS).performBonemeal((ServerLevel)var1, random, var5, var9);
+                   }
+                }
+             }
+ 

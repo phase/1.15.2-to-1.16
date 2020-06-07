@@ -1,0 +1,23 @@
+--- net/minecraft/server/commands/data/DataCommands.java
++++ net/minecraft/server/commands/data/DataCommands.java
+@@ -30,18 +30,18 @@
+ import net.minecraft.nbt.Tag;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.util.Mth;
+ 
+ public class DataCommands {
+-   private static final SimpleCommandExceptionType ERROR_MERGE_UNCHANGED = new SimpleCommandExceptionType(new TranslatableComponent("commands.data.merge.failed", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_MERGE_UNCHANGED = new SimpleCommandExceptionType(new TranslatableComponent("commands.data.merge.failed"));
+    private static final DynamicCommandExceptionType ERROR_GET_NOT_NUMBER = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.data.get.invalid", new Object[]{var0});
+    });
+    private static final DynamicCommandExceptionType ERROR_GET_NON_EXISTENT = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.data.get.unknown", new Object[]{var0});
+    });
+-   private static final SimpleCommandExceptionType ERROR_MULTIPLE_TAGS = new SimpleCommandExceptionType(new TranslatableComponent("commands.data.get.multiple", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_MULTIPLE_TAGS = new SimpleCommandExceptionType(new TranslatableComponent("commands.data.get.multiple"));
+    private static final DynamicCommandExceptionType ERROR_EXPECTED_LIST = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.data.modify.expected_list", new Object[]{var0});
+    });
+    private static final DynamicCommandExceptionType ERROR_EXPECTED_OBJECT = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.data.modify.expected_object", new Object[]{var0});

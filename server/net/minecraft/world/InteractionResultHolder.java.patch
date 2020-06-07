@@ -1,0 +1,13 @@
+--- net/minecraft/world/InteractionResultHolder.java
++++ net/minecraft/world/InteractionResultHolder.java
+@@ -30,6 +30,10 @@
+    }
+ 
+    public static <T> InteractionResultHolder<T> fail(T var0) {
+       return new InteractionResultHolder(InteractionResult.FAIL, var0);
+    }
++
++   public static <T> InteractionResultHolder<T> sidedSuccess(T var0, boolean var1) {
++      return var1 ? success(var0) : consume(var0);
++   }
+ }

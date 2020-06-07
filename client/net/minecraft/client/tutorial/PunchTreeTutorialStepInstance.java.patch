@@ -1,0 +1,34 @@
+--- net/minecraft/client/tutorial/PunchTreeTutorialStepInstance.java
++++ net/minecraft/client/tutorial/PunchTreeTutorialStepInstance.java
+@@ -6,16 +6,17 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.tags.BlockTags;
+ import net.minecraft.tags.ItemTags;
++import net.minecraft.tags.Tag;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class PunchTreeTutorialStepInstance implements TutorialStepInstance {
+-   private static final Component TITLE = new TranslatableComponent("tutorial.punch_tree.title", new Object[0]);
++   private static final Component TITLE = new TranslatableComponent("tutorial.punch_tree.title");
+    private static final Component DESCRIPTION = new TranslatableComponent("tutorial.punch_tree.description", new Object[]{Tutorial.key("attack")});
+    private final Tutorial tutorial;
+    private TutorialToast toast;
+    private int timeWaiting;
+    private int resetCount;
+@@ -30,11 +31,11 @@
+          this.tutorial.setStep(TutorialSteps.NONE);
+       } else {
+          if (this.timeWaiting == 1) {
+             LocalPlayer var1 = this.tutorial.getMinecraft().player;
+             if (var1 != null) {
+-               if (var1.inventory.contains(ItemTags.LOGS)) {
++               if (var1.inventory.contains((Tag)ItemTags.LOGS)) {
+                   this.tutorial.setStep(TutorialSteps.CRAFT_PLANKS);
+                   return;
+                }
+ 
+                if (FindTreeTutorialStepInstance.hasPunchedTreesPreviously(var1)) {

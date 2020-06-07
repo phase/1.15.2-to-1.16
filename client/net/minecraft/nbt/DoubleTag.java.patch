@@ -1,0 +1,27 @@
+--- net/minecraft/nbt/DoubleTag.java
++++ net/minecraft/nbt/DoubleTag.java
+@@ -2,10 +2,11 @@
+ 
+ import java.io.DataInput;
+ import java.io.DataOutput;
+ import java.io.IOException;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.util.Mth;
+ 
+ public class DoubleTag extends NumericTag {
+    public static final DoubleTag ZERO = new DoubleTag(0.0D);
+@@ -69,11 +70,11 @@
+       long var1 = Double.doubleToLongBits(this.data);
+       return (int)(var1 ^ var1 >>> 32);
+    }
+ 
+    public Component getPrettyDisplay(String var1, int var2) {
+-      Component var3 = (new TextComponent("d")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
++      MutableComponent var3 = (new TextComponent("d")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
+       return (new TextComponent(String.valueOf(this.data))).append(var3).withStyle(SYNTAX_HIGHLIGHTING_NUMBER);
+    }
+ 
+    public long getAsLong() {
+       return (long)Math.floor(this.data);

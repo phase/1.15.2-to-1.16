@@ -1,0 +1,34 @@
+--- net/minecraft/world/entity/ai/goal/FleeSunGoal.java
++++ net/minecraft/world/entity/ai/goal/FleeSunGoal.java
+@@ -29,11 +29,11 @@
+          return false;
+       } else if (!this.level.isDay()) {
+          return false;
+       } else if (!this.mob.isOnFire()) {
+          return false;
+-      } else if (!this.level.canSeeSky(new BlockPos(this.mob))) {
++      } else if (!this.level.canSeeSky(this.mob.blockPosition())) {
+          return false;
+       } else {
+          return !this.mob.getItemBySlot(EquipmentSlot.HEAD).isEmpty() ? false : this.setWantedPos();
+       }
+    }
+@@ -59,16 +59,16 @@
+    }
+ 
+    @Nullable
+    protected Vec3 getHidePos() {
+       Random var1 = this.mob.getRandom();
+-      BlockPos var2 = new BlockPos(this.mob);
++      BlockPos var2 = this.mob.blockPosition();
+ 
+       for(int var3 = 0; var3 < 10; ++var3) {
+          BlockPos var4 = var2.offset(var1.nextInt(20) - 10, var1.nextInt(6) - 3, var1.nextInt(20) - 10);
+          if (!this.level.canSeeSky(var4) && this.mob.getWalkTargetValue(var4) < 0.0F) {
+-            return new Vec3(var4);
++            return Vec3.atBottomCenterOf(var4);
+          }
+       }
+ 
+       return null;
+    }

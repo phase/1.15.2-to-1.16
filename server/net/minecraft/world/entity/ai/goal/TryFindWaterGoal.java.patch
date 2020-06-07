@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/ai/goal/TryFindWaterGoal.java
++++ net/minecraft/world/entity/ai/goal/TryFindWaterGoal.java
+@@ -12,11 +12,11 @@
+    public TryFindWaterGoal(PathfinderMob var1) {
+       this.mob = var1;
+    }
+ 
+    public boolean canUse() {
+-      return this.mob.onGround && !this.mob.level.getFluidState(new BlockPos(this.mob)).is(FluidTags.WATER);
++      return this.mob.isOnGround() && !this.mob.level.getFluidState(this.mob.blockPosition()).is(FluidTags.WATER);
+    }
+ 
+    public void start() {
+       BlockPos var1 = null;
+       Iterable var2 = BlockPos.betweenClosed(Mth.floor(this.mob.getX() - 2.0D), Mth.floor(this.mob.getY() - 2.0D), Mth.floor(this.mob.getZ() - 2.0D), Mth.floor(this.mob.getX() + 2.0D), Mth.floor(this.mob.getY()), Mth.floor(this.mob.getZ() + 2.0D));

@@ -1,0 +1,62 @@
+--- net/minecraft/world/level/block/ComparatorBlock.java
++++ net/minecraft/world/level/block/ComparatorBlock.java
+@@ -15,10 +15,11 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.TickPriority;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.ComparatorMode;
+ import net.minecraft.world.level.block.state.properties.EnumProperty;
+@@ -26,11 +27,11 @@
+ import net.minecraft.world.phys.BlockHitResult;
+ 
+ public class ComparatorBlock extends DiodeBlock implements EntityBlock {
+    public static final EnumProperty<ComparatorMode> MODE;
+ 
+-   public ComparatorBlock(Block.Properties var1) {
++   public ComparatorBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(POWERED, false)).setValue(MODE, ComparatorMode.COMPARE));
+    }
+ 
+    protected int getDelay(BlockState var1) {
+@@ -68,17 +69,14 @@
+       if (var7.hasAnalogOutputSignal()) {
+          var4 = var7.getAnalogOutputSignal(var1, var6);
+       } else if (var4 < 15 && var7.isRedstoneConductor(var1, var6)) {
+          var6 = var6.relative(var5);
+          var7 = var1.getBlockState(var6);
+-         if (var7.hasAnalogOutputSignal()) {
+-            var4 = var7.getAnalogOutputSignal(var1, var6);
+-         } else if (var7.isAir()) {
+-            ItemFrame var8 = this.getItemFrame(var1, var5, var6);
+-            if (var8 != null) {
+-               var4 = var8.getAnalogOutput();
+-            }
++         ItemFrame var8 = this.getItemFrame(var1, var5, var6);
++         int var9 = Math.max(var8 == null ? Integer.MIN_VALUE : var8.getAnalogOutput(), var7.hasAnalogOutputSignal() ? var7.getAnalogOutputSignal(var1, var6) : Integer.MIN_VALUE);
++         if (var9 != Integer.MIN_VALUE) {
++            var4 = var9;
+          }
+       }
+ 
+       return var4;
+    }
+@@ -98,11 +96,11 @@
+          var1 = (BlockState)var1.cycle(MODE);
+          float var7 = var1.getValue(MODE) == ComparatorMode.SUBTRACT ? 0.55F : 0.5F;
+          var2.playSound(var4, var3, SoundEvents.COMPARATOR_CLICK, SoundSource.BLOCKS, 0.3F, var7);
+          var2.setBlock(var3, var1, 2);
+          this.refreshOutputState(var2, var3, var1);
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       }
+    }
+ 
+    protected void checkTickOnNeighbor(Level var1, BlockPos var2, BlockState var3) {
+       if (!var1.getBlockTicks().willTickThisTick(var2, this)) {

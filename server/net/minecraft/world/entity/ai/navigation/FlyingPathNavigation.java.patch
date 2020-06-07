@@ -1,0 +1,28 @@
+--- net/minecraft/world/entity/ai/navigation/FlyingPathNavigation.java
++++ net/minecraft/world/entity/ai/navigation/FlyingPathNavigation.java
+@@ -29,11 +29,11 @@
+    protected Vec3 getTempMobPos() {
+       return this.mob.position();
+    }
+ 
+    public Path createPath(Entity var1, int var2) {
+-      return this.createPath(new BlockPos(var1), var2);
++      return this.createPath(var1.blockPosition(), var2);
+    }
+ 
+    public void tick() {
+       ++this.tick;
+       if (this.hasDelayedRecomputation) {
+@@ -41,11 +41,11 @@
+       }
+ 
+       if (!this.isDone()) {
+          Vec3 var1;
+          if (this.canUpdatePath()) {
+-            this.updatePath();
++            this.followThePath();
+          } else if (this.path != null && this.path.getIndex() < this.path.getSize()) {
+             var1 = this.path.getPos(this.mob, this.path.getIndex());
+             if (Mth.floor(this.mob.getX()) == Mth.floor(var1.x) && Mth.floor(this.mob.getY()) == Mth.floor(var1.y) && Mth.floor(this.mob.getZ()) == Mth.floor(var1.z)) {
+                this.path.setIndex(this.path.getIndex() + 1);
+             }

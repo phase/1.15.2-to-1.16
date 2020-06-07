@@ -1,0 +1,65 @@
+--- net/minecraft/world/level/block/DetectorRailBlock.java
++++ net/minecraft/world/level/block/DetectorRailBlock.java
+@@ -14,11 +14,11 @@
+ import net.minecraft.world.entity.vehicle.AbstractMinecart;
+ import net.minecraft.world.entity.vehicle.MinecartCommandBlock;
+ import net.minecraft.world.inventory.AbstractContainerMenu;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.EnumProperty;
+@@ -28,19 +28,15 @@
+ 
+ public class DetectorRailBlock extends BaseRailBlock {
+    public static final EnumProperty<RailShape> SHAPE;
+    public static final BooleanProperty POWERED;
+ 
+-   public DetectorRailBlock(Block.Properties var1) {
++   public DetectorRailBlock(BlockBehaviour.Properties var1) {
+       super(true, var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(POWERED, false)).setValue(SHAPE, RailShape.NORTH_SOUTH));
+    }
+ 
+-   public int getTickDelay(LevelReader var1) {
+-      return 20;
+-   }
+-
+    public boolean isSignalSource(BlockState var1) {
+       return true;
+    }
+ 
+    public void entityInside(BlockState var1, Level var2, BlockPos var3, Entity var4) {
+@@ -95,11 +91,11 @@
+          var1.updateNeighborsAt(var2.below(), this);
+          var1.setBlocksDirty(var2, var3, var7);
+       }
+ 
+       if (var5) {
+-         var1.getBlockTicks().scheduleTick(var2, this, this.getTickDelay(var1));
++         var1.getBlockTicks().scheduleTick(var2, this, 20);
+       }
+ 
+       var1.updateNeighbourForOutputSignal(var2, this);
+    }
+ 
+@@ -115,13 +111,12 @@
+       }
+ 
+    }
+ 
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var4.getBlock() != var1.getBlock()) {
+-         super.onPlace(var1, var2, var3, var4, var5);
+-         this.checkPressed(var2, var3, var1);
++      if (!var4.is(var1.getBlock())) {
++         this.checkPressed(var2, var3, this.updateState(var1, var2, var3, var5));
+       }
+    }
+ 
+    public Property<RailShape> getShapeProperty() {
+       return SHAPE;

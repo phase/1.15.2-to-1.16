@@ -1,0 +1,75 @@
+--- net/minecraft/world/level/material/LavaFluid.java
++++ net/minecraft/world/level/material/LavaFluid.java
+@@ -14,10 +14,11 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.BaseFireBlock;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.LiquidBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ 
+@@ -68,11 +69,11 @@
+                }
+ 
+                BlockState var8 = var1.getBlockState(var6);
+                if (var8.isAir()) {
+                   if (this.hasFlammableNeighbours(var1, var6)) {
+-                     var1.setBlockAndUpdate(var6, Blocks.FIRE.defaultBlockState());
++                     var1.setBlockAndUpdate(var6, BaseFireBlock.getState(var1, var6));
+                      return;
+                   }
+                } else if (var8.getMaterial().blocksMotion()) {
+                   return;
+                }
+@@ -83,11 +84,11 @@
+                if (!var1.isLoaded(var10)) {
+                   return;
+                }
+ 
+                if (var1.isEmptyBlock(var10.above()) && this.isFlammable(var1, var10)) {
+-                  var1.setBlockAndUpdate(var10.above(), Blocks.FIRE.defaultBlockState());
++                  var1.setBlockAndUpdate(var10.above(), BaseFireBlock.getState(var1, var10));
+                }
+             }
+          }
+ 
+       }
+@@ -119,11 +120,11 @@
+    protected void beforeDestroyingBlock(LevelAccessor var1, BlockPos var2, BlockState var3) {
+       this.fizz(var1, var2);
+    }
+ 
+    public int getSlopeFindDistance(LevelReader var1) {
+-      return var1.getDimension().isUltraWarm() ? 4 : 2;
++      return var1.dimensionType().ultraWarm() ? 4 : 2;
+    }
+ 
+    public BlockState createLegacyBlock(FluidState var1) {
+       return (BlockState)Blocks.LAVA.defaultBlockState().setValue(LiquidBlock.LEVEL, getLegacyLevel(var1));
+    }
+@@ -131,19 +132,19 @@
+    public boolean isSame(Fluid var1) {
+       return var1 == Fluids.LAVA || var1 == Fluids.FLOWING_LAVA;
+    }
+ 
+    public int getDropOff(LevelReader var1) {
+-      return var1.getDimension().isUltraWarm() ? 1 : 2;
++      return var1.dimensionType().ultraWarm() ? 1 : 2;
+    }
+ 
+    public boolean canBeReplacedWith(FluidState var1, BlockGetter var2, BlockPos var3, Fluid var4, Direction var5) {
+       return var1.getHeight(var2, var3) >= 0.44444445F && var4.is(FluidTags.WATER);
+    }
+ 
+    public int getTickDelay(LevelReader var1) {
+-      return var1.getDimension().isHasCeiling() ? 10 : 30;
++      return var1.dimensionType().hasCeiling() ? 10 : 30;
+    }
+ 
+    public int getSpreadDelay(Level var1, BlockPos var2, FluidState var3, FluidState var4) {
+       int var5 = this.getTickDelay(var1);
+       if (!var3.isEmpty() && !var4.isEmpty() && !(Boolean)var3.getValue(FALLING) && !(Boolean)var4.getValue(FALLING) && var4.getHeight(var1, var2) > var3.getHeight(var1, var2) && var1.getRandom().nextInt(4) != 0) {

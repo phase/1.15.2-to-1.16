@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/GameType.java
++++ net/minecraft/world/level/GameType.java
+@@ -26,11 +26,11 @@
+    public String getName() {
+       return this.name;
+    }
+ 
+    public Component getDisplayName() {
+-      return new TranslatableComponent("gameMode." + this.name, new Object[0]);
++      return new TranslatableComponent("gameMode." + this.name);
+    }
+ 
+    public void updatePlayerAbilities(Abilities var1) {
+       if (this == CREATIVE) {
+          var1.mayfly = true;

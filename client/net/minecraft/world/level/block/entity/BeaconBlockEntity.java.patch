@@ -1,0 +1,78 @@
+--- net/minecraft/world/level/block/entity/BeaconBlockEntity.java
++++ net/minecraft/world/level/block/entity/BeaconBlockEntity.java
+@@ -16,10 +16,11 @@
+ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
++import net.minecraft.tags.BlockTags;
+ import net.minecraft.world.LockCode;
+ import net.minecraft.world.MenuProvider;
+ import net.minecraft.world.effect.MobEffect;
+ import net.minecraft.world.effect.MobEffectInstance;
+ import net.minecraft.world.effect.MobEffects;
+@@ -185,12 +186,11 @@
+ 
+          boolean var6 = true;
+ 
+          for(int var7 = var1 - var4; var7 <= var1 + var4 && var6; ++var7) {
+             for(int var8 = var3 - var4; var8 <= var3 + var4; ++var8) {
+-               Block var9 = this.level.getBlockState(new BlockPos(var7, var5, var8)).getBlock();
+-               if (var9 != Blocks.EMERALD_BLOCK && var9 != Blocks.GOLD_BLOCK && var9 != Blocks.DIAMOND_BLOCK && var9 != Blocks.IRON_BLOCK) {
++               if (!this.level.getBlockState(new BlockPos(var7, var5, var8)).is(BlockTags.BEACON_BASE_BLOCKS)) {
+                   var6 = false;
+                   break;
+                }
+             }
+          }
+@@ -258,28 +258,28 @@
+    public CompoundTag getUpdateTag() {
+       return this.save(new CompoundTag());
+    }
+ 
+    public double getViewDistance() {
+-      return 65536.0D;
++      return 256.0D;
+    }
+ 
+    @Nullable
+    private static MobEffect getValidEffectById(int var0) {
+       MobEffect var1 = MobEffect.byId(var0);
+       return VALID_EFFECTS.contains(var1) ? var1 : null;
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
+-      this.primaryPower = getValidEffectById(var1.getInt("Primary"));
+-      this.secondaryPower = getValidEffectById(var1.getInt("Secondary"));
+-      if (var1.contains("CustomName", 8)) {
+-         this.name = Component.Serializer.fromJson(var1.getString("CustomName"));
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
++      this.primaryPower = getValidEffectById(var2.getInt("Primary"));
++      this.secondaryPower = getValidEffectById(var2.getInt("Secondary"));
++      if (var2.contains("CustomName", 8)) {
++         this.name = Component.Serializer.fromJson(var2.getString("CustomName"));
+       }
+ 
+-      this.lockKey = LockCode.fromTag(var1);
++      this.lockKey = LockCode.fromTag(var2);
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+       super.save(var1);
+       var1.putInt("Primary", MobEffect.getId(this.primaryPower));
+@@ -301,11 +301,11 @@
+    public AbstractContainerMenu createMenu(int var1, Inventory var2, Player var3) {
+       return BaseContainerBlockEntity.canUnlock(var3, this.lockKey, this.getDisplayName()) ? new BeaconMenu(var1, var2, this.dataAccess, ContainerLevelAccess.create(this.level, this.getBlockPos())) : null;
+    }
+ 
+    public Component getDisplayName() {
+-      return (Component)(this.name != null ? this.name : new TranslatableComponent("container.beacon", new Object[0]));
++      return (Component)(this.name != null ? this.name : new TranslatableComponent("container.beacon"));
+    }
+ 
+    static {
+       BEACON_EFFECTS = new MobEffect[][]{{MobEffects.MOVEMENT_SPEED, MobEffects.DIG_SPEED}, {MobEffects.DAMAGE_RESISTANCE, MobEffects.JUMP}, {MobEffects.DAMAGE_BOOST}, {MobEffects.REGENERATION}};
+       VALID_EFFECTS = (Set)Arrays.stream(BEACON_EFFECTS).flatMap(Arrays::stream).collect(Collectors.toSet());

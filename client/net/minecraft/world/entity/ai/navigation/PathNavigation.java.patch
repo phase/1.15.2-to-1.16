@@ -1,0 +1,215 @@
+--- net/minecraft/world/entity/ai/navigation/PathNavigation.java
++++ net/minecraft/world/entity/ai/navigation/PathNavigation.java
+@@ -5,19 +5,18 @@
+ import java.util.stream.Collectors;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.Vec3i;
+ import net.minecraft.network.protocol.game.DebugPackets;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.Mob;
+-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.PathNavigationRegion;
+-import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.pathfinder.Node;
+ import net.minecraft.world.level.pathfinder.NodeEvaluator;
+ import net.minecraft.world.level.pathfinder.Path;
+@@ -29,15 +28,14 @@
+    protected final Mob mob;
+    protected final Level level;
+    @Nullable
+    protected Path path;
+    protected double speedModifier;
+-   private final AttributeInstance followRange;
+    protected int tick;
+    protected int lastStuckCheck;
+    protected Vec3 lastStuckCheckPos;
+-   protected Vec3 timeoutCachedNode;
++   protected Vec3i timeoutCachedNode;
+    protected long timeoutTimer;
+    protected long lastTimeoutCheck;
+    protected double timeoutLimit;
+    protected float maxDistanceToWaypoint;
+    protected boolean hasDelayedRecomputation;
+@@ -48,17 +46,16 @@
+    private float maxVisitedNodesMultiplier;
+    private final PathFinder pathFinder;
+ 
+    public PathNavigation(Mob var1, Level var2) {
+       this.lastStuckCheckPos = Vec3.ZERO;
+-      this.timeoutCachedNode = Vec3.ZERO;
++      this.timeoutCachedNode = Vec3i.ZERO;
+       this.maxDistanceToWaypoint = 0.5F;
+       this.maxVisitedNodesMultiplier = 1.0F;
+       this.mob = var1;
+       this.level = var2;
+-      this.followRange = var1.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE);
+-      int var3 = Mth.floor(this.followRange.getValue() * 16.0D);
++      int var3 = Mth.floor(var1.getAttributeValue(Attributes.FOLLOW_RANGE) * 16.0D);
+       this.pathFinder = this.createPathFinder(var3);
+    }
+ 
+    public void resetMaxVisitedNodesMultiplier() {
+       this.maxVisitedNodesMultiplier = 1.0F;
+@@ -111,11 +108,11 @@
+       return this.createPath(ImmutableSet.of(var1), 8, false, var2);
+    }
+ 
+    @Nullable
+    public Path createPath(Entity var1, int var2) {
+-      return this.createPath(ImmutableSet.of(new BlockPos(var1)), 16, true, var2);
++      return this.createPath(ImmutableSet.of(var1.blockPosition()), 16, true, var2);
+    }
+ 
+    @Nullable
+    protected Path createPath(Set<BlockPos> var1, int var2, boolean var3, int var4) {
+       if (var1.isEmpty()) {
+@@ -126,19 +123,20 @@
+          return null;
+       } else if (this.path != null && !this.path.isDone() && var1.contains(this.targetPos)) {
+          return this.path;
+       } else {
+          this.level.getProfiler().push("pathfind");
+-         float var5 = (float)this.followRange.getValue();
+-         BlockPos var6 = var3 ? (new BlockPos(this.mob)).above() : new BlockPos(this.mob);
++         float var5 = (float)this.mob.getAttributeValue(Attributes.FOLLOW_RANGE);
++         BlockPos var6 = var3 ? this.mob.blockPosition().above() : this.mob.blockPosition();
+          int var7 = (int)(var5 + (float)var2);
+          PathNavigationRegion var8 = new PathNavigationRegion(this.level, var6.offset(-var7, -var7, -var7), var6.offset(var7, var7, var7));
+          Path var9 = this.pathFinder.findPath(var8, this.mob, var1, var5, var4, this.maxVisitedNodesMultiplier);
+          this.level.getProfiler().pop();
+          if (var9 != null && var9.getTarget() != null) {
+             this.targetPos = var9.getTarget();
+             this.reachRange = var4;
++            this.resetStuckTimeout();
+          }
+ 
+          return var9;
+       }
+    }
+@@ -190,15 +188,15 @@
+       }
+ 
+       if (!this.isDone()) {
+          Vec3 var1;
+          if (this.canUpdatePath()) {
+-            this.updatePath();
++            this.followThePath();
+          } else if (this.path != null && this.path.getIndex() < this.path.getSize()) {
+             var1 = this.getTempMobPos();
+             Vec3 var2 = this.path.getPos(this.mob, this.path.getIndex());
+-            if (var1.y > var2.y && !this.mob.onGround && Mth.floor(var1.x) == Mth.floor(var2.x) && Mth.floor(var1.z) == Mth.floor(var2.z)) {
++            if (var1.y > var2.y && !this.mob.isOnGround() && Mth.floor(var1.x) == Mth.floor(var2.x) && Mth.floor(var1.z) == Mth.floor(var2.z)) {
+                this.path.setIndex(this.path.getIndex() + 1);
+             }
+          }
+ 
+          DebugPackets.sendPathFindingPacket(this.level, this.mob, this.path, this.maxDistanceToWaypoint);
+@@ -208,21 +206,41 @@
+             this.mob.getMoveControl().setWantedPosition(var1.x, this.level.getBlockState(var3.below()).isAir() ? var1.y : WalkNodeEvaluator.getFloorLevel(this.level, var3), var1.z, this.speedModifier);
+          }
+       }
+    }
+ 
+-   protected void updatePath() {
++   protected void followThePath() {
+       Vec3 var1 = this.getTempMobPos();
+       this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
+-      Vec3 var2 = this.path.currentPos();
+-      if (Math.abs(this.mob.getX() - (var2.x + 0.5D)) < (double)this.maxDistanceToWaypoint && Math.abs(this.mob.getZ() - (var2.z + 0.5D)) < (double)this.maxDistanceToWaypoint && Math.abs(this.mob.getY() - var2.y) < 1.0D) {
++      Vec3i var2 = this.path.currentPos();
++      double var3 = Math.abs(this.mob.getX() - (double)((float)var2.getX() + 0.5F));
++      double var5 = Math.abs(this.mob.getY() - (double)var2.getY());
++      double var7 = Math.abs(this.mob.getZ() - (double)((float)var2.getZ() + 0.5F));
++      boolean var9 = var3 < (double)this.maxDistanceToWaypoint && var7 < (double)this.maxDistanceToWaypoint && var5 < 1.0D;
++      if (var9 || this.mob.canCutCorner(this.path.currentNode().type) && this.shouldTargetNextNodeInDirection(var1)) {
+          this.path.setIndex(this.path.getIndex() + 1);
+       }
+ 
+       this.doStuckDetection(var1);
+    }
+ 
++   private boolean shouldTargetNextNodeInDirection(Vec3 var1) {
++      if (this.path.getSize() <= this.path.getIndex() + 1) {
++         return false;
++      } else {
++         Vec3 var2 = Vec3.atBottomCenterOf(this.path.get(this.path.getIndex()).asBlockPos());
++         if (!var1.closerThan(var2, 2.0D)) {
++            return false;
++         } else {
++            Vec3 var3 = Vec3.atBottomCenterOf(this.path.get(this.path.getIndex() + 1).asBlockPos());
++            Vec3 var4 = var3.subtract(var2);
++            Vec3 var5 = var1.subtract(var2);
++            return var4.dot(var5) > 0.0D;
++         }
++      }
++   }
++
+    protected void doStuckDetection(Vec3 var1) {
+       if (this.tick - this.lastStuckCheck > 100) {
+          if (var1.distanceToSqr(this.lastStuckCheckPos) < 2.25D) {
+             this.stop();
+          }
+@@ -230,31 +248,35 @@
+          this.lastStuckCheck = this.tick;
+          this.lastStuckCheckPos = var1;
+       }
+ 
+       if (this.path != null && !this.path.isDone()) {
+-         Vec3 var2 = this.path.currentPos();
++         Vec3i var2 = this.path.currentPos();
+          if (var2.equals(this.timeoutCachedNode)) {
+             this.timeoutTimer += Util.getMillis() - this.lastTimeoutCheck;
+          } else {
+             this.timeoutCachedNode = var2;
+-            double var3 = var1.distanceTo(this.timeoutCachedNode);
++            double var3 = var1.distanceTo(Vec3.atBottomCenterOf(this.timeoutCachedNode));
+             this.timeoutLimit = this.mob.getSpeed() > 0.0F ? var3 / (double)this.mob.getSpeed() * 1000.0D : 0.0D;
+          }
+ 
+          if (this.timeoutLimit > 0.0D && (double)this.timeoutTimer > this.timeoutLimit * 3.0D) {
+-            this.timeoutCachedNode = Vec3.ZERO;
+-            this.timeoutTimer = 0L;
+-            this.timeoutLimit = 0.0D;
++            this.resetStuckTimeout();
+             this.stop();
+          }
+ 
+          this.lastTimeoutCheck = Util.getMillis();
+       }
+ 
+    }
+ 
++   private void resetStuckTimeout() {
++      this.timeoutCachedNode = Vec3i.ZERO;
++      this.timeoutTimer = 0L;
++      this.timeoutLimit = 0.0D;
++   }
++
+    public boolean isDone() {
+       return this.path == null || this.path.isDone();
+    }
+ 
+    public boolean isInProgress() {
+@@ -277,12 +299,11 @@
+       if (this.path != null) {
+          for(int var1 = 0; var1 < this.path.getSize(); ++var1) {
+             Node var2 = this.path.get(var1);
+             Node var3 = var1 + 1 < this.path.getSize() ? this.path.get(var1 + 1) : null;
+             BlockState var4 = this.level.getBlockState(new BlockPos(var2.x, var2.y, var2.z));
+-            Block var5 = var4.getBlock();
+-            if (var5 == Blocks.CAULDRON) {
++            if (var4.is(Blocks.CAULDRON)) {
+                this.path.set(var1, var2.cloneMove(var2.x, var2.y + 1, var2.z));
+                if (var3 != null && var2.y >= var3.y) {
+                   this.path.set(var1 + 1, var3.cloneMove(var3.x, var2.y + 1, var3.z));
+                }
+             }

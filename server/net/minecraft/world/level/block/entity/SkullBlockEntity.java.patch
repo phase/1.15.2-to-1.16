@@ -1,0 +1,86 @@
+--- net/minecraft/world/level/block/entity/SkullBlockEntity.java
++++ net/minecraft/world/level/block/entity/SkullBlockEntity.java
+@@ -9,19 +9,22 @@
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtUtils;
+ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+ import net.minecraft.server.players.GameProfileCache;
+ import net.minecraft.util.StringUtil;
+-import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class SkullBlockEntity extends BlockEntity implements TickableBlockEntity {
++   @Nullable
++   private static GameProfileCache profileCache;
++   @Nullable
++   private static MinecraftSessionService sessionService;
++   @Nullable
+    private GameProfile owner;
+    private int mouthTickCount;
+    private boolean isMovingMouth;
+-   private static GameProfileCache profileCache;
+-   private static MinecraftSessionService sessionService;
+ 
+    public SkullBlockEntity() {
+       super(BlockEntityType.SKULL);
+    }
+ 
+@@ -36,32 +39,32 @@
+    public CompoundTag save(CompoundTag var1) {
+       super.save(var1);
+       if (this.owner != null) {
+          CompoundTag var2 = new CompoundTag();
+          NbtUtils.writeGameProfile(var2, this.owner);
+-         var1.put("Owner", var2);
++         var1.put("SkullOwner", var2);
+       }
+ 
+       return var1;
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
+-      if (var1.contains("Owner", 10)) {
+-         this.setOwner(NbtUtils.readGameProfile(var1.getCompound("Owner")));
+-      } else if (var1.contains("ExtraType", 8)) {
+-         String var2 = var1.getString("ExtraType");
+-         if (!StringUtil.isNullOrEmpty(var2)) {
+-            this.setOwner(new GameProfile((UUID)null, var2));
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
++      if (var2.contains("SkullOwner", 10)) {
++         this.setOwner(NbtUtils.readGameProfile(var2.getCompound("SkullOwner")));
++      } else if (var2.contains("ExtraType", 8)) {
++         String var3 = var2.getString("ExtraType");
++         if (!StringUtil.isNullOrEmpty(var3)) {
++            this.setOwner(new GameProfile((UUID)null, var3));
+          }
+       }
+ 
+    }
+ 
+    public void tick() {
+-      Block var1 = this.getBlockState().getBlock();
+-      if (var1 == Blocks.DRAGON_HEAD || var1 == Blocks.DRAGON_WALL_HEAD) {
++      BlockState var1 = this.getBlockState();
++      if (var1.is(Blocks.DRAGON_HEAD) || var1.is(Blocks.DRAGON_WALL_HEAD)) {
+          if (this.level.hasNeighborSignal(this.worldPosition)) {
+             this.isMovingMouth = true;
+             ++this.mouthTickCount;
+          } else {
+             this.isMovingMouth = false;
+@@ -87,11 +90,12 @@
+    private void updateOwnerProfile() {
+       this.owner = updateGameprofile(this.owner);
+       this.setChanged();
+    }
+ 
+-   public static GameProfile updateGameprofile(GameProfile var0) {
++   @Nullable
++   public static GameProfile updateGameprofile(@Nullable GameProfile var0) {
+       if (var0 != null && !StringUtil.isNullOrEmpty(var0.getName())) {
+          if (var0.isComplete() && var0.getProperties().containsKey("textures")) {
+             return var0;
+          } else if (profileCache != null && sessionService != null) {
+             GameProfile var1 = profileCache.get(var0.getName());

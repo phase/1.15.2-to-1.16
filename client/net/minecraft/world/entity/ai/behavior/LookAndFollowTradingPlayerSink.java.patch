@@ -1,0 +1,35 @@
+--- net/minecraft/world/entity/ai/behavior/LookAndFollowTradingPlayerSink.java
++++ net/minecraft/world/entity/ai/behavior/LookAndFollowTradingPlayerSink.java
+@@ -8,15 +8,15 @@
+ import net.minecraft.world.entity.ai.memory.WalkTarget;
+ import net.minecraft.world.entity.npc.Villager;
+ import net.minecraft.world.entity.player.Player;
+ 
+ public class LookAndFollowTradingPlayerSink extends Behavior<Villager> {
+-   private final float speed;
++   private final float speedModifier;
+ 
+    public LookAndFollowTradingPlayerSink(float var1) {
+       super(ImmutableMap.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED, MemoryModuleType.LOOK_TARGET, MemoryStatus.REGISTERED), Integer.MAX_VALUE);
+-      this.speed = var1;
++      this.speedModifier = var1;
+    }
+ 
+    protected boolean checkExtraStartConditions(ServerLevel var1, Villager var2) {
+       Player var3 = var2.getTradingPlayer();
+       return var2.isAlive() && var3 != null && !var2.isInWater() && !var2.hurtMarked && var2.distanceToSqr(var3) <= 16.0D && var3.containerMenu != null;
+@@ -43,11 +43,10 @@
+    protected boolean timedOut(long var1) {
+       return false;
+    }
+ 
+    private void followPlayer(Villager var1) {
+-      EntityPosWrapper var2 = new EntityPosWrapper(var1.getTradingPlayer());
+-      Brain var3 = var1.getBrain();
+-      var3.setMemory(MemoryModuleType.WALK_TARGET, (Object)(new WalkTarget(var2, this.speed, 2)));
+-      var3.setMemory(MemoryModuleType.LOOK_TARGET, (Object)var2);
++      Brain var2 = var1.getBrain();
++      var2.setMemory(MemoryModuleType.WALK_TARGET, (Object)(new WalkTarget(new EntityTracker(var1.getTradingPlayer(), false), this.speedModifier, 2)));
++      var2.setMemory(MemoryModuleType.LOOK_TARGET, (Object)(new EntityTracker(var1.getTradingPlayer(), true)));
+    }
+ }

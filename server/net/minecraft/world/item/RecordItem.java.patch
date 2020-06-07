@@ -1,0 +1,28 @@
+--- net/minecraft/world/item/RecordItem.java
++++ net/minecraft/world/item/RecordItem.java
+@@ -26,11 +26,11 @@
+ 
+    public InteractionResult useOn(UseOnContext var1) {
+       Level var2 = var1.getLevel();
+       BlockPos var3 = var1.getClickedPos();
+       BlockState var4 = var2.getBlockState(var3);
+-      if (var4.getBlock() == Blocks.JUKEBOX && !(Boolean)var4.getValue(JukeboxBlock.HAS_RECORD)) {
++      if (var4.is(Blocks.JUKEBOX) && !(Boolean)var4.getValue(JukeboxBlock.HAS_RECORD)) {
+          ItemStack var5 = var1.getItemInHand();
+          if (!var2.isClientSide) {
+             ((JukeboxBlock)Blocks.JUKEBOX).setRecord(var2, var3, var4, var5);
+             var2.levelEvent((Player)null, 1010, var3, Item.getId(this));
+             var5.shrink(1);
+@@ -38,11 +38,11 @@
+             if (var6 != null) {
+                var6.awardStat(Stats.PLAY_RECORD);
+             }
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       } else {
+          return InteractionResult.PASS;
+       }
+    }
+ 

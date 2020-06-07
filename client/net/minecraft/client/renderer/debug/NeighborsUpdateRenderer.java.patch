@@ -1,0 +1,15 @@
+--- net/minecraft/client/renderer/debug/NeighborsUpdateRenderer.java
++++ net/minecraft/client/renderer/debug/NeighborsUpdateRenderer.java
+@@ -65,11 +65,11 @@
+                   Entry var24 = (Entry)var23.next();
+                   BlockPos var25 = (BlockPos)var24.getKey();
+                   Integer var26 = (Integer)var24.getValue();
+                   if (var14.add(var25)) {
+                      AABB var27 = (new AABB(BlockPos.ZERO)).inflate(0.002D).deflate(0.0025D * (double)var21).move((double)var25.getX(), (double)var25.getY(), (double)var25.getZ()).move(-var3, -var5, -var7);
+-                     LevelRenderer.renderLineBox(var16, var27.minX, var27.minY, var27.minZ, var27.maxX, var27.maxY, var27.maxZ, 1.0F, 1.0F, 1.0F, 1.0F);
++                     LevelRenderer.renderLineBox(var1, var16, var27.minX, var27.minY, var27.minZ, var27.maxX, var27.maxY, var27.maxZ, 1.0F, 1.0F, 1.0F, 1.0F);
+                      var15.put(var25, var26);
+                   }
+                }
+             }
+          }

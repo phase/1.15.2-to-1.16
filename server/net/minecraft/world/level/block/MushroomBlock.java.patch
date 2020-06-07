@@ -1,0 +1,81 @@
+--- net/minecraft/world/level/block/MushroomBlock.java
++++ net/minecraft/world/level/block/MushroomBlock.java
+@@ -6,36 +6,37 @@
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelReader;
+ import net.minecraft.world.level.biome.BiomeDefaultFeatures;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+ import net.minecraft.world.level.levelgen.feature.Feature;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class MushroomBlock extends BushBlock implements BonemealableBlock {
+    protected static final VoxelShape SHAPE = Block.box(5.0D, 0.0D, 5.0D, 11.0D, 6.0D, 11.0D);
+ 
+-   public MushroomBlock(Block.Properties var1) {
++   public MushroomBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return SHAPE;
+    }
+ 
+-   public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
++   public void randomTick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+       if (var4.nextInt(25) == 0) {
+          int var5 = 5;
+          boolean var6 = true;
+          Iterator var7 = BlockPos.betweenClosed(var3.offset(-4, -1, -4), var3.offset(4, 1, 4)).iterator();
+ 
+          while(var7.hasNext()) {
+             BlockPos var8 = (BlockPos)var7.next();
+-            if (var2.getBlockState(var8).getBlock() == this) {
++            if (var2.getBlockState(var8).is(this)) {
+                --var5;
+                if (var5 <= 0) {
+                   return;
+                }
+             }
+@@ -63,12 +64,11 @@
+    }
+ 
+    public boolean canSurvive(BlockState var1, LevelReader var2, BlockPos var3) {
+       BlockPos var4 = var3.below();
+       BlockState var5 = var2.getBlockState(var4);
+-      Block var6 = var5.getBlock();
+-      if (var6 != Blocks.MYCELIUM && var6 != Blocks.PODZOL) {
++      if (!var5.is(Blocks.MYCELIUM) && !var5.is(Blocks.PODZOL)) {
+          return var2.getRawBrightness(var3, 0) < 13 && this.mayPlaceOn(var5, var2, var4);
+       } else {
+          return true;
+       }
+    }
+@@ -85,11 +85,11 @@
+          }
+ 
+          var5 = Feature.HUGE_RED_MUSHROOM.configured(BiomeDefaultFeatures.HUGE_RED_MUSHROOM_CONFIG);
+       }
+ 
+-      if (var5.place(var1, var1.getChunkSource().getGenerator(), var4, var2)) {
++      if (var5.place(var1, var1.structureFeatureManager(), var1.getChunkSource().getGenerator(), var4, var2)) {
+          return true;
+       } else {
+          var1.setBlock(var2, var3, 3);
+          return false;
+       }
+@@ -104,10 +104,6 @@
+    }
+ 
+    public void performBonemeal(ServerLevel var1, Random var2, BlockPos var3, BlockState var4) {
+       this.growMushroom(var1, var3, var4, var2);
+    }
+-
+-   public boolean hasPostProcess(BlockState var1, BlockGetter var2, BlockPos var3) {
+-      return true;
+-   }
+ }

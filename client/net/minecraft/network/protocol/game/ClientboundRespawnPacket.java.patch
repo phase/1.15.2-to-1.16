@@ -1,0 +1,106 @@
+--- net/minecraft/network/protocol/game/ClientboundRespawnPacket.java
++++ net/minecraft/network/protocol/game/ClientboundRespawnPacket.java
+@@ -1,53 +1,67 @@
+ package net.minecraft.network.protocol.game;
+ 
+ import java.io.IOException;
++import net.minecraft.core.Registry;
+ import net.minecraft.network.FriendlyByteBuf;
+ import net.minecraft.network.protocol.Packet;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.world.level.GameType;
+-import net.minecraft.world.level.LevelType;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.dimension.DimensionType;
+ 
+ public class ClientboundRespawnPacket implements Packet<ClientGamePacketListener> {
+-   private DimensionType dimension;
++   private ResourceKey<DimensionType> dimensionType;
++   private ResourceKey<Level> dimension;
+    private long seed;
+    private GameType playerGameType;
+-   private LevelType levelType;
++   private boolean isDebug;
++   private boolean isFlat;
++   private boolean keepAllPlayerData;
+ 
+    public ClientboundRespawnPacket() {
+    }
+ 
+-   public ClientboundRespawnPacket(DimensionType var1, long var2, LevelType var4, GameType var5) {
+-      this.dimension = var1;
+-      this.seed = var2;
++   public ClientboundRespawnPacket(ResourceKey<DimensionType> var1, ResourceKey<Level> var2, long var3, GameType var5, boolean var6, boolean var7, boolean var8) {
++      this.dimensionType = var1;
++      this.dimension = var2;
++      this.seed = var3;
+       this.playerGameType = var5;
+-      this.levelType = var4;
++      this.isDebug = var6;
++      this.isFlat = var7;
++      this.keepAllPlayerData = var8;
+    }
+ 
+    public void handle(ClientGamePacketListener var1) {
+       var1.handleRespawn(this);
+    }
+ 
+    public void read(FriendlyByteBuf var1) throws IOException {
+-      this.dimension = DimensionType.getById(var1.readInt());
++      this.dimensionType = ResourceKey.create(Registry.DIMENSION_TYPE_REGISTRY, var1.readResourceLocation());
++      this.dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, var1.readResourceLocation());
+       this.seed = var1.readLong();
+       this.playerGameType = GameType.byId(var1.readUnsignedByte());
+-      this.levelType = LevelType.getLevelType(var1.readUtf(16));
+-      if (this.levelType == null) {
+-         this.levelType = LevelType.NORMAL;
+-      }
+-
++      this.isDebug = var1.readBoolean();
++      this.isFlat = var1.readBoolean();
++      this.keepAllPlayerData = var1.readBoolean();
+    }
+ 
+    public void write(FriendlyByteBuf var1) throws IOException {
+-      var1.writeInt(this.dimension.getId());
++      var1.writeResourceLocation(this.dimensionType.location());
++      var1.writeResourceLocation(this.dimension.location());
+       var1.writeLong(this.seed);
+       var1.writeByte(this.playerGameType.getId());
+-      var1.writeUtf(this.levelType.getName());
++      var1.writeBoolean(this.isDebug);
++      var1.writeBoolean(this.isFlat);
++      var1.writeBoolean(this.keepAllPlayerData);
+    }
+ 
+-   public DimensionType getDimension() {
++   public ResourceKey<DimensionType> getDimensionType() {
++      return this.dimensionType;
++   }
++
++   public ResourceKey<Level> getDimension() {
+       return this.dimension;
+    }
+ 
+    public long getSeed() {
+       return this.seed;
+@@ -55,9 +69,17 @@
+ 
+    public GameType getPlayerGameType() {
+       return this.playerGameType;
+    }
+ 
+-   public LevelType getLevelType() {
+-      return this.levelType;
++   public boolean isDebug() {
++      return this.isDebug;
+    }
++
++   public boolean isFlat() {
++      return this.isFlat;
++   }
++
++   public boolean shouldKeepAllPlayerData() {
++      return this.keepAllPlayerData;
++   }
+ }

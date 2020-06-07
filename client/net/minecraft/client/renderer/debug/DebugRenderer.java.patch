@@ -1,0 +1,57 @@
+--- net/minecraft/client/renderer/debug/DebugRenderer.java
++++ net/minecraft/client/renderer/debug/DebugRenderer.java
+@@ -33,11 +33,12 @@
+    public final StructureRenderer structureRenderer;
+    public final DebugRenderer.SimpleDebugRenderer lightDebugRenderer;
+    public final DebugRenderer.SimpleDebugRenderer worldGenAttemptRenderer;
+    public final DebugRenderer.SimpleDebugRenderer solidFaceRenderer;
+    public final DebugRenderer.SimpleDebugRenderer chunkRenderer;
+-   public final VillageDebugRenderer villageDebugRenderer;
++   public final BrainDebugRenderer brainDebugRenderer;
++   public final VillageSectionsDebugRenderer villageSectionsDebugRenderer;
+    public final BeeDebugRenderer beeDebugRenderer;
+    public final RaidDebugRenderer raidDebugRenderer;
+    public final GoalSelectorDebugRenderer goalSelectorRenderer;
+    public final GameTestDebugRenderer gameTestDebugRenderer;
+    private boolean renderChunkborder;
+@@ -52,11 +53,12 @@
+       this.structureRenderer = new StructureRenderer(var1);
+       this.lightDebugRenderer = new LightDebugRenderer(var1);
+       this.worldGenAttemptRenderer = new WorldGenAttemptRenderer();
+       this.solidFaceRenderer = new SolidFaceRenderer(var1);
+       this.chunkRenderer = new ChunkDebugRenderer(var1);
+-      this.villageDebugRenderer = new VillageDebugRenderer(var1);
++      this.brainDebugRenderer = new BrainDebugRenderer(var1);
++      this.villageSectionsDebugRenderer = new VillageSectionsDebugRenderer();
+       this.beeDebugRenderer = new BeeDebugRenderer(var1);
+       this.raidDebugRenderer = new RaidDebugRenderer(var1);
+       this.goalSelectorRenderer = new GoalSelectorDebugRenderer(var1);
+       this.gameTestDebugRenderer = new GameTestDebugRenderer();
+    }
+@@ -72,11 +74,12 @@
+       this.structureRenderer.clear();
+       this.lightDebugRenderer.clear();
+       this.worldGenAttemptRenderer.clear();
+       this.solidFaceRenderer.clear();
+       this.chunkRenderer.clear();
+-      this.villageDebugRenderer.clear();
++      this.brainDebugRenderer.clear();
++      this.villageSectionsDebugRenderer.clear();
+       this.beeDebugRenderer.clear();
+       this.raidDebugRenderer.clear();
+       this.goalSelectorRenderer.clear();
+       this.gameTestDebugRenderer.clear();
+    }
+@@ -181,11 +184,11 @@
+          RenderSystem.scalef(-1.0F, 1.0F, 1.0F);
+          float var21 = var9 ? (float)(-var14.width(var0)) / 2.0F : 0.0F;
+          var21 -= var10 / var8;
+          RenderSystem.enableAlphaTest();
+          MultiBufferSource.BufferSource var22 = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+-         var14.drawInBatch(var0, var21, 0.0F, var7, false, Transformation.identity().getMatrix(), var22, var11, 0, 15728880);
++         var14.drawInBatch((String)var0, var21, 0.0F, var7, false, Transformation.identity().getMatrix(), var22, var11, 0, 15728880);
+          var22.endBatch();
+          RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+          RenderSystem.enableDepthTest();
+          RenderSystem.popMatrix();
+       }

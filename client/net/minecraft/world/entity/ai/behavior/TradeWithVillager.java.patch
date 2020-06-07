@@ -1,0 +1,56 @@
+--- net/minecraft/world/entity/ai/behavior/TradeWithVillager.java
++++ net/minecraft/world/entity/ai/behavior/TradeWithVillager.java
+@@ -12,10 +12,11 @@
+ import net.minecraft.world.entity.ai.memory.MemoryStatus;
+ import net.minecraft.world.entity.npc.Villager;
+ import net.minecraft.world.entity.npc.VillagerProfession;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.Items;
+ 
+ public class TradeWithVillager extends Behavior<Villager> {
+    private Set<Item> trades = ImmutableSet.of();
+ 
+    public TradeWithVillager() {
+@@ -30,23 +31,27 @@
+       return this.checkExtraStartConditions(var1, var2);
+    }
+ 
+    protected void start(ServerLevel var1, Villager var2, long var3) {
+       Villager var5 = (Villager)var2.getBrain().getMemory(MemoryModuleType.INTERACTION_TARGET).get();
+-      BehaviorUtils.lockGazeAndWalkToEachOther(var2, var5);
++      BehaviorUtils.lockGazeAndWalkToEachOther(var2, var5, 0.5F);
+       this.trades = figureOutWhatIAmWillingToTrade(var2, var5);
+    }
+ 
+    protected void tick(ServerLevel var1, Villager var2, long var3) {
+       Villager var5 = (Villager)var2.getBrain().getMemory(MemoryModuleType.INTERACTION_TARGET).get();
+       if (var2.distanceToSqr(var5) <= 5.0D) {
+-         BehaviorUtils.lockGazeAndWalkToEachOther(var2, var5);
++         BehaviorUtils.lockGazeAndWalkToEachOther(var2, var5, 0.5F);
+          var2.gossip(var5, var3);
+          if (var2.hasExcessFood() && (var2.getVillagerData().getProfession() == VillagerProfession.FARMER || var5.wantsMoreFood())) {
+             throwHalfStack(var2, Villager.FOOD_POINTS.keySet(), var5);
+          }
+ 
++         if (var5.getVillagerData().getProfession() == VillagerProfession.FARMER && var2.getInventory().countItem(Items.WHEAT) > Items.WHEAT.getMaxStackSize() / 2) {
++            throwHalfStack(var2, ImmutableSet.of(Items.WHEAT), var5);
++         }
++
+          if (!this.trades.isEmpty() && var2.getInventory().hasAnyOf(this.trades)) {
+             throwHalfStack(var2, this.trades, var5);
+          }
+ 
+       }
+@@ -98,10 +103,10 @@
+          var4 = new ItemStack(var7, var8);
+          break;
+       }
+ 
+       if (!var4.isEmpty()) {
+-         BehaviorUtils.throwItem(var0, var4, var2);
++         BehaviorUtils.throwItem(var0, var4, var2.position());
+       }
+ 
+    }
+ }

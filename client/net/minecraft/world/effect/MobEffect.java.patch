@@ -1,0 +1,65 @@
+--- net/minecraft/world/effect/MobEffect.java
++++ net/minecraft/world/effect/MobEffect.java
+@@ -13,12 +13,12 @@
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.ai.attributes.Attribute;
+ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
++import net.minecraft.world.entity.ai.attributes.AttributeMap;
+ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+-import net.minecraft.world.entity.ai.attributes.BaseAttributeMap;
+ import net.minecraft.world.entity.player.Player;
+ 
+ public class MobEffect {
+    private final Map<Attribute, AttributeModifier> attributeModifiers = Maps.newHashMap();
+    private final MobEffectCategory category;
+@@ -130,11 +130,11 @@
+    public String getDescriptionId() {
+       return this.getOrCreateDescriptionId();
+    }
+ 
+    public Component getDisplayName() {
+-      return new TranslatableComponent(this.getDescriptionId(), new Object[0]);
++      return new TranslatableComponent(this.getDescriptionId());
+    }
+ 
+    public MobEffectCategory getCategory() {
+       return this.category;
+    }
+@@ -151,11 +151,11 @@
+ 
+    public Map<Attribute, AttributeModifier> getAttributeModifiers() {
+       return this.attributeModifiers;
+    }
+ 
+-   public void removeAttributeModifiers(LivingEntity var1, BaseAttributeMap var2, int var3) {
++   public void removeAttributeModifiers(LivingEntity var1, AttributeMap var2, int var3) {
+       Iterator var4 = this.attributeModifiers.entrySet().iterator();
+ 
+       while(var4.hasNext()) {
+          Entry var5 = (Entry)var4.next();
+          AttributeInstance var6 = var2.getInstance((Attribute)var5.getKey());
+@@ -164,20 +164,20 @@
+          }
+       }
+ 
+    }
+ 
+-   public void addAttributeModifiers(LivingEntity var1, BaseAttributeMap var2, int var3) {
++   public void addAttributeModifiers(LivingEntity var1, AttributeMap var2, int var3) {
+       Iterator var4 = this.attributeModifiers.entrySet().iterator();
+ 
+       while(var4.hasNext()) {
+          Entry var5 = (Entry)var4.next();
+          AttributeInstance var6 = var2.getInstance((Attribute)var5.getKey());
+          if (var6 != null) {
+             AttributeModifier var7 = (AttributeModifier)var5.getValue();
+             var6.removeModifier(var7);
+-            var6.addModifier(new AttributeModifier(var7.getId(), this.getDescriptionId() + " " + var3, this.getAttributeModifierValue(var3, var7), var7.getOperation()));
++            var6.addPermanentModifier(new AttributeModifier(var7.getId(), this.getDescriptionId() + " " + var3, this.getAttributeModifierValue(var3, var7), var7.getOperation()));
+          }
+       }
+ 
+    }
+ 

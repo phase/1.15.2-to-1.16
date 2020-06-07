@@ -1,0 +1,31 @@
+--- net/minecraft/world/entity/AreaEffectCloud.java
++++ net/minecraft/world/entity/AreaEffectCloud.java
+@@ -346,11 +346,14 @@
+       this.reapplicationDelay = var1.getInt("ReapplicationDelay");
+       this.durationOnUse = var1.getInt("DurationOnUse");
+       this.radiusOnUse = var1.getFloat("RadiusOnUse");
+       this.radiusPerTick = var1.getFloat("RadiusPerTick");
+       this.setRadius(var1.getFloat("Radius"));
+-      this.ownerUUID = var1.getUUID("OwnerUUID");
++      if (var1.hasUUID("Owner")) {
++         this.ownerUUID = var1.getUUID("Owner");
++      }
++
+       if (var1.contains("Particle", 8)) {
+          try {
+             this.setParticle(ParticleArgument.readParticle(new StringReader(var1.getString("Particle"))));
+          } catch (CommandSyntaxException var5) {
+             LOGGER.warn((String)"Couldn't load custom particle {}", (Object)var1.getString("Particle"), (Object)var5);
+@@ -388,11 +391,11 @@
+       var1.putFloat("RadiusOnUse", this.radiusOnUse);
+       var1.putFloat("RadiusPerTick", this.radiusPerTick);
+       var1.putFloat("Radius", this.getRadius());
+       var1.putString("Particle", this.getParticle().writeToString());
+       if (this.ownerUUID != null) {
+-         var1.putUUID("OwnerUUID", this.ownerUUID);
++         var1.putUUID("Owner", this.ownerUUID);
+       }
+ 
+       if (this.fixedColor) {
+          var1.putInt("Color", this.getColor());
+       }

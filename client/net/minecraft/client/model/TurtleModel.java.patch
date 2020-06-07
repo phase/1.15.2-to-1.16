@@ -1,0 +1,15 @@
+--- net/minecraft/client/model/TurtleModel.java
++++ net/minecraft/client/model/TurtleModel.java
+@@ -55,11 +55,11 @@
+       this.leg2.yRot = 0.0F;
+       this.leg3.yRot = 0.0F;
+       this.leg0.yRot = 0.0F;
+       this.leg1.yRot = 0.0F;
+       this.eggBelly.xRot = 1.5707964F;
+-      if (!var1.isInWater() && var1.onGround) {
++      if (!var1.isInWater() && var1.isOnGround()) {
+          float var7 = var1.isLayingEgg() ? 4.0F : 1.0F;
+          float var8 = var1.isLayingEgg() ? 2.0F : 1.0F;
+          float var9 = 5.0F;
+          this.leg2.yRot = Mth.cos(var7 * var2 * 5.0F + 3.1415927F) * 8.0F * var3 * var8;
+          this.leg2.zRot = 0.0F;

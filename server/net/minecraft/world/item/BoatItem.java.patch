@@ -1,0 +1,40 @@
+--- net/minecraft/world/item/BoatItem.java
++++ net/minecraft/world/item/BoatItem.java
+@@ -11,10 +11,11 @@
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.entity.vehicle.Boat;
+ import net.minecraft.world.level.ClipContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.phys.AABB;
++import net.minecraft.world.phys.BlockHitResult;
+ import net.minecraft.world.phys.HitResult;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class BoatItem extends Item {
+    private static final Predicate<Entity> ENTITY_PREDICATE;
+@@ -25,11 +26,11 @@
+       this.type = var1;
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+       ItemStack var4 = var2.getItemInHand(var3);
+-      HitResult var5 = getPlayerPOVHitResult(var1, var2, ClipContext.Fluid.ANY);
++      BlockHitResult var5 = getPlayerPOVHitResult(var1, var2, ClipContext.Fluid.ANY);
+       if (var5.getType() == HitResult.Type.MISS) {
+          return InteractionResultHolder.pass(var4);
+       } else {
+          Vec3 var6 = var2.getViewVector(1.0F);
+          double var7 = 5.0D;
+@@ -60,11 +61,11 @@
+                      var4.shrink(1);
+                   }
+                }
+ 
+                var2.awardStat(Stats.ITEM_USED.get(this));
+-               return InteractionResultHolder.success(var4);
++               return InteractionResultHolder.sidedSuccess(var4, var1.isClientSide());
+             }
+          } else {
+             return InteractionResultHolder.pass(var4);
+          }
+       }

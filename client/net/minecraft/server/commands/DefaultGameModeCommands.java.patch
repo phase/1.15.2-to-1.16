@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/DefaultGameModeCommands.java
++++ net/minecraft/server/commands/DefaultGameModeCommands.java
+@@ -31,11 +31,11 @@
+    }
+ 
+    private static int setMode(CommandSourceStack var0, GameType var1) {
+       int var2 = 0;
+       MinecraftServer var3 = var0.getServer();
+-      var3.setDefaultGameMode(var1);
++      var3.setDefaultGameType(var1);
+       if (var3.getForceGameType()) {
+          Iterator var4 = var3.getPlayerList().getPlayers().iterator();
+ 
+          while(var4.hasNext()) {
+             ServerPlayer var5 = (ServerPlayer)var4.next();

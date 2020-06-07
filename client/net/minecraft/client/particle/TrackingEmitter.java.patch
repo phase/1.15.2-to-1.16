@@ -1,0 +1,34 @@
+--- net/minecraft/client/particle/TrackingEmitter.java
++++ net/minecraft/client/particle/TrackingEmitter.java
+@@ -1,27 +1,27 @@
+ package net.minecraft.client.particle;
+ 
++import net.minecraft.client.multiplayer.ClientLevel;
+ import net.minecraft.core.particles.ParticleOptions;
+ import net.minecraft.world.entity.Entity;
+-import net.minecraft.world.level.Level;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class TrackingEmitter extends NoRenderParticle {
+    private final Entity entity;
+    private int life;
+    private final int lifeTime;
+    private final ParticleOptions particleType;
+ 
+-   public TrackingEmitter(Level var1, Entity var2, ParticleOptions var3) {
++   public TrackingEmitter(ClientLevel var1, Entity var2, ParticleOptions var3) {
+       this(var1, var2, var3, 3);
+    }
+ 
+-   public TrackingEmitter(Level var1, Entity var2, ParticleOptions var3, int var4) {
++   public TrackingEmitter(ClientLevel var1, Entity var2, ParticleOptions var3, int var4) {
+       this(var1, var2, var3, var4, var2.getDeltaMovement());
+    }
+ 
+-   private TrackingEmitter(Level var1, Entity var2, ParticleOptions var3, int var4, Vec3 var5) {
++   private TrackingEmitter(ClientLevel var1, Entity var2, ParticleOptions var3, int var4, Vec3 var5) {
+       super(var1, var2.getX(), var2.getY(0.5D), var2.getZ(), var5.x, var5.y, var5.z);
+       this.entity = var2;
+       this.lifeTime = var4;
+       this.particleType = var3;
+       this.tick();

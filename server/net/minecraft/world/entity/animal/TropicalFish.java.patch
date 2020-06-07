@@ -1,0 +1,25 @@
+--- net/minecraft/world/entity/animal/TropicalFish.java
++++ net/minecraft/world/entity/animal/TropicalFish.java
+@@ -1,8 +1,9 @@
+ package net.minecraft.world.entity.animal;
+ 
+ import javax.annotation.Nullable;
++import net.minecraft.Util;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.syncher.EntityDataAccessor;
+ import net.minecraft.network.syncher.EntityDataSerializers;
+ import net.minecraft.network.syncher.SynchedEntityData;
+ import net.minecraft.resources.ResourceLocation;
+@@ -104,11 +105,11 @@
+             var6 = var10.base;
+             var7 = var10.pattern;
+             var8 = var10.baseColor;
+             var9 = var10.patternColor;
+          } else if ((double)this.random.nextFloat() < 0.9D) {
+-            int var12 = COMMON_VARIANTS[this.random.nextInt(COMMON_VARIANTS.length)];
++            int var12 = Util.getRandom(COMMON_VARIANTS, this.random);
+             var6 = var12 & 255;
+             var7 = (var12 & '\uff00') >> 8;
+             var8 = (var12 & 16711680) >> 16;
+             var9 = (var12 & -16777216) >> 24;
+             var11 = new TropicalFish.TropicalFishGroupData(this, var6, var7, var8, var9);

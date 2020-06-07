@@ -1,0 +1,44 @@
+--- net/minecraft/world/inventory/BeaconMenu.java
++++ net/minecraft/world/inventory/BeaconMenu.java
+@@ -1,13 +1,12 @@
+ package net.minecraft.world.inventory;
+ 
++import net.minecraft.tags.ItemTags;
+ import net.minecraft.world.Container;
+ import net.minecraft.world.SimpleContainer;
+ import net.minecraft.world.entity.player.Player;
+-import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+-import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.block.Blocks;
+ 
+ public class BeaconMenu extends AbstractContainerMenu {
+    private final Container beacon;
+    private final BeaconMenu.PaymentSlot paymentSlot;
+@@ -20,11 +19,11 @@
+ 
+    public BeaconMenu(int var1, Container var2, ContainerData var3, ContainerLevelAccess var4) {
+       super(MenuType.BEACON, var1);
+       this.beacon = new SimpleContainer(1) {
+          public boolean canPlaceItem(int var1, ItemStack var2) {
+-            return var2.getItem() == Items.EMERALD || var2.getItem() == Items.DIAMOND || var2.getItem() == Items.GOLD_INGOT || var2.getItem() == Items.IRON_INGOT;
++            return var2.getItem().is(ItemTags.BEACON_PAYMENT_ITEMS);
+          }
+ 
+          public int getMaxStackSize() {
+             return 1;
+          }
+@@ -128,12 +127,11 @@
+       public PaymentSlot(Container var2, int var3, int var4, int var5) {
+          super(var2, var3, var4, var5);
+       }
+ 
+       public boolean mayPlace(ItemStack var1) {
+-         Item var2 = var1.getItem();
+-         return var2 == Items.EMERALD || var2 == Items.DIAMOND || var2 == Items.GOLD_INGOT || var2 == Items.IRON_INGOT;
++         return var1.getItem().is(ItemTags.BEACON_PAYMENT_ITEMS);
+       }
+ 
+       public int getMaxStackSize() {
+          return 1;
+       }

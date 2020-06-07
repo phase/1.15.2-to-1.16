@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/PlaySoundCommand.java
++++ net/minecraft/server/commands/PlaySoundCommand.java
+@@ -21,11 +21,11 @@
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class PlaySoundCommand {
+-   private static final SimpleCommandExceptionType ERROR_TOO_FAR = new SimpleCommandExceptionType(new TranslatableComponent("commands.playsound.failed", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_TOO_FAR = new SimpleCommandExceptionType(new TranslatableComponent("commands.playsound.failed"));
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       RequiredArgumentBuilder var1 = Commands.argument("sound", ResourceLocationArgument.id()).suggests(SuggestionProviders.AVAILABLE_SOUNDS);
+       SoundSource[] var2 = SoundSource.values();
+       int var3 = var2.length;

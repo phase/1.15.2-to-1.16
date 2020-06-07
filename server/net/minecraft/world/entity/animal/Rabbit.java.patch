@@ -1,0 +1,109 @@
+--- net/minecraft/world/entity/animal/Rabbit.java
++++ net/minecraft/world/entity/animal/Rabbit.java
+@@ -18,12 +18,15 @@
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.AgableMob;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.MobSpawnType;
+ import net.minecraft.world.entity.SpawnGroupData;
++import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.control.JumpControl;
+ import net.minecraft.world.entity.ai.control.MoveControl;
+ import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+ import net.minecraft.world.entity.ai.goal.BreedGoal;
+ import net.minecraft.world.entity.ai.goal.FloatGoal;
+@@ -34,11 +37,10 @@
+ import net.minecraft.world.entity.ai.goal.TemptGoal;
+ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+ import net.minecraft.world.entity.monster.Monster;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.item.crafting.Ingredient;
+@@ -185,11 +187,12 @@
+       }
+ 
+       this.wasOnGround = this.onGround;
+    }
+ 
+-   public void updateSprintingState() {
++   public boolean canSpawnSprintParticle() {
++      return false;
+    }
+ 
+    private void facePoint(double var1, double var3) {
+       this.yRot = (float)(Mth.atan2(var3 - this.getZ(), var1 - this.getX()) * 57.2957763671875D) - 90.0F;
+    }
+@@ -226,14 +229,12 @@
+          this.setJumping(false);
+       }
+ 
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(3.0D);
+-      this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.30000001192092896D);
++   public static AttributeSupplier.Builder createAttributes() {
++      return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 3.0D).add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D);
+    }
+ 
+    public void addAdditionalSaveData(CompoundTag var1) {
+       super.addAdditionalSaveData(var1);
+       var1.putInt("RabbitType", this.getRabbitType());
+@@ -306,17 +307,17 @@
+       return (Integer)this.entityData.get(DATA_TYPE_ID);
+    }
+ 
+    public void setRabbitType(int var1) {
+       if (var1 == 99) {
+-         this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(8.0D);
++         this.getAttribute(Attributes.ARMOR).setBaseValue(8.0D);
+          this.goalSelector.addGoal(4, new Rabbit.EvilRabbitAttackGoal(this));
+          this.targetSelector.addGoal(1, (new HurtByTargetGoal(this, new Class[0])).setAlertOthers());
+          this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Player.class, true));
+          this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Wolf.class, true));
+          if (!this.hasCustomName()) {
+-            this.setCustomName(new TranslatableComponent(Util.makeDescriptionId("entity", KILLER_BUNNY), new Object[0]));
++            this.setCustomName(new TranslatableComponent(Util.makeDescriptionId("entity", KILLER_BUNNY)));
+          }
+       }
+ 
+       this.entityData.set(DATA_TYPE_ID, var1);
+    }
+@@ -333,11 +334,11 @@
+       this.setRabbitType(var6);
+       return super.finalizeSpawn(var1, var2, var3, (SpawnGroupData)var4, var5);
+    }
+ 
+    private int getRandomRabbitType(LevelAccessor var1) {
+-      Biome var2 = var1.getBiome(new BlockPos(this));
++      Biome var2 = var1.getBiome(this.blockPosition());
+       int var3 = this.random.nextInt(100);
+       if (var2.getPrecipitation() == Biome.Precipitation.SNOW) {
+          return var3 < 80 ? 1 : 3;
+       } else if (var2.getBiomeCategory() == Biome.BiomeCategory.DESERT) {
+          return 4;
+@@ -345,12 +346,12 @@
+          return var3 < 50 ? 0 : (var3 < 90 ? 5 : 2);
+       }
+    }
+ 
+    public static boolean checkRabbitSpawnRules(EntityType<Rabbit> var0, LevelAccessor var1, MobSpawnType var2, BlockPos var3, Random var4) {
+-      Block var5 = var1.getBlockState(var3.below()).getBlock();
+-      return (var5 == Blocks.GRASS_BLOCK || var5 == Blocks.SNOW || var5 == Blocks.SAND) && var1.getRawBrightness(var3, 0) > 8;
++      BlockState var5 = var1.getBlockState(var3.below());
++      return (var5.is(Blocks.GRASS_BLOCK) || var5.is(Blocks.SNOW) || var5.is(Blocks.SAND)) && var1.getRawBrightness(var3, 0) > 8;
+    }
+ 
+    private boolean wantsMoreFood() {
+       return this.moreCarrotTicks == 0;
+    }

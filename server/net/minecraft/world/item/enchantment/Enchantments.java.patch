@@ -1,0 +1,26 @@
+--- net/minecraft/world/item/enchantment/Enchantments.java
++++ net/minecraft/world/item/enchantment/Enchantments.java
+@@ -14,10 +14,11 @@
+    public static final Enchantment AQUA_AFFINITY;
+    public static final Enchantment THORNS;
+    public static final Enchantment DEPTH_STRIDER;
+    public static final Enchantment FROST_WALKER;
+    public static final Enchantment BINDING_CURSE;
++   public static final Enchantment SOUL_SPEED;
+    public static final Enchantment SHARPNESS;
+    public static final Enchantment SMITE;
+    public static final Enchantment BANE_OF_ARTHROPODS;
+    public static final Enchantment KNOCKBACK;
+    public static final Enchantment FIRE_ASPECT;
+@@ -58,10 +59,11 @@
+       AQUA_AFFINITY = register("aqua_affinity", new WaterWorkerEnchantment(Enchantment.Rarity.RARE, ARMOR_SLOTS));
+       THORNS = register("thorns", new ThornsEnchantment(Enchantment.Rarity.VERY_RARE, ARMOR_SLOTS));
+       DEPTH_STRIDER = register("depth_strider", new WaterWalkerEnchantment(Enchantment.Rarity.RARE, ARMOR_SLOTS));
+       FROST_WALKER = register("frost_walker", new FrostWalkerEnchantment(Enchantment.Rarity.RARE, new EquipmentSlot[]{EquipmentSlot.FEET}));
+       BINDING_CURSE = register("binding_curse", new BindingCurseEnchantment(Enchantment.Rarity.VERY_RARE, ARMOR_SLOTS));
++      SOUL_SPEED = register("soul_speed", new SoulSpeedEnchantment(Enchantment.Rarity.VERY_RARE, new EquipmentSlot[]{EquipmentSlot.FEET}));
+       SHARPNESS = register("sharpness", new DamageEnchantment(Enchantment.Rarity.COMMON, 0, new EquipmentSlot[]{EquipmentSlot.MAINHAND}));
+       SMITE = register("smite", new DamageEnchantment(Enchantment.Rarity.UNCOMMON, 1, new EquipmentSlot[]{EquipmentSlot.MAINHAND}));
+       BANE_OF_ARTHROPODS = register("bane_of_arthropods", new DamageEnchantment(Enchantment.Rarity.UNCOMMON, 2, new EquipmentSlot[]{EquipmentSlot.MAINHAND}));
+       KNOCKBACK = register("knockback", new KnockbackEnchantment(Enchantment.Rarity.UNCOMMON, new EquipmentSlot[]{EquipmentSlot.MAINHAND}));
+       FIRE_ASPECT = register("fire_aspect", new FireAspectEnchantment(Enchantment.Rarity.RARE, new EquipmentSlot[]{EquipmentSlot.MAINHAND}));

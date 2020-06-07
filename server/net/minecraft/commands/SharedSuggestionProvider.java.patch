@@ -1,0 +1,108 @@
+--- net/minecraft/commands/SharedSuggestionProvider.java
++++ net/minecraft/commands/SharedSuggestionProvider.java
+@@ -9,16 +9,19 @@
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.Iterator;
+ import java.util.Locale;
++import java.util.Set;
+ import java.util.concurrent.CompletableFuture;
+ import java.util.function.Consumer;
+ import java.util.function.Function;
+ import java.util.function.Predicate;
+ import java.util.stream.Stream;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.resources.ResourceLocation;
++import net.minecraft.world.level.Level;
+ 
+ public interface SharedSuggestionProvider {
+    Collection<String> getOnlinePlayerNames();
+ 
+    default Collection<String> getSelectedEntities() {
+@@ -39,10 +42,12 @@
+ 
+    default Collection<SharedSuggestionProvider.TextCoordinates> getAbsoluteCoordinates() {
+       return Collections.singleton(SharedSuggestionProvider.TextCoordinates.DEFAULT_GLOBAL);
+    }
+ 
++   Set<ResourceKey<Level>> levels();
++
+    boolean hasPermission(int var1);
+ 
+    static <T> void filterResources(Iterable<T> var0, String var1, Function<T, ResourceLocation> var2, Consumer<T> var3) {
+       boolean var4 = var1.indexOf(58) > -1;
+       Iterator var5 = var0.iterator();
+@@ -51,14 +56,14 @@
+          while(var5.hasNext()) {
+             Object var6 = var5.next();
+             ResourceLocation var7 = (ResourceLocation)var2.apply(var6);
+             if (var4) {
+                String var8 = var7.toString();
+-               if (var8.startsWith(var1)) {
++               if (matchesSubStr(var1, var8)) {
+                   var3.accept(var6);
+                }
+-            } else if (var7.getNamespace().startsWith(var1) || var7.getNamespace().equals("minecraft") && var7.getPath().startsWith(var1)) {
++            } else if (matchesSubStr(var1, var7.getNamespace()) || var7.getNamespace().equals("minecraft") && matchesSubStr(var1, var7.getPath())) {
+                var3.accept(var6);
+             }
+          }
+ 
+          return;
+@@ -195,22 +200,22 @@
+       String var2 = var1.getRemaining().toLowerCase(Locale.ROOT);
+       Iterator var3 = var0.iterator();
+ 
+       while(var3.hasNext()) {
+          String var4 = (String)var3.next();
+-         if (var4.toLowerCase(Locale.ROOT).startsWith(var2)) {
++         if (matchesSubStr(var2, var4.toLowerCase(Locale.ROOT))) {
+             var1.suggest(var4);
+          }
+       }
+ 
+       return var1.buildFuture();
+    }
+ 
+    static CompletableFuture<Suggestions> suggest(Stream<String> var0, SuggestionsBuilder var1) {
+       String var2 = var1.getRemaining().toLowerCase(Locale.ROOT);
+       var0.filter((var1x) -> {
+-         return var1x.toLowerCase(Locale.ROOT).startsWith(var2);
++         return matchesSubStr(var2, var1x.toLowerCase(Locale.ROOT));
+       }).forEach(var1::suggest);
+       return var1.buildFuture();
+    }
+ 
+    static CompletableFuture<Suggestions> suggest(String[] var0, SuggestionsBuilder var1) {
+@@ -218,18 +223,29 @@
+       String[] var3 = var0;
+       int var4 = var0.length;
+ 
+       for(int var5 = 0; var5 < var4; ++var5) {
+          String var6 = var3[var5];
+-         if (var6.toLowerCase(Locale.ROOT).startsWith(var2)) {
++         if (matchesSubStr(var2, var6.toLowerCase(Locale.ROOT))) {
+             var1.suggest(var6);
+          }
+       }
+ 
+       return var1.buildFuture();
+    }
+ 
++   static boolean matchesSubStr(String var0, String var1) {
++      for(int var2 = 0; !var1.startsWith(var0, var2); ++var2) {
++         var2 = var1.indexOf(95, var2);
++         if (var2 < 0) {
++            return false;
++         }
++      }
++
++      return true;
++   }
++
+    public static class TextCoordinates {
+       public static final SharedSuggestionProvider.TextCoordinates DEFAULT_LOCAL = new SharedSuggestionProvider.TextCoordinates("^", "^", "^");
+       public static final SharedSuggestionProvider.TextCoordinates DEFAULT_GLOBAL = new SharedSuggestionProvider.TextCoordinates("~", "~", "~");
+       public final String x;
+       public final String y;

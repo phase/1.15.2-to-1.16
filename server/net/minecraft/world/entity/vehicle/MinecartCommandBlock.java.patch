@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/vehicle/MinecartCommandBlock.java
++++ net/minecraft/world/entity/vehicle/MinecartCommandBlock.java
+@@ -31,11 +31,11 @@
+    }
+ 
+    protected void defineSynchedData() {
+       super.defineSynchedData();
+       this.getEntityData().define(DATA_ID_COMMAND_NAME, "");
+-      this.getEntityData().define(DATA_ID_LAST_OUTPUT, new TextComponent(""));
++      this.getEntityData().define(DATA_ID_LAST_OUTPUT, TextComponent.EMPTY);
+    }
+ 
+    protected void readAdditionalSaveData(CompoundTag var1) {
+       super.readAdditionalSaveData(var1);
+       this.commandBlock.load(var1);

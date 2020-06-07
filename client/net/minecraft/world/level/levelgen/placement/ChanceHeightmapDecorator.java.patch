@@ -1,0 +1,29 @@
+--- net/minecraft/world/level/levelgen/placement/ChanceHeightmapDecorator.java
++++ net/minecraft/world/level/levelgen/placement/ChanceHeightmapDecorator.java
+@@ -1,23 +1,21 @@
+ package net.minecraft.world.level.levelgen.placement;
+ 
+-import com.mojang.datafixers.Dynamic;
++import com.mojang.serialization.Codec;
+ import java.util.Random;
+-import java.util.function.Function;
+ import java.util.stream.Stream;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ 
+ public class ChanceHeightmapDecorator extends FeatureDecorator<ChanceDecoratorConfiguration> {
+-   public ChanceHeightmapDecorator(Function<Dynamic<?>, ? extends ChanceDecoratorConfiguration> var1) {
++   public ChanceHeightmapDecorator(Codec<ChanceDecoratorConfiguration> var1) {
+       super(var1);
+    }
+ 
+-   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, ChanceDecoratorConfiguration var4, BlockPos var5) {
++   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator var2, Random var3, ChanceDecoratorConfiguration var4, BlockPos var5) {
+       if (var3.nextFloat() < 1.0F / (float)var4.chance) {
+          int var6 = var3.nextInt(16) + var5.getX();
+          int var7 = var3.nextInt(16) + var5.getZ();
+          int var8 = var1.getHeight(Heightmap.Types.MOTION_BLOCKING, var6, var7);
+          return Stream.of(new BlockPos(var6, var8, var7));

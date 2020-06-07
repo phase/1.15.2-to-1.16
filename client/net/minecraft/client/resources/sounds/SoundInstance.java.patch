@@ -1,0 +1,17 @@
+--- net/minecraft/client/resources/sounds/SoundInstance.java
++++ net/minecraft/client/resources/sounds/SoundInstance.java
+@@ -36,10 +36,14 @@
+ 
+    default boolean canStartSilent() {
+       return false;
+    }
+ 
++   default boolean canPlaySound() {
++      return true;
++   }
++
+    public static enum Attenuation {
+       NONE,
+       LINEAR;
+ 
+       private Attenuation() {

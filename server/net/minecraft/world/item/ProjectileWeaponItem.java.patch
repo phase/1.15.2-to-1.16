@@ -1,0 +1,15 @@
+--- net/minecraft/world/item/ProjectileWeaponItem.java
++++ net/minecraft/world/item/ProjectileWeaponItem.java
+@@ -31,10 +31,12 @@
+ 
+    public int getEnchantmentValue() {
+       return 1;
+    }
+ 
++   public abstract int getDefaultProjectileRange();
++
+    static {
+       ARROW_OR_FIREWORK = ARROW_ONLY.or((var0) -> {
+          return var0.getItem() == Items.FIREWORK_ROCKET;
+       });
+    }

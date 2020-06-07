@@ -1,0 +1,157 @@
+--- net/minecraft/client/gui/screens/advancements/AdvancementsScreen.java
++++ net/minecraft/client/gui/screens/advancements/AdvancementsScreen.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.client.gui.screens.advancements;
+ 
+ import com.google.common.collect.Maps;
+ import com.mojang.blaze3d.systems.RenderSystem;
++import com.mojang.blaze3d.vertex.PoseStack;
+ import java.util.Iterator;
+ import java.util.Map;
+ import javax.annotation.Nullable;
+ import net.minecraft.advancements.Advancement;
+ import net.minecraft.advancements.AdvancementProgress;
+@@ -77,17 +78,17 @@
+       } else {
+          return super.keyPressed(var1, var2, var3);
+       }
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
+-      int var4 = (this.width - 252) / 2;
+-      int var5 = (this.height - 140) / 2;
+-      this.renderBackground();
+-      this.renderInside(var1, var2, var4, var5);
+-      this.renderWindow(var4, var5);
+-      this.renderTooltips(var1, var2, var4, var5);
++   public void render(PoseStack var1, int var2, int var3, float var4) {
++      int var5 = (this.width - 252) / 2;
++      int var6 = (this.height - 140) / 2;
++      this.renderBackground(var1);
++      this.renderInside(var1, var2, var3, var5, var6);
++      this.renderWindow(var1, var5, var6);
++      this.renderTooltips(var1, var2, var3, var5, var6);
+    }
+ 
+    public boolean mouseDragged(double var1, double var3, int var5, double var6, double var8) {
+       if (var5 != 0) {
+          this.isScrolling = false;
+@@ -101,84 +102,84 @@
+ 
+          return true;
+       }
+    }
+ 
+-   private void renderInside(int var1, int var2, int var3, int var4) {
+-      AdvancementTab var5 = this.selectedTab;
+-      if (var5 == null) {
+-         fill(var3 + 9, var4 + 18, var3 + 9 + 234, var4 + 18 + 113, -16777216);
+-         String var6 = I18n.get("advancements.empty");
+-         int var7 = this.font.width(var6);
++   private void renderInside(PoseStack var1, int var2, int var3, int var4, int var5) {
++      AdvancementTab var6 = this.selectedTab;
++      if (var6 == null) {
++         fill(var1, var4 + 9, var5 + 18, var4 + 9 + 234, var5 + 18 + 113, -16777216);
++         String var7 = I18n.get("advancements.empty");
++         int var8 = this.font.width(var7);
+          Font var10000 = this.font;
+-         float var10002 = (float)(var3 + 9 + 117 - var7 / 2);
+-         int var10003 = var4 + 18 + 56;
++         float var10003 = (float)(var4 + 9 + 117 - var8 / 2);
++         int var10004 = var5 + 18 + 56;
+          this.font.getClass();
+-         var10000.draw(var6, var10002, (float)(var10003 - 9 / 2), -1);
++         var10000.draw(var1, (String)var7, var10003, (float)(var10004 - 9 / 2), -1);
+          var10000 = this.font;
+-         var10002 = (float)(var3 + 9 + 117 - this.font.width(":(") / 2);
+-         var10003 = var4 + 18 + 113;
++         var10003 = (float)(var4 + 9 + 117 - this.font.width(":(") / 2);
++         var10004 = var5 + 18 + 113;
+          this.font.getClass();
+-         var10000.draw(":(", var10002, (float)(var10003 - 9), -1);
++         var10000.draw(var1, (String)":(", var10003, (float)(var10004 - 9), -1);
+       } else {
+          RenderSystem.pushMatrix();
+-         RenderSystem.translatef((float)(var3 + 9), (float)(var4 + 18), 0.0F);
+-         var5.drawContents();
++         RenderSystem.translatef((float)(var4 + 9), (float)(var5 + 18), 0.0F);
++         var6.drawContents(var1);
+          RenderSystem.popMatrix();
+          RenderSystem.depthFunc(515);
+          RenderSystem.disableDepthTest();
+       }
+    }
+ 
+-   public void renderWindow(int var1, int var2) {
++   public void renderWindow(PoseStack var1, int var2, int var3) {
+       RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+       RenderSystem.enableBlend();
+       this.minecraft.getTextureManager().bind(WINDOW_LOCATION);
+-      this.blit(var1, var2, 0, 0, 252, 140);
++      this.blit(var1, var2, var3, 0, 0, 252, 140);
+       if (this.tabs.size() > 1) {
+          this.minecraft.getTextureManager().bind(TABS_LOCATION);
+-         Iterator var3 = this.tabs.values().iterator();
++         Iterator var4 = this.tabs.values().iterator();
+ 
+-         AdvancementTab var4;
+-         while(var3.hasNext()) {
+-            var4 = (AdvancementTab)var3.next();
+-            var4.drawTab(var1, var2, var4 == this.selectedTab);
++         AdvancementTab var5;
++         while(var4.hasNext()) {
++            var5 = (AdvancementTab)var4.next();
++            var5.drawTab(var1, var2, var3, var5 == this.selectedTab);
+          }
+ 
+          RenderSystem.enableRescaleNormal();
+          RenderSystem.defaultBlendFunc();
+-         var3 = this.tabs.values().iterator();
++         var4 = this.tabs.values().iterator();
+ 
+-         while(var3.hasNext()) {
+-            var4 = (AdvancementTab)var3.next();
+-            var4.drawIcon(var1, var2, this.itemRenderer);
++         while(var4.hasNext()) {
++            var5 = (AdvancementTab)var4.next();
++            var5.drawIcon(var2, var3, this.itemRenderer);
+          }
+ 
+          RenderSystem.disableBlend();
+       }
+ 
+-      this.font.draw(I18n.get("gui.advancements"), (float)(var1 + 8), (float)(var2 + 6), 4210752);
++      this.font.draw(var1, I18n.get("gui.advancements"), (float)(var2 + 8), (float)(var3 + 6), 4210752);
+    }
+ 
+-   private void renderTooltips(int var1, int var2, int var3, int var4) {
++   private void renderTooltips(PoseStack var1, int var2, int var3, int var4, int var5) {
+       RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+       if (this.selectedTab != null) {
+          RenderSystem.pushMatrix();
+          RenderSystem.enableDepthTest();
+-         RenderSystem.translatef((float)(var3 + 9), (float)(var4 + 18), 400.0F);
+-         this.selectedTab.drawTooltips(var1 - var3 - 9, var2 - var4 - 18, var3, var4);
++         RenderSystem.translatef((float)(var4 + 9), (float)(var5 + 18), 400.0F);
++         this.selectedTab.drawTooltips(var1, var2 - var4 - 9, var3 - var5 - 18, var4, var5);
+          RenderSystem.disableDepthTest();
+          RenderSystem.popMatrix();
+       }
+ 
+       if (this.tabs.size() > 1) {
+-         Iterator var5 = this.tabs.values().iterator();
++         Iterator var6 = this.tabs.values().iterator();
+ 
+-         while(var5.hasNext()) {
+-            AdvancementTab var6 = (AdvancementTab)var5.next();
+-            if (var6.isMouseOver(var3, var4, (double)var1, (double)var2)) {
+-               this.renderTooltip(var6.getTitle(), var1, var2);
++         while(var6.hasNext()) {
++            AdvancementTab var7 = (AdvancementTab)var6.next();
++            if (var7.isMouseOver(var4, var5, (double)var2, (double)var3)) {
++               this.renderTooltip(var1, var7.getTitle(), var2, var3);
+             }
+          }
+       }
+ 
+    }

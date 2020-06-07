@@ -1,0 +1,12 @@
+--- net/minecraft/world/level/block/CryingObsidianBlock.java
++++ net/minecraft/world/level/block/CryingObsidianBlock.java
+@@ -1,0 +1,9 @@
++package net.minecraft.world.level.block;
++
++import net.minecraft.world.level.block.state.BlockBehaviour;
++
++public class CryingObsidianBlock extends Block {
++   public CryingObsidianBlock(BlockBehaviour.Properties var1) {
++      super(var1);
++   }
++}

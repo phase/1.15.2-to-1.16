@@ -1,0 +1,28 @@
+--- net/minecraft/world/entity/projectile/Snowball.java
++++ net/minecraft/world/entity/projectile/Snowball.java
+@@ -26,17 +26,19 @@
+ 
+    protected Item getDefaultItem() {
+       return Items.SNOWBALL;
+    }
+ 
+-   protected void onHit(HitResult var1) {
+-      if (var1.getType() == HitResult.Type.ENTITY) {
+-         Entity var2 = ((EntityHitResult)var1).getEntity();
+-         int var3 = var2 instanceof Blaze ? 3 : 0;
+-         var2.hurt(DamageSource.thrown(this, this.getOwner()), (float)var3);
+-      }
++   protected void onHitEntity(EntityHitResult var1) {
++      super.onHitEntity(var1);
++      Entity var2 = var1.getEntity();
++      int var3 = var2 instanceof Blaze ? 3 : 0;
++      var2.hurt(DamageSource.thrown(this, this.getOwner()), (float)var3);
++   }
+ 
++   protected void onHit(HitResult var1) {
++      super.onHit(var1);
+       if (!this.level.isClientSide) {
+          this.level.broadcastEntityEvent(this, (byte)3);
+          this.remove();
+       }
+ 

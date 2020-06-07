@@ -1,0 +1,63 @@
+--- net/minecraft/world/level/chunk/ChunkAccess.java
++++ net/minecraft/world/level/chunk/ChunkAccess.java
+@@ -1,28 +1,26 @@
+ package net.minecraft.world.level.chunk;
+ 
+ import it.unimi.dsi.fastutil.shorts.ShortArrayList;
+ import it.unimi.dsi.fastutil.shorts.ShortList;
+-import java.util.BitSet;
+ import java.util.Collection;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.Map.Entry;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+-import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.TickList;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+-import net.minecraft.world.level.levelgen.GenerationStep;
+ import net.minecraft.world.level.levelgen.Heightmap;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.level.levelgen.structure.StructureStart;
+ import net.minecraft.world.level.material.Fluid;
+ import org.apache.logging.log4j.LogManager;
+ 
+ public interface ChunkAccess extends BlockGetter, FeatureAccess {
+@@ -66,13 +64,13 @@
+ 
+    ChunkPos getPos();
+ 
+    void setLastSaveTime(long var1);
+ 
+-   Map<String, StructureStart> getAllStarts();
++   Map<StructureFeature<?>, StructureStart<?>> getAllStarts();
+ 
+-   void setAllStarts(Map<String, StructureStart> var1);
++   void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> var1);
+ 
+    default boolean isYSpaceEmpty(int var1, int var2) {
+       if (var1 < 0) {
+          var1 = 0;
+       }
+@@ -125,14 +123,10 @@
+ 
+    TickList<Block> getBlockTicks();
+ 
+    TickList<Fluid> getLiquidTicks();
+ 
+-   default BitSet getCarvingMask(GenerationStep.Carving var1) {
+-      throw (RuntimeException)Util.pauseInIde(new RuntimeException("Meaningless in this context"));
+-   }
+-
+    UpgradeData getUpgradeData();
+ 
+    void setInhabitedTime(long var1);
+ 
+    long getInhabitedTime();

@@ -1,0 +1,59 @@
+--- net/minecraft/world/entity/ai/village/VillageSiege.java
++++ net/minecraft/world/entity/ai/village/VillageSiege.java
+@@ -10,15 +10,16 @@
+ import net.minecraft.world.entity.MobSpawnType;
+ import net.minecraft.world.entity.SpawnGroupData;
+ import net.minecraft.world.entity.monster.Monster;
+ import net.minecraft.world.entity.monster.Zombie;
+ import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.level.CustomSpawner;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.phys.Vec3;
+ 
+-public class VillageSiege {
++public class VillageSiege implements CustomSpawner {
+    private boolean hasSetupSiege;
+    private VillageSiege.State siegeState;
+    private int zombiesToSpawn;
+    private int nextSpawnTime;
+    private int spawnX;
+@@ -73,11 +74,11 @@
+       Iterator var2 = var1.players().iterator();
+ 
+       while(var2.hasNext()) {
+          Player var3 = (Player)var2.next();
+          if (!var3.isSpectator()) {
+-            BlockPos var4 = var3.getCommandSenderBlockPosition();
++            BlockPos var4 = var3.blockPosition();
+             if (var1.isVillage(var4) && var1.getBiome(var4).getBiomeCategory() != Biome.BiomeCategory.MUSHROOM) {
+                for(int var5 = 0; var5 < 10; ++var5) {
+                   float var6 = var1.random.nextFloat() * 6.2831855F;
+                   this.spawnX = var4.getX() + Mth.floor(Mth.cos(var6) * 32.0F);
+                   this.spawnY = var4.getY();
+@@ -101,11 +102,11 @@
+       Vec3 var2 = this.findRandomSpawnPos(var1, new BlockPos(this.spawnX, this.spawnY, this.spawnZ));
+       if (var2 != null) {
+          Zombie var3;
+          try {
+             var3 = new Zombie(var1);
+-            var3.finalizeSpawn(var1, var1.getCurrentDifficultyAt(new BlockPos(var3)), MobSpawnType.EVENT, (SpawnGroupData)null, (CompoundTag)null);
++            var3.finalizeSpawn(var1, var1.getCurrentDifficultyAt(var3.blockPosition()), MobSpawnType.EVENT, (SpawnGroupData)null, (CompoundTag)null);
+          } catch (Exception var5) {
+             var5.printStackTrace();
+             return;
+          }
+ 
+@@ -120,11 +121,11 @@
+          int var4 = var2.getX() + var1.random.nextInt(16) - 8;
+          int var5 = var2.getZ() + var1.random.nextInt(16) - 8;
+          int var6 = var1.getHeight(Heightmap.Types.WORLD_SURFACE, var4, var5);
+          BlockPos var7 = new BlockPos(var4, var6, var5);
+          if (var1.isVillage(var7) && Monster.checkMonsterSpawnRules(EntityType.ZOMBIE, var1, MobSpawnType.EVENT, var7, var1.random)) {
+-            return new Vec3((double)var7.getX() + 0.5D, (double)var7.getY(), (double)var7.getZ() + 0.5D);
++            return Vec3.atBottomCenterOf(var7);
+          }
+       }
+ 
+       return null;
+    }

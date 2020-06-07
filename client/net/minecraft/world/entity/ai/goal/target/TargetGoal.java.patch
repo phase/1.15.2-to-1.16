@@ -1,0 +1,48 @@
+--- net/minecraft/world/entity/ai/goal/target/TargetGoal.java
++++ net/minecraft/world/entity/ai/goal/target/TargetGoal.java
+@@ -1,17 +1,15 @@
+ package net.minecraft.world.entity.ai.goal.target;
+ 
+ import javax.annotation.Nullable;
+-import net.minecraft.core.BlockPos;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.Mob;
+-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.goal.Goal;
+ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.pathfinder.Node;
+ import net.minecraft.world.level.pathfinder.Path;
+ import net.minecraft.world.scores.Team;
+ 
+@@ -74,12 +72,11 @@
+          }
+       }
+    }
+ 
+    protected double getFollowDistance() {
+-      AttributeInstance var1 = this.mob.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE);
+-      return var1 == null ? 16.0D : var1.getValue();
++      return this.mob.getAttributeValue(Attributes.FOLLOW_RANGE);
+    }
+ 
+    public void start() {
+       this.reachCache = 0;
+       this.reachCacheTime = 0;
+@@ -94,11 +91,11 @@
+    protected boolean canAttack(@Nullable LivingEntity var1, TargetingConditions var2) {
+       if (var1 == null) {
+          return false;
+       } else if (!var2.test(this.mob, var1)) {
+          return false;
+-      } else if (!this.mob.isWithinRestriction(new BlockPos(var1))) {
++      } else if (!this.mob.isWithinRestriction(var1.blockPosition())) {
+          return false;
+       } else {
+          if (this.mustReach) {
+             if (--this.reachCacheTime <= 0) {
+                this.reachCache = 0;

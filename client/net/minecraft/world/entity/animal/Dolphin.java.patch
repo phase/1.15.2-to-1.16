@@ -1,0 +1,191 @@
+--- net/minecraft/world/entity/animal/Dolphin.java
++++ net/minecraft/world/entity/animal/Dolphin.java
+@@ -30,10 +30,12 @@
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.MobSpawnType;
+ import net.minecraft.world.entity.MoverType;
+ import net.minecraft.world.entity.Pose;
+ import net.minecraft.world.entity.SpawnGroupData;
++import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.control.DolphinLookControl;
+ import net.minecraft.world.entity.ai.control.MoveControl;
+ import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+ import net.minecraft.world.entity.ai.goal.BreathAirGoal;
+ import net.minecraft.world.entity.ai.goal.DolphinJumpGoal;
+@@ -49,23 +51,23 @@
+ import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
+ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+ import net.minecraft.world.entity.ai.util.RandomPos;
+ import net.minecraft.world.entity.item.ItemEntity;
+ import net.minecraft.world.entity.monster.Guardian;
+-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.biome.Biomes;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.level.pathfinder.PathComputationType;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class Dolphin extends WaterAnimal {
+    private static final EntityDataAccessor<BlockPos> TREASURE_POS;
+    private static final EntityDataAccessor<Boolean> GOT_FISH;
+-   private static final EntityDataAccessor<Integer> MOISNTESS_LEVEL;
++   private static final EntityDataAccessor<Integer> MOISTNESS_LEVEL;
+    private static final TargetingConditions SWIM_WITH_PLAYER_TARGETING;
+    public static final Predicate<ItemEntity> ALLOWED_ITEMS;
+ 
+    public Dolphin(EntityType<? extends Dolphin> var1, Level var2) {
+       super(var1, var2);
+@@ -103,22 +105,22 @@
+    public void setGotFish(boolean var1) {
+       this.entityData.set(GOT_FISH, var1);
+    }
+ 
+    public int getMoistnessLevel() {
+-      return (Integer)this.entityData.get(MOISNTESS_LEVEL);
++      return (Integer)this.entityData.get(MOISTNESS_LEVEL);
+    }
+ 
+    public void setMoisntessLevel(int var1) {
+-      this.entityData.set(MOISNTESS_LEVEL, var1);
++      this.entityData.set(MOISTNESS_LEVEL, var1);
+    }
+ 
+    protected void defineSynchedData() {
+       super.defineSynchedData();
+       this.entityData.define(TREASURE_POS, BlockPos.ZERO);
+       this.entityData.define(GOT_FISH, false);
+-      this.entityData.define(MOISNTESS_LEVEL, 2400);
++      this.entityData.define(MOISTNESS_LEVEL, 2400);
+    }
+ 
+    public void addAdditionalSaveData(CompoundTag var1) {
+       super.addAdditionalSaveData(var1);
+       var1.putInt("TreasurePosX", this.getTreasurePos().getX());
+@@ -152,24 +154,20 @@
+       this.goalSelector.addGoal(8, new FollowBoatGoal(this));
+       this.goalSelector.addGoal(9, new AvoidEntityGoal(this, Guardian.class, 8.0F, 1.0D, 1.0D));
+       this.targetSelector.addGoal(1, (new HurtByTargetGoal(this, new Class[]{Guardian.class})).setAlertOthers());
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0D);
+-      this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(1.2000000476837158D);
+-      this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+-      this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0D);
++   public static AttributeSupplier.Builder createAttributes() {
++      return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 10.0D).add(Attributes.MOVEMENT_SPEED, 1.2000000476837158D).add(Attributes.ATTACK_DAMAGE, 3.0D);
+    }
+ 
+    protected PathNavigation createNavigation(Level var1) {
+       return new WaterBoundPathNavigation(this, var1);
+    }
+ 
+    public boolean doHurtTarget(Entity var1) {
+-      boolean var2 = var1.hurt(DamageSource.mobAttack(this), (float)((int)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue()));
++      boolean var2 = var1.hurt(DamageSource.mobAttack(this), (float)((int)this.getAttributeValue(Attributes.ATTACK_DAMAGE)));
+       if (var2) {
+          this.doEnchantDamageEffects(this, var1);
+          this.playSound(SoundEvents.DOLPHIN_ATTACK, 1.0F, 1.0F);
+       }
+ 
+@@ -211,10 +209,11 @@
+ 
+    protected void pickUpItem(ItemEntity var1) {
+       if (this.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()) {
+          ItemStack var2 = var1.getItem();
+          if (this.canHoldItem(var2)) {
++            this.onItemPickup(var1);
+             this.setItemSlot(EquipmentSlot.MAINHAND, var2);
+             this.handDropChances[EquipmentSlot.MAINHAND.getIndex()] = 2.0F;
+             this.take(var1, var2.getCount());
+             var1.remove();
+          }
+@@ -343,11 +342,11 @@
+    }
+ 
+    static {
+       TREASURE_POS = SynchedEntityData.defineId(Dolphin.class, EntityDataSerializers.BLOCK_POS);
+       GOT_FISH = SynchedEntityData.defineId(Dolphin.class, EntityDataSerializers.BOOLEAN);
+-      MOISNTESS_LEVEL = SynchedEntityData.defineId(Dolphin.class, EntityDataSerializers.INT);
++      MOISTNESS_LEVEL = SynchedEntityData.defineId(Dolphin.class, EntityDataSerializers.INT);
+       SWIM_WITH_PLAYER_TARGETING = (new TargetingConditions()).range(10.0D).allowSameTeam().allowInvulnerable().allowUnseeable();
+       ALLOWED_ITEMS = (var0) -> {
+          return !var0.hasPickUpDelay() && var0.isAlive() && var0.isInWater();
+       };
+    }
+@@ -377,21 +376,22 @@
+       public void start() {
+          if (this.dolphin.level instanceof ServerLevel) {
+             ServerLevel var1 = (ServerLevel)this.dolphin.level;
+             this.stuck = false;
+             this.dolphin.getNavigation().stop();
+-            BlockPos var2 = new BlockPos(this.dolphin);
+-            String var3 = (double)var1.random.nextFloat() >= 0.5D ? "Ocean_Ruin" : "Shipwreck";
++            BlockPos var2 = this.dolphin.blockPosition();
++            StructureFeature var3 = (double)var1.random.nextFloat() >= 0.5D ? StructureFeature.OCEAN_RUIN : StructureFeature.SHIPWRECK;
+             BlockPos var4 = var1.findNearestMapFeature(var3, var2, 50, false);
+             if (var4 == null) {
+-               BlockPos var5 = var1.findNearestMapFeature(var3.equals("Ocean_Ruin") ? "Shipwreck" : "Ocean_Ruin", var2, 50, false);
+-               if (var5 == null) {
++               StructureFeature var5 = var3.equals(StructureFeature.OCEAN_RUIN) ? StructureFeature.SHIPWRECK : StructureFeature.OCEAN_RUIN;
++               BlockPos var6 = var1.findNearestMapFeature(var5, var2, 50, false);
++               if (var6 == null) {
+                   this.stuck = true;
+                   return;
+                }
+ 
+-               this.dolphin.setTreasurePos(var5);
++               this.dolphin.setTreasurePos(var6);
+             } else {
+                this.dolphin.setTreasurePos(var4);
+             }
+ 
+             var1.broadcastEntityEvent(this.dolphin, (byte)38);
+@@ -407,11 +407,11 @@
+       }
+ 
+       public void tick() {
+          Level var1 = this.dolphin.level;
+          if (this.dolphin.closeToNextPos() || this.dolphin.getNavigation().isDone()) {
+-            Vec3 var2 = new Vec3(this.dolphin.getTreasurePos());
++            Vec3 var2 = Vec3.atCenterOf(this.dolphin.getTreasurePos());
+             Vec3 var3 = RandomPos.getPosTowards(this.dolphin, 16, 1, var2, 0.39269909262657166D);
+             if (var3 == null) {
+                var3 = RandomPos.getPosTowards(this.dolphin, 8, 4, var2);
+             }
+ 
+@@ -448,11 +448,15 @@
+          this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+       }
+ 
+       public boolean canUse() {
+          this.player = this.dolphin.level.getNearestPlayer(Dolphin.SWIM_WITH_PLAYER_TARGETING, this.dolphin);
+-         return this.player == null ? false : this.player.isSwimming();
++         if (this.player == null) {
++            return false;
++         } else {
++            return this.player.isSwimming() && this.dolphin.getTarget() != this.player;
++         }
+       }
+ 
+       public boolean canContinueToUse() {
+          return this.player != null && this.player.isSwimming() && this.dolphin.distanceToSqr(this.player) < 256.0D;
+       }
+@@ -566,11 +570,11 @@
+             } else {
+                float var9 = (float)(Mth.atan2(var5, var1) * 57.2957763671875D) - 90.0F;
+                this.dolphin.yRot = this.rotlerp(this.dolphin.yRot, var9, 10.0F);
+                this.dolphin.yBodyRot = this.dolphin.yRot;
+                this.dolphin.yHeadRot = this.dolphin.yRot;
+-               float var10 = (float)(this.speedModifier * this.dolphin.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
++               float var10 = (float)(this.speedModifier * this.dolphin.getAttributeValue(Attributes.MOVEMENT_SPEED));
+                if (this.dolphin.isInWater()) {
+                   this.dolphin.setSpeed(var10 * 0.02F);
+                   float var11 = -((float)(Mth.atan2(var3, (double)Mth.sqrt(var1 * var1 + var5 * var5)) * 57.2957763671875D));
+                   var11 = Mth.clamp(Mth.wrapDegrees(var11), -85.0F, 85.0F);
+                   this.dolphin.xRot = this.rotlerp(this.dolphin.xRot, var11, 5.0F);

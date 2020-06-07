@@ -1,0 +1,71 @@
+--- net/minecraft/world/level/block/DiodeBlock.java
++++ net/minecraft/world/level/block/DiodeBlock.java
+@@ -10,21 +10,22 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelReader;
+ import net.minecraft.world.level.TickPriority;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public abstract class DiodeBlock extends HorizontalDirectionalBlock {
+    protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D);
+    public static final BooleanProperty POWERED;
+ 
+-   protected DiodeBlock(Block.Properties var1) {
++   protected DiodeBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+    }
+ 
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return SHAPE;
+@@ -112,11 +113,11 @@
+       int var6 = var1.getSignal(var5, var4);
+       if (var6 >= 15) {
+          return var6;
+       } else {
+          BlockState var7 = var1.getBlockState(var5);
+-         return Math.max(var6, var7.getBlock() == Blocks.REDSTONE_WIRE ? (Integer)var7.getValue(RedStoneWireBlock.POWER) : 0);
++         return Math.max(var6, var7.is(Blocks.REDSTONE_WIRE) ? (Integer)var7.getValue(RedStoneWireBlock.POWER) : 0);
+       }
+    }
+ 
+    protected int getAlternateSignal(LevelReader var1, BlockPos var2, BlockState var3) {
+       Direction var4 = (Direction)var3.getValue(FACING);
+@@ -125,16 +126,15 @@
+       return Math.max(this.getAlternateSignalAt(var1, var2.relative(var5), var5), this.getAlternateSignalAt(var1, var2.relative(var6), var6));
+    }
+ 
+    protected int getAlternateSignalAt(LevelReader var1, BlockPos var2, Direction var3) {
+       BlockState var4 = var1.getBlockState(var2);
+-      Block var5 = var4.getBlock();
+       if (this.isAlternateInput(var4)) {
+-         if (var5 == Blocks.REDSTONE_BLOCK) {
++         if (var4.is(Blocks.REDSTONE_BLOCK)) {
+             return 15;
+          } else {
+-            return var5 == Blocks.REDSTONE_WIRE ? (Integer)var4.getValue(RedStoneWireBlock.POWER) : var1.getDirectSignal(var2, var3);
++            return var4.is(Blocks.REDSTONE_WIRE) ? (Integer)var4.getValue(RedStoneWireBlock.POWER) : var1.getDirectSignal(var2, var3);
+          }
+       } else {
+          return 0;
+       }
+    }
+@@ -157,11 +157,11 @@
+    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+       this.updateNeighborsInFront(var2, var3, var1);
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (!var5 && var1.getBlock() != var4.getBlock()) {
++      if (!var5 && !var1.is(var4.getBlock())) {
+          super.onRemove(var1, var2, var3, var4, var5);
+          this.updateNeighborsInFront(var2, var3, var1);
+       }
+    }
+ 

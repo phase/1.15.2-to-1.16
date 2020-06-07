@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/ReplaceItemCommand.java
++++ net/minecraft/server/commands/ReplaceItemCommand.java
+@@ -25,11 +25,11 @@
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ 
+ public class ReplaceItemCommand {
+-   public static final SimpleCommandExceptionType ERROR_NOT_A_CONTAINER = new SimpleCommandExceptionType(new TranslatableComponent("commands.replaceitem.block.failed", new Object[0]));
++   public static final SimpleCommandExceptionType ERROR_NOT_A_CONTAINER = new SimpleCommandExceptionType(new TranslatableComponent("commands.replaceitem.block.failed"));
+    public static final DynamicCommandExceptionType ERROR_INAPPLICABLE_SLOT = new DynamicCommandExceptionType((var0) -> {
+       return new TranslatableComponent("commands.replaceitem.slot.inapplicable", new Object[]{var0});
+    });
+    public static final Dynamic2CommandExceptionType ERROR_ENTITY_SLOT = new Dynamic2CommandExceptionType((var0, var1) -> {
+       return new TranslatableComponent("commands.replaceitem.entity.failed", new Object[]{var0, var1});

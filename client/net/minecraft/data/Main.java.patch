@@ -1,0 +1,36 @@
+--- net/minecraft/data/Main.java
++++ net/minecraft/data/Main.java
+@@ -13,10 +13,11 @@
+ import net.minecraft.data.advancements.AdvancementProvider;
+ import net.minecraft.data.info.BlockListReport;
+ import net.minecraft.data.info.CommandsReport;
+ import net.minecraft.data.info.RegistryDumpReport;
+ import net.minecraft.data.loot.LootTableProvider;
++import net.minecraft.data.models.ModelProvider;
+ import net.minecraft.data.recipes.RecipeProvider;
+ import net.minecraft.data.structures.NbtToSnbt;
+ import net.minecraft.data.structures.SnbtToNbt;
+ import net.minecraft.data.structures.StructureUpdater;
+ import net.minecraft.data.tags.BlockTagsProvider;
+@@ -61,14 +62,19 @@
+       DataGenerator var7 = new DataGenerator(var0, var1);
+       if (var2 || var3) {
+          var7.addProvider((new SnbtToNbt(var7)).addFilter(new StructureUpdater()));
+       }
+ 
++      if (var2) {
++         var7.addProvider(new ModelProvider(var7));
++      }
++
+       if (var3) {
+          var7.addProvider(new FluidTagsProvider(var7));
+-         var7.addProvider(new BlockTagsProvider(var7));
+-         var7.addProvider(new ItemTagsProvider(var7));
++         BlockTagsProvider var8 = new BlockTagsProvider(var7);
++         var7.addProvider(var8);
++         var7.addProvider(new ItemTagsProvider(var7, var8));
+          var7.addProvider(new EntityTypeTagsProvider(var7));
+          var7.addProvider(new RecipeProvider(var7));
+          var7.addProvider(new AdvancementProvider(var7));
+          var7.addProvider(new LootTableProvider(var7));
+       }

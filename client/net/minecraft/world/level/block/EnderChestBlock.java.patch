@@ -1,0 +1,78 @@
+--- net/minecraft/world/level/block/EnderChestBlock.java
++++ net/minecraft/world/level/block/EnderChestBlock.java
+@@ -7,10 +7,11 @@
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.stats.Stats;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.SimpleMenuProvider;
++import net.minecraft.world.entity.monster.piglin.PiglinAi;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.inventory.ChestMenu;
+ import net.minecraft.world.inventory.PlayerEnderChestContainer;
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+@@ -18,10 +19,11 @@
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.BlockEntityType;
+ import net.minecraft.world.level.block.entity.ChestBlockEntity;
+ import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+@@ -36,11 +38,11 @@
+    public static final DirectionProperty FACING;
+    public static final BooleanProperty WATERLOGGED;
+    protected static final VoxelShape SHAPE;
+    public static final TranslatableComponent CONTAINER_TITLE;
+ 
+-   protected EnderChestBlock(Block.Properties var1) {
++   protected EnderChestBlock(BlockBehaviour.Properties var1) {
+       super(var1, () -> {
+          return BlockEntityType.ENDER_CHEST;
+       });
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(WATERLOGGED, false));
+    }
+@@ -66,24 +68,25 @@
+       PlayerEnderChestContainer var7 = var4.getEnderChestInventory();
+       BlockEntity var8 = var2.getBlockEntity(var3);
+       if (var7 != null && var8 instanceof EnderChestBlockEntity) {
+          BlockPos var9 = var3.above();
+          if (var2.getBlockState(var9).isRedstoneConductor(var2, var9)) {
+-            return InteractionResult.SUCCESS;
++            return InteractionResult.sidedSuccess(var2.isClientSide);
+          } else if (var2.isClientSide) {
+             return InteractionResult.SUCCESS;
+          } else {
+             EnderChestBlockEntity var10 = (EnderChestBlockEntity)var8;
+             var7.setActiveChest(var10);
+             var4.openMenu(new SimpleMenuProvider((var1x, var2x, var3x) -> {
+                return ChestMenu.threeRows(var1x, var2x, var7);
+             }, CONTAINER_TITLE));
+             var4.awardStat(Stats.OPEN_ENDERCHEST);
+-            return InteractionResult.SUCCESS;
++            PiglinAi.angerNearbyPiglinsThatSee(var4);
++            return InteractionResult.CONSUME;
+          }
+       } else {
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       }
+    }
+ 
+    public BlockEntity newBlockEntity(BlockGetter var1) {
+       return new EnderChestBlockEntity();
+@@ -134,8 +137,8 @@
+ 
+    static {
+       FACING = HorizontalDirectionalBlock.FACING;
+       WATERLOGGED = BlockStateProperties.WATERLOGGED;
+       SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 14.0D, 15.0D);
+-      CONTAINER_TITLE = new TranslatableComponent("container.enderchest", new Object[0]);
++      CONTAINER_TITLE = new TranslatableComponent("container.enderchest");
+    }
+ }

@@ -1,0 +1,15 @@
+--- net/minecraft/client/model/WolfModel.java
++++ net/minecraft/client/model/WolfModel.java
+@@ -66,11 +66,11 @@
+          this.tail.yRot = 0.0F;
+       } else {
+          this.tail.yRot = Mth.cos(var2 * 0.6662F) * 1.4F * var3;
+       }
+ 
+-      if (var1.isSitting()) {
++      if (var1.isInSittingPose()) {
+          this.upperBody.setPos(-1.0F, 16.0F, -3.0F);
+          this.upperBody.xRot = 1.2566371F;
+          this.upperBody.yRot = 0.0F;
+          this.body.setPos(0.0F, 18.0F, 0.0F);
+          this.body.xRot = 0.7853982F;

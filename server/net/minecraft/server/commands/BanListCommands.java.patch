@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/BanListCommands.java
++++ net/minecraft/server/commands/BanListCommands.java
+@@ -26,11 +26,11 @@
+       })));
+    }
+ 
+    private static int showList(CommandSourceStack var0, Collection<? extends BanListEntry<?>> var1) {
+       if (var1.isEmpty()) {
+-         var0.sendSuccess(new TranslatableComponent("commands.banlist.none", new Object[0]), false);
++         var0.sendSuccess(new TranslatableComponent("commands.banlist.none"), false);
+       } else {
+          var0.sendSuccess(new TranslatableComponent("commands.banlist.list", new Object[]{var1.size()}), false);
+          Iterator var2 = var1.iterator();
+ 
+          while(var2.hasNext()) {

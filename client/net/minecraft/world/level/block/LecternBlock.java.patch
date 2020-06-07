@@ -1,0 +1,53 @@
+--- net/minecraft/world/level/block/LecternBlock.java
++++ net/minecraft/world/level/block/LecternBlock.java
+@@ -18,10 +18,11 @@
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.LecternBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.StateDefinition;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.DirectionProperty;
+@@ -43,11 +44,11 @@
+    public static final VoxelShape SHAPE_WEST;
+    public static final VoxelShape SHAPE_NORTH;
+    public static final VoxelShape SHAPE_EAST;
+    public static final VoxelShape SHAPE_SOUTH;
+ 
+-   protected LecternBlock(Block.Properties var1) {
++   protected LecternBlock(BlockBehaviour.Properties var1) {
+       super(var1);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(POWERED, false)).setValue(HAS_BOOK, false));
+    }
+ 
+    public RenderShape getRenderShape(BlockState var1) {
+@@ -148,11 +149,11 @@
+    public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
+       changePowered(var2, var3, var1, false);
+    }
+ 
+    public void onRemove(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      if (var1.getBlock() != var4.getBlock()) {
++      if (!var1.is(var4.getBlock())) {
+          if ((Boolean)var1.getValue(HAS_BOOK)) {
+             this.popBook(var1, var2, var3);
+          }
+ 
+          if ((Boolean)var1.getValue(POWERED)) {
+@@ -210,11 +211,11 @@
+       if ((Boolean)var1.getValue(HAS_BOOK)) {
+          if (!var2.isClientSide) {
+             this.openScreen(var2, var3, var4);
+          }
+ 
+-         return InteractionResult.SUCCESS;
++         return InteractionResult.sidedSuccess(var2.isClientSide);
+       } else {
+          ItemStack var7 = var4.getItemInHand(var5);
+          return !var7.isEmpty() && !var7.getItem().is(ItemTags.LECTERN_BOOKS) ? InteractionResult.CONSUME : InteractionResult.PASS;
+       }
+    }

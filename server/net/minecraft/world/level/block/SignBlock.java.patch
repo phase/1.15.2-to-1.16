@@ -1,0 +1,27 @@
+--- net/minecraft/world/level/block/SignBlock.java
++++ net/minecraft/world/level/block/SignBlock.java
+@@ -10,10 +10,11 @@
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.entity.SignBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
+ import net.minecraft.world.level.block.state.properties.WoodType;
+ import net.minecraft.world.level.material.FluidState;
+@@ -25,11 +26,11 @@
+ public abstract class SignBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
+    public static final BooleanProperty WATERLOGGED;
+    protected static final VoxelShape SHAPE;
+    private final WoodType type;
+ 
+-   protected SignBlock(Block.Properties var1, WoodType var2) {
++   protected SignBlock(BlockBehaviour.Properties var1, WoodType var2) {
+       super(var1);
+       this.type = var2;
+    }
+ 
+    public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {

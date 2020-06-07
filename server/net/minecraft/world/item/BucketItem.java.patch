@@ -1,0 +1,119 @@
+--- net/minecraft/world/item/BucketItem.java
++++ net/minecraft/world/item/BucketItem.java
+@@ -15,10 +15,11 @@
+ import net.minecraft.world.InteractionResultHolder;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.ClipContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.BucketPickup;
+ import net.minecraft.world.level.block.LiquidBlockContainer;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.material.FlowingFluid;
+ import net.minecraft.world.level.material.Fluid;
+@@ -35,11 +36,11 @@
+       this.content = var1;
+    }
+ 
+    public InteractionResultHolder<ItemStack> use(Level var1, Player var2, InteractionHand var3) {
+       ItemStack var4 = var2.getItemInHand(var3);
+-      HitResult var5 = getPlayerPOVHitResult(var1, var2, this.content == Fluids.EMPTY ? ClipContext.Fluid.SOURCE_ONLY : ClipContext.Fluid.NONE);
++      BlockHitResult var5 = getPlayerPOVHitResult(var1, var2, this.content == Fluids.EMPTY ? ClipContext.Fluid.SOURCE_ONLY : ClipContext.Fluid.NONE);
+       if (var5.getType() == HitResult.Type.MISS) {
+          return InteractionResultHolder.pass(var4);
+       } else if (var5.getType() != HitResult.Type.BLOCK) {
+          return InteractionResultHolder.pass(var4);
+       } else {
+@@ -59,11 +60,11 @@
+                      ItemStack var12 = this.createResultItem(var4, var2, var13.getBucket());
+                      if (!var1.isClientSide) {
+                         CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer)var2, new ItemStack(var13.getBucket()));
+                      }
+ 
+-                     return InteractionResultHolder.success(var12);
++                     return InteractionResultHolder.sidedSuccess(var12, var1.isClientSide());
+                   }
+                }
+ 
+                return InteractionResultHolder.fail(var4);
+             } else {
+@@ -74,11 +75,11 @@
+                   if (var2 instanceof ServerPlayer) {
+                      CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer)var2, var11, var4);
+                   }
+ 
+                   var2.awardStat(Stats.ITEM_USED.get(this));
+-                  return InteractionResultHolder.success(this.getEmptySuccessItem(var4, var2));
++                  return InteractionResultHolder.sidedSuccess(this.getEmptySuccessItem(var4, var2), var1.isClientSide());
+                } else {
+                   return InteractionResultHolder.fail(var4);
+                }
+             }
+          } else {
+@@ -114,38 +115,42 @@
+    public boolean emptyBucket(@Nullable Player var1, Level var2, BlockPos var3, @Nullable BlockHitResult var4) {
+       if (!(this.content instanceof FlowingFluid)) {
+          return false;
+       } else {
+          BlockState var5 = var2.getBlockState(var3);
+-         Material var6 = var5.getMaterial();
+-         boolean var7 = var5.canBeReplaced(this.content);
+-         if (!var5.isAir() && !var7 && (!(var5.getBlock() instanceof LiquidBlockContainer) || !((LiquidBlockContainer)var5.getBlock()).canPlaceLiquid(var2, var3, var5, this.content))) {
+-            return var4 == null ? false : this.emptyBucket(var1, var2, var4.getBlockPos().relative(var4.getDirection()), (BlockHitResult)null);
++         Block var6 = var5.getBlock();
++         Material var7 = var5.getMaterial();
++         boolean var8 = var5.canBeReplaced(this.content);
++         boolean var9 = var5.isAir() || var8 || var6 instanceof LiquidBlockContainer && ((LiquidBlockContainer)var6).canPlaceLiquid(var2, var3, var5, this.content);
++         if (!var9) {
++            return var4 != null && this.emptyBucket(var1, var2, var4.getBlockPos().relative(var4.getDirection()), (BlockHitResult)null);
++         } else if (var2.dimensionType().ultraWarm() && this.content.is(FluidTags.WATER)) {
++            int var10 = var3.getX();
++            int var11 = var3.getY();
++            int var12 = var3.getZ();
++            var2.playSound(var1, var3, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (var2.random.nextFloat() - var2.random.nextFloat()) * 0.8F);
++
++            for(int var13 = 0; var13 < 8; ++var13) {
++               var2.addParticle(ParticleTypes.LARGE_SMOKE, (double)var10 + Math.random(), (double)var11 + Math.random(), (double)var12 + Math.random(), 0.0D, 0.0D, 0.0D);
++            }
++
++            return true;
++         } else if (var6 instanceof LiquidBlockContainer && this.content == Fluids.WATER) {
++            ((LiquidBlockContainer)var6).placeLiquid(var2, var3, var5, ((FlowingFluid)this.content).getSource(false));
++            this.playEmptySound(var1, var2, var3);
++            return true;
+          } else {
+-            if (var2.dimension.isUltraWarm() && this.content.is(FluidTags.WATER)) {
+-               int var8 = var3.getX();
+-               int var9 = var3.getY();
+-               int var10 = var3.getZ();
+-               var2.playSound(var1, var3, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (var2.random.nextFloat() - var2.random.nextFloat()) * 0.8F);
++            if (!var2.isClientSide && var8 && !var7.isLiquid()) {
++               var2.destroyBlock(var3, true);
++            }
+ 
+-               for(int var11 = 0; var11 < 8; ++var11) {
+-                  var2.addParticle(ParticleTypes.LARGE_SMOKE, (double)var8 + Math.random(), (double)var9 + Math.random(), (double)var10 + Math.random(), 0.0D, 0.0D, 0.0D);
+-               }
+-            } else if (var5.getBlock() instanceof LiquidBlockContainer && this.content == Fluids.WATER) {
+-               if (((LiquidBlockContainer)var5.getBlock()).placeLiquid(var2, var3, var5, ((FlowingFluid)this.content).getSource(false))) {
+-                  this.playEmptySound(var1, var2, var3);
+-               }
++            if (!var2.setBlock(var3, this.content.defaultFluidState().createLegacyBlock(), 11) && !var5.getFluidState().isSource()) {
++               return false;
+             } else {
+-               if (!var2.isClientSide && var7 && !var6.isLiquid()) {
+-                  var2.destroyBlock(var3, true);
+-               }
+-
+                this.playEmptySound(var1, var2, var3);
+-               var2.setBlock(var3, this.content.defaultFluidState().createLegacyBlock(), 11);
++               return true;
+             }
+-
+-            return true;
+          }
+       }
+    }
+ 
+    protected void playEmptySound(@Nullable Player var1, LevelAccessor var2, BlockPos var3) {

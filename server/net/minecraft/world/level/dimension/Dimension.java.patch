@@ -1,0 +1,85 @@
+--- net/minecraft/world/level/dimension/Dimension.java
++++ net/minecraft/world/level/dimension/Dimension.java
+@@ -1,82 +1,0 @@
+-package net.minecraft.world.level.dimension;
+-
+-import javax.annotation.Nullable;
+-import net.minecraft.core.BlockPos;
+-import net.minecraft.util.Mth;
+-import net.minecraft.world.level.ChunkPos;
+-import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.border.WorldBorder;
+-import net.minecraft.world.level.chunk.ChunkGenerator;
+-
+-public abstract class Dimension {
+-   public static final float[] MOON_BRIGHTNESS_PER_PHASE = new float[]{1.0F, 0.75F, 0.5F, 0.25F, 0.0F, 0.25F, 0.5F, 0.75F};
+-   protected final Level level;
+-   private final DimensionType type;
+-   protected boolean ultraWarm;
+-   protected boolean hasCeiling;
+-   protected final float[] brightnessRamp = new float[16];
+-   private final float[] sunriseCol = new float[4];
+-
+-   public Dimension(Level var1, DimensionType var2, float var3) {
+-      this.level = var1;
+-      this.type = var2;
+-
+-      for(int var4 = 0; var4 <= 15; ++var4) {
+-         float var5 = (float)var4 / 15.0F;
+-         float var6 = var5 / (4.0F - 3.0F * var5);
+-         this.brightnessRamp[var4] = Mth.lerp(var3, var6, 1.0F);
+-      }
+-
+-   }
+-
+-   public int getMoonPhase(long var1) {
+-      return (int)(var1 / 24000L % 8L + 8L) % 8;
+-   }
+-
+-   @Nullable
+-   public BlockPos getDimensionSpecificSpawn() {
+-      return null;
+-   }
+-
+-   public boolean isUltraWarm() {
+-      return this.ultraWarm;
+-   }
+-
+-   public boolean isHasSkyLight() {
+-      return this.type.hasSkyLight();
+-   }
+-
+-   public boolean isHasCeiling() {
+-      return this.hasCeiling;
+-   }
+-
+-   public float getBrightness(int var1) {
+-      return this.brightnessRamp[var1];
+-   }
+-
+-   public WorldBorder createWorldBorder() {
+-      return new WorldBorder();
+-   }
+-
+-   public void saveData() {
+-   }
+-
+-   public void tick() {
+-   }
+-
+-   public abstract ChunkGenerator<?> createRandomLevelGenerator();
+-
+-   @Nullable
+-   public abstract BlockPos getSpawnPosInChunk(ChunkPos var1, boolean var2);
+-
+-   @Nullable
+-   public abstract BlockPos getValidSpawnPosition(int var1, int var2, boolean var3);
+-
+-   public abstract float getTimeOfDay(long var1, float var3);
+-
+-   public abstract boolean isNaturalDimension();
+-
+-   public abstract boolean mayRespawn();
+-
+-   public abstract DimensionType getType();
+-}

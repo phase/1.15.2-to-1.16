@@ -1,0 +1,17 @@
+--- net/minecraft/server/commands/RecipeCommand.java
++++ net/minecraft/server/commands/RecipeCommand.java
+@@ -16,12 +16,12 @@
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.item.crafting.Recipe;
+ 
+ public class RecipeCommand {
+-   private static final SimpleCommandExceptionType ERROR_GIVE_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.recipe.give.failed", new Object[0]));
+-   private static final SimpleCommandExceptionType ERROR_TAKE_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.recipe.take.failed", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_GIVE_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.recipe.give.failed"));
++   private static final SimpleCommandExceptionType ERROR_TAKE_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.recipe.take.failed"));
+ 
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("recipe").requires((var0x) -> {
+          return var0x.hasPermission(2);
+       })).then(Commands.literal("give").then(((RequiredArgumentBuilder)Commands.argument("targets", EntityArgument.players()).then(Commands.argument("recipe", ResourceLocationArgument.id()).suggests(SuggestionProviders.ALL_RECIPES).executes((var0x) -> {

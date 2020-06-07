@@ -1,0 +1,530 @@
+--- net/minecraft/client/multiplayer/ClientLevel.java
++++ net/minecraft/client/multiplayer/ClientLevel.java
+@@ -11,20 +11,22 @@
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Random;
+ import java.util.function.BooleanSupplier;
++import java.util.function.Supplier;
+ import javax.annotation.Nullable;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+ import net.minecraft.Util;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.color.block.BlockTintCache;
+ import net.minecraft.client.particle.FireworkParticles;
+ import net.minecraft.client.player.AbstractClientPlayer;
+ import net.minecraft.client.renderer.BiomeColors;
++import net.minecraft.client.renderer.DimensionSpecialEffects;
+ import net.minecraft.client.renderer.LevelRenderer;
+ import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
+ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Cursor3D;
+@@ -33,89 +35,113 @@
+ import net.minecraft.core.particles.ParticleOptions;
+ import net.minecraft.core.particles.ParticleTypes;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.network.protocol.Packet;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.sounds.SoundEvent;
+-import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.tags.BlockTags;
+ import net.minecraft.tags.TagManager;
+ import net.minecraft.util.Mth;
+ import net.minecraft.util.profiling.ProfilerFiller;
++import net.minecraft.world.Difficulty;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.global.LightningBolt;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.crafting.RecipeManager;
+ import net.minecraft.world.level.ColorResolver;
+ import net.minecraft.world.level.EmptyTickList;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelSettings;
+-import net.minecraft.world.level.LevelType;
+-import net.minecraft.world.level.LightLayer;
+ import net.minecraft.world.level.TickList;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.chunk.ChunkStatus;
+ import net.minecraft.world.level.chunk.LevelChunk;
+ import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.level.material.Fluid;
+ import net.minecraft.world.level.material.FluidState;
+ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+-import net.minecraft.world.level.storage.LevelData;
++import net.minecraft.world.level.storage.WritableLevelData;
+ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ import net.minecraft.world.scores.Scoreboard;
+ 
+ public class ClientLevel extends Level {
+    private final List<Entity> globalEntities = Lists.newArrayList();
+    private final Int2ObjectMap<Entity> entitiesById = new Int2ObjectOpenHashMap();
+    private final ClientPacketListener connection;
+    private final LevelRenderer levelRenderer;
++   private final ClientLevel.ClientLevelData clientLevelData;
++   private final DimensionSpecialEffects effects;
+    private final Minecraft minecraft = Minecraft.getInstance();
+    private final List<AbstractClientPlayer> players = Lists.newArrayList();
+-   private int delayUntilNextMoodSound;
+-   private Scoreboard scoreboard;
+-   private final Map<String, MapItemSavedData> mapData;
++   private Scoreboard scoreboard = new Scoreboard();
++   private final Map<String, MapItemSavedData> mapData = Maps.newHashMap();
+    private int skyFlashTime;
+-   private final Object2ObjectArrayMap<ColorResolver, BlockTintCache> tintCaches;
++   private final Object2ObjectArrayMap<ColorResolver, BlockTintCache> tintCaches = (Object2ObjectArrayMap)Util.make(new Object2ObjectArrayMap(3), (var0) -> {
++      var0.put(BiomeColors.GRASS_COLOR_RESOLVER, new BlockTintCache());
++      var0.put(BiomeColors.FOLIAGE_COLOR_RESOLVER, new BlockTintCache());
++      var0.put(BiomeColors.WATER_COLOR_RESOLVER, new BlockTintCache());
++   });
++   private final ClientChunkCache chunkSource;
+ 
+-   public ClientLevel(ClientPacketListener var1, LevelSettings var2, DimensionType var3, int var4, ProfilerFiller var5, LevelRenderer var6) {
+-      super(new LevelData(var2, "MpServer"), var3, (var1x, var2x) -> {
+-         return new ClientChunkCache((ClientLevel)var1x, var4);
+-      }, var5, true);
+-      this.delayUntilNextMoodSound = this.random.nextInt(12000);
+-      this.scoreboard = new Scoreboard();
+-      this.mapData = Maps.newHashMap();
+-      this.tintCaches = (Object2ObjectArrayMap)Util.make(new Object2ObjectArrayMap(3), (var0) -> {
+-         var0.put(BiomeColors.GRASS_COLOR_RESOLVER, new BlockTintCache());
+-         var0.put(BiomeColors.FOLIAGE_COLOR_RESOLVER, new BlockTintCache());
+-         var0.put(BiomeColors.WATER_COLOR_RESOLVER, new BlockTintCache());
+-      });
++   public ClientLevel(ClientPacketListener var1, ClientLevel.ClientLevelData var2, ResourceKey<Level> var3, ResourceKey<DimensionType> var4, DimensionType var5, int var6, Supplier<ProfilerFiller> var7, LevelRenderer var8, boolean var9, long var10) {
++      super(var2, var3, var4, var5, var7, true, var9, var10);
++      this.chunkSource = new ClientChunkCache(this, var6);
++      this.clientLevelData = var2;
+       this.connection = var1;
+-      this.levelRenderer = var6;
+-      this.setSpawnPos(new BlockPos(8, 64, 8));
++      this.levelRenderer = var8;
++      this.effects = DimensionSpecialEffects.forType(var1.registryAccess().dimensionTypes().getResourceKey(var5));
++      this.setDefaultSpawnPos(new BlockPos(8, 64, 8));
+       this.updateSkyBrightness();
+       this.prepareWeather();
+    }
+ 
++   public DimensionSpecialEffects effects() {
++      return this.effects;
++   }
++
+    public void tick(BooleanSupplier var1) {
+       this.getWorldBorder().tick();
+       this.tickTime();
+       this.getProfiler().push("blocks");
+       this.chunkSource.tick(var1);
+-      this.playMoodSounds();
+       this.getProfiler().pop();
+    }
+ 
++   private void tickTime() {
++      this.setGameTime(this.levelData.getGameTime() + 1L);
++      if (this.levelData.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
++         this.setDayTime(this.levelData.getDayTime() + 1L);
++      }
++
++   }
++
++   public void setGameTime(long var1) {
++      this.clientLevelData.setGameTime(var1);
++   }
++
++   public void setDayTime(long var1) {
++      if (var1 < 0L) {
++         var1 = -var1;
++         ((GameRules.BooleanValue)this.getGameRules().getRule(GameRules.RULE_DAYLIGHT)).set(false, (MinecraftServer)null);
++      } else {
++         ((GameRules.BooleanValue)this.getGameRules().getRule(GameRules.RULE_DAYLIGHT)).set(true, (MinecraftServer)null);
++      }
++
++      this.clientLevelData.setDayTime(var1);
++   }
++
+    public Iterable<Entity> entitiesForRendering() {
+       return Iterables.concat(this.entitiesById.values(), this.globalEntities);
+    }
+ 
+    public void tickEntities() {
+@@ -161,11 +187,13 @@
+       this.tickBlockEntities();
+       var1.pop();
+    }
+ 
+    public void tickNonPassenger(Entity var1) {
+-      if (var1 instanceof Player || this.getChunkSource().isEntityTickingChunk(var1)) {
++      if (!(var1 instanceof Player) && !this.getChunkSource().isEntityTickingChunk(var1)) {
++         this.updateChunkPos(var1);
++      } else {
+          var1.setPosAndOldPos(var1.getX(), var1.getY(), var1.getZ());
+          var1.yRotO = var1.yRot;
+          var1.xRotO = var1.xRot;
+          if (var1.inChunk || var1.isSpectator()) {
+             ++var1.tickCount;
+@@ -214,28 +242,34 @@
+       } else {
+          var2.stopRiding();
+       }
+    }
+ 
+-   public void updateChunkPos(Entity var1) {
+-      this.getProfiler().push("chunkCheck");
+-      int var2 = Mth.floor(var1.getX() / 16.0D);
+-      int var3 = Mth.floor(var1.getY() / 16.0D);
+-      int var4 = Mth.floor(var1.getZ() / 16.0D);
+-      if (!var1.inChunk || var1.xChunk != var2 || var1.yChunk != var3 || var1.zChunk != var4) {
+-         if (var1.inChunk && this.hasChunk(var1.xChunk, var1.zChunk)) {
+-            this.getChunk(var1.xChunk, var1.zChunk).removeEntity(var1, var1.yChunk);
+-         }
++   private void updateChunkPos(Entity var1) {
++      if (var1.checkAndResetUpdateChunkPos()) {
++         this.getProfiler().push("chunkCheck");
++         int var2 = Mth.floor(var1.getX() / 16.0D);
++         int var3 = Mth.floor(var1.getY() / 16.0D);
++         int var4 = Mth.floor(var1.getZ() / 16.0D);
++         if (!var1.inChunk || var1.xChunk != var2 || var1.yChunk != var3 || var1.zChunk != var4) {
++            if (var1.inChunk && this.hasChunk(var1.xChunk, var1.zChunk)) {
++               this.getChunk(var1.xChunk, var1.zChunk).removeEntity(var1, var1.yChunk);
++            }
+ 
+-         if (!var1.checkAndResetTeleportedFlag() && !this.hasChunk(var2, var4)) {
+-            var1.inChunk = false;
+-         } else {
+-            this.getChunk(var2, var4).addEntity(var1);
++            if (!var1.checkAndResetForcedChunkAdditionFlag() && !this.hasChunk(var2, var4)) {
++               if (var1.inChunk) {
++                  LOGGER.warn("Entity {} left loaded chunk area", var1);
++               }
++
++               var1.inChunk = false;
++            } else {
++               this.getChunk(var2, var4).addEntity(var1);
++            }
+          }
+-      }
+ 
+-      this.getProfiler().pop();
++         this.getProfiler().pop();
++      }
+    }
+ 
+    public void unload(LevelChunk var1) {
+       this.blockEntitiesToUnload.addAll(var1.getBlockEntities().values());
+       this.chunkSource.getLightEngine().enableLightSources(var1.getPos(), false);
+@@ -255,30 +289,10 @@
+ 
+    public boolean hasChunk(int var1, int var2) {
+       return true;
+    }
+ 
+-   private void playMoodSounds() {
+-      if (this.minecraft.player != null) {
+-         if (this.delayUntilNextMoodSound > 0) {
+-            --this.delayUntilNextMoodSound;
+-         } else {
+-            BlockPos var1 = new BlockPos(this.minecraft.player);
+-            BlockPos var2 = var1.offset(4 * (this.random.nextInt(3) - 1), 4 * (this.random.nextInt(3) - 1), 4 * (this.random.nextInt(3) - 1));
+-            double var3 = var1.distSqr(var2);
+-            if (var3 >= 4.0D && var3 <= 256.0D) {
+-               BlockState var5 = this.getBlockState(var2);
+-               if (var5.isAir() && this.getRawBrightness(var2, 0) <= this.random.nextInt(8) && this.getBrightness(LightLayer.SKY, var2) <= 0) {
+-                  this.playLocalSound((double)var2.getX() + 0.5D, (double)var2.getY() + 0.5D, (double)var2.getZ() + 0.5D, SoundEvents.AMBIENT_CAVE, SoundSource.AMBIENT, 0.7F, 0.8F + this.random.nextFloat() * 0.2F, false);
+-                  this.delayUntilNextMoodSound = this.random.nextInt(12000) + 6000;
+-               }
+-            }
+-
+-         }
+-      }
+-   }
+-
+    public int getEntityCount() {
+       return this.entitiesById.size();
+    }
+ 
+    public void addLightning(LightningBolt var1) {
+@@ -341,11 +355,11 @@
+    public void setKnownState(BlockPos var1, BlockState var2) {
+       this.setBlock(var1, var2, 19);
+    }
+ 
+    public void disconnect() {
+-      this.connection.getConnection().disconnect(new TranslatableComponent("multiplayer.status.quitting", new Object[0]));
++      this.connection.getConnection().disconnect(new TranslatableComponent("multiplayer.status.quitting"));
+    }
+ 
+    public void animateTick(int var1, int var2, int var3) {
+       boolean var4 = true;
+       Random var5 = new Random();
+@@ -387,14 +401,23 @@
+             BlockPos var15 = var7.below();
+             this.trySpawnDripParticles(var15, this.getBlockState(var15), var13, var14);
+          }
+       }
+ 
+-      if (var6 && var11.getBlock() == Blocks.BARRIER) {
++      if (var6 && var11.is(Blocks.BARRIER)) {
+          this.addParticle(ParticleTypes.BARRIER, (double)var8 + 0.5D, (double)var9 + 0.5D, (double)var10 + 0.5D, 0.0D, 0.0D, 0.0D);
+       }
+ 
++      if (!var11.isCollisionShapeFullBlock(this, var7)) {
++         this.getBiome(var7).getAmbientParticle().ifPresent((var2x) -> {
++            if (var2x.canSpawn(this.random)) {
++               this.addParticle(var2x.getOptions(), (double)((float)var7.getX() + this.random.nextFloat()), (double)((float)var7.getY() + this.random.nextFloat()), (double)((float)var7.getZ() + this.random.nextFloat()), 0.0D, 0.0D, 0.0D);
++            }
++
++         });
++      }
++
+    }
+ 
+    private void trySpawnDripParticles(BlockPos var1, BlockState var2, ParticleOptions var3, boolean var4) {
+       if (var2.getFluidState().isEmpty()) {
+          VoxelShape var5 = var2.getCollisionShape(this, var1);
+@@ -498,31 +521,20 @@
+ 
+    public void setScoreboard(Scoreboard var1) {
+       this.scoreboard = var1;
+    }
+ 
+-   public void setDayTime(long var1) {
+-      if (var1 < 0L) {
+-         var1 = -var1;
+-         ((GameRules.BooleanValue)this.getGameRules().getRule(GameRules.RULE_DAYLIGHT)).set(false, (MinecraftServer)null);
+-      } else {
+-         ((GameRules.BooleanValue)this.getGameRules().getRule(GameRules.RULE_DAYLIGHT)).set(true, (MinecraftServer)null);
+-      }
+-
+-      super.setDayTime(var1);
+-   }
+-
+    public TickList<Block> getBlockTicks() {
+       return EmptyTickList.empty();
+    }
+ 
+    public TickList<Fluid> getLiquidTicks() {
+       return EmptyTickList.empty();
+    }
+ 
+    public ClientChunkCache getChunkSource() {
+-      return (ClientChunkCache)super.getChunkSource();
++      return this.chunkSource;
+    }
+ 
+    @Nullable
+    public MapItemSavedData getMapData(String var1) {
+       return (MapItemSavedData)this.mapData.get(var1);
+@@ -690,34 +702,47 @@
+       }
+ 
+       return new Vec3((double)var4, (double)var5, (double)var6);
+    }
+ 
+-   public Vec3 getFogColor(float var1) {
+-      float var2 = this.getTimeOfDay(var1);
+-      return this.dimension.getFogColor(var2, var1);
+-   }
+-
+    public float getStarBrightness(float var1) {
+       float var2 = this.getTimeOfDay(var1);
+       float var3 = 1.0F - (Mth.cos(var2 * 6.2831855F) * 2.0F + 0.25F);
+       var3 = Mth.clamp(var3, 0.0F, 1.0F);
+       return var3 * var3 * 0.5F;
+    }
+ 
+-   public double getHorizonHeight() {
+-      return this.levelData.getGeneratorType() == LevelType.FLAT ? 0.0D : 63.0D;
+-   }
+-
+    public int getSkyFlashTime() {
+       return this.skyFlashTime;
+    }
+ 
+    public void setSkyFlashTime(int var1) {
+       this.skyFlashTime = var1;
+    }
+ 
++   public float getShade(Direction var1, boolean var2) {
++      boolean var3 = this.dimensionType().isNether();
++      if (!var2) {
++         return var3 ? 0.9F : 1.0F;
++      } else {
++         switch(var1) {
++         case DOWN:
++            return var3 ? 0.9F : 0.5F;
++         case UP:
++            return var3 ? 0.9F : 1.0F;
++         case NORTH:
++         case SOUTH:
++            return 0.8F;
++         case WEST:
++         case EAST:
++            return 0.6F;
++         default:
++            return 1.0F;
++         }
++      }
++   }
++
+    public int getBlockTint(BlockPos var1, ColorResolver var2) {
+       BlockTintCache var3 = (BlockTintCache)this.tintCaches.get(var2);
+       return var3.getColor(var1, () -> {
+          return this.calculateBlockTint(var1, var2);
+       });
+@@ -743,6 +768,142 @@
+          }
+ 
+          return (var5 / var4 & 255) << 16 | (var6 / var4 & 255) << 8 | var7 / var4 & 255;
+       }
+    }
++
++   public BlockPos getSharedSpawnPos() {
++      BlockPos var1 = new BlockPos(this.levelData.getXSpawn(), this.levelData.getYSpawn(), this.levelData.getZSpawn());
++      if (!this.getWorldBorder().isWithinBounds(var1)) {
++         var1 = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(this.getWorldBorder().getCenterX(), 0.0D, this.getWorldBorder().getCenterZ()));
++      }
++
++      return var1;
++   }
++
++   public void setDefaultSpawnPos(BlockPos var1) {
++      this.levelData.setSpawn(var1);
++   }
++
++   public String toString() {
++      return "ClientLevel";
++   }
++
++   public ClientLevel.ClientLevelData getLevelData() {
++      return this.clientLevelData;
++   }
++
++   public static class ClientLevelData implements WritableLevelData {
++      private final boolean hardcore;
++      private final GameRules gameRules;
++      private final boolean isFlat;
++      private int xSpawn;
++      private int ySpawn;
++      private int zSpawn;
++      private long gameTime;
++      private long dayTime;
++      private boolean raining;
++      private Difficulty difficulty;
++      private boolean difficultyLocked;
++
++      public ClientLevelData(Difficulty var1, boolean var2, boolean var3) {
++         this.difficulty = var1;
++         this.hardcore = var2;
++         this.isFlat = var3;
++         this.gameRules = new GameRules();
++      }
++
++      public int getXSpawn() {
++         return this.xSpawn;
++      }
++
++      public int getYSpawn() {
++         return this.ySpawn;
++      }
++
++      public int getZSpawn() {
++         return this.zSpawn;
++      }
++
++      public long getGameTime() {
++         return this.gameTime;
++      }
++
++      public long getDayTime() {
++         return this.dayTime;
++      }
++
++      public void setXSpawn(int var1) {
++         this.xSpawn = var1;
++      }
++
++      public void setYSpawn(int var1) {
++         this.ySpawn = var1;
++      }
++
++      public void setZSpawn(int var1) {
++         this.zSpawn = var1;
++      }
++
++      public void setGameTime(long var1) {
++         this.gameTime = var1;
++      }
++
++      public void setDayTime(long var1) {
++         this.dayTime = var1;
++      }
++
++      public void setSpawn(BlockPos var1) {
++         this.xSpawn = var1.getX();
++         this.ySpawn = var1.getY();
++         this.zSpawn = var1.getZ();
++      }
++
++      public boolean isThundering() {
++         return false;
++      }
++
++      public boolean isRaining() {
++         return this.raining;
++      }
++
++      public void setRaining(boolean var1) {
++         this.raining = var1;
++      }
++
++      public boolean isHardcore() {
++         return this.hardcore;
++      }
++
++      public GameRules getGameRules() {
++         return this.gameRules;
++      }
++
++      public Difficulty getDifficulty() {
++         return this.difficulty;
++      }
++
++      public boolean isDifficultyLocked() {
++         return this.difficultyLocked;
++      }
++
++      public void fillCrashReportCategory(CrashReportCategory var1) {
++         WritableLevelData.super.fillCrashReportCategory(var1);
++      }
++
++      public void setDifficulty(Difficulty var1) {
++         this.difficulty = var1;
++      }
++
++      public void setDifficultyLocked(boolean var1) {
++         this.difficultyLocked = var1;
++      }
++
++      public double getHorizonHeight() {
++         return this.isFlat ? 0.0D : 63.0D;
++      }
++
++      public double getClearColorScale() {
++         return this.isFlat ? 1.0D : 0.03125D;
++      }
++   }
+ }

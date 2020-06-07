@@ -1,0 +1,43 @@
+--- net/minecraft/world/level/levelgen/feature/configurations/OceanRuinConfiguration.java
++++ net/minecraft/world/level/levelgen/feature/configurations/OceanRuinConfiguration.java
+@@ -1,29 +1,26 @@
+ package net.minecraft.world.level.levelgen.feature.configurations;
+ 
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.codecs.RecordCodecBuilder;
+ import net.minecraft.world.level.levelgen.structure.OceanRuinFeature;
+ 
+ public class OceanRuinConfiguration implements FeatureConfiguration {
++   public static final Codec<OceanRuinConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
++      return var0.group(OceanRuinFeature.Type.CODEC.fieldOf("biome_temp").forGetter((var0x) -> {
++         return var0x.biomeTemp;
++      }), Codec.FLOAT.fieldOf("large_probability").forGetter((var0x) -> {
++         return var0x.largeProbability;
++      }), Codec.FLOAT.fieldOf("cluster_probability").forGetter((var0x) -> {
++         return var0x.clusterProbability;
++      })).apply(var0, OceanRuinConfiguration::new);
++   });
+    public final OceanRuinFeature.Type biomeTemp;
+    public final float largeProbability;
+    public final float clusterProbability;
+ 
+    public OceanRuinConfiguration(OceanRuinFeature.Type var1, float var2, float var3) {
+       this.biomeTemp = var1;
+       this.largeProbability = var2;
+       this.clusterProbability = var3;
+    }
+-
+-   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
+-      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("biome_temp"), var1.createString(this.biomeTemp.getName()), var1.createString("large_probability"), var1.createFloat(this.largeProbability), var1.createString("cluster_probability"), var1.createFloat(this.clusterProbability))));
+-   }
+-
+-   public static <T> OceanRuinConfiguration deserialize(Dynamic<T> var0) {
+-      OceanRuinFeature.Type var1 = OceanRuinFeature.Type.byName(var0.get("biome_temp").asString(""));
+-      float var2 = var0.get("large_probability").asFloat(0.0F);
+-      float var3 = var0.get("cluster_probability").asFloat(0.0F);
+-      return new OceanRuinConfiguration(var1, var2, var3);
+-   }
+ }

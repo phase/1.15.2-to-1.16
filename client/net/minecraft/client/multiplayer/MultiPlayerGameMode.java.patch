@@ -1,0 +1,141 @@
+--- net/minecraft/client/multiplayer/MultiPlayerGameMode.java
++++ net/minecraft/client/multiplayer/MultiPlayerGameMode.java
+@@ -57,33 +57,32 @@
+    private float destroyProgress;
+    private float destroyTicks;
+    private int destroyDelay;
+    private boolean isDestroying;
+    private GameType localPlayerMode;
++   private GameType prevLocalPlayerMode;
+    private final Object2ObjectLinkedOpenHashMap<Pair<BlockPos, ServerboundPlayerActionPacket.Action>, PosAndRot> unAckedActions;
+    private int carriedIndex;
+ 
+    public MultiPlayerGameMode(Minecraft var1, ClientPacketListener var2) {
+       this.destroyingItem = ItemStack.EMPTY;
+       this.localPlayerMode = GameType.SURVIVAL;
++      this.prevLocalPlayerMode = GameType.SURVIVAL;
+       this.unAckedActions = new Object2ObjectLinkedOpenHashMap();
+       this.minecraft = var1;
+       this.connection = var2;
+    }
+ 
+-   public static void creativeDestroyBlock(Minecraft var0, MultiPlayerGameMode var1, BlockPos var2, Direction var3) {
+-      if (!var0.level.extinguishFire(var0.player, var2, var3)) {
+-         var1.destroyBlock(var2);
+-      }
+-
+-   }
+-
+    public void adjustPlayer(Player var1) {
+       this.localPlayerMode.updatePlayerAbilities(var1.abilities);
+    }
+ 
+    public void setLocalMode(GameType var1) {
++      if (var1 != this.localPlayerMode) {
++         this.prevLocalPlayerMode = this.localPlayerMode;
++      }
++
+       this.localPlayerMode = var1;
+       this.localPlayerMode.updatePlayerAbilities(this.minecraft.player.abilities);
+    }
+ 
+    public boolean canHurtPlayer() {
+@@ -127,11 +126,11 @@
+          BlockState var3;
+          if (this.localPlayerMode.isCreative()) {
+             var3 = this.minecraft.level.getBlockState(var1);
+             this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, var1, var3, 1.0F);
+             this.sendBlockAction(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, var1, var2);
+-            creativeDestroyBlock(this.minecraft, this, var1, var2);
++            this.destroyBlock(var1);
+             this.destroyDelay = 5;
+          } else if (!this.isDestroying || !this.sameDestroyTarget(var1)) {
+             if (this.isDestroying) {
+                this.sendBlockAction(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, this.destroyBlockPos, var2);
+             }
+@@ -183,11 +182,11 @@
+          if (this.localPlayerMode.isCreative() && this.minecraft.level.getWorldBorder().isWithinBounds(var1)) {
+             this.destroyDelay = 5;
+             var3 = this.minecraft.level.getBlockState(var1);
+             this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, var1, var3, 1.0F);
+             this.sendBlockAction(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, var1, var2);
+-            creativeDestroyBlock(this.minecraft, this, var1, var2);
++            this.destroyBlock(var1);
+             return true;
+          } else if (this.sameDestroyTarget(var1)) {
+             var3 = this.minecraft.level.getBlockState(var1);
+             if (var3.isAir()) {
+                this.isDestroying = false;
+@@ -304,23 +303,27 @@
+             return InteractionResult.PASS;
+          } else {
+             int var5 = var4.getCount();
+             InteractionResultHolder var6 = var4.use(var2, var1, var3);
+             ItemStack var7 = (ItemStack)var6.getObject();
+-            if (var7 != var4 || var7.getCount() != var5) {
++            if (var7 != var4) {
+                var1.setItemInHand(var3, var7);
+             }
+ 
+             return var6.getResult();
+          }
+       }
+    }
+ 
+    public LocalPlayer createPlayer(ClientLevel var1, StatsCounter var2, ClientRecipeBook var3) {
+-      return new LocalPlayer(this.minecraft, var1, this.connection, var2, var3);
++      return this.createPlayer(var1, var2, var3, false, false);
+    }
+ 
++   public LocalPlayer createPlayer(ClientLevel var1, StatsCounter var2, ClientRecipeBook var3, boolean var4, boolean var5) {
++      return new LocalPlayer(this.minecraft, var1, this.connection, var2, var3, var4, var5);
++   }
++
+    public void attack(Player var1, Entity var2) {
+       this.ensureHasSentCarriedItem();
+       this.connection.send((Packet)(new ServerboundInteractPacket(var2)));
+       if (this.localPlayerMode != GameType.SPECTATOR) {
+          var1.attack(var2);
+@@ -399,10 +402,14 @@
+ 
+    public boolean isAlwaysFlying() {
+       return this.localPlayerMode == GameType.SPECTATOR;
+    }
+ 
++   public GameType getPrevPlayerMode() {
++      return this.prevLocalPlayerMode;
++   }
++
+    public GameType getPlayerMode() {
+       return this.localPlayerMode;
+    }
+ 
+    public boolean isDestroying() {
+@@ -419,21 +426,22 @@
+       this.connection.send((Packet)(new ServerboundPlayerActionPacket(var1, var2, var3)));
+    }
+ 
+    public void handleBlockBreakAck(ClientLevel var1, BlockPos var2, BlockState var3, ServerboundPlayerActionPacket.Action var4, boolean var5) {
+       PosAndRot var6 = (PosAndRot)this.unAckedActions.remove(Pair.of(var2, var4));
+-      if (var6 == null || !var5 || var4 != ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK && var1.getBlockState(var2) != var3) {
++      BlockState var7 = var1.getBlockState(var2);
++      if ((var6 == null || !var5 || var4 != ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK && var7 != var3) && var7 != var3) {
+          var1.setKnownState(var2, var3);
+          if (var6 != null) {
+-            Vec3 var7 = var6.pos();
+-            this.minecraft.player.absMoveTo(var7.x, var7.y, var7.z, var6.yRot(), var6.xRot());
++            Vec3 var8 = var6.pos();
++            this.minecraft.player.absMoveTo(var8.x, var8.y, var8.z, var6.yRot(), var6.xRot());
+          }
+       }
+ 
+       while(this.unAckedActions.size() >= 50) {
+-         Pair var8 = (Pair)this.unAckedActions.firstKey();
++         Pair var9 = (Pair)this.unAckedActions.firstKey();
+          this.unAckedActions.removeFirst();
+-         LOGGER.error("Too many unacked block actions, dropping " + var8);
++         LOGGER.error("Too many unacked block actions, dropping " + var9);
+       }
+ 
+    }
+ }

@@ -1,0 +1,27 @@
+--- net/minecraft/nbt/ShortTag.java
++++ net/minecraft/nbt/ShortTag.java
+@@ -2,10 +2,11 @@
+ 
+ import java.io.DataInput;
+ import java.io.DataOutput;
+ import java.io.IOException;
+ import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.MutableComponent;
+ import net.minecraft.network.chat.TextComponent;
+ 
+ public class ShortTag extends NumericTag {
+    public static final TagType<ShortTag> TYPE = new TagType<ShortTag>() {
+       public ShortTag load(DataInput var1, int var2, NbtAccounter var3) throws IOException {
+@@ -66,11 +67,11 @@
+    public int hashCode() {
+       return this.data;
+    }
+ 
+    public Component getPrettyDisplay(String var1, int var2) {
+-      Component var3 = (new TextComponent("s")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
++      MutableComponent var3 = (new TextComponent("s")).withStyle(SYNTAX_HIGHLIGHTING_NUMBER_TYPE);
+       return (new TextComponent(String.valueOf(this.data))).append(var3).withStyle(SYNTAX_HIGHLIGHTING_NUMBER);
+    }
+ 
+    public long getAsLong() {
+       return (long)this.data;

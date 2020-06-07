@@ -1,0 +1,17 @@
+--- net/minecraft/world/level/levelgen/NetherGeneratorSettings.java
++++ net/minecraft/world/level/levelgen/NetherGeneratorSettings.java
+@@ -1,14 +1,0 @@
+-package net.minecraft.world.level.levelgen;
+-
+-public class NetherGeneratorSettings extends ChunkGeneratorSettings {
+-   public NetherGeneratorSettings() {
+-   }
+-
+-   public int getBedrockFloorPosition() {
+-      return 0;
+-   }
+-
+-   public int getBedrockRoofPosition() {
+-      return 127;
+-   }
+-}

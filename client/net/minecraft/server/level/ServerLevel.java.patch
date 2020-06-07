@@ -1,0 +1,1198 @@
+--- net/minecraft/server/level/ServerLevel.java
++++ net/minecraft/server/level/ServerLevel.java
+@@ -1,19 +1,19 @@
+ package net.minecraft.server.level;
+ 
+ import com.google.common.annotations.VisibleForTesting;
++import com.google.common.collect.ImmutableList;
++import com.google.common.collect.Iterables;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Queues;
+ import com.google.common.collect.Sets;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
+ import it.unimi.dsi.fastutil.longs.LongSet;
+ import it.unimi.dsi.fastutil.longs.LongSets;
+-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+ import it.unimi.dsi.fastutil.objects.ObjectIterator;
+ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+ import java.io.BufferedWriter;
+ import java.io.IOException;
+ import java.io.Writer;
+@@ -24,11 +24,10 @@
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.Queue;
+-import java.util.Random;
+ import java.util.Set;
+ import java.util.UUID;
+ import java.util.concurrent.Executor;
+ import java.util.function.BooleanSupplier;
+ import java.util.function.Predicate;
+@@ -36,10 +35,11 @@
+ import javax.annotation.Nonnull;
+ import javax.annotation.Nullable;
+ import net.minecraft.CrashReport;
+ import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
+ import net.minecraft.core.Registry;
+ import net.minecraft.core.SectionPos;
+ import net.minecraft.core.particles.ParticleOptions;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.TranslatableComponent;
+@@ -50,27 +50,27 @@
+ import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+ import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundLevelEventPacket;
+ import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
++import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
+ import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
+ import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+ import net.minecraft.network.protocol.game.DebugPackets;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.ServerScoreboard;
+ import net.minecraft.server.level.progress.ChunkProgressListener;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundSource;
+-import net.minecraft.tags.BlockTags;
+ import net.minecraft.tags.TagManager;
+ import net.minecraft.util.ClassInstanceMultiMap;
+ import net.minecraft.util.CsvOutput;
+ import net.minecraft.util.Mth;
+ import net.minecraft.util.ProgressListener;
+ import net.minecraft.util.Unit;
+ import net.minecraft.util.profiling.ProfilerFiller;
+-import net.minecraft.world.Difficulty;
+ import net.minecraft.world.DifficultyInstance;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.LivingEntity;
+@@ -86,130 +86,153 @@
+ import net.minecraft.world.entity.animal.horse.SkeletonHorse;
+ import net.minecraft.world.entity.boss.EnderDragonPart;
+ import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+ import net.minecraft.world.entity.global.LightningBolt;
+ import net.minecraft.world.entity.npc.Npc;
+-import net.minecraft.world.entity.npc.WanderingTraderSpawner;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.entity.raid.Raid;
+ import net.minecraft.world.entity.raid.Raids;
+ import net.minecraft.world.item.crafting.RecipeManager;
+ import net.minecraft.world.level.BlockEventData;
+ import net.minecraft.world.level.ChunkPos;
++import net.minecraft.world.level.CustomSpawner;
+ import net.minecraft.world.level.Explosion;
+ import net.minecraft.world.level.ForcedChunksSavedData;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelConflictException;
+-import net.minecraft.world.level.LevelSettings;
+-import net.minecraft.world.level.LevelType;
++import net.minecraft.world.level.NaturalSpawner;
+ import net.minecraft.world.level.PortalForcer;
+ import net.minecraft.world.level.ServerTickList;
++import net.minecraft.world.level.StructureFeatureManager;
+ import net.minecraft.world.level.TickNextTickData;
++import net.minecraft.world.level.WorldGenLevel;
+ import net.minecraft.world.level.biome.Biome;
+-import net.minecraft.world.level.biome.BiomeSource;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.chunk.ChunkGenerator;
+ import net.minecraft.world.level.chunk.ChunkStatus;
+ import net.minecraft.world.level.chunk.LevelChunk;
+ import net.minecraft.world.level.chunk.LevelChunkSection;
+ import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.dimension.end.EndDragonFight;
+ import net.minecraft.world.level.levelgen.Heightmap;
+-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+-import net.minecraft.world.level.levelgen.feature.Feature;
+-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
+ import net.minecraft.world.level.levelgen.structure.BoundingBox;
+ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+ import net.minecraft.world.level.material.Fluid;
+ import net.minecraft.world.level.material.FluidState;
+ import net.minecraft.world.level.material.Fluids;
+ import net.minecraft.world.level.saveddata.maps.MapIndex;
+ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+ import net.minecraft.world.level.storage.DimensionDataStorage;
+-import net.minecraft.world.level.storage.LevelData;
+-import net.minecraft.world.level.storage.LevelStorage;
++import net.minecraft.world.level.storage.LevelStorageSource;
++import net.minecraft.world.level.storage.ServerLevelData;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.phys.shapes.BooleanOp;
+ import net.minecraft.world.phys.shapes.Shapes;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+-public class ServerLevel extends Level {
++public class ServerLevel extends Level implements WorldGenLevel {
++   public static final BlockPos END_SPAWN_POINT = new BlockPos(100, 50, 0);
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final List<Entity> globalEntities = Lists.newArrayList();
+    private final Int2ObjectMap<Entity> entitiesById = new Int2ObjectLinkedOpenHashMap();
+    private final Map<UUID, Entity> entitiesByUuid = Maps.newHashMap();
+    private final Queue<Entity> toAddAfterTick = Queues.newArrayDeque();
+    private final List<ServerPlayer> players = Lists.newArrayList();
++   private final ServerChunkCache chunkSource;
+    boolean tickingEntities;
+    private final MinecraftServer server;
+-   private final LevelStorage levelStorage;
++   private final ServerLevelData serverLevelData;
+    public boolean noSave;
+    private boolean allPlayersSleeping;
+    private int emptyTime;
+    private final PortalForcer portalForcer;
+    private final ServerTickList<Block> blockTicks;
+    private final ServerTickList<Fluid> liquidTicks;
+    private final Set<PathNavigation> navigations;
+    protected final Raids raids;
+    private final ObjectLinkedOpenHashSet<BlockEventData> blockEvents;
+    private boolean handlingTick;
++   private final List<CustomSpawner> customSpawners;
+    @Nullable
+-   private final WanderingTraderSpawner wanderingTraderSpawner;
++   private final EndDragonFight dragonFight;
++   private final StructureFeatureManager structureFeatureManager;
++   private final boolean tickTime;
+ 
+-   public ServerLevel(MinecraftServer var1, Executor var2, LevelStorage var3, LevelData var4, DimensionType var5, ProfilerFiller var6, ChunkProgressListener var7) {
+-      super(var4, var5, (var4x, var5x) -> {
+-         return new ServerChunkCache((ServerLevel)var4x, var3.getFolder(), var3.getFixerUpper(), var3.getStructureManager(), var2, var5x.createRandomLevelGenerator(), var1.getPlayerList().getViewDistance(), var7, () -> {
+-            return var1.getLevel(DimensionType.OVERWORLD).getDataStorage();
+-         });
+-      }, var6, false);
++   public ServerLevel(MinecraftServer var1, Executor var2, LevelStorageSource.LevelStorageAccess var3, ServerLevelData var4, ResourceKey<Level> var5, ResourceKey<DimensionType> var6, DimensionType var7, ChunkProgressListener var8, ChunkGenerator var9, boolean var10, long var11, List<CustomSpawner> var13, boolean var14) {
++      super(var4, var5, var6, var7, var1::getProfiler, false, var10, var11);
+       this.blockTicks = new ServerTickList(this, (var0) -> {
+          return var0 == null || var0.defaultBlockState().isAir();
+-      }, Registry.BLOCK::getKey, Registry.BLOCK::get, this::tickBlock);
++      }, Registry.BLOCK::getKey, this::tickBlock);
+       this.liquidTicks = new ServerTickList(this, (var0) -> {
+          return var0 == null || var0 == Fluids.EMPTY;
+-      }, Registry.FLUID::getKey, Registry.FLUID::get, this::tickLiquid);
++      }, Registry.FLUID::getKey, this::tickLiquid);
+       this.navigations = Sets.newHashSet();
+       this.blockEvents = new ObjectLinkedOpenHashSet();
+-      this.levelStorage = var3;
++      this.tickTime = var14;
+       this.server = var1;
++      this.customSpawners = var13;
++      this.serverLevelData = var4;
++      this.chunkSource = new ServerChunkCache(this, var3, var1.getFixerUpper(), var1.getStructureManager(), var2, var9, var1.getPlayerList().getViewDistance(), var1.forceSynchronousWrites(), var8, () -> {
++         return var1.getLevel(Level.OVERWORLD).getDataStorage();
++      });
+       this.portalForcer = new PortalForcer(this);
+       this.updateSkyBrightness();
+       this.prepareWeather();
+       this.getWorldBorder().setAbsoluteMaxSize(var1.getAbsoluteMaxWorldSize());
+       this.raids = (Raids)this.getDataStorage().computeIfAbsent(() -> {
+          return new Raids(this);
+-      }, Raids.getFileId(this.dimension));
++      }, Raids.getFileId(this.dimensionType()));
+       if (!var1.isSingleplayer()) {
+-         this.getLevelData().setGameType(var1.getDefaultGameType());
++         var4.setGameType(var1.getDefaultGameType());
+       }
+ 
+-      this.wanderingTraderSpawner = this.dimension.getType() == DimensionType.OVERWORLD ? new WanderingTraderSpawner(this) : null;
++      this.structureFeatureManager = new StructureFeatureManager(this, var1.getWorldData().worldGenSettings());
++      if (this.dimensionType().createDragonFight()) {
++         this.dragonFight = new EndDragonFight(this, var1.getWorldData().worldGenSettings().seed(), var1.getWorldData().endDragonFightData());
++      } else {
++         this.dragonFight = null;
++      }
++
+    }
+ 
++   public void setWeatherParameters(int var1, int var2, boolean var3, boolean var4) {
++      this.serverLevelData.setClearWeatherTime(var1);
++      this.serverLevelData.setRainTime(var2);
++      this.serverLevelData.setThunderTime(var2);
++      this.serverLevelData.setRaining(var3);
++      this.serverLevelData.setThundering(var4);
++   }
++
+    public Biome getUncachedNoiseBiome(int var1, int var2, int var3) {
+       return this.getChunkSource().getGenerator().getBiomeSource().getNoiseBiome(var1, var2, var3);
+    }
+ 
++   public StructureFeatureManager structureFeatureManager() {
++      return this.structureFeatureManager;
++   }
++
+    public void tick(BooleanSupplier var1) {
+       ProfilerFiller var2 = this.getProfiler();
+       this.handlingTick = true;
+       var2.push("world border");
+       this.getWorldBorder().tick();
+       var2.popPush("weather");
+       boolean var3 = this.isRaining();
+       int var5;
+-      if (this.dimension.isHasSkyLight()) {
++      if (this.dimensionType().hasSkyLight()) {
+          if (this.getGameRules().getBoolean(GameRules.RULE_WEATHER_CYCLE)) {
+-            int var4 = this.levelData.getClearWeatherTime();
+-            var5 = this.levelData.getThunderTime();
+-            int var6 = this.levelData.getRainTime();
++            int var4 = this.serverLevelData.getClearWeatherTime();
++            var5 = this.serverLevelData.getThunderTime();
++            int var6 = this.serverLevelData.getRainTime();
+             boolean var7 = this.levelData.isThundering();
+             boolean var8 = this.levelData.isRaining();
+             if (var4 > 0) {
+                --var4;
+                var5 = var7 ? 0 : 1;
+@@ -238,15 +261,15 @@
+                } else {
+                   var6 = this.random.nextInt(168000) + 12000;
+                }
+             }
+ 
+-            this.levelData.setThunderTime(var5);
+-            this.levelData.setRainTime(var6);
+-            this.levelData.setClearWeatherTime(var4);
+-            this.levelData.setThundering(var7);
+-            this.levelData.setRaining(var8);
++            this.serverLevelData.setThunderTime(var5);
++            this.serverLevelData.setRainTime(var6);
++            this.serverLevelData.setClearWeatherTime(var4);
++            this.serverLevelData.setThundering(var7);
++            this.serverLevelData.setRaining(var8);
+          }
+ 
+          this.oThunderLevel = this.thunderLevel;
+          if (this.levelData.isThundering()) {
+             this.thunderLevel = (float)((double)this.thunderLevel + 0.01D);
+@@ -264,15 +287,15 @@
+ 
+          this.rainLevel = Mth.clamp(this.rainLevel, 0.0F, 1.0F);
+       }
+ 
+       if (this.oRainLevel != this.rainLevel) {
+-         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(7, this.rainLevel), this.dimension.getType());
++         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(7, this.rainLevel), this.dimension());
+       }
+ 
+       if (this.oThunderLevel != this.thunderLevel) {
+-         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(8, this.thunderLevel), this.dimension.getType());
++         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(8, this.thunderLevel), this.dimension());
+       }
+ 
+       if (var3 != this.isRaining()) {
+          if (var3) {
+             this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(2, 0.0F));
+@@ -282,14 +305,10 @@
+ 
+          this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(7, this.rainLevel));
+          this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(8, this.thunderLevel));
+       }
+ 
+-      if (this.getLevelData().isHardcore() && this.getDifficulty() != Difficulty.HARD) {
+-         this.getLevelData().setDifficulty(Difficulty.HARD);
+-      }
+-
+       if (this.allPlayersSleeping && this.players.stream().noneMatch((var0) -> {
+          return !var0.isSpectator() && !var0.isSleepingLongEnough();
+       })) {
+          this.allPlayersSleeping = false;
+          if (this.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
+@@ -306,32 +325,31 @@
+       this.updateSkyBrightness();
+       this.tickTime();
+       var2.popPush("chunkSource");
+       this.getChunkSource().tick(var1);
+       var2.popPush("tickPending");
+-      if (this.levelData.getGeneratorType() != LevelType.DEBUG_ALL_BLOCK_STATES) {
++      if (!this.isDebug()) {
+          this.blockTicks.tick();
+          this.liquidTicks.tick();
+       }
+ 
+       var2.popPush("raid");
+       this.raids.tick();
+-      if (this.wanderingTraderSpawner != null) {
+-         this.wanderingTraderSpawner.tick();
+-      }
+-
+       var2.popPush("blockEvents");
+       this.runBlockEvents();
+       this.handlingTick = false;
+       var2.popPush("entities");
+       boolean var10 = !this.players.isEmpty() || !this.getForcedChunks().isEmpty();
+       if (var10) {
+          this.resetEmptyTime();
+       }
+ 
+       if (var10 || this.emptyTime++ < 300) {
+-         this.dimension.tick();
++         if (this.dragonFight != null) {
++            this.dragonFight.tick();
++         }
++
+          var2.push("global");
+ 
+          Entity var11;
+          for(var5 = 0; var5 < this.globalEntities.size(); ++var5) {
+             var11 = (Entity)this.globalEntities.get(var5);
+@@ -346,11 +364,11 @@
+ 
+          var2.popPush("regular");
+          this.tickingEntities = true;
+          ObjectIterator var12 = this.entitiesById.int2ObjectEntrySet().iterator();
+ 
+-         label174:
++         label171:
+          while(true) {
+             Entity var14;
+             while(true) {
+                if (!var12.hasNext()) {
+                   this.tickingEntities = false;
+@@ -359,21 +377,21 @@
+                      this.add(var11);
+                   }
+ 
+                   var2.pop();
+                   this.tickBlockEntities();
+-                  break label174;
++                  break label171;
+                }
+ 
+                Entry var13 = (Entry)var12.next();
+                var14 = (Entity)var13.getValue();
+                Entity var15 = var14.getVehicle();
+-               if (!this.server.isAnimals() && (var14 instanceof Animal || var14 instanceof WaterAnimal)) {
++               if (!this.server.isSpawningAnimals() && (var14 instanceof Animal || var14 instanceof WaterAnimal)) {
+                   var14.remove();
+                }
+ 
+-               if (!this.server.isNpcsEnabled() && var14 instanceof Npc) {
++               if (!this.server.areNpcsEnabled() && var14 instanceof Npc) {
+                   var14.remove();
+                }
+ 
+                var2.push("checkDespawn");
+                if (!var14.removed) {
+@@ -409,10 +427,36 @@
+       }
+ 
+       var2.pop();
+    }
+ 
++   protected void tickTime() {
++      if (this.tickTime) {
++         long var1 = this.levelData.getGameTime() + 1L;
++         this.serverLevelData.setGameTime(var1);
++         this.serverLevelData.getScheduledEvents().tick(this.server, var1);
++         if (this.levelData.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
++            this.setDayTime(this.levelData.getDayTime() + 1L);
++         }
++
++      }
++   }
++
++   public void setDayTime(long var1) {
++      this.serverLevelData.setDayTime(var1);
++   }
++
++   public void tickCustomSpawners(boolean var1, boolean var2) {
++      Iterator var3 = this.customSpawners.iterator();
++
++      while(var3.hasNext()) {
++         CustomSpawner var4 = (CustomSpawner)var3.next();
++         var4.tick(this, var1, var2);
++      }
++
++   }
++
+    private void wakeUpAllPlayers() {
+       ((List)this.players.stream().filter(LivingEntity::isSleeping).collect(Collectors.toList())).forEach((var0) -> {
+          var0.stopSleepInBed(false, false);
+       });
+    }
+@@ -494,14 +538,14 @@
+ 
+    protected BlockPos findLightingTargetAround(BlockPos var1) {
+       BlockPos var2 = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, var1);
+       AABB var3 = (new AABB(var2, new BlockPos(var2.getX(), this.getMaxBuildHeight(), var2.getZ()))).inflate(3.0D);
+       List var4 = this.getEntitiesOfClass(LivingEntity.class, var3, (var1x) -> {
+-         return var1x != null && var1x.isAlive() && this.canSeeSky(var1x.getCommandSenderBlockPosition());
++         return var1x != null && var1x.isAlive() && this.canSeeSky(var1x.blockPosition());
+       });
+       if (!var4.isEmpty()) {
+-         return ((LivingEntity)var4.get(this.random.nextInt(var4.size()))).getCommandSenderBlockPosition();
++         return ((LivingEntity)var4.get(this.random.nextInt(var4.size()))).blockPosition();
+       } else {
+          if (var2.getY() == -1) {
+             var2 = var2.above(2);
+          }
+ 
+@@ -537,38 +581,16 @@
+    public ServerScoreboard getScoreboard() {
+       return this.server.getScoreboard();
+    }
+ 
+    private void stopWeather() {
+-      this.levelData.setRainTime(0);
+-      this.levelData.setRaining(false);
+-      this.levelData.setThunderTime(0);
+-      this.levelData.setThundering(false);
++      this.serverLevelData.setRainTime(0);
++      this.serverLevelData.setRaining(false);
++      this.serverLevelData.setThunderTime(0);
++      this.serverLevelData.setThundering(false);
+    }
+ 
+-   public void validateSpawn() {
+-      if (this.levelData.getYSpawn() <= 0) {
+-         this.levelData.setYSpawn(this.getSeaLevel() + 1);
+-      }
+-
+-      int var1 = this.levelData.getXSpawn();
+-      int var2 = this.levelData.getZSpawn();
+-      int var3 = 0;
+-
+-      while(this.getTopBlockState(new BlockPos(var1, 0, var2)).isAir()) {
+-         var1 += this.random.nextInt(8) - this.random.nextInt(8);
+-         var2 += this.random.nextInt(8) - this.random.nextInt(8);
+-         ++var3;
+-         if (var3 == 10000) {
+-            break;
+-         }
+-      }
+-
+-      this.levelData.setXSpawn(var1);
+-      this.levelData.setZSpawn(var2);
+-   }
+-
+    public void resetEmptyTime() {
+       this.emptyTime = 0;
+    }
+ 
+    private void tickLiquid(TickNextTickData<Fluid> var1) {
+@@ -579,18 +601,20 @@
+ 
+    }
+ 
+    private void tickBlock(TickNextTickData<Block> var1) {
+       BlockState var2 = this.getBlockState(var1.pos);
+-      if (var2.getBlock() == var1.getType()) {
++      if (var2.is((Block)var1.getType())) {
+          var2.tick(this, var1.pos, this.random);
+       }
+ 
+    }
+ 
+    public void tickNonPassenger(Entity var1) {
+-      if (var1 instanceof Player || this.getChunkSource().isEntityTickingChunk(var1)) {
++      if (!(var1 instanceof Player) && !this.getChunkSource().isEntityTickingChunk(var1)) {
++         this.updateChunkPos(var1);
++      } else {
+          var1.setPosAndOldPos(var1.getX(), var1.getY(), var1.getZ());
+          var1.yRotO = var1.yRot;
+          var1.xRotO = var1.xRot;
+          if (var1.inChunk) {
+             ++var1.tickCount;
+@@ -648,121 +672,60 @@
+          var2.stopRiding();
+       }
+    }
+ 
+    public void updateChunkPos(Entity var1) {
+-      this.getProfiler().push("chunkCheck");
+-      int var2 = Mth.floor(var1.getX() / 16.0D);
+-      int var3 = Mth.floor(var1.getY() / 16.0D);
+-      int var4 = Mth.floor(var1.getZ() / 16.0D);
+-      if (!var1.inChunk || var1.xChunk != var2 || var1.yChunk != var3 || var1.zChunk != var4) {
+-         if (var1.inChunk && this.hasChunk(var1.xChunk, var1.zChunk)) {
+-            this.getChunk(var1.xChunk, var1.zChunk).removeEntity(var1, var1.yChunk);
+-         }
+-
+-         if (!var1.checkAndResetTeleportedFlag() && !this.hasChunk(var2, var4)) {
+-            var1.inChunk = false;
+-         } else {
+-            this.getChunk(var2, var4).addEntity(var1);
+-         }
+-      }
+-
+-      this.getProfiler().pop();
+-   }
+-
+-   public boolean mayInteract(Player var1, BlockPos var2) {
+-      return !this.server.isUnderSpawnProtection(this, var2, var1) && this.getWorldBorder().isWithinBounds(var2);
+-   }
+-
+-   public void setInitialSpawn(LevelSettings var1) {
+-      if (!this.dimension.mayRespawn()) {
+-         this.levelData.setSpawn(BlockPos.ZERO.above(this.getChunkSource().getGenerator().getSpawnHeight()));
+-      } else if (this.levelData.getGeneratorType() == LevelType.DEBUG_ALL_BLOCK_STATES) {
+-         this.levelData.setSpawn(BlockPos.ZERO.above());
+-      } else {
+-         BiomeSource var2 = this.getChunkSource().getGenerator().getBiomeSource();
+-         List var3 = var2.getPlayerSpawnBiomes();
+-         Random var4 = new Random(this.getSeed());
+-         BlockPos var5 = var2.findBiomeHorizontal(0, this.getSeaLevel(), 0, 256, var3, var4);
+-         ChunkPos var6 = var5 == null ? new ChunkPos(0, 0) : new ChunkPos(var5);
+-         if (var5 == null) {
+-            LOGGER.warn("Unable to find spawn biome");
+-         }
+-
+-         boolean var7 = false;
+-         Iterator var8 = BlockTags.VALID_SPAWN.getValues().iterator();
+-
+-         while(var8.hasNext()) {
+-            Block var9 = (Block)var8.next();
+-            if (var2.getSurfaceBlocks().contains(var9.defaultBlockState())) {
+-               var7 = true;
+-               break;
++      if (var1.checkAndResetUpdateChunkPos()) {
++         this.getProfiler().push("chunkCheck");
++         int var2 = Mth.floor(var1.getX() / 16.0D);
++         int var3 = Mth.floor(var1.getY() / 16.0D);
++         int var4 = Mth.floor(var1.getZ() / 16.0D);
++         if (!var1.inChunk || var1.xChunk != var2 || var1.yChunk != var3 || var1.zChunk != var4) {
++            if (var1.inChunk && this.hasChunk(var1.xChunk, var1.zChunk)) {
++               this.getChunk(var1.xChunk, var1.zChunk).removeEntity(var1, var1.yChunk);
+             }
+-         }
+ 
+-         this.levelData.setSpawn(var6.getWorldPosition().offset(8, this.getChunkSource().getGenerator().getSpawnHeight(), 8));
+-         int var15 = 0;
+-         int var16 = 0;
+-         int var10 = 0;
+-         int var11 = -1;
+-         boolean var12 = true;
+-
+-         for(int var13 = 0; var13 < 1024; ++var13) {
+-            if (var15 > -16 && var15 <= 16 && var16 > -16 && var16 <= 16) {
+-               BlockPos var14 = this.dimension.getSpawnPosInChunk(new ChunkPos(var6.x + var15, var6.z + var16), var7);
+-               if (var14 != null) {
+-                  this.levelData.setSpawn(var14);
+-                  break;
++            if (!var1.checkAndResetForcedChunkAdditionFlag() && !this.hasChunk(var2, var4)) {
++               if (var1.inChunk) {
++                  LOGGER.warn("Entity {} left loaded chunk area", var1);
+                }
+-            }
+ 
+-            if (var15 == var16 || var15 < 0 && var15 == -var16 || var15 > 0 && var15 == 1 - var16) {
+-               int var17 = var10;
+-               var10 = -var11;
+-               var11 = var17;
++               var1.inChunk = false;
++            } else {
++               this.getChunk(var2, var4).addEntity(var1);
+             }
+-
+-            var15 += var10;
+-            var16 += var11;
+          }
+ 
+-         if (var1.hasStartingBonusItems()) {
+-            this.generateBonusItemsNearSpawn();
+-         }
+-
++         this.getProfiler().pop();
+       }
+    }
+ 
+-   protected void generateBonusItemsNearSpawn() {
+-      ConfiguredFeature var1 = Feature.BONUS_CHEST.configured(FeatureConfiguration.NONE);
+-      var1.place(this, this.getChunkSource().getGenerator(), this.random, new BlockPos(this.levelData.getXSpawn(), this.levelData.getYSpawn(), this.levelData.getZSpawn()));
++   public boolean mayInteract(Player var1, BlockPos var2) {
++      return !this.server.isUnderSpawnProtection(this, var2, var1) && this.getWorldBorder().isWithinBounds(var2);
+    }
+ 
+-   @Nullable
+-   public BlockPos getDimensionSpecificSpawn() {
+-      return this.dimension.getDimensionSpecificSpawn();
+-   }
+-
+-   public void save(@Nullable ProgressListener var1, boolean var2, boolean var3) throws LevelConflictException {
++   public void save(@Nullable ProgressListener var1, boolean var2, boolean var3) {
+       ServerChunkCache var4 = this.getChunkSource();
+       if (!var3) {
+          if (var1 != null) {
+-            var1.progressStartNoAbort(new TranslatableComponent("menu.savingLevel", new Object[0]));
++            var1.progressStartNoAbort(new TranslatableComponent("menu.savingLevel"));
+          }
+ 
+          this.saveLevelData();
+          if (var1 != null) {
+-            var1.progressStage(new TranslatableComponent("menu.savingChunks", new Object[0]));
++            var1.progressStage(new TranslatableComponent("menu.savingChunks"));
+          }
+ 
+          var4.save(var2);
+       }
+    }
+ 
+-   protected void saveLevelData() throws LevelConflictException {
+-      this.checkSession();
+-      this.dimension.saveData();
++   private void saveLevelData() {
++      if (this.dragonFight != null) {
++         this.server.getWorldData().setEndDragonFightData(this.dragonFight.saveData());
++      }
++
+       this.getChunkSource().getDataStorage().save();
+    }
+ 
+    public List<Entity> getEntities(@Nullable EntityType<?> var1, Predicate<? super Entity> var2) {
+       ArrayList var3 = Lists.newArrayList();
+@@ -817,37 +780,10 @@
+    public ServerPlayer getRandomPlayer() {
+       List var1 = this.getPlayers(LivingEntity::isAlive);
+       return var1.isEmpty() ? null : (ServerPlayer)var1.get(this.random.nextInt(var1.size()));
+    }
+ 
+-   public Object2IntMap<MobCategory> getMobCategoryCounts() {
+-      Object2IntOpenHashMap var1 = new Object2IntOpenHashMap();
+-      ObjectIterator var2 = this.entitiesById.values().iterator();
+-
+-      while(true) {
+-         Entity var3;
+-         Mob var4;
+-         do {
+-            if (!var2.hasNext()) {
+-               return var1;
+-            }
+-
+-            var3 = (Entity)var2.next();
+-            if (!(var3 instanceof Mob)) {
+-               break;
+-            }
+-
+-            var4 = (Mob)var3;
+-         } while(var4.isPersistenceRequired() || var4.requiresCustomPersistence());
+-
+-         MobCategory var5 = var3.getType().getCategory();
+-         if (var5 != MobCategory.MISC && this.getChunkSource().isInAccessibleChunk(var3)) {
+-            var1.mergeInt(var5, 1, Integer::sum);
+-         }
+-      }
+-   }
+-
+    public boolean addFreshEntity(Entity var1) {
+       return this.addEntity(var1);
+    }
+ 
+    public boolean addWithUUID(Entity var1) {
+@@ -1032,11 +968,11 @@
+       this.updateSleepingPlayerList();
+    }
+ 
+    public void addGlobalEntity(LightningBolt var1) {
+       this.globalEntities.add(var1);
+-      this.server.getPlayerList().broadcast((Player)null, var1.getX(), var1.getY(), var1.getZ(), 512.0D, this.dimension.getType(), new ClientboundAddGlobalEntityPacket(var1));
++      this.server.getPlayerList().broadcast((Player)null, var1.getX(), var1.getY(), var1.getZ(), 512.0D, this.dimension(), new ClientboundAddGlobalEntityPacket(var1));
+    }
+ 
+    public void destroyBlockProgress(int var1, BlockPos var2, int var3) {
+       Iterator var4 = this.server.getPlayerList().getPlayers().iterator();
+ 
+@@ -1053,23 +989,23 @@
+       }
+ 
+    }
+ 
+    public void playSound(@Nullable Player var1, double var2, double var4, double var6, SoundEvent var8, SoundSource var9, float var10, float var11) {
+-      this.server.getPlayerList().broadcast(var1, var2, var4, var6, var10 > 1.0F ? (double)(16.0F * var10) : 16.0D, this.dimension.getType(), new ClientboundSoundPacket(var8, var9, var2, var4, var6, var10, var11));
++      this.server.getPlayerList().broadcast(var1, var2, var4, var6, var10 > 1.0F ? (double)(16.0F * var10) : 16.0D, this.dimension(), new ClientboundSoundPacket(var8, var9, var2, var4, var6, var10, var11));
+    }
+ 
+    public void playSound(@Nullable Player var1, Entity var2, SoundEvent var3, SoundSource var4, float var5, float var6) {
+-      this.server.getPlayerList().broadcast(var1, var2.getX(), var2.getY(), var2.getZ(), var5 > 1.0F ? (double)(16.0F * var5) : 16.0D, this.dimension.getType(), new ClientboundSoundEntityPacket(var3, var4, var2, var5, var6));
++      this.server.getPlayerList().broadcast(var1, var2.getX(), var2.getY(), var2.getZ(), var5 > 1.0F ? (double)(16.0F * var5) : 16.0D, this.dimension(), new ClientboundSoundEntityPacket(var3, var4, var2, var5, var6));
+    }
+ 
+    public void globalLevelEvent(int var1, BlockPos var2, int var3) {
+       this.server.getPlayerList().broadcastAll(new ClientboundLevelEventPacket(var1, var2, var3, true));
+    }
+ 
+    public void levelEvent(@Nullable Player var1, int var2, BlockPos var3, int var4) {
+-      this.server.getPlayerList().broadcast(var1, (double)var3.getX(), (double)var3.getY(), (double)var3.getZ(), 64.0D, this.dimension.getType(), new ClientboundLevelEventPacket(var2, var3, var4, false));
++      this.server.getPlayerList().broadcast(var1, (double)var3.getX(), (double)var3.getY(), (double)var3.getZ(), 64.0D, this.dimension(), new ClientboundLevelEventPacket(var2, var3, var4, false));
+    }
+ 
+    public void sendBlockUpdated(BlockPos var1, BlockState var2, BlockState var3, int var4) {
+       this.getChunkSource().blockChanged(var1);
+       VoxelShape var5 = var2.getCollisionShape(this, var1);
+@@ -1090,11 +1026,11 @@
+    public void broadcastEntityEvent(Entity var1, byte var2) {
+       this.getChunkSource().broadcastAndSend(var1, new ClientboundEntityEventPacket(var1, var2));
+    }
+ 
+    public ServerChunkCache getChunkSource() {
+-      return (ServerChunkCache)super.getChunkSource();
++      return this.chunkSource;
+    }
+ 
+    public Explosion explode(@Nullable Entity var1, @Nullable DamageSource var2, double var3, double var5, double var7, float var9, boolean var10, Explosion.BlockInteraction var11) {
+       Explosion var12 = new Explosion(this, var1, var3, var5, var7, var9, var10, var11);
+       if (var2 != null) {
+@@ -1125,19 +1061,19 @@
+ 
+    private void runBlockEvents() {
+       while(!this.blockEvents.isEmpty()) {
+          BlockEventData var1 = (BlockEventData)this.blockEvents.removeFirst();
+          if (this.doBlockEvent(var1)) {
+-            this.server.getPlayerList().broadcast((Player)null, (double)var1.getPos().getX(), (double)var1.getPos().getY(), (double)var1.getPos().getZ(), 64.0D, this.dimension.getType(), new ClientboundBlockEventPacket(var1.getPos(), var1.getBlock(), var1.getParamA(), var1.getParamB()));
++            this.server.getPlayerList().broadcast((Player)null, (double)var1.getPos().getX(), (double)var1.getPos().getY(), (double)var1.getPos().getZ(), 64.0D, this.dimension(), new ClientboundBlockEventPacket(var1.getPos(), var1.getBlock(), var1.getParamA(), var1.getParamB()));
+          }
+       }
+ 
+    }
+ 
+    private boolean doBlockEvent(BlockEventData var1) {
+       BlockState var2 = this.getBlockState(var1.getPos());
+-      return var2.getBlock() == var1.getBlock() ? var2.triggerEvent(this, var1.getPos(), var1.getParamA(), var1.getParamB()) : false;
++      return var2.is(var1.getBlock()) ? var2.triggerEvent(this, var1.getPos(), var1.getParamA(), var1.getParamB()) : false;
+    }
+ 
+    public ServerTickList<Block> getBlockTicks() {
+       return this.blockTicks;
+    }
+@@ -1154,11 +1090,11 @@
+    public PortalForcer getPortalForcer() {
+       return this.portalForcer;
+    }
+ 
+    public StructureManager getStructureManager() {
+-      return this.levelStorage.getStructureManager();
++      return this.server.getStructureManager();
+    }
+ 
+    public <T extends ParticleOptions> int sendParticles(T var1, double var2, double var4, double var6, int var8, double var9, double var11, double var13, double var15) {
+       ClientboundLevelParticlesPacket var17 = new ClientboundLevelParticlesPacket(var1, false, var2, var4, var6, (float)var9, (float)var11, (float)var13, (float)var15, var8);
+       int var18 = 0;
+@@ -1180,11 +1116,11 @@
+ 
+    private boolean sendParticles(ServerPlayer var1, boolean var2, double var3, double var5, double var7, Packet<?> var9) {
+       if (var1.getLevel() != this) {
+          return false;
+       } else {
+-         BlockPos var10 = var1.getCommandSenderBlockPosition();
++         BlockPos var10 = var1.blockPosition();
+          if (var10.closerThan(new Vec3(var3, var5, var7), var2 ? 512.0D : 32.0D)) {
+             var1.connection.send(var9);
+             return true;
+          } else {
+             return false;
+@@ -1201,65 +1137,67 @@
+    public Entity getEntity(UUID var1) {
+       return (Entity)this.entitiesByUuid.get(var1);
+    }
+ 
+    @Nullable
+-   public BlockPos findNearestMapFeature(String var1, BlockPos var2, int var3, boolean var4) {
+-      return this.getChunkSource().getGenerator().findNearestMapFeature(this, var1, var2, var3, var4);
++   public BlockPos findNearestMapFeature(StructureFeature<?> var1, BlockPos var2, int var3, boolean var4) {
++      return !this.server.getWorldData().worldGenSettings().generateFeatures() ? null : this.getChunkSource().getGenerator().findNearestMapFeature(this, var1, var2, var3, var4);
+    }
+ 
++   @Nullable
++   public BlockPos findNearestBiome(Biome var1, BlockPos var2, int var3, int var4) {
++      return this.getChunkSource().getGenerator().getBiomeSource().findBiomeHorizontal(var2.getX(), var2.getY(), var2.getZ(), var3, var4, ImmutableList.of(var1), this.random, true);
++   }
++
+    public RecipeManager getRecipeManager() {
+       return this.server.getRecipeManager();
+    }
+ 
+    public TagManager getTagManager() {
+       return this.server.getTags();
+    }
+ 
+-   public void setGameTime(long var1) {
+-      super.setGameTime(var1);
+-      this.levelData.getScheduledEvents().tick(this.server, var1);
+-   }
+-
+    public boolean noSave() {
+       return this.noSave;
+    }
+ 
+-   public void checkSession() throws LevelConflictException {
+-      this.levelStorage.checkSession();
+-   }
+-
+-   public LevelStorage getLevelStorage() {
+-      return this.levelStorage;
+-   }
+-
+    public DimensionDataStorage getDataStorage() {
+       return this.getChunkSource().getDataStorage();
+    }
+ 
+    @Nullable
+    public MapItemSavedData getMapData(String var1) {
+-      return (MapItemSavedData)this.getServer().getLevel(DimensionType.OVERWORLD).getDataStorage().get(() -> {
++      return (MapItemSavedData)this.getServer().getLevel(Level.OVERWORLD).getDataStorage().get(() -> {
+          return new MapItemSavedData(var1);
+       }, var1);
+    }
+ 
+    public void setMapData(MapItemSavedData var1) {
+-      this.getServer().getLevel(DimensionType.OVERWORLD).getDataStorage().set(var1);
++      this.getServer().getLevel(Level.OVERWORLD).getDataStorage().set(var1);
+    }
+ 
+    public int getFreeMapId() {
+-      return ((MapIndex)this.getServer().getLevel(DimensionType.OVERWORLD).getDataStorage().computeIfAbsent(MapIndex::new, "idcounts")).getFreeAuxValueForMap();
++      return ((MapIndex)this.getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(MapIndex::new, "idcounts")).getFreeAuxValueForMap();
+    }
+ 
+-   public void setSpawnPos(BlockPos var1) {
++   public void setDefaultSpawnPos(BlockPos var1) {
+       ChunkPos var2 = new ChunkPos(new BlockPos(this.levelData.getXSpawn(), 0, this.levelData.getZSpawn()));
+-      super.setSpawnPos(var1);
++      this.levelData.setSpawn(var1);
+       this.getChunkSource().removeRegionTicket(TicketType.START, var2, 11, Unit.INSTANCE);
+       this.getChunkSource().addRegionTicket(TicketType.START, new ChunkPos(var1), 11, Unit.INSTANCE);
++      this.getServer().getPlayerList().broadcastAll(new ClientboundSetDefaultSpawnPositionPacket(var1));
+    }
+ 
++   public BlockPos getSharedSpawnPos() {
++      BlockPos var1 = new BlockPos(this.levelData.getXSpawn(), this.levelData.getYSpawn(), this.levelData.getZSpawn());
++      if (!this.getWorldBorder().isWithinBounds(var1)) {
++         var1 = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(this.getWorldBorder().getCenterX(), 0.0D, this.getWorldBorder().getCenterZ()));
++      }
++
++      return var1;
++   }
++
+    public LongSet getForcedChunks() {
+       ForcedChunksSavedData var1 = (ForcedChunksSavedData)this.getDataStorage().get(ForcedChunksSavedData::new, "chunks");
+       return (LongSet)(var1 != null ? LongSets.unmodifiable(var1.getChunks()) : LongSets.EMPTY_SET);
+    }
+ 
+@@ -1312,18 +1250,18 @@
+    public PoiManager getPoiManager() {
+       return this.getChunkSource().getPoiManager();
+    }
+ 
+    public boolean isVillage(BlockPos var1) {
+-      return this.closeToVillage(var1, 1);
++      return this.isCloseToVillage(var1, 1);
+    }
+ 
+    public boolean isVillage(SectionPos var1) {
+       return this.isVillage(var1.center());
+    }
+ 
+-   public boolean closeToVillage(BlockPos var1, int var2) {
++   public boolean isCloseToVillage(BlockPos var1, int var2) {
+       if (var2 > 6) {
+          return false;
+       } else {
+          return this.sectionsToVillage(SectionPos.of(var1)) <= var2;
+       }
+@@ -1355,160 +1293,160 @@
+       BufferedWriter var3 = Files.newBufferedWriter(var1.resolve("stats.txt"));
+       Throwable var4 = null;
+ 
+       try {
+          var3.write(String.format("spawning_chunks: %d\n", var2.getDistanceManager().getNaturalSpawnChunkCount()));
+-         ObjectIterator var5 = this.getMobCategoryCounts().object2IntEntrySet().iterator();
++         NaturalSpawner.SpawnState var5 = this.getChunkSource().getLastSpawnState();
++         if (var5 != null) {
++            ObjectIterator var6 = var5.getMobCategoryCounts().object2IntEntrySet().iterator();
+ 
+-         while(true) {
+-            if (!var5.hasNext()) {
+-               var3.write(String.format("entities: %d\n", this.entitiesById.size()));
+-               var3.write(String.format("block_entities: %d\n", this.blockEntityList.size()));
+-               var3.write(String.format("block_ticks: %d\n", this.getBlockTicks().size()));
+-               var3.write(String.format("fluid_ticks: %d\n", this.getLiquidTicks().size()));
+-               var3.write("distance_manager: " + var2.getDistanceManager().getDebugStatus() + "\n");
+-               var3.write(String.format("pending_tasks: %d\n", this.getChunkSource().getPendingTasksCount()));
+-               break;
++            while(var6.hasNext()) {
++               it.unimi.dsi.fastutil.objects.Object2IntMap.Entry var7 = (it.unimi.dsi.fastutil.objects.Object2IntMap.Entry)var6.next();
++               var3.write(String.format("spawn_count.%s: %d\n", ((MobCategory)var7.getKey()).getName(), var7.getIntValue()));
+             }
+-
+-            it.unimi.dsi.fastutil.objects.Object2IntMap.Entry var6 = (it.unimi.dsi.fastutil.objects.Object2IntMap.Entry)var5.next();
+-            var3.write(String.format("spawn_count.%s: %d\n", ((MobCategory)var6.getKey()).getName(), var6.getIntValue()));
+          }
+-      } catch (Throwable var164) {
+-         var4 = var164;
+-         throw var164;
++
++         var3.write(String.format("entities: %d\n", this.entitiesById.size()));
++         var3.write(String.format("block_entities: %d\n", this.blockEntityList.size()));
++         var3.write(String.format("block_ticks: %d\n", this.getBlockTicks().size()));
++         var3.write(String.format("fluid_ticks: %d\n", this.getLiquidTicks().size()));
++         var3.write("distance_manager: " + var2.getDistanceManager().getDebugStatus() + "\n");
++         var3.write(String.format("pending_tasks: %d\n", this.getChunkSource().getPendingTasksCount()));
++      } catch (Throwable var165) {
++         var4 = var165;
++         throw var165;
+       } finally {
+          if (var3 != null) {
+             if (var4 != null) {
+                try {
+                   var3.close();
+-               } catch (Throwable var148) {
+-                  var4.addSuppressed(var148);
++               } catch (Throwable var154) {
++                  var4.addSuppressed(var154);
+                }
+             } else {
+                var3.close();
+             }
+          }
+ 
+       }
+ 
+-      CrashReport var166 = new CrashReport("Level dump", new Exception("dummy"));
+-      this.fillReportDetails(var166);
+-      BufferedWriter var167 = Files.newBufferedWriter(var1.resolve("example_crash.txt"));
+-      Throwable var168 = null;
++      CrashReport var167 = new CrashReport("Level dump", new Exception("dummy"));
++      this.fillReportDetails(var167);
++      BufferedWriter var168 = Files.newBufferedWriter(var1.resolve("example_crash.txt"));
++      Throwable var169 = null;
+ 
+       try {
+-         var167.write(var166.getFriendlyReport());
+-      } catch (Throwable var158) {
+-         var168 = var158;
+-         throw var158;
++         var168.write(var167.getFriendlyReport());
++      } catch (Throwable var159) {
++         var169 = var159;
++         throw var159;
+       } finally {
+-         if (var167 != null) {
+-            if (var168 != null) {
++         if (var168 != null) {
++            if (var169 != null) {
+                try {
+-                  var167.close();
+-               } catch (Throwable var149) {
+-                  var168.addSuppressed(var149);
++                  var168.close();
++               } catch (Throwable var151) {
++                  var169.addSuppressed(var151);
+                }
+             } else {
+-               var167.close();
++               var168.close();
+             }
+          }
+ 
+       }
+ 
+-      Path var169 = var1.resolve("chunks.csv");
+-      BufferedWriter var170 = Files.newBufferedWriter(var169);
+-      Throwable var171 = null;
++      Path var170 = var1.resolve("chunks.csv");
++      BufferedWriter var171 = Files.newBufferedWriter(var170);
++      Throwable var172 = null;
+ 
+       try {
+-         var2.dumpChunks(var170);
+-      } catch (Throwable var157) {
+-         var171 = var157;
+-         throw var157;
++         var2.dumpChunks(var171);
++      } catch (Throwable var158) {
++         var172 = var158;
++         throw var158;
+       } finally {
+-         if (var170 != null) {
+-            if (var171 != null) {
++         if (var171 != null) {
++            if (var172 != null) {
+                try {
+-                  var170.close();
++                  var171.close();
+                } catch (Throwable var150) {
+-                  var171.addSuppressed(var150);
++                  var172.addSuppressed(var150);
+                }
+             } else {
+-               var170.close();
++               var171.close();
+             }
+          }
+ 
+       }
+ 
+-      Path var172 = var1.resolve("entities.csv");
+-      BufferedWriter var173 = Files.newBufferedWriter(var172);
+-      Throwable var7 = null;
++      Path var173 = var1.resolve("entities.csv");
++      BufferedWriter var174 = Files.newBufferedWriter(var173);
++      Throwable var175 = null;
+ 
+       try {
+-         dumpEntities(var173, this.entitiesById.values());
+-      } catch (Throwable var156) {
+-         var7 = var156;
+-         throw var156;
++         dumpEntities(var174, this.entitiesById.values());
++      } catch (Throwable var157) {
++         var175 = var157;
++         throw var157;
+       } finally {
+-         if (var173 != null) {
+-            if (var7 != null) {
++         if (var174 != null) {
++            if (var175 != null) {
+                try {
+-                  var173.close();
+-               } catch (Throwable var153) {
+-                  var7.addSuppressed(var153);
++                  var174.close();
++               } catch (Throwable var152) {
++                  var175.addSuppressed(var152);
+                }
+             } else {
+-               var173.close();
++               var174.close();
+             }
+          }
+ 
+       }
+ 
+-      Path var174 = var1.resolve("global_entities.csv");
+-      BufferedWriter var175 = Files.newBufferedWriter(var174);
++      Path var176 = var1.resolve("global_entities.csv");
++      BufferedWriter var177 = Files.newBufferedWriter(var176);
+       Throwable var8 = null;
+ 
+       try {
+-         dumpEntities(var175, this.globalEntities);
+-      } catch (Throwable var155) {
+-         var8 = var155;
+-         throw var155;
++         dumpEntities(var177, this.globalEntities);
++      } catch (Throwable var156) {
++         var8 = var156;
++         throw var156;
+       } finally {
+-         if (var175 != null) {
++         if (var177 != null) {
+             if (var8 != null) {
+                try {
+-                  var175.close();
+-               } catch (Throwable var151) {
+-                  var8.addSuppressed(var151);
++                  var177.close();
++               } catch (Throwable var153) {
++                  var8.addSuppressed(var153);
+                }
+             } else {
+-               var175.close();
++               var177.close();
+             }
+          }
+ 
+       }
+ 
+-      Path var176 = var1.resolve("block_entities.csv");
+-      BufferedWriter var177 = Files.newBufferedWriter(var176);
++      Path var178 = var1.resolve("block_entities.csv");
++      BufferedWriter var179 = Files.newBufferedWriter(var178);
+       Throwable var9 = null;
+ 
+       try {
+-         this.dumpBlockEntities(var177);
+-      } catch (Throwable var154) {
+-         var9 = var154;
+-         throw var154;
++         this.dumpBlockEntities(var179);
++      } catch (Throwable var155) {
++         var9 = var155;
++         throw var155;
+       } finally {
+-         if (var177 != null) {
++         if (var179 != null) {
+             if (var9 != null) {
+                try {
+-                  var177.close();
+-               } catch (Throwable var152) {
+-                  var9.addSuppressed(var152);
++                  var179.close();
++               } catch (Throwable var149) {
++                  var9.addSuppressed(var149);
+                }
+             } else {
+-               var177.close();
++               var179.close();
+             }
+          }
+ 
+       }
+ 
+@@ -1543,6 +1481,51 @@
+    public void clearBlockEvents(BoundingBox var1) {
+       this.blockEvents.removeIf((var1x) -> {
+          return var1.isInside(var1x.getPos());
+       });
+    }
++
++   public void blockUpdated(BlockPos var1, Block var2) {
++      if (!this.isDebug()) {
++         this.updateNeighborsAt(var1, var2);
++      }
++
++   }
++
++   public float getShade(Direction var1, boolean var2) {
++      return 1.0F;
++   }
++
++   public Iterable<Entity> getAllEntities() {
++      return Iterables.unmodifiableIterable(this.entitiesById.values());
++   }
++
++   public String toString() {
++      return "ServerLevel[" + this.serverLevelData.getLevelName() + "]";
++   }
++
++   public boolean isFlat() {
++      return this.server.getWorldData().worldGenSettings().isFlatWorld();
++   }
++
++   public long getSeed() {
++      return this.server.getWorldData().worldGenSettings().seed();
++   }
++
++   @Nullable
++   public EndDragonFight dragonFight() {
++      return this.dragonFight;
++   }
++
++   public static void makeObsidianPlatform(ServerLevel var0) {
++      BlockPos var1 = END_SPAWN_POINT;
++      int var2 = var1.getX();
++      int var3 = var1.getY() - 2;
++      int var4 = var1.getZ();
++      BlockPos.betweenClosed(var2 - 2, var3 + 1, var4 - 2, var2 + 2, var3 + 3, var4 + 2).forEach((var1x) -> {
++         var0.setBlockAndUpdate(var1x, Blocks.AIR.defaultBlockState());
++      });
++      BlockPos.betweenClosed(var2 - 2, var3, var4 - 2, var2 + 2, var3, var4 + 2).forEach((var1x) -> {
++         var0.setBlockAndUpdate(var1x, Blocks.OBSIDIAN.defaultBlockState());
++      });
++   }
+ }

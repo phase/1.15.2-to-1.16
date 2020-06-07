@@ -1,0 +1,15 @@
+--- net/minecraft/commands/arguments/ScoreHolderArgument.java
++++ net/minecraft/commands/arguments/ScoreHolderArgument.java
+@@ -40,11 +40,11 @@
+       return var3.fillSuggestions(var1, (var1x) -> {
+          SharedSuggestionProvider.suggest((Iterable)((CommandSourceStack)var0.getSource()).getOnlinePlayerNames(), var1x);
+       });
+    };
+    private static final Collection<String> EXAMPLES = Arrays.asList("Player", "0123", "*", "@e");
+-   private static final SimpleCommandExceptionType ERROR_NO_RESULTS = new SimpleCommandExceptionType(new TranslatableComponent("argument.scoreHolder.empty", new Object[0]));
++   private static final SimpleCommandExceptionType ERROR_NO_RESULTS = new SimpleCommandExceptionType(new TranslatableComponent("argument.scoreHolder.empty"));
+    private final boolean multiple;
+ 
+    public ScoreHolderArgument(boolean var1) {
+       this.multiple = var1;
+    }

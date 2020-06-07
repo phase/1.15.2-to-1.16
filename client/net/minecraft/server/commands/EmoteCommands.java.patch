@@ -1,0 +1,31 @@
+--- net/minecraft/server/commands/EmoteCommands.java
++++ net/minecraft/server/commands/EmoteCommands.java
+@@ -1,17 +1,27 @@
+ package net.minecraft.server.commands;
+ 
+ import com.mojang.brigadier.CommandDispatcher;
+ import com.mojang.brigadier.arguments.StringArgumentType;
+ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
++import net.minecraft.Util;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
++import net.minecraft.network.chat.ChatType;
+ import net.minecraft.network.chat.TranslatableComponent;
++import net.minecraft.world.entity.Entity;
+ 
+ public class EmoteCommands {
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)Commands.literal("me").then(Commands.argument("action", StringArgumentType.greedyString()).executes((var0x) -> {
+-         ((CommandSourceStack)var0x.getSource()).getServer().getPlayerList().broadcastMessage(new TranslatableComponent("chat.type.emote", new Object[]{((CommandSourceStack)var0x.getSource()).getDisplayName(), StringArgumentType.getString(var0x, "action")}));
++         TranslatableComponent var1 = new TranslatableComponent("chat.type.emote", new Object[]{((CommandSourceStack)var0x.getSource()).getDisplayName(), StringArgumentType.getString(var0x, "action")});
++         Entity var2 = ((CommandSourceStack)var0x.getSource()).getEntity();
++         if (var2 != null) {
++            ((CommandSourceStack)var0x.getSource()).getServer().getPlayerList().broadcastMessage(var1, ChatType.CHAT, var2.getUUID());
++         } else {
++            ((CommandSourceStack)var0x.getSource()).getServer().getPlayerList().broadcastMessage(var1, ChatType.SYSTEM, Util.NIL_UUID);
++         }
++
+          return 1;
+       })));
+    }
+ }

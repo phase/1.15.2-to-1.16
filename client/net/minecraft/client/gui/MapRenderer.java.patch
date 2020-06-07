@@ -1,0 +1,39 @@
+--- net/minecraft/client/gui/MapRenderer.java
++++ net/minecraft/client/gui/MapRenderer.java
+@@ -11,10 +11,12 @@
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.MultiBufferSource;
+ import net.minecraft.client.renderer.RenderType;
+ import net.minecraft.client.renderer.texture.DynamicTexture;
+ import net.minecraft.client.renderer.texture.TextureManager;
++import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.FormattedText;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.level.material.MaterialColor;
+ import net.minecraft.world.level.saveddata.maps.MapDecoration;
+ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+@@ -145,20 +147,20 @@
+             var20.vertex(var18, 1.0F, -1.0F, (float)var10 * -0.001F).color(255, 255, 255, 255).uv(var16, var17).uv2(var4).endVertex();
+             var20.vertex(var18, -1.0F, -1.0F, (float)var10 * -0.001F).color(255, 255, 255, 255).uv(var14, var17).uv2(var4).endVertex();
+             var1.popPose();
+             if (var12.getName() != null) {
+                Font var21 = Minecraft.getInstance().font;
+-               String var22 = var12.getName().getColoredString();
+-               float var23 = (float)var21.width(var22);
++               Component var22 = var12.getName();
++               float var23 = (float)var21.width((FormattedText)var22);
+                float var10000 = 25.0F / var23;
+                var21.getClass();
+                float var24 = Mth.clamp(var10000, 0.0F, 6.0F / 9.0F);
+                var1.pushPose();
+                var1.translate((double)(0.0F + (float)var12.getX() / 2.0F + 64.0F - var23 * var24 / 2.0F), (double)(0.0F + (float)var12.getY() / 2.0F + 64.0F + 4.0F), -0.02500000037252903D);
+                var1.scale(var24, var24, 1.0F);
+                var1.translate(0.0D, 0.0D, -0.10000000149011612D);
+-               var21.drawInBatch(var22, 0.0F, 0.0F, -1, false, var1.last().pose(), var2, false, Integer.MIN_VALUE, var4);
++               var21.drawInBatch((FormattedText)var22, 0.0F, 0.0F, -1, false, var1.last().pose(), var2, false, Integer.MIN_VALUE, var4);
+                var1.popPose();
+             }
+ 
+             ++var10;
+          }

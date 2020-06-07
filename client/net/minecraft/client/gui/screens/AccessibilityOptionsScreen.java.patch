@@ -1,0 +1,58 @@
+--- net/minecraft/client/gui/screens/AccessibilityOptionsScreen.java
++++ net/minecraft/client/gui/screens/AccessibilityOptionsScreen.java
+@@ -1,21 +1,22 @@
+ package net.minecraft.client.gui.screens;
+ 
++import com.mojang.blaze3d.vertex.PoseStack;
+ import net.minecraft.client.Option;
+ import net.minecraft.client.Options;
+ import net.minecraft.client.gui.chat.NarratorChatListener;
+ import net.minecraft.client.gui.components.AbstractWidget;
+ import net.minecraft.client.gui.components.Button;
+-import net.minecraft.client.resources.language.I18n;
++import net.minecraft.network.chat.CommonComponents;
+ import net.minecraft.network.chat.TranslatableComponent;
+ 
+ public class AccessibilityOptionsScreen extends OptionsSubScreen {
+    private static final Option[] OPTIONS;
+    private AbstractWidget narratorButton;
+ 
+    public AccessibilityOptionsScreen(Screen var1, Options var2) {
+-      super(var1, var2, new TranslatableComponent("options.accessibility.title", new Object[0]));
++      super(var1, var2, new TranslatableComponent("options.accessibility.title"));
+    }
+ 
+    protected void init() {
+       int var1 = 0;
+       Option[] var2 = OPTIONS;
+@@ -32,24 +33,24 @@
+          }
+ 
+          ++var1;
+       }
+ 
+-      this.addButton(new Button(this.width / 2 - 100, this.height / 6 + 144, 200, 20, I18n.get("gui.done"), (var1x) -> {
++      this.addButton(new Button(this.width / 2 - 100, this.height / 6 + 144, 200, 20, CommonComponents.GUI_DONE, (var1x) -> {
+          this.minecraft.setScreen(this.lastScreen);
+       }));
+    }
+ 
+-   public void render(int var1, int var2, float var3) {
+-      this.renderBackground();
+-      this.drawCenteredString(this.font, this.title.getColoredString(), this.width / 2, 20, 16777215);
+-      super.render(var1, var2, var3);
++   public void render(PoseStack var1, int var2, int var3, float var4) {
++      this.renderBackground(var1);
++      this.drawCenteredString(var1, this.font, this.title, this.width / 2, 20, 16777215);
++      super.render(var1, var2, var3, var4);
+    }
+ 
+    public void updateNarratorButton() {
+       this.narratorButton.setMessage(Option.NARRATOR.getMessage(this.options));
+    }
+ 
+    static {
+-      OPTIONS = new Option[]{Option.NARRATOR, Option.SHOW_SUBTITLES, Option.TEXT_BACKGROUND_OPACITY, Option.TEXT_BACKGROUND, Option.CHAT_OPACITY, Option.AUTO_JUMP, Option.TOGGLE_CROUCH, Option.TOGGLE_SPRINT};
++      OPTIONS = new Option[]{Option.NARRATOR, Option.SHOW_SUBTITLES, Option.TEXT_BACKGROUND_OPACITY, Option.TEXT_BACKGROUND, Option.CHAT_OPACITY, Option.CHAT_LINE_SPACING, Option.CHAT_DELAY, Option.AUTO_JUMP, Option.TOGGLE_CROUCH, Option.TOGGLE_SPRINT};
+    }
+ }

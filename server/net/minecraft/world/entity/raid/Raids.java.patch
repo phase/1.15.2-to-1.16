@@ -1,0 +1,74 @@
+--- net/minecraft/world/entity/raid/Raids.java
++++ net/minecraft/world/entity/raid/Raids.java
+@@ -18,11 +18,10 @@
+ import net.minecraft.world.effect.MobEffects;
+ import net.minecraft.world.entity.ai.village.poi.PoiManager;
+ import net.minecraft.world.entity.ai.village.poi.PoiRecord;
+ import net.minecraft.world.entity.ai.village.poi.PoiType;
+ import net.minecraft.world.level.GameRules;
+-import net.minecraft.world.level.dimension.Dimension;
+ import net.minecraft.world.level.dimension.DimensionType;
+ import net.minecraft.world.level.saveddata.SavedData;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class Raids extends SavedData {
+@@ -30,11 +29,11 @@
+    private final ServerLevel level;
+    private int nextAvailableID;
+    private int tick;
+ 
+    public Raids(ServerLevel var1) {
+-      super(getFileId(var1.dimension));
++      super(getFileId(var1.dimensionType()));
+       this.level = var1;
+       this.nextAvailableID = 1;
+       this.setDirty();
+    }
+ 
+@@ -67,11 +66,11 @@
+       DebugPackets.sendRaids(this.level, this.raidMap.values());
+    }
+ 
+    public static boolean canJoinRaid(Raider var0, Raid var1) {
+       if (var0 != null && var1 != null && var1.getLevel() != null) {
+-         return var0.isAlive() && var0.canJoinRaid() && var0.getNoActionTime() <= 2400 && var0.level.getDimension().getType() == var1.getLevel().getDimension().getType();
++         return var0.isAlive() && var0.canJoinRaid() && var0.getNoActionTime() <= 2400 && var0.level.dimensionType() == var1.getLevel().dimensionType();
+       } else {
+          return false;
+       }
+    }
+ 
+@@ -80,15 +79,15 @@
+       if (var1.isSpectator()) {
+          return null;
+       } else if (this.level.getGameRules().getBoolean(GameRules.RULE_DISABLE_RAIDS)) {
+          return null;
+       } else {
+-         DimensionType var2 = var1.level.getDimension().getType();
+-         if (var2 == DimensionType.NETHER) {
++         DimensionType var2 = var1.level.dimensionType();
++         if (var2.isNether()) {
+             return null;
+          } else {
+-            BlockPos var3 = new BlockPos(var1);
++            BlockPos var3 = var1.blockPosition();
+             List var5 = (List)this.level.getPoiManager().getInRange(PoiType.ALL, var3, 64, PoiManager.Occupancy.IS_OCCUPIED).collect(Collectors.toList());
+             int var6 = 0;
+             Vec3 var7 = Vec3.ZERO;
+ 
+             for(Iterator var8 = var5.iterator(); var8.hasNext(); ++var6) {
+@@ -168,12 +167,12 @@
+ 
+       var1.put("Raids", var2);
+       return var1;
+    }
+ 
+-   public static String getFileId(Dimension var0) {
+-      return "raids" + var0.getType().getFileSuffix();
++   public static String getFileId(DimensionType var0) {
++      return "raids" + var0.getFileSuffix();
+    }
+ 
+    private int getUniqueId() {
+       return ++this.nextAvailableID;
+    }

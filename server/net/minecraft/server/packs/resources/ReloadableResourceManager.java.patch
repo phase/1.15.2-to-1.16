@@ -1,0 +1,17 @@
+--- net/minecraft/server/packs/resources/ReloadableResourceManager.java
++++ net/minecraft/server/packs/resources/ReloadableResourceManager.java
+@@ -5,9 +5,13 @@
+ import java.util.concurrent.Executor;
+ import net.minecraft.server.packs.Pack;
+ import net.minecraft.util.Unit;
+ 
+ public interface ReloadableResourceManager extends ResourceManager {
+-   CompletableFuture<Unit> reload(Executor var1, Executor var2, List<Pack> var3, CompletableFuture<Unit> var4);
++   default CompletableFuture<Unit> reload(Executor var1, Executor var2, List<Pack> var3, CompletableFuture<Unit> var4) {
++      return this.createFullReload(var1, var2, var4, var3).done();
++   }
+ 
++   ReloadInstance createFullReload(Executor var1, Executor var2, CompletableFuture<Unit> var3, List<Pack> var4);
++
+    void registerReloadListener(PreparableReloadListener var1);
+ }

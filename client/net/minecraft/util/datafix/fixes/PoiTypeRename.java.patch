@@ -1,0 +1,38 @@
+--- net/minecraft/util/datafix/fixes/PoiTypeRename.java
++++ net/minecraft/util/datafix/fixes/PoiTypeRename.java
+@@ -1,14 +1,15 @@
+ package net.minecraft.util.datafix.fixes;
+ 
+ import com.mojang.datafixers.DSL;
+ import com.mojang.datafixers.DataFix;
+ import com.mojang.datafixers.DataFixUtils;
+-import com.mojang.datafixers.Dynamic;
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.schemas.Schema;
+ import com.mojang.datafixers.types.Type;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.Dynamic;
+ import java.util.Objects;
+ import java.util.Optional;
+ 
+ public abstract class PoiTypeRename extends DataFix {
+    public PoiTypeRename(Schema var1, boolean var2) {
+@@ -42,15 +43,15 @@
+ 
+    private <T> Optional<Dynamic<T>> renameRecords(Dynamic<T> var1) {
+       return var1.asStreamOpt().map((var2) -> {
+          return var1.createList(var2.map((var1x) -> {
+             return var1x.update("type", (var1) -> {
+-               Optional var10000 = var1.asString().map(this::rename);
++               DataResult var10000 = var1.asString().map(this::rename);
+                var1.getClass();
+-               return (Dynamic)DataFixUtils.orElse(var10000.map(var1::createString), var1);
++               return (Dynamic)DataFixUtils.orElse(var10000.map(var1::createString).result(), var1);
+             });
+          }));
+-      });
++      }).result();
+    }
+ 
+    protected abstract String rename(String var1);
+ }

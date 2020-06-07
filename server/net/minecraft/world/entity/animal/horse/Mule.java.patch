@@ -1,0 +1,37 @@
+--- net/minecraft/world/entity/animal/horse/Mule.java
++++ net/minecraft/world/entity/animal/horse/Mule.java
+@@ -1,7 +1,8 @@
+ package net.minecraft.world.entity.animal.horse;
+ 
++import javax.annotation.Nullable;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.AgableMob;
+ import net.minecraft.world.entity.EntityType;
+@@ -15,15 +16,25 @@
+    protected SoundEvent getAmbientSound() {
+       super.getAmbientSound();
+       return SoundEvents.MULE_AMBIENT;
+    }
+ 
++   protected SoundEvent getAngrySound() {
++      super.getAngrySound();
++      return SoundEvents.MULE_ANGRY;
++   }
++
+    protected SoundEvent getDeathSound() {
+       super.getDeathSound();
+       return SoundEvents.MULE_DEATH;
+    }
+ 
++   @Nullable
++   protected SoundEvent getEatingSound() {
++      return SoundEvents.MULE_EAT;
++   }
++
+    protected SoundEvent getHurtSound(DamageSource var1) {
+       super.getHurtSound(var1);
+       return SoundEvents.MULE_HURT;
+    }
+ 

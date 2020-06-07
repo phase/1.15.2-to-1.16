@@ -1,0 +1,58 @@
+--- net/minecraft/world/item/enchantment/Enchantment.java
++++ net/minecraft/world/item/enchantment/Enchantment.java
+@@ -17,13 +17,12 @@
+ import net.minecraft.world.item.ItemStack;
+ 
+ public abstract class Enchantment {
+    private final EquipmentSlot[] slots;
+    private final Enchantment.Rarity rarity;
++   public final EnchantmentCategory category;
+    @Nullable
+-   public EnchantmentCategory category;
+-   @Nullable
+    protected String descriptionId;
+ 
+    protected Enchantment(Enchantment.Rarity var1, EnchantmentCategory var2, EquipmentSlot[] var3) {
+       this.rarity = var1;
+       this.category = var2;
+@@ -93,19 +92,19 @@
+    public String getDescriptionId() {
+       return this.getOrCreateDescriptionId();
+    }
+ 
+    public Component getFullname(int var1) {
+-      TranslatableComponent var2 = new TranslatableComponent(this.getDescriptionId(), new Object[0]);
++      TranslatableComponent var2 = new TranslatableComponent(this.getDescriptionId());
+       if (this.isCurse()) {
+          var2.withStyle(ChatFormatting.RED);
+       } else {
+          var2.withStyle(ChatFormatting.GRAY);
+       }
+ 
+       if (var1 != 1 || this.getMaxLevel() != 1) {
+-         var2.append(" ").append((Component)(new TranslatableComponent("enchantment.level." + var1, new Object[0])));
++         var2.append(" ").append((Component)(new TranslatableComponent("enchantment.level." + var1)));
+       }
+ 
+       return var2;
+    }
+ 
+@@ -125,10 +124,18 @@
+ 
+    public boolean isCurse() {
+       return false;
+    }
+ 
++   public boolean isTradeable() {
++      return true;
++   }
++
++   public boolean isDiscoverable() {
++      return true;
++   }
++
+    public static enum Rarity {
+       COMMON(10),
+       UNCOMMON(5),
+       RARE(2),
+       VERY_RARE(1);

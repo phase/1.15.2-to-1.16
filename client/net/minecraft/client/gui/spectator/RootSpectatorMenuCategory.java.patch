@@ -1,0 +1,12 @@
+--- net/minecraft/client/gui/spectator/RootSpectatorMenuCategory.java
++++ net/minecraft/client/gui/spectator/RootSpectatorMenuCategory.java
+@@ -18,8 +18,8 @@
+    public List<SpectatorMenuItem> getItems() {
+       return this.items;
+    }
+ 
+    public Component getPrompt() {
+-      return new TranslatableComponent("spectatorMenu.root.prompt", new Object[0]);
++      return new TranslatableComponent("spectatorMenu.root.prompt");
+    }
+ }

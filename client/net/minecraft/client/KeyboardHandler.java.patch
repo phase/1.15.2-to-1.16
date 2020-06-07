@@ -1,0 +1,193 @@
+--- net/minecraft/client/KeyboardHandler.java
++++ net/minecraft/client/KeyboardHandler.java
+@@ -13,10 +13,12 @@
+ import net.minecraft.client.gui.components.EditBox;
+ import net.minecraft.client.gui.screens.AccessibilityOptionsScreen;
+ import net.minecraft.client.gui.screens.ChatOptionsScreen;
+ import net.minecraft.client.gui.screens.Screen;
+ import net.minecraft.client.gui.screens.controls.ControlsScreen;
++import net.minecraft.client.gui.screens.debug.GameModeSwitcherScreen;
++import net.minecraft.client.multiplayer.ClientPacketListener;
+ import net.minecraft.commands.arguments.blocks.BlockStateParser;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Registry;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.chat.Component;
+@@ -25,11 +27,10 @@
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+-import net.minecraft.world.level.dimension.DimensionType;
+ import net.minecraft.world.phys.BlockHitResult;
+ import net.minecraft.world.phys.EntityHitResult;
+ import net.minecraft.world.phys.HitResult;
+ import net.minecraft.world.phys.Vec3;
+ 
+@@ -45,15 +46,15 @@
+    public KeyboardHandler(Minecraft var1) {
+       this.minecraft = var1;
+    }
+ 
+    private void debugFeedbackTranslated(String var1, Object... var2) {
+-      this.minecraft.gui.getChat().addMessage((new TextComponent("")).append((new TranslatableComponent("debug.prefix", new Object[0])).withStyle(new ChatFormatting[]{ChatFormatting.YELLOW, ChatFormatting.BOLD})).append(" ").append((Component)(new TranslatableComponent(var1, var2))));
++      this.minecraft.gui.getChat().addMessage((new TextComponent("")).append((new TranslatableComponent("debug.prefix")).withStyle(new ChatFormatting[]{ChatFormatting.YELLOW, ChatFormatting.BOLD})).append(" ").append((Component)(new TranslatableComponent(var1, var2))));
+    }
+ 
+    private void debugWarningTranslated(String var1, Object... var2) {
+-      this.minecraft.gui.getChat().addMessage((new TextComponent("")).append((new TranslatableComponent("debug.prefix", new Object[0])).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.BOLD})).append(" ").append((Component)(new TranslatableComponent(var1, var2))));
++      this.minecraft.gui.getChat().addMessage((new TextComponent("")).append((new TranslatableComponent("debug.prefix")).withStyle(new ChatFormatting[]{ChatFormatting.RED, ChatFormatting.BOLD})).append(" ").append((Component)(new TranslatableComponent(var1, var2))));
+    }
+ 
+    private boolean handleDebugKeys(int var1) {
+       if (this.debugCrashKeyTime > 0L && this.debugCrashKeyTime < Util.getMillis() - 100L) {
+          return true;
+@@ -69,31 +70,26 @@
+             this.debugFeedbackTranslated(var2 ? "debug.show_hitboxes.on" : "debug.show_hitboxes.off");
+             return true;
+          case 67:
+             if (this.minecraft.player.isReducedDebugInfo()) {
+                return false;
+-            }
++            } else {
++               ClientPacketListener var5 = this.minecraft.player.connection;
++               if (var5 == null) {
++                  return false;
++               }
+ 
+-            this.debugFeedbackTranslated("debug.copy_location.message");
+-            this.setClipboard(String.format(Locale.ROOT, "/execute in %s run tp @s %.2f %.2f %.2f %.2f %.2f", DimensionType.getName(this.minecraft.player.level.dimension.getType()), this.minecraft.player.getX(), this.minecraft.player.getY(), this.minecraft.player.getZ(), this.minecraft.player.yRot, this.minecraft.player.xRot));
+-            return true;
++               this.debugFeedbackTranslated("debug.copy_location.message");
++               this.setClipboard(String.format(Locale.ROOT, "/execute in %s run tp @s %.2f %.2f %.2f %.2f %.2f", this.minecraft.player.level.dimension().location(), this.minecraft.player.getX(), this.minecraft.player.getY(), this.minecraft.player.getZ(), this.minecraft.player.yRot, this.minecraft.player.xRot));
++               return true;
++            }
+          case 68:
+             if (this.minecraft.gui != null) {
+                this.minecraft.gui.getChat().clearMessages(false);
+             }
+ 
+             return true;
+-         case 69:
+-         case 74:
+-         case 75:
+-         case 76:
+-         case 77:
+-         case 79:
+-         case 82:
+-         case 83:
+-         default:
+-            return false;
+          case 70:
+             Option.RENDER_DISTANCE.set(this.minecraft.options, Mth.clamp((double)(this.minecraft.options.renderDistance + (Screen.hasShiftDown() ? -1 : 1)), Option.RENDER_DISTANCE.getMinValue(), Option.RENDER_DISTANCE.getMaxValue()));
+             this.debugFeedbackTranslated("debug.cycle_renderdistance.message", this.minecraft.options.renderDistance);
+             return true;
+          case 71:
+@@ -112,14 +108,14 @@
+ 
+             return true;
+          case 78:
+             if (!this.minecraft.player.hasPermissions(2)) {
+                this.debugFeedbackTranslated("debug.creative_spectator.error");
+-            } else if (this.minecraft.player.isCreative()) {
++            } else if (!this.minecraft.player.isSpectator()) {
+                this.minecraft.player.chat("/gamemode spectator");
+             } else {
+-               this.minecraft.player.chat("/gamemode creative");
++               this.minecraft.player.chat("/gamemode " + this.minecraft.gameMode.getPrevPlayerMode().getName());
+             }
+ 
+             return true;
+          case 80:
+             this.minecraft.options.pauseOnLostFocus = !this.minecraft.options.pauseOnLostFocus;
+@@ -127,28 +123,39 @@
+             this.debugFeedbackTranslated(this.minecraft.options.pauseOnLostFocus ? "debug.pause_focus.on" : "debug.pause_focus.off");
+             return true;
+          case 81:
+             this.debugFeedbackTranslated("debug.help.message");
+             ChatComponent var4 = this.minecraft.gui.getChat();
+-            var4.addMessage(new TranslatableComponent("debug.reload_chunks.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.show_hitboxes.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.copy_location.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.clear_chat.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.cycle_renderdistance.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.chunk_boundaries.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.advanced_tooltips.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.inspect.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.creative_spectator.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.pause_focus.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.help.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.reload_resourcepacks.help", new Object[0]));
+-            var4.addMessage(new TranslatableComponent("debug.pause.help", new Object[0]));
++            var4.addMessage(new TranslatableComponent("debug.reload_chunks.help"));
++            var4.addMessage(new TranslatableComponent("debug.show_hitboxes.help"));
++            var4.addMessage(new TranslatableComponent("debug.copy_location.help"));
++            var4.addMessage(new TranslatableComponent("debug.clear_chat.help"));
++            var4.addMessage(new TranslatableComponent("debug.cycle_renderdistance.help"));
++            var4.addMessage(new TranslatableComponent("debug.chunk_boundaries.help"));
++            var4.addMessage(new TranslatableComponent("debug.advanced_tooltips.help"));
++            var4.addMessage(new TranslatableComponent("debug.inspect.help"));
++            var4.addMessage(new TranslatableComponent("debug.creative_spectator.help"));
++            var4.addMessage(new TranslatableComponent("debug.pause_focus.help"));
++            var4.addMessage(new TranslatableComponent("debug.help.help"));
++            var4.addMessage(new TranslatableComponent("debug.reload_resourcepacks.help"));
++            var4.addMessage(new TranslatableComponent("debug.pause.help"));
++            var4.addMessage(new TranslatableComponent("debug.gamemodes.help"));
+             return true;
+          case 84:
+             this.debugFeedbackTranslated("debug.reload_resourcepacks.message");
+             this.minecraft.reloadResourcePacks();
+             return true;
++         case 293:
++            if (!this.minecraft.player.hasPermissions(2)) {
++               this.debugFeedbackTranslated("debug.gamemodes.error");
++            } else {
++               this.minecraft.setScreen(new GameModeSwitcherScreen());
++            }
++
++            return true;
++         default:
++            return false;
+          }
+       }
+    }
+ 
+    private void copyRecreateCommand(boolean var1, boolean var2) {
+@@ -216,12 +223,11 @@
+    }
+ 
+    private void copyCreateEntityCommand(ResourceLocation var1, Vec3 var2, @Nullable CompoundTag var3) {
+       String var4;
+       if (var3 != null) {
+-         var3.remove("UUIDMost");
+-         var3.remove("UUIDLeast");
++         var3.remove("UUID");
+          var3.remove("Pos");
+          var3.remove("Dimension");
+          String var5 = var3.getPrettyDisplay().getString();
+          var4 = String.format(Locale.ROOT, "/summon %s %.2f %.2f %.2f %s", var1.toString(), var2.x, var2.y, var2.z, var5);
+       } else {
+@@ -331,20 +337,12 @@
+                } else {
+                   KeyMapping.set(var12, true);
+                   KeyMapping.click(var12);
+                }
+ 
+-               if (this.minecraft.options.renderDebugCharts) {
+-                  if (var3 == 48) {
+-                     this.minecraft.debugFpsMeterKeyPress(0);
+-                  }
+-
+-                  for(int var13 = 0; var13 < 9; ++var13) {
+-                     if (var3 == 49 + var13) {
+-                        this.minecraft.debugFpsMeterKeyPress(var13 + 1);
+-                     }
+-                  }
++               if (this.minecraft.options.renderDebugCharts && var3 >= 48 && var3 <= 57) {
++                  this.minecraft.debugFpsMeterKeyPress(var3 - 48);
+                }
+             }
+          }
+ 
+       }

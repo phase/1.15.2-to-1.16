@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/levelgen/structure/WoodlandMansionPieces.java
++++ net/minecraft/world/level/levelgen/structure/WoodlandMansionPieces.java
+@@ -1054,11 +1054,11 @@
+                return;
+             }
+ 
+             var9.setPersistenceRequired();
+             var9.moveTo(var2, 0.0F, 0.0F);
+-            var9.finalizeSpawn(var3, var3.getCurrentDifficultyAt(new BlockPos(var9)), MobSpawnType.STRUCTURE, (SpawnGroupData)null, (CompoundTag)null);
++            var9.finalizeSpawn(var3, var3.getCurrentDifficultyAt(var9.blockPosition()), MobSpawnType.STRUCTURE, (SpawnGroupData)null, (CompoundTag)null);
+             var3.addFreshEntity(var9);
+             var3.setBlock(var2, Blocks.AIR.defaultBlockState(), 2);
+          }
+ 
+       }

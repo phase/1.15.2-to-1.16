@@ -1,0 +1,67 @@
+--- net/minecraft/world/level/block/entity/CampfireBlockEntity.java
++++ net/minecraft/world/level/block/entity/CampfireBlockEntity.java
+@@ -17,10 +17,11 @@
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+ import net.minecraft.world.item.crafting.RecipeType;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.CampfireBlock;
++import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class CampfireBlockEntity extends BlockEntity implements Clearable, TickableBlockEntity {
+    private final NonNullList<ItemStack> items;
+    private final int[] cookingProgress;
+    private final int[] cookingTime;
+@@ -107,23 +108,23 @@
+ 
+    public NonNullList<ItemStack> getItems() {
+       return this.items;
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
+       this.items.clear();
+-      ContainerHelper.loadAllItems(var1, this.items);
+-      int[] var2;
+-      if (var1.contains("CookingTimes", 11)) {
+-         var2 = var1.getIntArray("CookingTimes");
+-         System.arraycopy(var2, 0, this.cookingProgress, 0, Math.min(this.cookingTime.length, var2.length));
++      ContainerHelper.loadAllItems(var2, this.items);
++      int[] var3;
++      if (var2.contains("CookingTimes", 11)) {
++         var3 = var2.getIntArray("CookingTimes");
++         System.arraycopy(var3, 0, this.cookingProgress, 0, Math.min(this.cookingTime.length, var3.length));
+       }
+ 
+-      if (var1.contains("CookingTotalTimes", 11)) {
+-         var2 = var1.getIntArray("CookingTotalTimes");
+-         System.arraycopy(var2, 0, this.cookingTime, 0, Math.min(this.cookingTime.length, var2.length));
++      if (var2.contains("CookingTotalTimes", 11)) {
++         var3 = var2.getIntArray("CookingTotalTimes");
++         System.arraycopy(var3, 0, this.cookingTime, 0, Math.min(this.cookingTime.length, var3.length));
+       }
+ 
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+@@ -175,12 +176,15 @@
+    public void clearContent() {
+       this.items.clear();
+    }
+ 
+    public void dowse() {
+-      if (!this.getLevel().isClientSide) {
+-         Containers.dropContents(this.getLevel(), this.getBlockPos(), this.getItems());
++      if (this.level != null) {
++         if (!this.level.isClientSide) {
++            Containers.dropContents(this.level, this.getBlockPos(), this.getItems());
++         }
++
++         this.markUpdated();
+       }
+ 
+-      this.markUpdated();
+    }
+ }

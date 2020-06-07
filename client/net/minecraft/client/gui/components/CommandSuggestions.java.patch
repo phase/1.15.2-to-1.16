@@ -1,0 +1,152 @@
+--- net/minecraft/client/gui/components/CommandSuggestions.java
++++ net/minecraft/client/gui/components/CommandSuggestions.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.client.gui.components;
+ 
+ import com.google.common.base.Strings;
+ import com.google.common.collect.Lists;
++import com.mojang.blaze3d.vertex.PoseStack;
+ import com.mojang.brigadier.CommandDispatcher;
+ import com.mojang.brigadier.Message;
+ import com.mojang.brigadier.ParseResults;
+ import com.mojang.brigadier.StringReader;
+ import com.mojang.brigadier.context.CommandContextBuilder;
+@@ -33,10 +34,11 @@
+ import net.minecraft.client.renderer.Rect2i;
+ import net.minecraft.client.resources.language.I18n;
+ import net.minecraft.commands.Commands;
+ import net.minecraft.commands.SharedSuggestionProvider;
+ import net.minecraft.network.chat.ComponentUtils;
++import net.minecraft.network.chat.FormattedText;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.phys.Vec2;
+ 
+ public class CommandSuggestions {
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("(\\s+)");
+@@ -291,21 +293,21 @@
+ 
+       var5.append(var1, var6, var1.length());
+       return var5.toString();
+    }
+ 
+-   public void render(int var1, int var2) {
++   public void render(PoseStack var1, int var2, int var3) {
+       if (this.suggestions != null) {
+-         this.suggestions.render(var1, var2);
++         this.suggestions.render(var1, var2, var3);
+       } else {
+-         int var3 = 0;
++         int var4 = 0;
+ 
+-         for(Iterator var4 = this.commandUsage.iterator(); var4.hasNext(); ++var3) {
+-            String var5 = (String)var4.next();
+-            int var6 = this.anchorToBottom ? this.screen.height - 14 - 13 - 12 * var3 : 72 + 12 * var3;
+-            GuiComponent.fill(this.commandUsagePosition - 1, var6, this.commandUsagePosition + this.commandUsageWidth + 1, var6 + 12, this.fillColor);
+-            this.font.drawShadow(var5, (float)this.commandUsagePosition, (float)(var6 + 2), -1);
++         for(Iterator var5 = this.commandUsage.iterator(); var5.hasNext(); ++var4) {
++            String var6 = (String)var5.next();
++            int var7 = this.anchorToBottom ? this.screen.height - 14 - 13 - 12 * var4 : 72 + 12 * var4;
++            GuiComponent.fill(var1, this.commandUsagePosition - 1, var7, this.commandUsagePosition + this.commandUsageWidth + 1, var7 + 12, this.fillColor);
++            this.font.drawShadow(var1, (String)var6, (float)this.commandUsagePosition, (float)(var7 + 2), -1);
+          }
+       }
+ 
+    }
+ 
+@@ -332,62 +334,62 @@
+          this.originalContents = CommandSuggestions.this.input.getValue();
+          this.lastNarratedEntry = var6 ? -1 : 0;
+          this.select(0);
+       }
+ 
+-      public void render(int var1, int var2) {
+-         int var3 = Math.min(this.suggestions.getList().size(), CommandSuggestions.this.suggestionLineLimit);
+-         int var4 = -5592406;
+-         boolean var5 = this.offset > 0;
+-         boolean var6 = this.suggestions.getList().size() > this.offset + var3;
+-         boolean var7 = var5 || var6;
+-         boolean var8 = this.lastMouse.x != (float)var1 || this.lastMouse.y != (float)var2;
+-         if (var8) {
+-            this.lastMouse = new Vec2((float)var1, (float)var2);
++      public void render(PoseStack var1, int var2, int var3) {
++         int var4 = Math.min(this.suggestions.getList().size(), CommandSuggestions.this.suggestionLineLimit);
++         int var5 = -5592406;
++         boolean var6 = this.offset > 0;
++         boolean var7 = this.suggestions.getList().size() > this.offset + var4;
++         boolean var8 = var6 || var7;
++         boolean var9 = this.lastMouse.x != (float)var2 || this.lastMouse.y != (float)var3;
++         if (var9) {
++            this.lastMouse = new Vec2((float)var2, (float)var3);
+          }
+ 
+-         if (var7) {
+-            GuiComponent.fill(this.rect.getX(), this.rect.getY() - 1, this.rect.getX() + this.rect.getWidth(), this.rect.getY(), CommandSuggestions.this.fillColor);
+-            GuiComponent.fill(this.rect.getX(), this.rect.getY() + this.rect.getHeight(), this.rect.getX() + this.rect.getWidth(), this.rect.getY() + this.rect.getHeight() + 1, CommandSuggestions.this.fillColor);
+-            int var9;
+-            if (var5) {
+-               for(var9 = 0; var9 < this.rect.getWidth(); ++var9) {
+-                  if (var9 % 2 == 0) {
+-                     GuiComponent.fill(this.rect.getX() + var9, this.rect.getY() - 1, this.rect.getX() + var9 + 1, this.rect.getY(), -1);
++         if (var8) {
++            GuiComponent.fill(var1, this.rect.getX(), this.rect.getY() - 1, this.rect.getX() + this.rect.getWidth(), this.rect.getY(), CommandSuggestions.this.fillColor);
++            GuiComponent.fill(var1, this.rect.getX(), this.rect.getY() + this.rect.getHeight(), this.rect.getX() + this.rect.getWidth(), this.rect.getY() + this.rect.getHeight() + 1, CommandSuggestions.this.fillColor);
++            int var10;
++            if (var6) {
++               for(var10 = 0; var10 < this.rect.getWidth(); ++var10) {
++                  if (var10 % 2 == 0) {
++                     GuiComponent.fill(var1, this.rect.getX() + var10, this.rect.getY() - 1, this.rect.getX() + var10 + 1, this.rect.getY(), -1);
+                   }
+                }
+             }
+ 
+-            if (var6) {
+-               for(var9 = 0; var9 < this.rect.getWidth(); ++var9) {
+-                  if (var9 % 2 == 0) {
+-                     GuiComponent.fill(this.rect.getX() + var9, this.rect.getY() + this.rect.getHeight(), this.rect.getX() + var9 + 1, this.rect.getY() + this.rect.getHeight() + 1, -1);
++            if (var7) {
++               for(var10 = 0; var10 < this.rect.getWidth(); ++var10) {
++                  if (var10 % 2 == 0) {
++                     GuiComponent.fill(var1, this.rect.getX() + var10, this.rect.getY() + this.rect.getHeight(), this.rect.getX() + var10 + 1, this.rect.getY() + this.rect.getHeight() + 1, -1);
+                   }
+                }
+             }
+          }
+ 
+-         boolean var12 = false;
++         boolean var13 = false;
+ 
+-         for(int var10 = 0; var10 < var3; ++var10) {
+-            Suggestion var11 = (Suggestion)this.suggestions.getList().get(var10 + this.offset);
+-            GuiComponent.fill(this.rect.getX(), this.rect.getY() + 12 * var10, this.rect.getX() + this.rect.getWidth(), this.rect.getY() + 12 * var10 + 12, CommandSuggestions.this.fillColor);
+-            if (var1 > this.rect.getX() && var1 < this.rect.getX() + this.rect.getWidth() && var2 > this.rect.getY() + 12 * var10 && var2 < this.rect.getY() + 12 * var10 + 12) {
+-               if (var8) {
+-                  this.select(var10 + this.offset);
++         for(int var11 = 0; var11 < var4; ++var11) {
++            Suggestion var12 = (Suggestion)this.suggestions.getList().get(var11 + this.offset);
++            GuiComponent.fill(var1, this.rect.getX(), this.rect.getY() + 12 * var11, this.rect.getX() + this.rect.getWidth(), this.rect.getY() + 12 * var11 + 12, CommandSuggestions.this.fillColor);
++            if (var2 > this.rect.getX() && var2 < this.rect.getX() + this.rect.getWidth() && var3 > this.rect.getY() + 12 * var11 && var3 < this.rect.getY() + 12 * var11 + 12) {
++               if (var9) {
++                  this.select(var11 + this.offset);
+                }
+ 
+-               var12 = true;
++               var13 = true;
+             }
+ 
+-            CommandSuggestions.this.font.drawShadow(var11.getText(), (float)(this.rect.getX() + 1), (float)(this.rect.getY() + 2 + 12 * var10), var10 + this.offset == this.current ? -256 : -5592406);
++            CommandSuggestions.this.font.drawShadow(var1, var12.getText(), (float)(this.rect.getX() + 1), (float)(this.rect.getY() + 2 + 12 * var11), var11 + this.offset == this.current ? -256 : -5592406);
+          }
+ 
+-         if (var12) {
+-            Message var13 = ((Suggestion)this.suggestions.getList().get(this.current)).getTooltip();
+-            if (var13 != null) {
+-               CommandSuggestions.this.screen.renderTooltip(ComponentUtils.fromMessage(var13).getColoredString(), var1, var2);
++         if (var13) {
++            Message var14 = ((Suggestion)this.suggestions.getList().get(this.current)).getTooltip();
++            if (var14 != null) {
++               CommandSuggestions.this.screen.renderTooltip(var1, (FormattedText)ComponentUtils.fromMessage(var14), var2, var3);
+             }
+          }
+ 
+       }
+ 

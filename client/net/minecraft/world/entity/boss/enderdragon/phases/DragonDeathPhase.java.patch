@@ -1,0 +1,15 @@
+--- net/minecraft/world/entity/boss/enderdragon/phases/DragonDeathPhase.java
++++ net/minecraft/world/entity/boss/enderdragon/phases/DragonDeathPhase.java
+@@ -28,11 +28,11 @@
+ 
+    public void doServerTick() {
+       ++this.time;
+       if (this.targetLocation == null) {
+          BlockPos var1 = this.dragon.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, EndPodiumFeature.END_PODIUM_LOCATION);
+-         this.targetLocation = new Vec3((double)var1.getX(), (double)var1.getY(), (double)var1.getZ());
++         this.targetLocation = Vec3.atBottomCenterOf(var1);
+       }
+ 
+       double var3 = this.targetLocation.distanceToSqr(this.dragon.getX(), this.dragon.getY(), this.dragon.getZ());
+       if (var3 >= 100.0D && var3 <= 22500.0D && !this.dragon.horizontalCollision && !this.dragon.verticalCollision) {
+          this.dragon.setHealth(1.0F);

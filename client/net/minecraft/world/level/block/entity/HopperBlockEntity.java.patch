@@ -1,0 +1,39 @@
+--- net/minecraft/world/level/block/entity/HopperBlockEntity.java
++++ net/minecraft/world/level/block/entity/HopperBlockEntity.java
+@@ -42,18 +42,18 @@
+       super(BlockEntityType.HOPPER);
+       this.items = NonNullList.withSize(5, ItemStack.EMPTY);
+       this.cooldownTime = -1;
+    }
+ 
+-   public void load(CompoundTag var1) {
+-      super.load(var1);
++   public void load(BlockState var1, CompoundTag var2) {
++      super.load(var1, var2);
+       this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+-      if (!this.tryLoadLootTable(var1)) {
+-         ContainerHelper.loadAllItems(var1, this.items);
++      if (!this.tryLoadLootTable(var2)) {
++         ContainerHelper.loadAllItems(var2, this.items);
+       }
+ 
+-      this.cooldownTime = var1.getInt("TransferCooldown");
++      this.cooldownTime = var2.getInt("TransferCooldown");
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+       super.save(var1);
+       if (!this.trySaveLootTable(var1)) {
+@@ -81,11 +81,11 @@
+       }
+ 
+    }
+ 
+    protected Component getDefaultName() {
+-      return new TranslatableComponent("container.hopper", new Object[0]);
++      return new TranslatableComponent("container.hopper");
+    }
+ 
+    public void tick() {
+       if (this.level != null && !this.level.isClientSide) {
+          --this.cooldownTime;

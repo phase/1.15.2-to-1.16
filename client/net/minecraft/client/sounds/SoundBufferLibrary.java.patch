@@ -1,0 +1,27 @@
+--- net/minecraft/client/sounds/SoundBufferLibrary.java
++++ net/minecraft/client/sounds/SoundBufferLibrary.java
+@@ -101,18 +101,18 @@
+             }
+          }, Util.backgroundExecutor());
+       });
+    }
+ 
+-   public CompletableFuture<AudioStream> getStream(ResourceLocation var1) {
++   public CompletableFuture<AudioStream> getStream(ResourceLocation var1, boolean var2) {
+       return CompletableFuture.supplyAsync(() -> {
+          try {
+-            Resource var2 = this.resourceManager.getResource(var1);
+-            InputStream var3 = var2.getInputStream();
+-            return new OggAudioStream(var3);
+-         } catch (IOException var4) {
+-            throw new CompletionException(var4);
++            Resource var3 = this.resourceManager.getResource(var1);
++            InputStream var4 = var3.getInputStream();
++            return (AudioStream)(var2 ? new LoopingAudioStream(OggAudioStream::new, var4) : new OggAudioStream(var4));
++         } catch (IOException var5) {
++            throw new CompletionException(var5);
+          }
+       }, Util.backgroundExecutor());
+    }
+ 
+    public void clear() {

@@ -1,0 +1,44 @@
+--- net/minecraft/world/entity/global/LightningBolt.java
++++ net/minecraft/world/entity/global/LightningBolt.java
+@@ -15,11 +15,11 @@
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.block.BaseFireBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.phys.AABB;
+ 
+ public class LightningBolt extends Entity {
+    private int life;
+@@ -92,20 +92,21 @@
+ 
+    }
+ 
+    private void spawnFire(int var1) {
+       if (!this.visualOnly && !this.level.isClientSide && this.level.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK)) {
+-         BlockState var2 = Blocks.FIRE.defaultBlockState();
+-         BlockPos var3 = new BlockPos(this);
+-         if (this.level.getBlockState(var3).isAir() && var2.canSurvive(this.level, var3)) {
+-            this.level.setBlockAndUpdate(var3, var2);
++         BlockPos var2 = this.blockPosition();
++         BlockState var3 = BaseFireBlock.getState(this.level, var2);
++         if (this.level.getBlockState(var2).isAir() && var3.canSurvive(this.level, var2)) {
++            this.level.setBlockAndUpdate(var2, var3);
+          }
+ 
+          for(int var4 = 0; var4 < var1; ++var4) {
+-            BlockPos var5 = var3.offset(this.random.nextInt(3) - 1, this.random.nextInt(3) - 1, this.random.nextInt(3) - 1);
+-            if (this.level.getBlockState(var5).isAir() && var2.canSurvive(this.level, var5)) {
+-               this.level.setBlockAndUpdate(var5, var2);
++            BlockPos var5 = var2.offset(this.random.nextInt(3) - 1, this.random.nextInt(3) - 1, this.random.nextInt(3) - 1);
++            var3 = BaseFireBlock.getState(this.level, var5);
++            if (this.level.getBlockState(var5).isAir() && var3.canSurvive(this.level, var5)) {
++               this.level.setBlockAndUpdate(var5, var3);
+             }
+          }
+ 
+       }
+    }

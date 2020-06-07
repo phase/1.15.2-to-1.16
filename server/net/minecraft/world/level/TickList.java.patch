@@ -1,0 +1,20 @@
+--- net/minecraft/world/level/TickList.java
++++ net/minecraft/world/level/TickList.java
+@@ -1,8 +1,7 @@
+ package net.minecraft.world.level;
+ 
+-import java.util.stream.Stream;
+ import net.minecraft.core.BlockPos;
+ 
+ public interface TickList<T> {
+    boolean hasScheduledTick(BlockPos var1, T var2);
+ 
+@@ -11,8 +10,6 @@
+    }
+ 
+    void scheduleTick(BlockPos var1, T var2, int var3, TickPriority var4);
+ 
+    boolean willTickThisTick(BlockPos var1, T var2);
+-
+-   void addAll(Stream<TickNextTickData<T>> var1);
+ }

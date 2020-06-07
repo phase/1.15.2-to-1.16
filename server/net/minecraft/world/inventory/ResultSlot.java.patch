@@ -1,0 +1,15 @@
+--- net/minecraft/world/inventory/ResultSlot.java
++++ net/minecraft/world/inventory/ResultSlot.java
+@@ -42,11 +42,11 @@
+       if (this.removeCount > 0) {
+          var1.onCraftedBy(this.player.level, this.player, this.removeCount);
+       }
+ 
+       if (this.container instanceof RecipeHolder) {
+-         ((RecipeHolder)this.container).awardAndReset(this.player);
++         ((RecipeHolder)this.container).awardUsedRecipes(this.player);
+       }
+ 
+       this.removeCount = 0;
+    }
+ 

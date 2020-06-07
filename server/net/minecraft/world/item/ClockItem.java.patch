@@ -1,0 +1,14 @@
+--- net/minecraft/world/item/ClockItem.java
++++ net/minecraft/world/item/ClockItem.java
+@@ -1,11 +1,0 @@
+-package net.minecraft.world.item;
+-
+-import net.minecraft.resources.ResourceLocation;
+-
+-public class ClockItem extends Item {
+-   public ClockItem(Item.Properties var1) {
+-      super(var1);
+-      this.addProperty(new ResourceLocation("time"), new ItemPropertyFunction() {
+-      });
+-   }
+-}

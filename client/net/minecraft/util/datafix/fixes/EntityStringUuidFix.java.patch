@@ -1,0 +1,15 @@
+--- net/minecraft/util/datafix/fixes/EntityStringUuidFix.java
++++ net/minecraft/util/datafix/fixes/EntityStringUuidFix.java
+@@ -13,11 +13,11 @@
+    }
+ 
+    public TypeRewriteRule makeRule() {
+       return this.fixTypeEverywhereTyped("EntityStringUuidFix", this.getInputSchema().getType(References.ENTITY), (var0) -> {
+          return var0.update(DSL.remainderFinder(), (var0x) -> {
+-            Optional var1 = var0x.get("UUID").asString();
++            Optional var1 = var0x.get("UUID").asString().result();
+             if (var1.isPresent()) {
+                UUID var2 = UUID.fromString((String)var1.get());
+                return var0x.remove("UUID").set("UUIDMost", var0x.createLong(var2.getMostSignificantBits())).set("UUIDLeast", var0x.createLong(var2.getLeastSignificantBits()));
+             } else {
+                return var0x;

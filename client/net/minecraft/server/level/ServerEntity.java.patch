@@ -1,0 +1,143 @@
+--- net/minecraft/server/level/ServerEntity.java
++++ net/minecraft/server/level/ServerEntity.java
+@@ -24,11 +24,10 @@
+ import net.minecraft.world.effect.MobEffectInstance;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EquipmentSlot;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.Mob;
+-import net.minecraft.world.entity.ai.attributes.ModifiableAttributeMap;
+ import net.minecraft.world.entity.decoration.ItemFrame;
+ import net.minecraft.world.entity.projectile.AbstractArrow;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.MapItem;
+ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+@@ -66,11 +65,11 @@
+       this.trackDelta = var4;
+       this.updateSentPos();
+       this.yRotp = Mth.floor(var2.yRot * 256.0F / 360.0F);
+       this.xRotp = Mth.floor(var2.xRot * 256.0F / 360.0F);
+       this.yHeadRotp = Mth.floor(var2.getYHeadRot() * 256.0F / 360.0F);
+-      this.wasOnGround = var2.onGround;
++      this.wasOnGround = var2.isOnGround();
+    }
+ 
+    public void sendChanges() {
+       List var1 = this.entity.getPassengers();
+       if (!var1.equals(this.lastPassengers)) {
+@@ -104,11 +103,11 @@
+          if (this.entity.isPassenger()) {
+             var16 = Mth.floor(this.entity.yRot * 256.0F / 360.0F);
+             var17 = Mth.floor(this.entity.xRot * 256.0F / 360.0F);
+             boolean var19 = Math.abs(var16 - this.yRotp) >= 1 || Math.abs(var17 - this.xRotp) >= 1;
+             if (var19) {
+-               this.broadcast.accept(new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte)var16, (byte)var17, this.entity.onGround));
++               this.broadcast.accept(new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte)var16, (byte)var17, this.entity.isOnGround()));
+                this.yRotp = var16;
+                this.xRotp = var17;
+             }
+ 
+             this.updateSentPos();
+@@ -126,22 +125,22 @@
+             if (this.tickCount > 0 || this.entity instanceof AbstractArrow) {
+                long var9 = ClientboundMoveEntityPacket.entityToPacket(var18.x);
+                long var11 = ClientboundMoveEntityPacket.entityToPacket(var18.y);
+                long var13 = ClientboundMoveEntityPacket.entityToPacket(var18.z);
+                boolean var15 = var9 < -32768L || var9 > 32767L || var11 < -32768L || var11 > 32767L || var13 < -32768L || var13 > 32767L;
+-               if (!var15 && this.teleportDelay <= 400 && !this.wasRiding && this.wasOnGround == this.entity.onGround) {
++               if (!var15 && this.teleportDelay <= 400 && !this.wasRiding && this.wasOnGround == this.entity.isOnGround()) {
+                   if ((!var22 || !var8) && !(this.entity instanceof AbstractArrow)) {
+                      if (var22) {
+-                        var21 = new ClientboundMoveEntityPacket.Pos(this.entity.getId(), (short)((int)var9), (short)((int)var11), (short)((int)var13), this.entity.onGround);
++                        var21 = new ClientboundMoveEntityPacket.Pos(this.entity.getId(), (short)((int)var9), (short)((int)var11), (short)((int)var13), this.entity.isOnGround());
+                      } else if (var8) {
+-                        var21 = new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte)var16, (byte)var17, this.entity.onGround);
++                        var21 = new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte)var16, (byte)var17, this.entity.isOnGround());
+                      }
+                   } else {
+-                     var21 = new ClientboundMoveEntityPacket.PosRot(this.entity.getId(), (short)((int)var9), (short)((int)var11), (short)((int)var13), (byte)var16, (byte)var17, this.entity.onGround);
++                     var21 = new ClientboundMoveEntityPacket.PosRot(this.entity.getId(), (short)((int)var9), (short)((int)var11), (short)((int)var13), (byte)var16, (byte)var17, this.entity.isOnGround());
+                   }
+                } else {
+-                  this.wasOnGround = this.entity.onGround;
++                  this.wasOnGround = this.entity.isOnGround();
+                   this.teleportDelay = 0;
+                   var21 = new ClientboundTeleportEntityPacket(this.entity);
+                }
+             }
+ 
+@@ -212,14 +211,13 @@
+          var1.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.entity.getEntityData(), true));
+       }
+ 
+       boolean var3 = this.trackDelta;
+       if (this.entity instanceof LivingEntity) {
+-         ModifiableAttributeMap var4 = (ModifiableAttributeMap)((LivingEntity)this.entity).getAttributes();
+-         Collection var5 = var4.getSyncableAttributes();
+-         if (!var5.isEmpty()) {
+-            var1.accept(new ClientboundUpdateAttributesPacket(this.entity.getId(), var5));
++         Collection var4 = ((LivingEntity)this.entity).getAttributes().getSyncableAttributes();
++         if (!var4.isEmpty()) {
++            var1.accept(new ClientboundUpdateAttributesPacket(this.entity.getId(), var4));
+          }
+ 
+          if (((LivingEntity)this.entity).isFallFlying()) {
+             var3 = true;
+          }
+@@ -230,28 +228,28 @@
+          var1.accept(new ClientboundSetEntityMotionPacket(this.entity.getId(), this.ap));
+       }
+ 
+       if (this.entity instanceof LivingEntity) {
+          EquipmentSlot[] var9 = EquipmentSlot.values();
+-         int var12 = var9.length;
++         int var5 = var9.length;
+ 
+-         for(int var6 = 0; var6 < var12; ++var6) {
++         for(int var6 = 0; var6 < var5; ++var6) {
+             EquipmentSlot var7 = var9[var6];
+             ItemStack var8 = ((LivingEntity)this.entity).getItemBySlot(var7);
+             if (!var8.isEmpty()) {
+                var1.accept(new ClientboundSetEquippedItemPacket(this.entity.getId(), var7, var8));
+             }
+          }
+       }
+ 
+       if (this.entity instanceof LivingEntity) {
+          LivingEntity var10 = (LivingEntity)this.entity;
+-         Iterator var13 = var10.getActiveEffects().iterator();
++         Iterator var12 = var10.getActiveEffects().iterator();
+ 
+-         while(var13.hasNext()) {
+-            MobEffectInstance var14 = (MobEffectInstance)var13.next();
+-            var1.accept(new ClientboundUpdateMobEffectPacket(this.entity.getId(), var14));
++         while(var12.hasNext()) {
++            MobEffectInstance var13 = (MobEffectInstance)var12.next();
++            var1.accept(new ClientboundUpdateMobEffectPacket(this.entity.getId(), var13));
+          }
+       }
+ 
+       if (!this.entity.getPassengers().isEmpty()) {
+          var1.accept(new ClientboundSetPassengersPacket(this.entity));
+@@ -275,17 +273,16 @@
+       if (var1.isDirty()) {
+          this.broadcastAndSend(new ClientboundSetEntityDataPacket(this.entity.getId(), var1, false));
+       }
+ 
+       if (this.entity instanceof LivingEntity) {
+-         ModifiableAttributeMap var2 = (ModifiableAttributeMap)((LivingEntity)this.entity).getAttributes();
+-         Set var3 = var2.getDirtyAttributes();
+-         if (!var3.isEmpty()) {
+-            this.broadcastAndSend(new ClientboundUpdateAttributesPacket(this.entity.getId(), var3));
++         Set var2 = ((LivingEntity)this.entity).getAttributes().getDirtyAttributes();
++         if (!var2.isEmpty()) {
++            this.broadcastAndSend(new ClientboundUpdateAttributesPacket(this.entity.getId(), var2));
+          }
+ 
+-         var3.clear();
++         var2.clear();
+       }
+ 
+    }
+ 
+    private void updateSentPos() {

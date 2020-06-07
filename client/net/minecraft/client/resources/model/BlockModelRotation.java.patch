@@ -1,0 +1,58 @@
+--- net/minecraft/client/resources/model/BlockModelRotation.java
++++ net/minecraft/client/resources/model/BlockModelRotation.java
+@@ -1,7 +1,8 @@
+ package net.minecraft.client.resources.model;
+ 
++import com.mojang.math.OctahedralGroup;
+ import com.mojang.math.Quaternion;
+ import com.mojang.math.Transformation;
+ import com.mojang.math.Vector3f;
+ import java.util.Arrays;
+ import java.util.Map;
+@@ -29,30 +30,39 @@
+    private static final Map<Integer, BlockModelRotation> BY_INDEX = (Map)Arrays.stream(values()).collect(Collectors.toMap((var0) -> {
+       return var0.index;
+    }, (var0) -> {
+       return var0;
+    }));
++   private final Transformation transformation;
++   private final OctahedralGroup actualRotation;
+    private final int index;
+-   private final Quaternion rotation;
+-   private final int xSteps;
+-   private final int ySteps;
+ 
+    private static int getIndex(int var0, int var1) {
+       return var0 * 360 + var1;
+    }
+ 
+    private BlockModelRotation(int var3, int var4) {
+       this.index = getIndex(var3, var4);
+       Quaternion var5 = new Quaternion(new Vector3f(0.0F, 1.0F, 0.0F), (float)(-var4), true);
+       var5.mul(new Quaternion(new Vector3f(1.0F, 0.0F, 0.0F), (float)(-var3), true));
+-      this.rotation = var5;
+-      this.xSteps = Mth.abs(var3 / 90);
+-      this.ySteps = Mth.abs(var4 / 90);
++      OctahedralGroup var6 = OctahedralGroup.IDENTITY;
++
++      int var7;
++      for(var7 = 0; var7 < var4; var7 += 90) {
++         var6 = var6.compose(OctahedralGroup.ROT_90_Y_NEG);
++      }
++
++      for(var7 = 0; var7 < var3; var7 += 90) {
++         var6 = var6.compose(OctahedralGroup.ROT_90_X_NEG);
++      }
++
++      this.transformation = new Transformation((Vector3f)null, var5, (Vector3f)null, (Quaternion)null);
++      this.actualRotation = var6;
+    }
+ 
+    public Transformation getRotation() {
+-      return new Transformation((Vector3f)null, this.rotation, (Vector3f)null, (Quaternion)null);
++      return this.transformation;
+    }
+ 
+    public static BlockModelRotation by(int var0, int var1) {
+       return (BlockModelRotation)BY_INDEX.get(getIndex(Mth.positiveModulo(var0, 360), Mth.positiveModulo(var1, 360)));
+    }

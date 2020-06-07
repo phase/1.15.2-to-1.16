@@ -1,0 +1,58 @@
+--- net/minecraft/world/entity/ai/util/RandomPos.java
++++ net/minecraft/world/entity/ai/util/RandomPos.java
+@@ -39,10 +39,16 @@
+    public static Vec3 getAboveLandPos(PathfinderMob var0, int var1, int var2, Vec3 var3, float var4, int var5, int var6) {
+       return generateRandomPos(var0, var1, var2, 0, var3, false, (double)var4, var0::getWalkTargetValue, true, var5, var6, true);
+    }
+ 
+    @Nullable
++   public static Vec3 getLandPosTowards(PathfinderMob var0, int var1, int var2, Vec3 var3) {
++      Vec3 var4 = var3.subtract(var0.getX(), var0.getY(), var0.getZ());
++      return generateRandomPos(var0, var1, var2, 0, var4, false, 1.5707963705062866D, var0::getWalkTargetValue, true, 0, 0, true);
++   }
++
++   @Nullable
+    public static Vec3 getPosTowards(PathfinderMob var0, int var1, int var2, Vec3 var3) {
+       Vec3 var4 = var3.subtract(var0.getX(), var0.getY(), var0.getZ());
+       return generateRandomPos(var0, var1, var2, 0, var4, true, 1.5707963705062866D, var0::getWalkTargetValue, false, 0, 0, true);
+    }
+ 
+@@ -81,11 +87,11 @@
+          var15 = false;
+       }
+ 
+       boolean var16 = false;
+       double var17 = Double.NEGATIVE_INFINITY;
+-      BlockPos var19 = new BlockPos(var0);
++      BlockPos var19 = var0.blockPosition();
+ 
+       for(int var20 = 0; var20 < 10; ++var20) {
+          BlockPos var21 = getRandomDelta(var14, var1, var2, var3, var4, var6);
+          if (var21 != null) {
+             int var22 = var21.getX();
+@@ -114,11 +120,11 @@
+                      return var0.level.getBlockState(var1x).getMaterial().isSolid();
+                   });
+                }
+ 
+                if (var5 || !var0.level.getFluidState(var25).is(FluidTags.WATER)) {
+-                  BlockPathTypes var26 = WalkNodeEvaluator.getBlockPathTypeStatic(var0.level, var25.getX(), var25.getY(), var25.getZ());
++                  BlockPathTypes var26 = WalkNodeEvaluator.getBlockPathTypeStatic(var0.level, var25.mutable());
+                   if (var0.getPathfindingMalus(var26) == 0.0F) {
+                      double var27 = var8.applyAsDouble(var25);
+                      if (var27 > var17) {
+                         var17 = var27;
+                         var19 = var25;
+@@ -129,11 +135,11 @@
+             }
+          }
+       }
+ 
+       if (var16) {
+-         return new Vec3(var19);
++         return Vec3.atBottomCenterOf(var19);
+       } else {
+          return null;
+       }
+    }
+ 

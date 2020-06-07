@@ -1,0 +1,36 @@
+--- net/minecraft/world/level/chunk/storage/ChunkStorage.java
++++ net/minecraft/world/level/chunk/storage/ChunkStorage.java
+@@ -6,28 +6,29 @@
+ import java.util.function.Supplier;
+ import javax.annotation.Nullable;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtUtils;
++import net.minecraft.resources.ResourceKey;
+ import net.minecraft.util.datafix.DataFixTypes;
+ import net.minecraft.world.level.ChunkPos;
+-import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.levelgen.structure.LegacyStructureDataHandler;
+ import net.minecraft.world.level.storage.DimensionDataStorage;
+ 
+ public class ChunkStorage implements AutoCloseable {
+    private final IOWorker worker;
+    protected final DataFixer fixerUpper;
+    @Nullable
+    private LegacyStructureDataHandler legacyStructureHandler;
+ 
+-   public ChunkStorage(File var1, DataFixer var2) {
++   public ChunkStorage(File var1, DataFixer var2, boolean var3) {
+       this.fixerUpper = var2;
+-      this.worker = new IOWorker(new RegionFileStorage(var1), "chunk");
++      this.worker = new IOWorker(var1, var3, "chunk");
+    }
+ 
+-   public CompoundTag upgradeChunkTag(DimensionType var1, Supplier<DimensionDataStorage> var2, CompoundTag var3) {
++   public CompoundTag upgradeChunkTag(ResourceKey<Level> var1, Supplier<DimensionDataStorage> var2, CompoundTag var3) {
+       int var4 = getVersion(var3);
+       boolean var5 = true;
+       if (var4 < 1493) {
+          var3 = NbtUtils.update(this.fixerUpper, DataFixTypes.CHUNK, var3, var4, 1493);
+          if (var3.getCompound("Level").getBoolean("hasLegacyStructureData")) {

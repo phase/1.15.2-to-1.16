@@ -1,0 +1,52 @@
+--- net/minecraft/world/level/BaseCommandBlock.java
++++ net/minecraft/world/level/BaseCommandBlock.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.world.level;
+ 
+ import java.text.SimpleDateFormat;
+ import java.util.Date;
++import java.util.UUID;
+ import javax.annotation.Nullable;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+ import net.minecraft.commands.CommandSource;
+@@ -38,11 +39,11 @@
+    public void setSuccessCount(int var1) {
+       this.successCount = var1;
+    }
+ 
+    public Component getLastOutput() {
+-      return (Component)(this.lastOutput == null ? new TextComponent("") : this.lastOutput);
++      return this.lastOutput == null ? TextComponent.EMPTY : this.lastOutput;
+    }
+ 
+    public CompoundTag save(CompoundTag var1) {
+       var1.putString("Command", this.command);
+       var1.putInt("SuccessCount", this.successCount);
+@@ -109,11 +110,11 @@
+             this.successCount = 1;
+             return true;
+          } else {
+             this.successCount = 0;
+             MinecraftServer var2 = this.getLevel().getServer();
+-            if (var2 != null && var2.isInitialized() && var2.isCommandBlockEnabled() && !StringUtil.isNullOrEmpty(this.command)) {
++            if (var2 != null && var2.isCommandBlockEnabled() && !StringUtil.isNullOrEmpty(this.command)) {
+                try {
+                   this.lastOutput = null;
+                   CommandSourceStack var3 = this.createCommandSourceStack().withCallback((var1x, var2x, var3x) -> {
+                      if (var2x) {
+                         ++this.successCount;
+@@ -156,11 +157,11 @@
+          this.name = DEFAULT_NAME;
+       }
+ 
+    }
+ 
+-   public void sendMessage(Component var1) {
++   public void sendMessage(Component var1, UUID var2) {
+       if (this.trackOutput) {
+          this.lastOutput = (new TextComponent("[" + TIME_FORMAT.format(new Date()) + "] ")).append(var1);
+          this.onUpdated();
+       }
+ 

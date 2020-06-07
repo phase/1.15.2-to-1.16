@@ -1,0 +1,118 @@
+--- net/minecraft/world/entity/monster/Phantom.java
++++ net/minecraft/world/entity/monster/Phantom.java
+@@ -24,10 +24,11 @@
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.MobSpawnType;
+ import net.minecraft.world.entity.MobType;
+ import net.minecraft.world.entity.Pose;
+ import net.minecraft.world.entity.SpawnGroupData;
++import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.control.BodyRotationControl;
+ import net.minecraft.world.entity.ai.control.LookControl;
+ import net.minecraft.world.entity.ai.control.MoveControl;
+ import net.minecraft.world.entity.ai.goal.Goal;
+ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+@@ -63,15 +64,10 @@
+       this.goalSelector.addGoal(2, new Phantom.PhantomSweepAttackGoal());
+       this.goalSelector.addGoal(3, new Phantom.PhantomCircleAroundAnchorGoal());
+       this.targetSelector.addGoal(1, new Phantom.PhantomAttackPlayerTargetGoal());
+    }
+ 
+-   protected void registerAttributes() {
+-      super.registerAttributes();
+-      this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+-   }
+-
+    protected void defineSynchedData() {
+       super.defineSynchedData();
+       this.entityData.define(ID_SIZE, 0);
+    }
+ 
+@@ -79,11 +75,11 @@
+       this.entityData.set(ID_SIZE, Mth.clamp(var1, 0, 64));
+    }
+ 
+    private void updatePhantomSizeInfo() {
+       this.refreshDimensions();
+-      this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue((double)(6 + this.getPhantomSize()));
++      this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue((double)(6 + this.getPhantomSize()));
+    }
+ 
+    public int getPhantomSize() {
+       return (Integer)this.entityData.get(ID_SIZE);
+    }
+@@ -134,11 +130,11 @@
+    protected void customServerAiStep() {
+       super.customServerAiStep();
+    }
+ 
+    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+-      this.anchorPoint = (new BlockPos(this)).above(5);
++      this.anchorPoint = this.blockPosition().above(5);
+       this.setPhantomSize(0);
+       return super.finalizeSpawn(var1, var2, var3, var4, var5);
+    }
+ 
+    public void readAdditionalSaveData(CompoundTag var1) {
+@@ -275,11 +271,11 @@
+          }
+ 
+       }
+ 
+       private void setAnchorAboveTarget() {
+-         Phantom.this.anchorPoint = (new BlockPos(Phantom.this.getTarget())).above(20 + Phantom.this.random.nextInt(20));
++         Phantom.this.anchorPoint = Phantom.this.getTarget().blockPosition().above(20 + Phantom.this.random.nextInt(20));
+          if (Phantom.this.anchorPoint.getY() < Phantom.this.level.getSeaLevel()) {
+             Phantom.this.anchorPoint = new BlockPos(Phantom.this.anchorPoint.getX(), Phantom.this.level.getSeaLevel() + 1, Phantom.this.anchorPoint.getZ());
+          }
+ 
+       }
+@@ -335,11 +331,13 @@
+          LivingEntity var1 = Phantom.this.getTarget();
+          Phantom.this.moveTargetPoint = new Vec3(var1.getX(), var1.getY(0.5D), var1.getZ());
+          if (Phantom.this.getBoundingBox().inflate(0.20000000298023224D).intersects(var1.getBoundingBox())) {
+             Phantom.this.doHurtTarget(var1);
+             Phantom.this.attackPhase = Phantom.AttackPhase.CIRCLE;
+-            Phantom.this.level.levelEvent(1039, new BlockPos(Phantom.this), 0);
++            if (!Phantom.this.isSilent()) {
++               Phantom.this.level.levelEvent(1039, Phantom.this.blockPosition(), 0);
++            }
+          } else if (Phantom.this.horizontalCollision || Phantom.this.hurtTime > 0) {
+             Phantom.this.attackPhase = Phantom.AttackPhase.CIRCLE;
+          }
+ 
+       }
+@@ -386,29 +384,29 @@
+ 
+          if (this.touchingTarget()) {
+             this.selectNext();
+          }
+ 
+-         if (Phantom.this.moveTargetPoint.y < Phantom.this.getY() && !Phantom.this.level.isEmptyBlock((new BlockPos(Phantom.this)).below(1))) {
++         if (Phantom.this.moveTargetPoint.y < Phantom.this.getY() && !Phantom.this.level.isEmptyBlock(Phantom.this.blockPosition().below(1))) {
+             this.height = Math.max(1.0F, this.height);
+             this.selectNext();
+          }
+ 
+-         if (Phantom.this.moveTargetPoint.y > Phantom.this.getY() && !Phantom.this.level.isEmptyBlock((new BlockPos(Phantom.this)).above(1))) {
++         if (Phantom.this.moveTargetPoint.y > Phantom.this.getY() && !Phantom.this.level.isEmptyBlock(Phantom.this.blockPosition().above(1))) {
+             this.height = Math.min(-1.0F, this.height);
+             this.selectNext();
+          }
+ 
+       }
+ 
+       private void selectNext() {
+          if (BlockPos.ZERO.equals(Phantom.this.anchorPoint)) {
+-            Phantom.this.anchorPoint = new BlockPos(Phantom.this);
++            Phantom.this.anchorPoint = Phantom.this.blockPosition();
+          }
+ 
+          this.angle += this.clockwise * 15.0F * 0.017453292F;
+-         Phantom.this.moveTargetPoint = (new Vec3(Phantom.this.anchorPoint)).add((double)(this.distance * Mth.cos(this.angle)), (double)(-4.0F + this.height), (double)(this.distance * Mth.sin(this.angle)));
++         Phantom.this.moveTargetPoint = Vec3.atLowerCornerOf(Phantom.this.anchorPoint).add((double)(this.distance * Mth.cos(this.angle)), (double)(-4.0F + this.height), (double)(this.distance * Mth.sin(this.angle)));
+       }
+    }
+ 
+    abstract class PhantomMoveTargetGoal extends Goal {
+       public PhantomMoveTargetGoal() {
