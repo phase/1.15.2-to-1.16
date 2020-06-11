@@ -1,6 +1,6 @@
 --- net/minecraft/client/resources/sounds/AbstractSoundInstance.java
 +++ net/minecraft/client/resources/sounds/AbstractSoundInstance.java
-@@ -1,18 +1,15 @@
+@@ -1,25 +1,22 @@
  package net.minecraft.client.resources.sounds;
  
 -import javax.annotation.Nullable;
@@ -18,7 +18,17 @@
     protected final ResourceLocation location;
     protected float volume;
     protected float pitch;
-    protected float x;
+-   protected float x;
+-   protected float y;
+-   protected float z;
++   protected double x;
++   protected double y;
++   protected double z;
+    protected boolean looping;
+    protected int delay;
+    protected SoundInstance.Attenuation attenuation;
+    protected boolean priority;
+    protected boolean relative;
 @@ -39,18 +36,18 @@
     public ResourceLocation getLocation() {
        return this.location;
@@ -42,3 +52,26 @@
     public Sound getSound() {
        return this.sound;
     }
+@@ -73,19 +70,19 @@
+ 
+    public float getPitch() {
+       return this.pitch * this.sound.getPitch();
+    }
+ 
+-   public float getX() {
++   public double getX() {
+       return this.x;
+    }
+ 
+-   public float getY() {
++   public double getY() {
+       return this.y;
+    }
+ 
+-   public float getZ() {
++   public double getZ() {
+       return this.z;
+    }
+ 
+    public SoundInstance.Attenuation getAttenuation() {
+       return this.attenuation;

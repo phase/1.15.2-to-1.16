@@ -55,7 +55,7 @@
              }, CONTAINER_TITLE));
              var4.awardStat(Stats.OPEN_ENDERCHEST);
 -            return InteractionResult.SUCCESS;
-+            PiglinAi.angerNearbyPiglinsThatSee(var4);
++            PiglinAi.angerNearbyPiglins(var4, true);
 +            return InteractionResult.CONSUME;
           }
        } else {

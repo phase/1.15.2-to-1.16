@@ -29,27 +29,70 @@
  import net.minecraft.client.renderer.texture.OverlayTexture;
  import net.minecraft.client.renderer.texture.TextureAtlas;
  import net.minecraft.client.renderer.texture.TextureManager;
-@@ -103,28 +102,25 @@
+@@ -42,14 +41,18 @@
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.packs.resources.ResourceManager;
+ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.item.BlockItem;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.level.block.Block;
++import net.minecraft.world.level.block.HalfTransparentBlock;
++import net.minecraft.world.level.block.StainedGlassPaneBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class ItemRenderer implements ResourceManagerReloadListener {
+    public static final ResourceLocation ENCHANT_GLINT_LOCATION = new ResourceLocation("textures/misc/enchanted_item_glint.png");
+    private static final Set<Item> IGNORED;
+@@ -94,41 +97,55 @@
+    }
+ 
+    public void render(ItemStack var1, ItemTransforms.TransformType var2, boolean var3, PoseStack var4, MultiBufferSource var5, int var6, int var7, BakedModel var8) {
+       if (!var1.isEmpty()) {
+          var4.pushPose();
+-         boolean var9 = var2 == ItemTransforms.TransformType.GUI;
+-         boolean var10 = var9 || var2 == ItemTransforms.TransformType.GROUND || var2 == ItemTransforms.TransformType.FIXED;
+-         if (var1.getItem() == Items.TRIDENT && var10) {
++         boolean var9 = var2 == ItemTransforms.TransformType.GUI || var2 == ItemTransforms.TransformType.GROUND || var2 == ItemTransforms.TransformType.FIXED;
++         if (var1.getItem() == Items.TRIDENT && var9) {
+             var8 = this.itemModelShaper.getModelManager().getModel(new ModelResourceLocation("minecraft:trident#inventory"));
           }
  
           var8.getTransforms().getTransform(var2).apply(var3, var4);
           var4.translate(-0.5D, -0.5D, -0.5D);
-          if (!var8.isCustomRenderer() && (var1.getItem() != Items.TRIDENT || var10)) {
+-         if (!var8.isCustomRenderer() && (var1.getItem() != Items.TRIDENT || var10)) {
 -            RenderType var11 = ItemBlockRenderTypes.getRenderType(var1);
 -            RenderType var12;
 -            if (var9 && Objects.equals(var11, Sheets.translucentBlockSheet())) {
 -               var12 = Sheets.translucentCullBlockSheet();
--            } else {
++         if (!var8.isCustomRenderer() && (var1.getItem() != Items.TRIDENT || var9)) {
++            boolean var10;
++            if (var2 != ItemTransforms.TransformType.GUI && !var2.firstPerson() && var1.getItem() instanceof BlockItem) {
++               Block var11 = ((BlockItem)var1.getItem()).getBlock();
++               var10 = !(var11 instanceof HalfTransparentBlock) && !(var11 instanceof StainedGlassPaneBlock);
+             } else {
 -               var12 = var11;
--            }
--
++               var10 = true;
+             }
+ 
 -            VertexConsumer var13 = getFoilBuffer(var5, var12, true, var1.hasFoil());
 -            this.renderModelLists(var8, var1, var6, var7, var4, var13);
-+            RenderType var11 = ItemBlockRenderTypes.getRenderType(var1, var2 != ItemTransforms.TransformType.GROUND);
-+            VertexConsumer var12 = getFoilBuffer(var5, var11, true, var1.hasFoil());
++            RenderType var13 = ItemBlockRenderTypes.getRenderType(var1, var10);
++            VertexConsumer var12;
++            if (var10) {
++               var12 = getFoilBufferDirect(var5, var13, true, var1.hasFoil());
++            } else {
++               var12 = getFoilBuffer(var5, var13, true, var1.hasFoil());
++            }
++
 +            this.renderModelLists(var8, var1, var6, var7, var4, var12);
           } else {
-             BlockEntityWithoutLevelRenderer.instance.renderByItem(var1, var4, var5, var6, var7);
+-            BlockEntityWithoutLevelRenderer.instance.renderByItem(var1, var4, var5, var6, var7);
++            BlockEntityWithoutLevelRenderer.instance.renderByItem(var1, var2, var4, var5, var6, var7);
           }
  
           var4.popPose();
@@ -64,8 +107,16 @@
        return var3 ? VertexMultiConsumer.create(var0.getBuffer(var2 ? RenderType.glint() : RenderType.entityGlint()), var0.getBuffer(var1)) : var0.getBuffer(var1);
     }
  
++   public static VertexConsumer getFoilBufferDirect(MultiBufferSource var0, RenderType var1, boolean var2, boolean var3) {
++      return var3 ? VertexMultiConsumer.create(var0.getBuffer(var2 ? RenderType.glintDirect() : RenderType.entityGlintDirect()), var0.getBuffer(var1)) : var0.getBuffer(var1);
++   }
++
     private void renderQuadList(PoseStack var1, VertexConsumer var2, List<BakedQuad> var3, ItemStack var4, int var5, int var6) {
-@@ -154,18 +150,15 @@
+       boolean var7 = !var4.isEmpty();
+       PoseStack.Pose var8 = var1.last();
+       Iterator var9 = var3.iterator();
+ 
+@@ -154,18 +171,15 @@
           var4 = this.itemModelShaper.getModelManager().getModel(new ModelResourceLocation("minecraft:trident_in_hand#inventory"));
        } else {
           var4 = this.itemModelShaper.getItemModel(var1);
@@ -87,7 +138,7 @@
     }
  
     public void renderStatic(@Nullable LivingEntity var1, ItemStack var2, ItemTransforms.TransformType var3, boolean var4, PoseStack var5, MultiBufferSource var6, @Nullable Level var7, int var8, int var9) {
-@@ -211,14 +204,22 @@
+@@ -211,14 +225,22 @@
        RenderSystem.disableRescaleNormal();
        RenderSystem.popMatrix();
     }
@@ -112,7 +163,7 @@
  
           try {
              this.renderGuiItem(var2, var3, var4, this.getModel(var2, (Level)null, var1));
-@@ -253,11 +254,11 @@
+@@ -253,11 +275,11 @@
           PoseStack var6 = new PoseStack();
           if (var2.getCount() != 1 || var5 != null) {
              String var7 = var5 == null ? String.valueOf(var2.getCount()) : var5;

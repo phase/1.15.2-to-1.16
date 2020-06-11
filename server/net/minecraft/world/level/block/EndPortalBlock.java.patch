@@ -1,10 +1,11 @@
 --- net/minecraft/world/level/block/EndPortalBlock.java
 +++ net/minecraft/world/level/block/EndPortalBlock.java
-@@ -1,25 +1,26 @@
+@@ -1,25 +1,27 @@
  package net.minecraft.world.level.block;
  
  import net.minecraft.core.BlockPos;
 +import net.minecraft.resources.ResourceKey;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
@@ -29,15 +30,22 @@
  
     public BlockEntity newBlockEntity(BlockGetter var1) {
        return new TheEndPortalBlockEntity();
-@@ -29,11 +30,12 @@
+@@ -28,12 +30,18 @@
+    public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
        return SHAPE;
     }
  
     public void entityInside(BlockState var1, Level var2, BlockPos var3, Entity var4) {
-       if (!var2.isClientSide && !var4.isPassenger() && !var4.isVehicle() && var4.canChangeDimensions() && Shapes.joinIsNotEmpty(Shapes.create(var4.getBoundingBox().move((double)(-var3.getX()), (double)(-var3.getY()), (double)(-var3.getZ()))), var1.getShape(var2, var3), BooleanOp.AND)) {
+-      if (!var2.isClientSide && !var4.isPassenger() && !var4.isVehicle() && var4.canChangeDimensions() && Shapes.joinIsNotEmpty(Shapes.create(var4.getBoundingBox().move((double)(-var3.getX()), (double)(-var3.getY()), (double)(-var3.getZ()))), var1.getShape(var2, var3), BooleanOp.AND)) {
 -         var4.changeDimension(var2.dimension.getType() == DimensionType.THE_END ? DimensionType.OVERWORLD : DimensionType.THE_END);
-+         ResourceKey var5 = var2.dimensionType().isEnd() ? Level.OVERWORLD : Level.END;
-+         var4.changeDimension(var5);
++      if (var2 instanceof ServerLevel && !var4.isPassenger() && !var4.isVehicle() && var4.canChangeDimensions() && Shapes.joinIsNotEmpty(Shapes.create(var4.getBoundingBox().move((double)(-var3.getX()), (double)(-var3.getY()), (double)(-var3.getZ()))), var1.getShape(var2, var3), BooleanOp.AND)) {
++         ResourceKey var5 = var2.dimension() == Level.END ? Level.OVERWORLD : Level.END;
++         ServerLevel var6 = ((ServerLevel)var2).getServer().getLevel(var5);
++         if (var6 == null) {
++            return;
++         }
++
++         var4.changeDimension(var6);
        }
  
     }

@@ -1,0 +1,32 @@
+--- net/minecraft/client/renderer/entity/EnderDragonRenderer.java
++++ net/minecraft/client/renderer/entity/EnderDragonRenderer.java
+@@ -45,11 +45,11 @@
+       boolean var9 = var1.hurtTime > 0;
+       this.model.prepareMobModel(var1, 0.0F, 0.0F, var3);
+       VertexConsumer var20;
+       if (var1.dragonDeathTime > 0) {
+          float var10 = (float)var1.dragonDeathTime / 200.0F;
+-         VertexConsumer var11 = var5.getBuffer(RenderType.entityAlpha(DRAGON_EXPLODING_LOCATION, var10));
++         VertexConsumer var11 = var5.getBuffer(RenderType.dragonExplosionAlpha(DRAGON_EXPLODING_LOCATION, var10));
+          this.model.renderToBuffer(var4, var11, var6, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+          VertexConsumer var12 = var5.getBuffer(DECAL);
+          this.model.renderToBuffer(var4, var12, var6, OverlayTexture.pack(0.0F, var9), 1.0F, 1.0F, 1.0F, 1.0F);
+       } else {
+          var20 = var5.getBuffer(RENDER_TYPE);
+@@ -60,15 +60,11 @@
+       this.model.renderToBuffer(var4, var20, var6, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+       float var21;
+       float var22;
+       if (var1.dragonDeathTime > 0) {
+          var21 = ((float)var1.dragonDeathTime + var3) / 200.0F;
+-         var22 = 0.0F;
+-         if (var21 > 0.8F) {
+-            var22 = (var21 - 0.8F) / 0.2F;
+-         }
+-
++         var22 = Math.min(var21 > 0.8F ? (var21 - 0.8F) / 0.2F : 0.0F, 1.0F);
+          Random var13 = new Random(432L);
+          VertexConsumer var14 = var5.getBuffer(RenderType.lightning());
+          var4.pushPose();
+          var4.translate(0.0D, -1.0D, -2.0D);
+ 

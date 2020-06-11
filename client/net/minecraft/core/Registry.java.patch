@@ -38,7 +38,7 @@
  import net.minecraft.world.entity.ai.village.poi.PoiType;
  import net.minecraft.world.entity.decoration.Motive;
  import net.minecraft.world.entity.npc.VillagerProfession;
-@@ -36,235 +43,466 @@
+@@ -36,235 +43,475 @@
  import net.minecraft.world.item.alchemy.Potions;
  import net.minecraft.world.item.crafting.RecipeSerializer;
  import net.minecraft.world.item.crafting.RecipeType;
@@ -56,6 +56,7 @@
 +import net.minecraft.world.level.chunk.ChunkGenerator;
  import net.minecraft.world.level.chunk.ChunkStatus;
  import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.dimension.LevelStem;
  import net.minecraft.world.level.levelgen.carver.WorldCarver;
  import net.minecraft.world.level.levelgen.feature.Feature;
  import net.minecraft.world.level.levelgen.feature.StructureFeature;
@@ -251,7 +252,7 @@
 +   public static final ResourceKey<Registry<MenuType<?>>> MENU_REGISTRY;
 +   public static final ResourceKey<Registry<RecipeType<?>>> RECIPE_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<RecipeSerializer<?>>> RECIPE_SERIALIZER_REGISTRY;
-+   public static final ResourceKey<Registry<Attribute>> ATTRIBUTES_REGISTRY;
++   public static final ResourceKey<Registry<Attribute>> ATTRIBUTE_REGISTRY;
 +   public static final ResourceKey<Registry<StatType<?>>> STAT_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<VillagerType>> VILLAGER_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<VillagerProfession>> VILLAGER_PROFESSION_REGISTRY;
@@ -265,6 +266,7 @@
 +   public static final ResourceKey<Registry<LootItemConditionType>> LOOT_ITEM_REGISTRY;
 +   public static final ResourceKey<Registry<DimensionType>> DIMENSION_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<Level>> DIMENSION_REGISTRY;
++   public static final ResourceKey<Registry<LevelStem>> LEVEL_STEM_REGISTRY;
 +   public static final Registry<SoundEvent> SOUND_EVENT;
 +   public static final DefaultedRegistry<Fluid> FLUID;
 +   public static final Registry<MobEffect> MOB_EFFECT;
@@ -300,7 +302,7 @@
 +   public static final Registry<MenuType<?>> MENU;
 +   public static final Registry<RecipeType<?>> RECIPE_TYPE;
 +   public static final Registry<RecipeSerializer<?>> RECIPE_SERIALIZER;
-+   public static final Registry<Attribute> ATTRIBUTES;
++   public static final Registry<Attribute> ATTRIBUTE;
 +   public static final Registry<StatType<?>> STAT_TYPE;
 +   public static final DefaultedRegistry<VillagerType> VILLAGER_TYPE;
 +   public static final DefaultedRegistry<VillagerProfession> VILLAGER_PROFESSION;
@@ -372,6 +374,10 @@
 +      this.lifecycle = var2;
 +   }
 +
++   public String toString() {
++      return "Registry[" + this.key + " (" + this.lifecycle + ")]";
++   }
++
 +   public <U> DataResult<Pair<T, U>> decode(DynamicOps<U> var1, U var2) {
 +      return var1.compressMaps() ? var1.getNumberValue(var2).flatMap((var1x) -> {
 +         int var2 = var1x.intValue();
@@ -429,6 +435,8 @@
  
     public abstract boolean containsKey(ResourceLocation var1);
  
++   public abstract boolean persistent(ResourceKey<T> var1);
++
 +   public abstract boolean containsId(int var1);
 +
     public static <T> T register(Registry<? super T> var0, String var1, T var2) {
@@ -489,7 +497,7 @@
 +      MENU_REGISTRY = createRegistryKey("menu");
 +      RECIPE_TYPE_REGISTRY = createRegistryKey("recipe_type");
 +      RECIPE_SERIALIZER_REGISTRY = createRegistryKey("recipe_serializer");
-+      ATTRIBUTES_REGISTRY = createRegistryKey("attributes");
++      ATTRIBUTE_REGISTRY = createRegistryKey("attribute");
 +      STAT_TYPE_REGISTRY = createRegistryKey("stat_type");
 +      VILLAGER_TYPE_REGISTRY = createRegistryKey("villager_type");
 +      VILLAGER_PROFESSION_REGISTRY = createRegistryKey("villager_profession");
@@ -503,6 +511,7 @@
 +      LOOT_ITEM_REGISTRY = createRegistryKey("loot_condition_type");
 +      DIMENSION_TYPE_REGISTRY = createRegistryKey("dimension_type");
 +      DIMENSION_REGISTRY = createRegistryKey("dimension");
++      LEVEL_STEM_REGISTRY = createRegistryKey("dimension");
 +      SOUND_EVENT = registerSimple(SOUND_EVENT_REGISTRY, () -> {
 +         return SoundEvents.ITEM_PICKUP;
        });
@@ -614,7 +623,7 @@
 +      RECIPE_SERIALIZER = registerSimple(RECIPE_SERIALIZER_REGISTRY, () -> {
 +         return RecipeSerializer.SHAPELESS_RECIPE;
 +      });
-+      ATTRIBUTES = registerSimple(ATTRIBUTES_REGISTRY, () -> {
++      ATTRIBUTE = registerSimple(ATTRIBUTE_REGISTRY, () -> {
 +         return Attributes.LUCK;
 +      });
 +      STAT_TYPE = registerSimple(STAT_TYPE_REGISTRY, () -> {

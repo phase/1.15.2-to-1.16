@@ -1,14 +1,22 @@
 --- net/minecraft/core/RegistryAccess.java
 +++ net/minecraft/core/RegistryAccess.java
-@@ -1,0 +1,31 @@
+@@ -1,0 +1,47 @@
 +package net.minecraft.core;
 +
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.Lifecycle;
++import java.util.Objects;
++import java.util.Optional;
 +import net.minecraft.resources.ResourceKey;
 +import net.minecraft.world.level.dimension.DimensionType;
 +
 +public interface RegistryAccess {
++   <E> Optional<WritableRegistry<E>> registry(ResourceKey<Registry<E>> var1);
++
++   static RegistryAccess.RegistryHolder builtin() {
++      return DimensionType.registerBuiltin(new RegistryAccess.RegistryHolder());
++   }
++
 +   public static final class RegistryHolder implements RegistryAccess {
 +      public static final Codec<RegistryAccess.RegistryHolder> CODEC;
 +      private final MappedRegistry<DimensionType> dimensionTypes;
@@ -25,8 +33,16 @@
 +         this.dimensionTypes.register(var1, var2);
 +      }
 +
++      public <E> Optional<WritableRegistry<E>> registry(ResourceKey<Registry<E>> var1) {
++         return Objects.equals(var1, Registry.DIMENSION_TYPE_REGISTRY) ? Optional.of(this.dimensionTypes) : Optional.empty();
++      }
++
++      public Registry<DimensionType> dimensionTypes() {
++         return this.dimensionTypes;
++      }
++
 +      static {
-+         CODEC = MappedRegistry.codec(Registry.DIMENSION_TYPE_REGISTRY, Lifecycle.experimental(), DimensionType.CODEC).xmap(RegistryAccess.RegistryHolder::new, (var0) -> {
++         CODEC = MappedRegistry.networkCodec(Registry.DIMENSION_TYPE_REGISTRY, Lifecycle.experimental(), DimensionType.DIRECT_CODEC).xmap(RegistryAccess.RegistryHolder::new, (var0) -> {
 +            return var0.dimensionTypes;
 +         }).fieldOf("dimension").codec();
 +      }

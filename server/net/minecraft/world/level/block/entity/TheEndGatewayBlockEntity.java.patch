@@ -37,19 +37,26 @@
     public void tick() {
        boolean var1 = this.isSpawning();
        boolean var2 = this.isCoolingDown();
-@@ -121,11 +120,11 @@
+@@ -121,17 +120,17 @@
     }
  
     public void teleportEntity(Entity var1) {
        if (this.level instanceof ServerLevel && !this.isCoolingDown()) {
           this.teleportCooldown = 100;
 -         if (this.exitPortal == null && this.level.dimension instanceof TheEndDimension) {
-+         if (this.exitPortal == null && this.level.dimensionType().isEnd()) {
++         if (this.exitPortal == null && this.level.dimension() == Level.END) {
              this.findExitPortal((ServerLevel)this.level);
           }
  
           if (this.exitPortal != null) {
              BlockPos var2 = this.exactTeleport ? this.exitPortal : this.findExitPosition();
+-            var1.teleportToWithTicket((double)var2.getX() + 0.5D, (double)var2.getY() + 0.5D, (double)var2.getZ() + 0.5D);
++            var1.teleportToWithTicket((double)var2.getX() + 0.5D, (double)var2.getY(), (double)var2.getZ() + 0.5D);
+          }
+ 
+          this.triggerCooldown();
+       }
+    }
 @@ -159,11 +158,11 @@
        LevelChunk var5 = getChunk(var1, var3);
        this.exitPortal = findValidSpawnInChunk(var5);

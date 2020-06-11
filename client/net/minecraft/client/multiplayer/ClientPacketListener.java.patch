@@ -27,7 +27,7 @@
  import java.util.concurrent.CompletableFuture;
  import javax.annotation.Nullable;
  import net.minecraft.advancements.Advancement;
-@@ -48,33 +51,36 @@
+@@ -48,40 +51,42 @@
  import net.minecraft.client.particle.ItemPickupParticle;
  import net.minecraft.client.player.KeyboardInput;
  import net.minecraft.client.player.LocalPlayer;
@@ -66,7 +66,14 @@
  import net.minecraft.network.protocol.PacketUtils;
  import net.minecraft.network.protocol.game.ClientGamePacketListener;
  import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
-@@ -139,10 +145,11 @@
+ import net.minecraft.network.protocol.game.ClientboundAddExperienceOrbPacket;
+-import net.minecraft.network.protocol.game.ClientboundAddGlobalEntityPacket;
+ import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
+ import net.minecraft.network.protocol.game.ClientboundAddPaintingPacket;
+ import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
+ import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
+ import net.minecraft.network.protocol.game.ClientboundAwardStatsPacket;
+@@ -139,10 +144,11 @@
  import net.minecraft.network.protocol.game.ClientboundSetBorderPacket;
  import net.minecraft.network.protocol.game.ClientboundSetCameraPacket;
  import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
@@ -78,7 +85,7 @@
  import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
  import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
  import net.minecraft.network.protocol.game.ClientboundSetEquippedItemPacket;
-@@ -150,11 +157,10 @@
+@@ -150,11 +156,10 @@
  import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
  import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket;
  import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
@@ -90,7 +97,7 @@
  import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
  import net.minecraft.network.protocol.game.ClientboundSoundPacket;
  import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
-@@ -174,11 +180,12 @@
+@@ -174,12 +179,14 @@
  import net.minecraft.network.protocol.game.ServerboundKeepAlivePacket;
  import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
  import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
@@ -100,11 +107,13 @@
 +import net.minecraft.realms.RealmsScreen;
 +import net.minecraft.resources.ResourceKey;
  import net.minecraft.resources.ResourceLocation;
++import net.minecraft.server.packs.repository.PackSource;
  import net.minecraft.sounds.SoundEvents;
  import net.minecraft.sounds.SoundSource;
  import net.minecraft.stats.Stat;
  import net.minecraft.stats.StatsCounter;
-@@ -187,35 +194,33 @@
+ import net.minecraft.tags.BlockTags;
+@@ -187,36 +194,34 @@
  import net.minecraft.tags.FluidTags;
  import net.minecraft.tags.ItemTags;
  import net.minecraft.tags.TagManager;
@@ -119,6 +128,7 @@
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.entity.ExperienceOrb;
++import net.minecraft.world.entity.LightningBolt;
  import net.minecraft.world.entity.LivingEntity;
  import net.minecraft.world.entity.Mob;
 -import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -137,11 +147,12 @@
  import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
  import net.minecraft.world.entity.decoration.Painting;
 -import net.minecraft.world.entity.fishing.FishingHook;
- import net.minecraft.world.entity.global.LightningBolt;
+-import net.minecraft.world.entity.global.LightningBolt;
  import net.minecraft.world.entity.item.FallingBlockEntity;
  import net.minecraft.world.entity.item.ItemEntity;
  import net.minecraft.world.entity.item.PrimedTnt;
  import net.minecraft.world.entity.monster.Guardian;
+ import net.minecraft.world.entity.player.Inventory;
 @@ -225,10 +230,11 @@
  import net.minecraft.world.entity.projectile.Arrow;
  import net.minecraft.world.entity.projectile.DragonFireball;
@@ -246,7 +257,48 @@
        this.minecraft.gameMode.setLocalMode(var1.getGameType());
        this.minecraft.options.broadcastOptions();
        this.connection.send(new ServerboundCustomPayloadPacket(ServerboundCustomPayloadPacket.BRAND, (new FriendlyByteBuf(Unpooled.buffer())).writeUtf(ClientBrandRetriever.getClientModName())));
-@@ -565,11 +591,11 @@
+@@ -458,10 +484,13 @@
+             var8 = new ItemEntity(this.level, var2, var4, var6);
+          } else if (var9 == EntityType.FALLING_BLOCK) {
+             var8 = new FallingBlockEntity(this.level, var2, var4, var6, Block.stateById(var1.getData()));
+          } else if (var9 == EntityType.AREA_EFFECT_CLOUD) {
+             var8 = new AreaEffectCloud(this.level, var2, var4, var6);
++         } else if (var9 == EntityType.LIGHTNING_BOLT) {
++            var8 = new LightningBolt(EntityType.LIGHTNING_BOLT, this.level);
++            ((Entity)var8).moveTo(var2, var4, var6);
+          } else {
+             var8 = null;
+          }
+       }
+ 
+@@ -491,26 +520,10 @@
+       var8.xRot = 0.0F;
+       var8.setId(var1.getId());
+       this.level.putNonPlayerEntity(var1.getId(), var8);
+    }
+ 
+-   public void handleAddGlobalEntity(ClientboundAddGlobalEntityPacket var1) {
+-      PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+-      double var2 = var1.getX();
+-      double var4 = var1.getY();
+-      double var6 = var1.getZ();
+-      if (var1.getType() == 1) {
+-         LightningBolt var8 = new LightningBolt(this.level, var2, var4, var6, false);
+-         var8.setPacketCoordinates(var2, var4, var6);
+-         var8.yRot = 0.0F;
+-         var8.xRot = 0.0F;
+-         var8.setId(var1.getId());
+-         this.level.addLightning(var8);
+-      }
+-
+-   }
+-
+    public void handleAddPainting(ClientboundAddPaintingPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+       Painting var2 = new Painting(this.level, var1.getPos(), var1.getDirection(), var1.getMotive());
+       var2.setId(var1.getId());
+       var2.setUUID(var1.getUUID());
+@@ -565,11 +578,11 @@
                 var2.lerpTo(var2.getX(), var2.getY(), var2.getZ(), var9, var10, 3, true);
              } else {
                 var2.lerpTo(var3, var5, var7, var9, var10, 3, true);
@@ -259,7 +311,7 @@
        }
     }
  
-@@ -599,11 +625,11 @@
+@@ -599,11 +612,11 @@
                 float var6 = (float)(var1.getyRot() * 360) / 256.0F;
                 var4 = (float)(var1.getxRot() * 360) / 256.0F;
                 var2.lerpTo(var2.getX(), var2.getY(), var2.getZ(), var6, var4, 3, false);
@@ -272,7 +324,7 @@
        }
     }
  
-@@ -667,10 +693,14 @@
+@@ -667,10 +680,14 @@
           var15 = 0.0D;
           var17 = var1.getZ();
           var2.zOld = var17;
@@ -287,7 +339,7 @@
        var2.yo = var13;
        var2.zo = var17;
        var2.setDeltaMovement(var7, var11, var15);
-@@ -708,11 +738,11 @@
+@@ -708,11 +725,11 @@
  
     public void handleLevelChunk(ClientboundLevelChunkPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
@@ -300,7 +352,7 @@
        }
  
        for(int var5 = 0; var5 < 16; ++var5) {
-@@ -724,11 +754,11 @@
+@@ -724,11 +741,11 @@
        while(var9.hasNext()) {
           CompoundTag var6 = (CompoundTag)var9.next();
           BlockPos var7 = new BlockPos(var6.getInt("x"), var6.getInt("y"), var6.getInt("z"));
@@ -313,7 +365,7 @@
  
     }
  
-@@ -758,12 +788,12 @@
+@@ -758,12 +775,12 @@
     }
  
     public void onDisconnect(Component var1) {
@@ -328,7 +380,7 @@
           }
        } else {
           this.minecraft.setScreen(new DisconnectedScreen(new JoinMultiplayerScreen(new TitleScreen()), "disconnect.lost", var1));
-@@ -788,23 +818,28 @@
+@@ -788,23 +805,28 @@
              this.level.playLocalSound(var2.getX(), var2.getY(), var2.getZ(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.1F, (this.random.nextFloat() - this.random.nextFloat()) * 0.35F + 0.9F, false);
           } else {
              this.level.playLocalSound(var2.getX(), var2.getY(), var2.getZ(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, (this.random.nextFloat() - this.random.nextFloat()) * 1.4F + 2.0F, false);
@@ -362,7 +414,7 @@
     public void handleAnimate(ClientboundAnimatePacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = this.level.getEntity(var1.getId());
-@@ -862,11 +897,11 @@
+@@ -862,11 +884,11 @@
                 var14 = new BeeAggressiveSoundInstance((Bee)var10);
              } else {
                 var14 = new BeeFlyingSoundInstance((Bee)var10);
@@ -375,7 +427,7 @@
           LOGGER.warn("Skipping Entity with id {}", var1.getType());
        }
  
-@@ -876,14 +911,13 @@
+@@ -876,14 +898,13 @@
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        this.minecraft.level.setGameTime(var1.getGameTime());
        this.minecraft.level.setDayTime(var1.getDayTime());
@@ -392,7 +444,7 @@
     public void handleSetEntityPassengersPacket(ClientboundSetPassengersPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = this.level.getEntity(var1.getVehicle());
-@@ -899,11 +933,11 @@
+@@ -899,11 +920,11 @@
              int var7 = var4[var6];
              Entity var8 = this.level.getEntity(var7);
              if (var8 != null) {
@@ -405,7 +457,7 @@
           }
  
        }
-@@ -965,41 +999,48 @@
+@@ -965,41 +986,52 @@
        this.minecraft.player.setExperienceValues(var1.getExperienceProgress(), var1.getTotalExperience(), var1.getExperienceLevel());
     }
  
@@ -460,6 +512,10 @@
 +      LocalPlayer var12 = this.minecraft.gameMode.createPlayer(this.level, var5.getStats(), var5.getRecipeBook(), var5.isShiftKeyDown(), var5.isSprinting());
 +      var12.setId(var6);
 +      this.minecraft.player = var12;
++      if (var3 != var5.level.dimension()) {
++         this.minecraft.getMusicManager().stopPlaying();
++      }
++
 +      this.minecraft.cameraEntity = var12;
 +      var12.getEntityData().assignValues(var5.getEntityData().getAll());
 +      if (var1.shouldKeepAllPlayerData()) {
@@ -479,7 +535,7 @@
        }
  
        this.minecraft.gameMode.setLocalMode(var1.getPlayerGameType());
-@@ -1104,21 +1145,20 @@
+@@ -1104,21 +1136,20 @@
        this.minecraft.player.openTextEdit((SignBlockEntity)var2);
     }
  
@@ -510,35 +566,83 @@
     }
  
     public void handleContainerSetData(ClientboundContainerSetDataPacket var1) {
-@@ -1159,11 +1199,11 @@
+@@ -1155,35 +1186,33 @@
+    }
+ 
+    public void handleGameEvent(ClientboundGameEventPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        LocalPlayer var2 = this.minecraft.player;
-       int var3 = var1.getEvent();
+-      int var3 = var1.getEvent();
++      ClientboundGameEventPacket.Type var3 = var1.getEvent();
        float var4 = var1.getParam();
        int var5 = Mth.floor(var4 + 0.5F);
-       if (var3 >= 0 && var3 < ClientboundGameEventPacket.EVENT_LANGUAGE_ID.length && ClientboundGameEventPacket.EVENT_LANGUAGE_ID[var3] != null) {
+-      if (var3 >= 0 && var3 < ClientboundGameEventPacket.EVENT_LANGUAGE_ID.length && ClientboundGameEventPacket.EVENT_LANGUAGE_ID[var3] != null) {
 -         var2.displayClientMessage(new TranslatableComponent(ClientboundGameEventPacket.EVENT_LANGUAGE_ID[var3], new Object[0]), false);
-+         var2.displayClientMessage(new TranslatableComponent(ClientboundGameEventPacket.EVENT_LANGUAGE_ID[var3]), false);
-       }
- 
-       if (var3 == 1) {
+-      }
+-
+-      if (var3 == 1) {
++      if (var3 == ClientboundGameEventPacket.NO_RESPAWN_BLOCK_AVAILABLE) {
++         var2.displayClientMessage(new TranslatableComponent("block.minecraft.spawn.not_valid"), false);
++      } else if (var3 == ClientboundGameEventPacket.START_RAINING) {
           this.level.getLevelData().setRaining(true);
           this.level.setRainLevel(0.0F);
-@@ -1202,11 +1242,13 @@
+-      } else if (var3 == 2) {
++      } else if (var3 == ClientboundGameEventPacket.STOP_RAINING) {
+          this.level.getLevelData().setRaining(false);
+          this.level.setRainLevel(1.0F);
+-      } else if (var3 == 3) {
++      } else if (var3 == ClientboundGameEventPacket.CHANGE_GAME_MODE) {
+          this.minecraft.gameMode.setLocalMode(GameType.byId(var5));
+-      } else if (var3 == 4) {
++      } else if (var3 == ClientboundGameEventPacket.WIN_GAME) {
+          if (var5 == 0) {
+             this.minecraft.player.connection.send((Packet)(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.PERFORM_RESPAWN)));
+             this.minecraft.setScreen(new ReceivingLevelScreen());
+          } else if (var5 == 1) {
+             this.minecraft.setScreen(new WinScreen(true, () -> {
+                this.minecraft.player.connection.send((Packet)(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.PERFORM_RESPAWN)));
+             }));
+          }
+-      } else if (var3 == 5) {
++      } else if (var3 == ClientboundGameEventPacket.DEMO_EVENT) {
+          Options var6 = this.minecraft.options;
+          if (var4 == 0.0F) {
+             this.minecraft.setScreen(new DemoIntroScreen());
+          } else if (var4 == 101.0F) {
+             this.minecraft.gui.getChat().addMessage(new TranslatableComponent("demo.help.movement", new Object[]{var6.keyUp.getTranslatedKeyMessage(), var6.keyLeft.getTranslatedKeyMessage(), var6.keyDown.getTranslatedKeyMessage(), var6.keyRight.getTranslatedKeyMessage()}));
+@@ -1192,22 +1221,24 @@
+          } else if (var4 == 103.0F) {
+             this.minecraft.gui.getChat().addMessage(new TranslatableComponent("demo.help.inventory", new Object[]{var6.keyInventory.getTranslatedKeyMessage()}));
+          } else if (var4 == 104.0F) {
+             this.minecraft.gui.getChat().addMessage(new TranslatableComponent("demo.day.6", new Object[]{var6.keyScreenshot.getTranslatedKeyMessage()}));
+          }
+-      } else if (var3 == 6) {
++      } else if (var3 == ClientboundGameEventPacket.ARROW_HIT_PLAYER) {
+          this.level.playSound(var2, var2.getX(), var2.getEyeY(), var2.getZ(), SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.18F, 0.45F);
+-      } else if (var3 == 7) {
++      } else if (var3 == ClientboundGameEventPacket.RAIN_LEVEL_CHANGE) {
+          this.level.setRainLevel(var4);
+-      } else if (var3 == 8) {
++      } else if (var3 == ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE) {
           this.level.setThunderLevel(var4);
-       } else if (var3 == 9) {
+-      } else if (var3 == 9) {
++      } else if (var3 == ClientboundGameEventPacket.PUFFER_FISH_STING) {
           this.level.playSound(var2, var2.getX(), var2.getY(), var2.getZ(), SoundEvents.PUFFER_FISH_STING, SoundSource.NEUTRAL, 1.0F, 1.0F);
-       } else if (var3 == 10) {
+-      } else if (var3 == 10) {
++      } else if (var3 == ClientboundGameEventPacket.GUARDIAN_ELDER_EFFECT) {
           this.level.addParticle(ParticleTypes.ELDER_GUARDIAN, var2.getX(), var2.getY(), var2.getZ(), 0.0D, 0.0D, 0.0D);
 -         this.level.playSound(var2, var2.getX(), var2.getY(), var2.getZ(), SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.HOSTILE, 1.0F, 1.0F);
+-      } else if (var3 == 11) {
 +         if (var5 == 1) {
 +            this.level.playSound(var2, var2.getX(), var2.getY(), var2.getZ(), SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.HOSTILE, 1.0F, 1.0F);
 +         }
-       } else if (var3 == 11) {
++      } else if (var3 == ClientboundGameEventPacket.IMMEDIATE_RESPAWN) {
           this.minecraft.player.setShowDeathScreen(var4 == 0.0F);
        }
  
     }
-@@ -1389,23 +1431,20 @@
+ 
+@@ -1389,23 +1420,20 @@
        if (var2 instanceof LivingEntity) {
           MobEffect var3 = MobEffect.byId(var1.getEffectId());
           if (var3 != null) {
@@ -564,7 +668,7 @@
        this.minecraft.getSearchTree(SearchRegistry.CREATIVE_TAGS).refresh();
     }
  
-@@ -1424,12 +1463,12 @@
+@@ -1424,12 +1452,12 @@
  
     }
  
@@ -579,7 +683,7 @@
     public void handleSetCamera(ClientboundSetCameraPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = var1.getEntity(this.level);
-@@ -1445,13 +1484,13 @@
+@@ -1445,13 +1473,13 @@
     }
  
     public void handleSetTitles(ClientboundSetTitlesPacket var1) {
@@ -596,7 +700,7 @@
           var3 = var5;
           break;
        case SUBTITLE:
-@@ -1459,21 +1498,21 @@
+@@ -1459,21 +1487,21 @@
           break;
        case ACTIONBAR:
           this.minecraft.gui.setOverlayMessage(var5, false);
@@ -621,7 +725,33 @@
     public void handleRemoveMobEffect(ClientboundRemoveMobEffectPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = var1.getEntity(this.level);
-@@ -1599,11 +1638,11 @@
+@@ -1548,11 +1576,11 @@
+       }
+    }
+ 
+    public void handleCustomSoundEvent(ClientboundCustomSoundPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+-      this.minecraft.getSoundManager().play(new SimpleSoundInstance(var1.getName(), var1.getSource(), var1.getVolume(), var1.getPitch(), false, 0, SoundInstance.Attenuation.LINEAR, (float)var1.getX(), (float)var1.getY(), (float)var1.getZ(), false));
++      this.minecraft.getSoundManager().play(new SimpleSoundInstance(var1.getName(), var1.getSource(), var1.getVolume(), var1.getPitch(), false, 0, SoundInstance.Attenuation.LINEAR, var1.getX(), var1.getY(), var1.getZ(), false));
+    }
+ 
+    public void handleResourcePack(ClientboundResourcePackPacket var1) {
+       String var2 = var1.getUrl();
+       String var3 = var1.getHash();
+@@ -1562,11 +1590,11 @@
+                String var9 = URLDecoder.decode(var2.substring("level://".length()), StandardCharsets.UTF_8.toString());
+                File var5 = new File(this.minecraft.gameDirectory, "saves");
+                File var6 = new File(var5, var9);
+                if (var6.isFile()) {
+                   this.send(ServerboundResourcePackPacket.Action.ACCEPTED);
+-                  CompletableFuture var7 = this.minecraft.getClientPackSource().setServerPack(var6);
++                  CompletableFuture var7 = this.minecraft.getClientPackSource().setServerPack(var6, PackSource.WORLD);
+                   this.downloadCallback(var7);
+                   return;
+                }
+             } catch (UnsupportedEncodingException var8) {
+             }
+@@ -1599,11 +1627,11 @@
                          this.send(ServerboundResourcePackPacket.Action.DECLINED);
                       }
  
@@ -634,7 +764,7 @@
  
           }
        }
-@@ -1689,228 +1728,238 @@
+@@ -1689,228 +1717,238 @@
                 var4 = var3.readInt();
                 float var5 = var3.readFloat();
                 Path var6 = Path.createFromStream(var3);
@@ -1004,7 +1134,7 @@
                             }
                          }
                       }
-@@ -2060,30 +2109,33 @@
+@@ -2060,30 +2098,33 @@
        Entity var2 = this.level.getEntity(var1.getEntityId());
        if (var2 != null) {
           if (!(var2 instanceof LivingEntity)) {
@@ -1025,7 +1155,7 @@
 +                  ClientboundUpdateAttributesPacket.AttributeSnapshot var5 = (ClientboundUpdateAttributesPacket.AttributeSnapshot)var4.next();
 +                  AttributeInstance var6 = var3.getInstance(var5.getAttribute());
 +                  if (var6 == null) {
-+                     LOGGER.warn("Entity {} does not have attribute {}", var2, Registry.ATTRIBUTES.getKey(var5.getAttribute()));
++                     LOGGER.warn("Entity {} does not have attribute {}", var2, Registry.ATTRIBUTE.getKey(var5.getAttribute()));
 +                  } else {
 +                     var6.setBaseValue(var5.getBase());
 +                     var6.removeModifiers();
@@ -1053,7 +1183,52 @@
     }
  
     public void handlePlaceRecipe(ClientboundPlaceGhostRecipePacket var1) {
-@@ -2211,6 +2263,14 @@
+@@ -2106,15 +2147,15 @@
+       int var3 = var1.getZ();
+       LevelLightEngine var4 = this.level.getChunkSource().getLightEngine();
+       int var5 = var1.getSkyYMask();
+       int var6 = var1.getEmptySkyYMask();
+       Iterator var7 = var1.getSkyUpdates().iterator();
+-      this.readSectionList(var2, var3, var4, LightLayer.SKY, var5, var6, var7);
++      this.readSectionList(var2, var3, var4, LightLayer.SKY, var5, var6, var7, var1.getTrustEdges());
+       int var8 = var1.getBlockYMask();
+       int var9 = var1.getEmptyBlockYMask();
+       Iterator var10 = var1.getBlockUpdates().iterator();
+-      this.readSectionList(var2, var3, var4, LightLayer.BLOCK, var8, var9, var10);
++      this.readSectionList(var2, var3, var4, LightLayer.BLOCK, var8, var9, var10, var1.getTrustEdges());
+    }
+ 
+    public void handleMerchantOffers(ClientboundMerchantOffersPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+       AbstractContainerMenu var2 = this.minecraft.player.containerMenu;
+@@ -2142,18 +2183,18 @@
+    public void handleBlockBreakAck(ClientboundBlockBreakAckPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+       this.minecraft.gameMode.handleBlockBreakAck(this.level, var1.getPos(), var1.getState(), var1.action(), var1.allGood());
+    }
+ 
+-   private void readSectionList(int var1, int var2, LevelLightEngine var3, LightLayer var4, int var5, int var6, Iterator<byte[]> var7) {
+-      for(int var8 = 0; var8 < 18; ++var8) {
+-         int var9 = -1 + var8;
+-         boolean var10 = (var5 & 1 << var8) != 0;
+-         boolean var11 = (var6 & 1 << var8) != 0;
+-         if (var10 || var11) {
+-            var3.queueSectionData(var4, SectionPos.of(var1, var9, var2), var10 ? new DataLayer((byte[])((byte[])var7.next()).clone()) : new DataLayer());
+-            this.level.setSectionDirtyWithNeighbors(var1, var9, var2);
++   private void readSectionList(int var1, int var2, LevelLightEngine var3, LightLayer var4, int var5, int var6, Iterator<byte[]> var7, boolean var8) {
++      for(int var9 = 0; var9 < 18; ++var9) {
++         int var10 = -1 + var9;
++         boolean var11 = (var5 & 1 << var9) != 0;
++         boolean var12 = (var6 & 1 << var9) != 0;
++         if (var11 || var12) {
++            var3.queueSectionData(var4, SectionPos.of(var1, var10, var2), var11 ? new DataLayer((byte[])((byte[])var7.next()).clone()) : new DataLayer(), var8);
++            this.level.setSectionDirtyWithNeighbors(var1, var10, var2);
+          }
+       }
+ 
+    }
+ 
+@@ -2211,6 +2252,14 @@
     }
  
     public UUID getId() {

@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/components/OptionButton.java
 +++ net/minecraft/client/gui/components/OptionButton.java
-@@ -1,12 +1,13 @@
+@@ -1,12 +1,17 @@
  package net.minecraft.client.gui.components;
  
  import net.minecraft.client.Option;
@@ -14,4 +14,8 @@
        super(var1, var2, var3, var4, var6, var7);
        this.option = var5;
     }
++
++   public Option getOption() {
++      return this.option;
++   }
  }

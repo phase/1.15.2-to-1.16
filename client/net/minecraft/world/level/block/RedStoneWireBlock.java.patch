@@ -639,10 +639,10 @@
 +      if (var2.nextFloat() < 0.2F * var9) {
 +         float var10 = 0.4375F;
 +         float var11 = var7 + var9 * var2.nextFloat();
-+         float var12 = 0.5F + 0.4375F * (float)var5.getStepX() + var11 * (float)var6.getStepX();
-+         float var13 = 0.5F + 0.4375F * (float)var5.getStepY() + var11 * (float)var6.getStepY();
-+         float var14 = 0.5F + 0.4375F * (float)var5.getStepZ() + var11 * (float)var6.getStepZ();
-+         var1.addParticle(new DustParticleOptions(var4.x(), var4.y(), var4.z(), 1.0F), (double)((float)var3.getX() + var12), (double)((float)var3.getY() + var13), (double)((float)var3.getZ() + var14), 0.0D, 0.0D, 0.0D);
++         double var12 = 0.5D + (double)(0.4375F * (float)var5.getStepX()) + (double)(var11 * (float)var6.getStepX());
++         double var14 = 0.5D + (double)(0.4375F * (float)var5.getStepY()) + (double)(var11 * (float)var6.getStepY());
++         double var16 = 0.5D + (double)(0.4375F * (float)var5.getStepZ()) + (double)(var11 * (float)var6.getStepZ());
++         var1.addParticle(new DustParticleOptions(var4.x(), var4.y(), var4.z(), 1.0F), (double)var3.getX() + var12, (double)var3.getY() + var14, (double)var3.getZ() + var16, 0.0D, 0.0D, 0.0D);
        }
 -
 -      if (var4 < 0.0F) {

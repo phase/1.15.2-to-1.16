@@ -1,0 +1,151 @@
+--- net/minecraft/client/renderer/BlockEntityWithoutLevelRenderer.java
++++ net/minecraft/client/renderer/BlockEntityWithoutLevelRenderer.java
+@@ -7,10 +7,11 @@
+ import java.util.Comparator;
+ import java.util.List;
+ import java.util.UUID;
+ import net.minecraft.client.model.ShieldModel;
+ import net.minecraft.client.model.TridentModel;
++import net.minecraft.client.renderer.block.model.ItemTransforms;
+ import net.minecraft.client.renderer.blockentity.BannerRenderer;
+ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+ import net.minecraft.client.renderer.blockentity.SkullBlockRenderer;
+ import net.minecraft.client.renderer.entity.ItemRenderer;
+ import net.minecraft.client.resources.model.Material;
+@@ -57,82 +58,82 @@
+    private final TridentModel tridentModel = new TridentModel();
+ 
+    public BlockEntityWithoutLevelRenderer() {
+    }
+ 
+-   public void renderByItem(ItemStack var1, PoseStack var2, MultiBufferSource var3, int var4, int var5) {
+-      Item var6 = var1.getItem();
+-      if (var6 instanceof BlockItem) {
+-         Block var12 = ((BlockItem)var6).getBlock();
+-         if (var12 instanceof AbstractSkullBlock) {
+-            GameProfile var16 = null;
++   public void renderByItem(ItemStack var1, ItemTransforms.TransformType var2, PoseStack var3, MultiBufferSource var4, int var5, int var6) {
++      Item var7 = var1.getItem();
++      if (var7 instanceof BlockItem) {
++         Block var13 = ((BlockItem)var7).getBlock();
++         if (var13 instanceof AbstractSkullBlock) {
++            GameProfile var17 = null;
+             if (var1.hasTag()) {
+-               CompoundTag var15 = var1.getTag();
+-               if (var15.contains("SkullOwner", 10)) {
+-                  var16 = NbtUtils.readGameProfile(var15.getCompound("SkullOwner"));
+-               } else if (var15.contains("SkullOwner", 8) && !StringUtils.isBlank(var15.getString("SkullOwner"))) {
+-                  var16 = new GameProfile((UUID)null, var15.getString("SkullOwner"));
+-                  var16 = SkullBlockEntity.updateGameprofile(var16);
+-                  var15.remove("SkullOwner");
+-                  var15.put("SkullOwner", NbtUtils.writeGameProfile(new CompoundTag(), var16));
++               CompoundTag var16 = var1.getTag();
++               if (var16.contains("SkullOwner", 10)) {
++                  var17 = NbtUtils.readGameProfile(var16.getCompound("SkullOwner"));
++               } else if (var16.contains("SkullOwner", 8) && !StringUtils.isBlank(var16.getString("SkullOwner"))) {
++                  var17 = new GameProfile((UUID)null, var16.getString("SkullOwner"));
++                  var17 = SkullBlockEntity.updateGameprofile(var17);
++                  var16.remove("SkullOwner");
++                  var16.put("SkullOwner", NbtUtils.writeGameProfile(new CompoundTag(), var17));
+                }
+             }
+ 
+-            SkullBlockRenderer.renderSkull((Direction)null, 180.0F, ((AbstractSkullBlock)var12).getType(), var16, 0.0F, var2, var3, var4);
++            SkullBlockRenderer.renderSkull((Direction)null, 180.0F, ((AbstractSkullBlock)var13).getType(), var17, 0.0F, var3, var4, var5);
+          } else {
+-            Object var13;
+-            if (var12 instanceof AbstractBannerBlock) {
+-               this.banner.fromItem(var1, ((AbstractBannerBlock)var12).getColor());
+-               var13 = this.banner;
+-            } else if (var12 instanceof BedBlock) {
+-               this.bed.setColor(((BedBlock)var12).getColor());
+-               var13 = this.bed;
+-            } else if (var12 == Blocks.CONDUIT) {
+-               var13 = this.conduit;
+-            } else if (var12 == Blocks.CHEST) {
+-               var13 = this.chest;
+-            } else if (var12 == Blocks.ENDER_CHEST) {
+-               var13 = this.enderChest;
+-            } else if (var12 == Blocks.TRAPPED_CHEST) {
+-               var13 = this.trappedChest;
++            Object var14;
++            if (var13 instanceof AbstractBannerBlock) {
++               this.banner.fromItem(var1, ((AbstractBannerBlock)var13).getColor());
++               var14 = this.banner;
++            } else if (var13 instanceof BedBlock) {
++               this.bed.setColor(((BedBlock)var13).getColor());
++               var14 = this.bed;
++            } else if (var13 == Blocks.CONDUIT) {
++               var14 = this.conduit;
++            } else if (var13 == Blocks.CHEST) {
++               var14 = this.chest;
++            } else if (var13 == Blocks.ENDER_CHEST) {
++               var14 = this.enderChest;
++            } else if (var13 == Blocks.TRAPPED_CHEST) {
++               var14 = this.trappedChest;
+             } else {
+-               if (!(var12 instanceof ShulkerBoxBlock)) {
++               if (!(var13 instanceof ShulkerBoxBlock)) {
+                   return;
+                }
+ 
+-               DyeColor var14 = ShulkerBoxBlock.getColorFromItem(var6);
+-               if (var14 == null) {
+-                  var13 = DEFAULT_SHULKER_BOX;
++               DyeColor var15 = ShulkerBoxBlock.getColorFromItem(var7);
++               if (var15 == null) {
++                  var14 = DEFAULT_SHULKER_BOX;
+                } else {
+-                  var13 = SHULKER_BOXES[var14.getId()];
++                  var14 = SHULKER_BOXES[var15.getId()];
+                }
+             }
+ 
+-            BlockEntityRenderDispatcher.instance.renderItem((BlockEntity)var13, var2, var3, var4, var5);
++            BlockEntityRenderDispatcher.instance.renderItem((BlockEntity)var14, var3, var4, var5, var6);
+          }
+       } else {
+-         if (var6 == Items.SHIELD) {
+-            boolean var7 = var1.getTagElement("BlockEntityTag") != null;
+-            var2.pushPose();
+-            var2.scale(1.0F, -1.0F, -1.0F);
+-            Material var8 = var7 ? ModelBakery.SHIELD_BASE : ModelBakery.NO_PATTERN_SHIELD;
+-            VertexConsumer var9 = var8.sprite().wrap(ItemRenderer.getFoilBuffer(var3, this.shieldModel.renderType(var8.atlasLocation()), false, var1.hasFoil()));
+-            this.shieldModel.handle().render(var2, var9, var4, var5, 1.0F, 1.0F, 1.0F, 1.0F);
+-            if (var7) {
+-               List var10 = BannerBlockEntity.createPatterns(ShieldItem.getColor(var1), BannerBlockEntity.getItemPatterns(var1));
+-               BannerRenderer.renderPatterns(var2, var3, var4, var5, this.shieldModel.plate(), var8, false, var10);
++         if (var7 == Items.SHIELD) {
++            boolean var8 = var1.getTagElement("BlockEntityTag") != null;
++            var3.pushPose();
++            var3.scale(1.0F, -1.0F, -1.0F);
++            Material var9 = var8 ? ModelBakery.SHIELD_BASE : ModelBakery.NO_PATTERN_SHIELD;
++            VertexConsumer var10 = var9.sprite().wrap(ItemRenderer.getFoilBufferDirect(var4, this.shieldModel.renderType(var9.atlasLocation()), false, var1.hasFoil()));
++            this.shieldModel.handle().render(var3, var10, var5, var6, 1.0F, 1.0F, 1.0F, 1.0F);
++            if (var8) {
++               List var11 = BannerBlockEntity.createPatterns(ShieldItem.getColor(var1), BannerBlockEntity.getItemPatterns(var1));
++               BannerRenderer.renderPatterns(var3, var4, var5, var6, this.shieldModel.plate(), var9, false, var11, var1.hasFoil());
+             } else {
+-               this.shieldModel.plate().render(var2, var9, var4, var5, 1.0F, 1.0F, 1.0F, 1.0F);
++               this.shieldModel.plate().render(var3, var10, var5, var6, 1.0F, 1.0F, 1.0F, 1.0F);
+             }
+ 
+-            var2.popPose();
+-         } else if (var6 == Items.TRIDENT) {
+-            var2.pushPose();
+-            var2.scale(1.0F, -1.0F, -1.0F);
+-            VertexConsumer var11 = ItemRenderer.getFoilBuffer(var3, this.tridentModel.renderType(TridentModel.TEXTURE), false, var1.hasFoil());
+-            this.tridentModel.renderToBuffer(var2, var11, var4, var5, 1.0F, 1.0F, 1.0F, 1.0F);
+-            var2.popPose();
++            var3.popPose();
++         } else if (var7 == Items.TRIDENT) {
++            var3.pushPose();
++            var3.scale(1.0F, -1.0F, -1.0F);
++            VertexConsumer var12 = ItemRenderer.getFoilBufferDirect(var4, this.tridentModel.renderType(TridentModel.TEXTURE), false, var1.hasFoil());
++            this.tridentModel.renderToBuffer(var3, var12, var5, var6, 1.0F, 1.0F, 1.0F, 1.0F);
++            var3.popPose();
+          }
+ 
+       }
+    }
+ }

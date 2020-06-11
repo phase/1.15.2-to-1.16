@@ -59,7 +59,18 @@
  
     public void resetMaxVisitedNodesMultiplier() {
        this.maxVisitedNodesMultiplier = 1.0F;
-@@ -111,11 +108,11 @@
+@@ -105,17 +102,22 @@
+    public Path createPath(Stream<BlockPos> var1, int var2) {
+       return this.createPath((Set)var1.collect(Collectors.toSet()), 8, false, var2);
+    }
+ 
+    @Nullable
++   public Path createPath(Set<BlockPos> var1, int var2) {
++      return this.createPath(var1, 8, false, var2);
++   }
++
++   @Nullable
+    public Path createPath(BlockPos var1, int var2) {
        return this.createPath(ImmutableSet.of(var1), 8, false, var2);
     }
  
@@ -72,7 +83,7 @@
     @Nullable
     protected Path createPath(Set<BlockPos> var1, int var2, boolean var3, int var4) {
        if (var1.isEmpty()) {
-@@ -126,19 +123,20 @@
+@@ -126,19 +128,20 @@
           return null;
        } else if (this.path != null && !this.path.isDone() && var1.contains(this.targetPos)) {
           return this.path;
@@ -95,7 +106,7 @@
           return var9;
        }
     }
-@@ -190,15 +188,15 @@
+@@ -190,15 +193,15 @@
        }
  
        if (!this.isDone()) {
@@ -113,7 +124,7 @@
           }
  
           DebugPackets.sendPathFindingPacket(this.level, this.mob, this.path, this.maxDistanceToWaypoint);
-@@ -208,21 +206,41 @@
+@@ -208,21 +211,41 @@
              this.mob.getMoveControl().setWantedPosition(var1.x, this.level.getBlockState(var3.below()).isAir() ? var1.y : WalkNodeEvaluator.getFloorLevel(this.level, var3), var1.z, this.speedModifier);
           }
        }
@@ -126,9 +137,9 @@
 -      Vec3 var2 = this.path.currentPos();
 -      if (Math.abs(this.mob.getX() - (var2.x + 0.5D)) < (double)this.maxDistanceToWaypoint && Math.abs(this.mob.getZ() - (var2.z + 0.5D)) < (double)this.maxDistanceToWaypoint && Math.abs(this.mob.getY() - var2.y) < 1.0D) {
 +      Vec3i var2 = this.path.currentPos();
-+      double var3 = Math.abs(this.mob.getX() - (double)((float)var2.getX() + 0.5F));
++      double var3 = Math.abs(this.mob.getX() - ((double)var2.getX() + 0.5D));
 +      double var5 = Math.abs(this.mob.getY() - (double)var2.getY());
-+      double var7 = Math.abs(this.mob.getZ() - (double)((float)var2.getZ() + 0.5F));
++      double var7 = Math.abs(this.mob.getZ() - ((double)var2.getZ() + 0.5D));
 +      boolean var9 = var3 < (double)this.maxDistanceToWaypoint && var7 < (double)this.maxDistanceToWaypoint && var5 < 1.0D;
 +      if (var9 || this.mob.canCutCorner(this.path.currentNode().type) && this.shouldTargetNextNodeInDirection(var1)) {
           this.path.setIndex(this.path.getIndex() + 1);
@@ -158,7 +169,7 @@
           if (var1.distanceToSqr(this.lastStuckCheckPos) < 2.25D) {
              this.stop();
           }
-@@ -230,31 +248,35 @@
+@@ -230,31 +253,35 @@
           this.lastStuckCheck = this.tick;
           this.lastStuckCheckPos = var1;
        }
@@ -199,7 +210,7 @@
     }
  
     public boolean isInProgress() {
-@@ -277,12 +299,11 @@
+@@ -277,12 +304,11 @@
        if (this.path != null) {
           for(int var1 = 0; var1 < this.path.getSize(); ++var1) {
              Node var2 = this.path.get(var1);

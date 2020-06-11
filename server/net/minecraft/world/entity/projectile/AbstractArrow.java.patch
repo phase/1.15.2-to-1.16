@@ -244,8 +244,9 @@
  
              this.doPostHurtEffects(var9);
 -            if (var6 != null && var9 != var6 && var9 instanceof Player && var6 instanceof ServerPlayer) {
+-               ((ServerPlayer)var6).connection.send(new ClientboundGameEventPacket(6, 0.0F));
 +            if (var6 != null && var9 != var6 && var9 instanceof Player && var6 instanceof ServerPlayer && !this.isSilent()) {
-                ((ServerPlayer)var6).connection.send(new ClientboundGameEventPacket(6, 0.0F));
++               ((ServerPlayer)var6).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.ARROW_HIT_PLAYER, 0.0F));
              }
  
              if (!var2.isAlive() && this.piercedAndKilledEntities != null) {

@@ -1,7 +1,12 @@
 --- net/minecraft/world/entity/animal/horse/SkeletonHorse.java
 +++ net/minecraft/world/entity/animal/horse/SkeletonHorse.java
-@@ -8,11 +8,12 @@
+@@ -4,19 +4,20 @@
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.tags.FluidTags;
  import net.minecraft.world.InteractionHand;
++import net.minecraft.world.InteractionResult;
  import net.minecraft.world.damagesource.DamageSource;
  import net.minecraft.world.entity.AgableMob;
  import net.minecraft.world.entity.EntityType;
@@ -12,9 +17,13 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
- import net.minecraft.world.item.SpawnEggItem;
+-import net.minecraft.world.item.SpawnEggItem;
  import net.minecraft.world.level.Level;
-@@ -24,17 +25,18 @@
+ 
+ public class SkeletonHorse extends AbstractHorse {
+    private final SkeletonTrapGoal skeletonTrapGoal = new SkeletonTrapGoal(this);
+    private boolean isTrap;
+@@ -24,23 +25,24 @@
  
     public SkeletonHorse(EntityType<? extends SkeletonHorse> var1, Level var2) {
        super(var1, var2);
@@ -38,6 +47,13 @@
  
     protected SoundEvent getAmbientSound() {
        super.getAmbientSound();
+-      return this.isUnderLiquid(FluidTags.WATER) ? SoundEvents.SKELETON_HORSE_AMBIENT_WATER : SoundEvents.SKELETON_HORSE_AMBIENT;
++      return this.isEyeInFluid(FluidTags.WATER) ? SoundEvents.SKELETON_HORSE_AMBIENT_WATER : SoundEvents.SKELETON_HORSE_AMBIENT;
+    }
+ 
+    protected SoundEvent getDeathSound() {
+       super.getDeathSound();
+       return SoundEvents.SKELETON_HORSE_DEATH;
 @@ -90,12 +92,12 @@
  
     public MobType getMobType() {
@@ -53,3 +69,48 @@
     public void aiStep() {
        super.aiStep();
        if (this.isTrap() && this.trapTime++ >= 18000) {
+@@ -143,35 +145,34 @@
+    @Nullable
+    public AgableMob getBreedOffspring(AgableMob var1) {
+       return (AgableMob)EntityType.SKELETON_HORSE.create(this.level);
+    }
+ 
+-   public boolean mobInteract(Player var1, InteractionHand var2) {
++   public InteractionResult mobInteract(Player var1, InteractionHand var2) {
+       ItemStack var3 = var1.getItemInHand(var2);
+-      if (var3.getItem() instanceof SpawnEggItem) {
+-         return super.mobInteract(var1, var2);
+-      } else if (!this.isTamed()) {
+-         return false;
++      if (!this.isTamed()) {
++         return InteractionResult.PASS;
+       } else if (this.isBaby()) {
+          return super.mobInteract(var1, var2);
+       } else if (var1.isSecondaryUseActive()) {
+          this.openInventory(var1);
+-         return true;
++         return InteractionResult.sidedSuccess(this.level.isClientSide);
+       } else if (this.isVehicle()) {
+          return super.mobInteract(var1, var2);
+       } else {
+          if (!var3.isEmpty()) {
+             if (var3.getItem() == Items.SADDLE && !this.isSaddled()) {
+                this.openInventory(var1);
+-               return true;
++               return InteractionResult.sidedSuccess(this.level.isClientSide);
+             }
+ 
+-            if (var3.interactEnemy(var1, this, var2)) {
+-               return true;
++            InteractionResult var4 = var3.interactLivingEntity(var1, this, var2);
++            if (var4.consumesAction()) {
++               return var4;
+             }
+          }
+ 
+          this.doPlayerRide(var1);
+-         return true;
++         return InteractionResult.sidedSuccess(this.level.isClientSide);
+       }
+    }
+ }

@@ -1,0 +1,31 @@
+--- net/minecraft/server/packs/repository/ServerPacksSource.java
++++ net/minecraft/server/packs/repository/ServerPacksSource.java
+@@ -1,21 +1,21 @@
+ package net.minecraft.server.packs.repository;
+ 
+-import java.util.Map;
+-import net.minecraft.server.packs.VanillaPack;
++import java.util.function.Consumer;
++import net.minecraft.server.packs.VanillaPackResources;
+ 
+ public class ServerPacksSource implements RepositorySource {
+-   private final VanillaPack vanillaPack = new VanillaPack(new String[]{"minecraft"});
++   private final VanillaPackResources vanillaPack = new VanillaPackResources(new String[]{"minecraft"});
+ 
+    public ServerPacksSource() {
+    }
+ 
+-   public <T extends UnopenedPack> void loadPacks(Map<String, T> var1, UnopenedPack.UnopenedPackConstructor<T> var2) {
+-      UnopenedPack var3 = UnopenedPack.create("vanilla", false, () -> {
++   public <T extends Pack> void loadPacks(Consumer<T> var1, Pack.PackConstructor<T> var2) {
++      Pack var3 = Pack.create("vanilla", false, () -> {
+          return this.vanillaPack;
+-      }, var2, UnopenedPack.Position.BOTTOM);
++      }, var2, Pack.Position.BOTTOM, PackSource.BUILT_IN);
+       if (var3 != null) {
+-         var1.put("vanilla", var3);
++         var1.accept(var3);
+       }
+ 
+    }
+ }

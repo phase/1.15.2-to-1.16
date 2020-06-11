@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/LevelSettings.java
 +++ net/minecraft/world/level/LevelSettings.java
-@@ -1,71 +1,72 @@
+@@ -1,71 +1,75 @@
  package net.minecraft.world.level;
  
 -import com.google.gson.JsonElement;
@@ -8,7 +8,6 @@
 -import net.minecraft.world.level.storage.LevelData;
 +import com.mojang.serialization.Dynamic;
 +import net.minecraft.world.Difficulty;
-+import net.minecraft.world.level.levelgen.WorldGenSettings;
  
  public final class LevelSettings {
 -   private final long seed;
@@ -23,7 +22,7 @@
 +   private final Difficulty difficulty;
 +   private final boolean allowCommands;
 +   private final GameRules gameRules;
-+   private final WorldGenSettings worldGenSettings;
++   private final DataPackConfig dataPackConfig;
  
 -   public LevelSettings(long var1, GameType var3, boolean var4, boolean var5, LevelType var6) {
 -      this.levelTypeOptions = new JsonObject();
@@ -32,19 +31,19 @@
 -      this.generateMapFeatures = var4;
 -      this.hardcore = var5;
 -      this.levelType = var6;
-+   public LevelSettings(String var1, GameType var2, boolean var3, Difficulty var4, boolean var5, GameRules var6, WorldGenSettings var7) {
++   public LevelSettings(String var1, GameType var2, boolean var3, Difficulty var4, boolean var5, GameRules var6, DataPackConfig var7) {
 +      this.levelName = var1;
 +      this.gameType = var2;
 +      this.hardcore = var3;
 +      this.difficulty = var4;
 +      this.allowCommands = var5;
 +      this.gameRules = var6;
-+      this.worldGenSettings = var7;
++      this.dataPackConfig = var7;
     }
  
 -   public LevelSettings(LevelData var1) {
 -      this(var1.getSeed(), var1.getGameType(), var1.isGenerateMapFeatures(), var1.isHardcore(), var1.getGeneratorType());
-+   public static LevelSettings parse(Dynamic<?> var0, WorldGenSettings var1) {
++   public static LevelSettings parse(Dynamic<?> var0, DataPackConfig var1) {
 +      GameType var2 = GameType.byId(var0.get("GameType").asInt(0));
 +      return new LevelSettings(var0.get("LevelName").asString(""), var2, var0.get("hardcore").asBoolean(false), (Difficulty)var0.get("Difficulty").asNumber().map((var0x) -> {
 +         return Difficulty.byId(var0x.byteValue());
@@ -91,25 +90,29 @@
  
 -   public boolean isGenerateMapFeatures() {
 -      return this.generateMapFeatures;
-+   public WorldGenSettings worldGenSettings() {
-+      return this.worldGenSettings;
++   public DataPackConfig getDataPackConfig() {
++      return this.dataPackConfig;
     }
  
 -   public LevelType getLevelType() {
 -      return this.levelType;
 +   public LevelSettings withGameType(GameType var1) {
-+      return new LevelSettings(this.levelName, var1, this.hardcore, this.difficulty, this.allowCommands, this.gameRules, this.worldGenSettings);
++      return new LevelSettings(this.levelName, var1, this.hardcore, this.difficulty, this.allowCommands, this.gameRules, this.dataPackConfig);
     }
  
 -   public boolean getAllowCommands() {
 -      return this.allowCommands;
 +   public LevelSettings withDifficulty(Difficulty var1) {
-+      return new LevelSettings(this.levelName, this.gameType, this.hardcore, var1, this.allowCommands, this.gameRules, this.worldGenSettings);
++      return new LevelSettings(this.levelName, this.gameType, this.hardcore, var1, this.allowCommands, this.gameRules, this.dataPackConfig);
     }
  
 -   public JsonElement getLevelTypeOptions() {
 -      return this.levelTypeOptions;
-+   public LevelSettings copy() {
-+      return new LevelSettings(this.levelName, this.gameType, this.hardcore, this.difficulty, this.allowCommands, this.gameRules.copy(), this.worldGenSettings);
++   public LevelSettings withDataPackConfig(DataPackConfig var1) {
++      return new LevelSettings(this.levelName, this.gameType, this.hardcore, this.difficulty, this.allowCommands, this.gameRules, var1);
     }
++
++   public LevelSettings copy() {
++      return new LevelSettings(this.levelName, this.gameType, this.hardcore, this.difficulty, this.allowCommands, this.gameRules.copy(), this.dataPackConfig);
++   }
  }

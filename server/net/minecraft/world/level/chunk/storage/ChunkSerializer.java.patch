@@ -38,6 +38,24 @@
        if (var13) {
           var19.retainData(var3, true);
        }
+@@ -103,15 +104,15 @@
+             var2.checkConsistencyWithBlocks(var3, var23);
+          }
+ 
+          if (var13) {
+             if (var21.contains("BlockLight", 7)) {
+-               var19.queueSectionData(LightLayer.BLOCK, SectionPos.of(var3, var22), new DataLayer(var21.getByteArray("BlockLight")));
++               var19.queueSectionData(LightLayer.BLOCK, SectionPos.of(var3, var22), new DataLayer(var21.getByteArray("BlockLight")), true);
+             }
+ 
+             if (var17 && var21.contains("SkyLight", 7)) {
+-               var19.queueSectionData(LightLayer.SKY, SectionPos.of(var3, var22), new DataLayer(var21.getByteArray("SkyLight")));
++               var19.queueSectionData(LightLayer.SKY, SectionPos.of(var3, var22), new DataLayer(var21.getByteArray("SkyLight")), true);
+             }
+          }
+       }
+ 
+       long var36 = var7.getLong("InhabitedTime");
 @@ -183,11 +184,11 @@
           }
        }

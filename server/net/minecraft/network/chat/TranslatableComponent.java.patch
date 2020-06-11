@@ -219,7 +219,7 @@
 -      }
 -
 -      return this;
-+   public TranslatableComponent toMutable() {
++   public TranslatableComponent plainCopy() {
 +      return new TranslatableComponent(this.key, this.args);
     }
  

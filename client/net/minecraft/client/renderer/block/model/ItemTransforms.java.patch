@@ -1,0 +1,14 @@
+--- net/minecraft/client/renderer/block/model/ItemTransforms.java
++++ net/minecraft/client/renderer/block/model/ItemTransforms.java
+@@ -112,7 +112,11 @@
+       GROUND,
+       FIXED;
+ 
+       private TransformType() {
+       }
++
++      public boolean firstPerson() {
++         return this == FIRST_PERSON_LEFT_HAND || this == FIRST_PERSON_RIGHT_HAND;
++      }
+    }
+ }

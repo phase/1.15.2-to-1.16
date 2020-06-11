@@ -84,7 +84,7 @@
 -            double var7 = random.nextGaussian() * 0.02D;
 +         double var4 = 0.5D;
 +         double var6;
-+         if (!var3.getFluidState().isEmpty()) {
++         if (var3.is(Blocks.WATER)) {
 +            var2 *= 3;
 +            var6 = 1.0D;
 +            var4 = 3.0D;

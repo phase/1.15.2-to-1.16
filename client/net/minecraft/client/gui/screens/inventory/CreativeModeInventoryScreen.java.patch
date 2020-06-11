@@ -25,6 +25,19 @@
        this.imageHeight = 136;
        this.imageWidth = 195;
     }
+@@ -141,11 +142,11 @@
+                if (var4 != ClickType.QUICK_CRAFT && var1.container == CONTAINER) {
+                   var10 = this.minecraft.player.inventory;
+                   var7 = var10.getCarried();
+                   ItemStack var13 = var1.getItem();
+                   if (var4 == ClickType.SWAP) {
+-                     if (!var13.isEmpty() && var3 >= 0 && var3 < 9) {
++                     if (!var13.isEmpty()) {
+                         var9 = var13.copy();
+                         var9.setCount(var9.getMaxStackSize());
+                         this.minecraft.player.inventory.setItem(var3, var9);
+                         this.minecraft.player.inventoryMenu.broadcastChanges();
+                      }
 @@ -243,11 +244,11 @@
           this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
           Font var10003 = this.font;
@@ -38,6 +51,19 @@
           this.searchBox.setVisible(false);
           this.searchBox.setTextColor(16777215);
           this.children.add(this.searchBox);
+@@ -311,11 +312,11 @@
+          } else {
+             return super.keyPressed(var1, var2, var3);
+          }
+       } else {
+          boolean var4 = !this.isCreativeSlot(this.hoveredSlot) || this.hoveredSlot != null && this.hoveredSlot.hasItem();
+-         if (var4 && this.checkNumkeyPressed(var1, var2)) {
++         if (var4 && this.checkHotbarKeyPressed(var1, var2)) {
+             this.ignoreTextInput = true;
+             return true;
+          } else {
+             String var5 = this.searchBox.getValue();
+             if (this.searchBox.keyPressed(var1, var2, var3)) {
 @@ -383,15 +384,15 @@
        var6.getAvailableTags().stream().filter(var3).forEach((var2x) -> {
           Tag var10000 = (Tag)this.visibleTags.put(var2x, var6.getTag(var2x));

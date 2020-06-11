@@ -1,6 +1,6 @@
 --- net/minecraft/core/WritableRegistry.java
 +++ net/minecraft/core/WritableRegistry.java
-@@ -1,14 +1,18 @@
+@@ -1,14 +1,16 @@
  package net.minecraft.core;
  
 -import net.minecraft.resources.ResourceLocation;
@@ -20,7 +20,5 @@
 +   public abstract <V extends T> V register(ResourceKey<T> var1, V var2);
  
 -   public abstract boolean isEmpty();
-+   public String toString() {
-+      return "Registry[" + WRITABLE_REGISTRY.getKey(this) + "]";
-+   }
++   public abstract void setPersistent(ResourceKey<T> var1);
  }

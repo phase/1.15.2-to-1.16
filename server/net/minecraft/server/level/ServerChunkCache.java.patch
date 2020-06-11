@@ -213,38 +213,7 @@
  
     public int getLoadedChunksCount() {
        return this.chunkMap.size();
-@@ -390,15 +382,29 @@
-    public void blockChanged(BlockPos var1) {
-       int var2 = var1.getX() >> 4;
-       int var3 = var1.getZ() >> 4;
-       ChunkHolder var4 = this.getVisibleChunkIfPresent(ChunkPos.asLong(var2, var3));
-       if (var4 != null) {
--         var4.blockChanged(var1.getX() & 15, var1.getY(), var1.getZ() & 15);
-+         var4.blockChanged(this, var1.getX() & 15, var1.getY(), var1.getZ() & 15);
-       }
- 
-    }
- 
-+   protected void notifyNeighborsOfLightChange(int var1, int var2) {
-+      for(int var3 = -1; var3 <= 1; ++var3) {
-+         for(int var4 = -1; var4 <= 1; ++var4) {
-+            if (var3 != 0 || var4 != 0) {
-+               ChunkHolder var5 = this.getVisibleChunkIfPresent(ChunkPos.asLong(var1 + var3, var2 + var4));
-+               if (var5 != null) {
-+                  var5.forceSendLight();
-+               }
-+            }
-+         }
-+      }
-+
-+   }
-+
-    public void onLightUpdate(LightLayer var1, SectionPos var2) {
-       this.mainThreadProcessor.execute(() -> {
-          ChunkHolder var3 = this.getVisibleChunkIfPresent(var2.chunk().toLong());
-          if (var3 != null) {
-             var3.sectionLightChanged(var1, var2.y());
-@@ -454,13 +460,18 @@
+@@ -454,13 +446,18 @@
  
     public PoiManager getPoiManager() {
        return this.chunkMap.getPoiManager();

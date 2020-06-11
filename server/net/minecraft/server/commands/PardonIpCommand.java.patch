@@ -1,6 +1,6 @@
 --- net/minecraft/server/commands/PardonIpCommand.java
 +++ net/minecraft/server/commands/PardonIpCommand.java
-@@ -11,12 +11,12 @@
+@@ -11,16 +11,16 @@
  import net.minecraft.commands.SharedSuggestionProvider;
  import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.server.players.IpBanList;
@@ -13,5 +13,10 @@
  
     public static void register(CommandDispatcher<CommandSourceStack> var0) {
        var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("pardon-ip").requires((var0x) -> {
-          return var0x.getServer().getPlayerList().getIpBans().isEnabled() && var0x.hasPermission(3);
+-         return var0x.getServer().getPlayerList().getIpBans().isEnabled() && var0x.hasPermission(3);
++         return var0x.hasPermission(3);
        })).then(Commands.argument("target", StringArgumentType.word()).suggests((var0x, var1) -> {
+          return SharedSuggestionProvider.suggest(((CommandSourceStack)var0x.getSource()).getServer().getPlayerList().getIpBans().getUserList(), var1);
+       }).executes((var0x) -> {
+          return unban((CommandSourceStack)var0x.getSource(), StringArgumentType.getString(var0x, "target"));
+       })));

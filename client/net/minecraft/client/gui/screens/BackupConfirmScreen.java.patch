@@ -1,12 +1,13 @@
 --- net/minecraft/client/gui/screens/BackupConfirmScreen.java
 +++ net/minecraft/client/gui/screens/BackupConfirmScreen.java
-@@ -1,74 +1,69 @@
+@@ -1,74 +1,71 @@
  package net.minecraft.client.gui.screens;
  
  import com.google.common.collect.Lists;
 +import com.mojang.blaze3d.vertex.PoseStack;
  import java.util.Iterator;
  import java.util.List;
++import javax.annotation.Nullable;
  import net.minecraft.client.gui.components.Button;
  import net.minecraft.client.gui.components.Checkbox;
 -import net.minecraft.client.resources.language.I18n;
@@ -16,6 +17,7 @@
 +import net.minecraft.network.chat.TranslatableComponent;
  
  public class BackupConfirmScreen extends Screen {
++   @Nullable
     private final Screen lastScreen;
     protected final BackupConfirmScreen.Listener listener;
     private final Component description;
@@ -28,7 +30,8 @@
 +   private final List<FormattedText> lines = Lists.newArrayList();
     private Checkbox eraseCache;
  
-    public BackupConfirmScreen(Screen var1, BackupConfirmScreen.Listener var2, Component var3, Component var4, boolean var5) {
+-   public BackupConfirmScreen(Screen var1, BackupConfirmScreen.Listener var2, Component var3, Component var4, boolean var5) {
++   public BackupConfirmScreen(@Nullable Screen var1, BackupConfirmScreen.Listener var2, Component var3, Component var4, boolean var5) {
        super(var3);
        this.lastScreen = var1;
        this.listener = var2;

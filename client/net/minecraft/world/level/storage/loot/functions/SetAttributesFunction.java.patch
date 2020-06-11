@@ -70,7 +70,7 @@
           JsonObject var2 = new JsonObject();
           var2.addProperty("name", this.name);
 -         var2.addProperty("attribute", this.attribute);
-+         var2.addProperty("attribute", Registry.ATTRIBUTES.getKey(this.attribute).toString());
++         var2.addProperty("attribute", Registry.ATTRIBUTE.getKey(this.attribute).toString());
           var2.addProperty("operation", operationToString(this.operation));
           var2.add("amount", var1.serialize(this.amount));
           if (this.id != null) {
@@ -90,7 +90,7 @@
 -         if (GsonHelper.isStringValue(var0, "slot")) {
 -            var6 = new EquipmentSlot[]{EquipmentSlot.byName(GsonHelper.getAsString(var0, "slot"))};
 +         ResourceLocation var3 = new ResourceLocation(GsonHelper.getAsString(var0, "attribute"));
-+         Attribute var4 = (Attribute)Registry.ATTRIBUTES.get(var3);
++         Attribute var4 = (Attribute)Registry.ATTRIBUTE.get(var3);
 +         if (var4 == null) {
 +            throw new JsonSyntaxException("Unknown attribute: " + var3);
           } else {

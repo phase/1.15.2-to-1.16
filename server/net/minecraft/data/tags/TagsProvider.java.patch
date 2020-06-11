@@ -1,14 +1,6 @@
 --- net/minecraft/data/tags/TagsProvider.java
 +++ net/minecraft/data/tags/TagsProvider.java
-@@ -1,38 +1,39 @@
- package net.minecraft.data.tags;
- 
-+import com.google.common.collect.ImmutableSet;
- import com.google.common.collect.Maps;
- import com.google.gson.Gson;
- import com.google.gson.GsonBuilder;
- import com.google.gson.JsonElement;
- import com.google.gson.JsonObject;
+@@ -8,31 +8,32 @@
  import java.io.BufferedWriter;
  import java.io.IOException;
  import java.nio.file.Files;
@@ -27,6 +19,7 @@
  import net.minecraft.data.DataProvider;
  import net.minecraft.data.HashCache;
  import net.minecraft.resources.ResourceLocation;
++import net.minecraft.tags.SetTag;
  import net.minecraft.tags.Tag;
 -import net.minecraft.tags.TagCollection;
  import org.apache.logging.log4j.LogManager;
@@ -62,7 +55,7 @@
 -         var10001.getClass();
 -         JsonObject var4 = var3x.serializeToJson(var10001::getKey);
 -         Path var5 = this.getPath(var2x);
-+      Tag var2 = Tag.fromSet(ImmutableSet.of());
++      SetTag var2 = SetTag.empty();
 +      Function var3 = (var2x) -> {
 +         return this.builders.containsKey(var2x) ? var2 : null;
 +      };

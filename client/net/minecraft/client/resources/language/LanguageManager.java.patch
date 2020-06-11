@@ -16,8 +16,9 @@
  import java.util.SortedSet;
 +import java.util.stream.Stream;
  import net.minecraft.client.resources.metadata.language.LanguageMetadataSection;
+-import net.minecraft.server.packs.Pack;
 +import net.minecraft.locale.Language;
- import net.minecraft.server.packs.Pack;
++import net.minecraft.server.packs.PackResources;
  import net.minecraft.server.packs.resources.ResourceManager;
  import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
  import org.apache.logging.log4j.LogManager;
@@ -46,7 +47,7 @@
 -      while(var2.hasNext()) {
 -         Pack var3 = (Pack)var2.next();
 -
-+   private static Map<String, LanguageInfo> extractLanguages(Stream<Pack> var0) {
++   private static Map<String, LanguageInfo> extractLanguages(Stream<PackResources> var0) {
 +      HashMap var1 = Maps.newHashMap();
 +      var0.forEach((var1x) -> {
           try {

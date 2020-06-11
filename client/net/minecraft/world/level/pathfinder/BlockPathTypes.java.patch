@@ -1,0 +1,14 @@
+--- net/minecraft/world/level/pathfinder/BlockPathTypes.java
++++ net/minecraft/world/level/pathfinder/BlockPathTypes.java
+@@ -8,10 +8,11 @@
+    FENCE(-1.0F),
+    LAVA(-1.0F),
+    WATER(8.0F),
+    WATER_BORDER(8.0F),
+    RAIL(0.0F),
++   UNPASSABLE_RAIL(-1.0F),
+    DANGER_FIRE(8.0F),
+    DAMAGE_FIRE(16.0F),
+    DANGER_CACTUS(8.0F),
+    DAMAGE_CACTUS(-1.0F),
+    DANGER_OTHER(8.0F),

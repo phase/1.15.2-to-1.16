@@ -6,11 +6,11 @@
  import java.util.Comparator;
 +import java.util.List;
 +import java.util.Optional;
++import java.util.UUID;
 +import java.util.function.Predicate;
  import java.util.stream.Stream;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.SectionPos;
-+import net.minecraft.core.SerializableUUID;
  import net.minecraft.server.level.ServerLevel;
 +import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
@@ -162,9 +162,9 @@
 +      return var0.distanceToSqr(var3) < var0.distanceToSqr(var4) ? var1 : var2;
 +   }
 +
-+   public static Optional<LivingEntity> getLivingEntityFromUUIDMemory(LivingEntity var0, MemoryModuleType<SerializableUUID> var1) {
++   public static Optional<LivingEntity> getLivingEntityFromUUIDMemory(LivingEntity var0, MemoryModuleType<UUID> var1) {
 +      Optional var2 = var0.getBrain().getMemory(var1);
-+      return var2.map(SerializableUUID::value).map((var1x) -> {
++      return var2.map((var1x) -> {
 +         return (LivingEntity)((ServerLevel)var0.level).getEntity(var1x);
 +      });
 +   }

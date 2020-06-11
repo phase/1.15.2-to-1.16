@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/ai/Brain.java
 +++ net/minecraft/world/entity/ai/Brain.java
-@@ -1,111 +1,206 @@
+@@ -1,113 +1,214 @@
  package net.minecraft.world.entity.ai;
  
  import com.google.common.collect.ImmutableList;
@@ -240,10 +240,18 @@
 +      return ((Optional)this.memories.get(var1)).map(ExpirableValue::getValue);
     }
  
++   public <U> boolean isMemoryValue(MemoryModuleType<U> var1, U var2) {
++      return !this.hasMemoryValue(var1) ? false : this.getMemory(var1).filter((var1x) -> {
++         return var1x.equals(var2);
++      }).isPresent();
++   }
++
     public boolean checkMemory(MemoryModuleType<?> var1, MemoryStatus var2) {
        Optional var3 = (Optional)this.memories.get(var1);
        if (var3 == null) {
-@@ -126,124 +221,355 @@
+          return false;
+       } else {
+@@ -126,124 +227,355 @@
     public void setCoreActivities(Set<Activity> var1) {
        this.coreActivities = var1;
     }

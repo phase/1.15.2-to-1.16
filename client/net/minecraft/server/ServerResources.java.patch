@@ -1,13 +1,13 @@
 --- net/minecraft/server/ServerResources.java
 +++ net/minecraft/server/ServerResources.java
-@@ -1,0 +1,93 @@
+@@ -1,0 +1,102 @@
 +package net.minecraft.server;
 +
 +import java.util.List;
 +import java.util.concurrent.CompletableFuture;
 +import java.util.concurrent.Executor;
 +import net.minecraft.commands.Commands;
-+import net.minecraft.server.packs.Pack;
++import net.minecraft.server.packs.PackResources;
 +import net.minecraft.server.packs.PackType;
 +import net.minecraft.server.packs.resources.ReloadableResourceManager;
 +import net.minecraft.server.packs.resources.ResourceManager;
@@ -18,7 +18,7 @@
 +import net.minecraft.world.level.storage.loot.LootTables;
 +import net.minecraft.world.level.storage.loot.PredicateManager;
 +
-+public class ServerResources {
++public class ServerResources implements AutoCloseable {
 +   private static final CompletableFuture<Unit> DATA_RELOAD_INITIAL_TASK;
 +   private final ReloadableResourceManager resources;
 +   private final Commands commands;
@@ -29,7 +29,7 @@
 +   private final ServerAdvancementManager advancements;
 +   private final ServerFunctionLibrary functionLibrary;
 +
-+   public ServerResources(boolean var1, int var2) {
++   public ServerResources(Commands.CommandSelection var1, int var2) {
 +      this.resources = new SimpleReloadableResourceManager(PackType.SERVER_DATA);
 +      this.recipes = new RecipeManager();
 +      this.tags = new TagManager();
@@ -78,16 +78,25 @@
 +      return this.resources;
 +   }
 +
-+   public static CompletableFuture<ServerResources> loadResources(List<Pack> var0, boolean var1, int var2, Executor var3, Executor var4) {
++   public static CompletableFuture<ServerResources> loadResources(List<PackResources> var0, Commands.CommandSelection var1, int var2, Executor var3, Executor var4) {
 +      ServerResources var5 = new ServerResources(var1, var2);
 +      CompletableFuture var6 = var5.resources.reload(var3, var4, var0, DATA_RELOAD_INITIAL_TASK);
-+      return var6.thenApply((var1x) -> {
++      return var6.whenComplete((var1x, var2x) -> {
++         if (var2x != null) {
++            var5.close();
++         }
++
++      }).thenApply((var1x) -> {
 +         return var5;
 +      });
 +   }
 +
 +   public void updateGlobals() {
 +      this.tags.bindToGlobal();
++   }
++
++   public void close() {
++      this.resources.close();
 +   }
 +
 +   static {

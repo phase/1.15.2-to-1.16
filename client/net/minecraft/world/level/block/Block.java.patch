@@ -630,7 +630,7 @@
     public void playerWillDestroy(Level var1, BlockPos var2, BlockState var3, Player var4) {
        var1.levelEvent(var4, 2001, var2, getId(var3));
 +      if (this.is((Tag)BlockTags.GUARDED_BY_PIGLINS)) {
-+         PiglinAi.angerNearbyPiglinsThatSee(var4);
++         PiglinAi.angerNearbyPiglins(var4, false);
 +      }
 +
     }

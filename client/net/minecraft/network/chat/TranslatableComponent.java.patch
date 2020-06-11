@@ -201,7 +201,7 @@
 -      super.setStyle(var1);
 -      Object[] var2 = this.args;
 -      int var3 = var2.length;
-+   public TranslatableComponent toMutable() {
++   public TranslatableComponent plainCopy() {
 +      return new TranslatableComponent(this.key, this.args);
 +   }
  

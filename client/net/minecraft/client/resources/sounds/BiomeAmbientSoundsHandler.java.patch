@@ -88,7 +88,7 @@
 +            double var16 = var10 - this.player.getZ();
 +            double var18 = (double)Mth.sqrt(var12 * var12 + var14 * var14 + var16 * var16);
 +            double var20 = var18 + var1x.getSoundPositionOffset();
-+            SimpleSoundInstance var22 = SimpleSoundInstance.forAmbientMood(var1x.getSoundEvent(), (float)(this.player.getX() + var12 / var18 * var20), (float)(this.player.getEyeY() + var14 / var18 * var20), (float)(this.player.getZ() + var16 / var18 * var20));
++            SimpleSoundInstance var22 = SimpleSoundInstance.forAmbientMood(var1x.getSoundEvent(), this.player.getX() + var12 / var18 * var20, this.player.getEyeY() + var14 / var18 * var20, this.player.getZ() + var16 / var18 * var20);
 +            this.soundManager.play(var22);
 +            this.moodiness = 0.0F;
 +         } else {

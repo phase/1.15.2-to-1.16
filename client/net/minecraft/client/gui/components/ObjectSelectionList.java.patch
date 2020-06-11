@@ -1,0 +1,18 @@
+--- net/minecraft/client/gui/components/ObjectSelectionList.java
++++ net/minecraft/client/gui/components/ObjectSelectionList.java
+@@ -13,13 +13,13 @@
+       if (!this.inFocus && this.getItemCount() == 0) {
+          return false;
+       } else {
+          this.inFocus = !this.inFocus;
+          if (this.inFocus && this.getSelected() == null && this.getItemCount() > 0) {
+-            this.moveSelection(1);
++            this.moveSelection(AbstractSelectionList.SelectionDirection.DOWN);
+          } else if (this.inFocus && this.getSelected() != null) {
+-            this.moveSelection(0);
++            this.refreshSelection();
+          }
+ 
+          return this.inFocus;
+       }
+    }

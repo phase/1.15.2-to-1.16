@@ -1,0 +1,39 @@
+--- net/minecraft/client/renderer/ScreenEffectRenderer.java
++++ net/minecraft/client/renderer/ScreenEffectRenderer.java
+@@ -33,11 +33,11 @@
+             renderTex(var0, var0.getBlockRenderer().getBlockModelShaper().getParticleIcon(var3), var1);
+          }
+       }
+ 
+       if (!var0.player.isSpectator()) {
+-         if (var0.player.isUnderLiquid(FluidTags.WATER)) {
++         if (var0.player.isEyeInFluid(FluidTags.WATER)) {
+             renderWater(var0, var1);
+          }
+ 
+          if (var0.player.isOnFire()) {
+             renderFire(var0, var1);
+@@ -87,10 +87,11 @@
+       var3.end();
+       BufferUploader.end(var3);
+    }
+ 
+    private static void renderWater(Minecraft var0, PoseStack var1) {
++      RenderSystem.enableTexture();
+       var0.getTextureManager().bind(UNDERWATER_LOCATION);
+       BufferBuilder var2 = Tesselator.getInstance().getBuilder();
+       float var3 = var0.player.getBrightness();
+       RenderSystem.enableBlend();
+       RenderSystem.defaultBlendFunc();
+@@ -117,10 +118,11 @@
+       BufferBuilder var2 = Tesselator.getInstance().getBuilder();
+       RenderSystem.depthFunc(519);
+       RenderSystem.depthMask(false);
+       RenderSystem.enableBlend();
+       RenderSystem.defaultBlendFunc();
++      RenderSystem.enableTexture();
+       TextureAtlasSprite var3 = ModelBakery.FIRE_1.sprite();
+       var0.getTextureManager().bind(var3.atlas().location());
+       float var4 = var3.getU0();
+       float var5 = var3.getU1();
+       float var6 = (var4 + var5) / 2.0F;

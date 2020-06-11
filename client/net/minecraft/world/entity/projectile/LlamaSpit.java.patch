@@ -18,7 +18,8 @@
  import net.minecraft.world.entity.animal.horse.Llama;
  import net.minecraft.world.level.ClipContext;
  import net.minecraft.world.level.Level;
- import net.minecraft.world.level.material.Material;
+-import net.minecraft.world.level.material.Material;
++import net.minecraft.world.level.block.state.BlockBehaviour;
 +import net.minecraft.world.phys.BlockHitResult;
  import net.minecraft.world.phys.EntityHitResult;
  import net.minecraft.world.phys.HitResult;
@@ -42,7 +43,7 @@
  
     public LlamaSpit(Level var1, double var2, double var4, double var6, double var8, double var10, double var12) {
        this(EntityType.LLAMA_SPIT, var1);
-@@ -45,47 +40,22 @@
+@@ -45,48 +40,23 @@
        this.setDeltaMovement(var8, var10, var12);
     }
  
@@ -86,14 +87,16 @@
 -      this.yRot = Mth.lerp(0.2F, this.yRotO, this.yRot);
 -      float var10 = 0.99F;
 -      float var11 = 0.06F;
+-      if (!this.level.containsMaterial(this.getBoundingBox(), Material.AIR)) {
 +      this.updateRotation();
 +      float var9 = 0.99F;
 +      float var10 = 0.06F;
-       if (!this.level.containsMaterial(this.getBoundingBox(), Material.AIR)) {
++      if (this.level.getBlockStates(this.getBoundingBox()).noneMatch(BlockBehaviour.BlockStateBase::isAir)) {
           this.remove();
        } else if (this.isInWaterOrBubble()) {
           this.remove();
        } else {
+          this.setDeltaMovement(var1.scale(0.9900000095367432D));
 @@ -96,80 +66,29 @@
  
           this.setPos(var3, var5, var7);

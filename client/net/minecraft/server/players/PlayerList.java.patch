@@ -79,7 +79,7 @@
  import net.minecraft.world.scores.PlayerTeam;
  import net.minecraft.world.scores.Team;
  import org.apache.logging.log4j.LogManager;
-@@ -88,27 +100,30 @@
+@@ -88,127 +100,153 @@
     private final IpBanList ipBans;
     private final ServerOpList ops;
     private final UserWhiteList whitelist;
@@ -105,15 +105,15 @@
        this.advancements = Maps.newHashMap();
        this.server = var1;
 -      this.maxPlayers = var2;
+-      this.getBans().setEnabled(true);
+-      this.getIpBans().setEnabled(true);
 +      this.registryHolder = var2;
 +      this.maxPlayers = var4;
 +      this.playerIo = var3;
-       this.getBans().setEnabled(true);
-       this.getIpBans().setEnabled(true);
     }
  
     public void placeNewPlayer(Connection var1, ServerPlayer var2) {
-@@ -116,99 +131,116 @@
+       GameProfile var3 = var2.getGameProfile();
        GameProfileCache var4 = this.server.getProfileCache();
        GameProfile var5 = var4.get(var3.getId());
        String var6 = var5 == null ? var3.getName() : var5.getName();
@@ -121,25 +121,33 @@
        CompoundTag var7 = this.load(var2);
 -      ServerLevel var8 = this.server.getLevel(var2.dimension);
 -      var2.setLevel(var8);
-+      ResourceKey var22;
++      ResourceKey var23;
 +      if (var7 != null) {
 +         DataResult var10000 = DimensionType.parseLegacy(new Dynamic(NbtOps.INSTANCE, var7.get("Dimension")));
 +         Logger var10001 = LOGGER;
 +         var10001.getClass();
-+         var22 = (ResourceKey)var10000.resultOrPartial(var10001::error).orElse(Level.OVERWORLD);
++         var23 = (ResourceKey)var10000.resultOrPartial(var10001::error).orElse(Level.OVERWORLD);
 +      } else {
-+         var22 = Level.OVERWORLD;
++         var23 = Level.OVERWORLD;
 +      }
 +
-+      ResourceKey var8 = var22;
++      ResourceKey var8 = var23;
 +      ServerLevel var9 = this.server.getLevel(var8);
-+      var2.setLevel(var9);
++      ServerLevel var10;
++      if (var9 == null) {
++         LOGGER.warn("Unknown respawn dimension {}, defaulting to overworld", var8);
++         var10 = this.server.overworld();
++      } else {
++         var10 = var9;
++      }
++
++      var2.setLevel(var10);
        var2.gameMode.setLevel((ServerLevel)var2.level);
 -      String var9 = "local";
-+      String var10 = "local";
++      String var11 = "local";
        if (var1.getRemoteAddress() != null) {
 -         var9 = var1.getRemoteAddress().toString();
-+         var10 = var1.getRemoteAddress().toString();
++         var11 = var1.getRemoteAddress().toString();
        }
  
 -      LOGGER.info("{}[{}] logged in with entity id {} at ({}, {}, {})", var2.getName().getString(), var9, var2.getId(), var2.getX(), var2.getY(), var2.getZ());
@@ -156,77 +164,77 @@
 -      var11.send(new ClientboundSetCarriedItemPacket(var2.inventory.selected));
 -      var11.send(new ClientboundUpdateRecipesPacket(this.server.getRecipeManager().getRecipes()));
 -      var11.send(new ClientboundUpdateTagsPacket(this.server.getTags()));
-+      LOGGER.info("{}[{}] logged in with entity id {} at ({}, {}, {})", var2.getName().getString(), var10, var2.getId(), var2.getX(), var2.getY(), var2.getZ());
-+      LevelData var11 = var9.getLevelData();
-+      this.updatePlayerGameMode(var2, (ServerPlayer)null, var9);
-+      ServerGamePacketListenerImpl var12 = new ServerGamePacketListenerImpl(this.server, var1, var2);
-+      GameRules var13 = var9.getGameRules();
-+      boolean var14 = var13.getBoolean(GameRules.RULE_DO_IMMEDIATE_RESPAWN);
-+      boolean var15 = var13.getBoolean(GameRules.RULE_REDUCEDDEBUGINFO);
-+      var12.send(new ClientboundLoginPacket(var2.getId(), var2.gameMode.getGameModeForPlayer(), BiomeManager.obfuscateSeed(var9.getSeed()), var11.isHardcore(), this.server.levelKeys(), this.registryHolder, var9.dimensionTypeKey(), var9.dimension(), this.getMaxPlayers(), this.viewDistance, var15, !var14, var9.isDebug(), var9.isFlat()));
-+      var12.send(new ClientboundCustomPayloadPacket(ClientboundCustomPayloadPacket.BRAND, (new FriendlyByteBuf(Unpooled.buffer())).writeUtf(this.getServer().getServerModName())));
-+      var12.send(new ClientboundChangeDifficultyPacket(var11.getDifficulty(), var11.isDifficultyLocked()));
-+      var12.send(new ClientboundPlayerAbilitiesPacket(var2.abilities));
-+      var12.send(new ClientboundSetCarriedItemPacket(var2.inventory.selected));
-+      var12.send(new ClientboundUpdateRecipesPacket(this.server.getRecipeManager().getRecipes()));
-+      var12.send(new ClientboundUpdateTagsPacket(this.server.getTags()));
++      LOGGER.info("{}[{}] logged in with entity id {} at ({}, {}, {})", var2.getName().getString(), var11, var2.getId(), var2.getX(), var2.getY(), var2.getZ());
++      LevelData var12 = var10.getLevelData();
++      this.updatePlayerGameMode(var2, (ServerPlayer)null, var10);
++      ServerGamePacketListenerImpl var13 = new ServerGamePacketListenerImpl(this.server, var1, var2);
++      GameRules var14 = var10.getGameRules();
++      boolean var15 = var14.getBoolean(GameRules.RULE_DO_IMMEDIATE_RESPAWN);
++      boolean var16 = var14.getBoolean(GameRules.RULE_REDUCEDDEBUGINFO);
++      var13.send(new ClientboundLoginPacket(var2.getId(), var2.gameMode.getGameModeForPlayer(), BiomeManager.obfuscateSeed(var10.getSeed()), var12.isHardcore(), this.server.levelKeys(), this.registryHolder, var10.dimensionTypeKey(), var10.dimension(), this.getMaxPlayers(), this.viewDistance, var16, !var15, var10.isDebug(), var10.isFlat()));
++      var13.send(new ClientboundCustomPayloadPacket(ClientboundCustomPayloadPacket.BRAND, (new FriendlyByteBuf(Unpooled.buffer())).writeUtf(this.getServer().getServerModName())));
++      var13.send(new ClientboundChangeDifficultyPacket(var12.getDifficulty(), var12.isDifficultyLocked()));
++      var13.send(new ClientboundPlayerAbilitiesPacket(var2.abilities));
++      var13.send(new ClientboundSetCarriedItemPacket(var2.inventory.selected));
++      var13.send(new ClientboundUpdateRecipesPacket(this.server.getRecipeManager().getRecipes()));
++      var13.send(new ClientboundUpdateTagsPacket(this.server.getTags()));
        this.sendPlayerPermissionLevel(var2);
        var2.getStats().markAllDirty();
        var2.getRecipeBook().sendInitialRecipeBook(var2);
 -      this.updateEntireScoreboard(var8.getScoreboard(), var2);
-+      this.updateEntireScoreboard(var9.getScoreboard(), var2);
++      this.updateEntireScoreboard(var10.getScoreboard(), var2);
        this.server.invalidateStatus();
 -      TranslatableComponent var15;
-+      TranslatableComponent var16;
++      TranslatableComponent var17;
        if (var2.getGameProfile().getName().equalsIgnoreCase(var6)) {
 -         var15 = new TranslatableComponent("multiplayer.player.joined", new Object[]{var2.getDisplayName()});
-+         var16 = new TranslatableComponent("multiplayer.player.joined", new Object[]{var2.getDisplayName()});
++         var17 = new TranslatableComponent("multiplayer.player.joined", new Object[]{var2.getDisplayName()});
        } else {
 -         var15 = new TranslatableComponent("multiplayer.player.joined.renamed", new Object[]{var2.getDisplayName(), var6});
-+         var16 = new TranslatableComponent("multiplayer.player.joined.renamed", new Object[]{var2.getDisplayName(), var6});
++         var17 = new TranslatableComponent("multiplayer.player.joined.renamed", new Object[]{var2.getDisplayName(), var6});
        }
  
 -      this.broadcastMessage(var15.withStyle(ChatFormatting.YELLOW));
 -      var11.teleport(var2.getX(), var2.getY(), var2.getZ(), var2.yRot, var2.xRot);
-+      this.broadcastMessage(var16.withStyle(ChatFormatting.YELLOW), ChatType.SYSTEM, Util.NIL_UUID);
-+      var12.teleport(var2.getX(), var2.getY(), var2.getZ(), var2.yRot, var2.xRot);
++      this.broadcastMessage(var17.withStyle(ChatFormatting.YELLOW), ChatType.SYSTEM, Util.NIL_UUID);
++      var13.teleport(var2.getX(), var2.getY(), var2.getZ(), var2.yRot, var2.xRot);
        this.players.add(var2);
        this.playersByUUID.put(var2.getUUID(), var2);
        this.broadcastAll(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, new ServerPlayer[]{var2}));
  
 -      for(int var16 = 0; var16 < this.players.size(); ++var16) {
 -         var2.connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, new ServerPlayer[]{(ServerPlayer)this.players.get(var16)}));
-+      for(int var17 = 0; var17 < this.players.size(); ++var17) {
-+         var2.connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, new ServerPlayer[]{(ServerPlayer)this.players.get(var17)}));
++      for(int var18 = 0; var18 < this.players.size(); ++var18) {
++         var2.connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, new ServerPlayer[]{(ServerPlayer)this.players.get(var18)}));
        }
  
 -      var8.addNewPlayer(var2);
-+      var9.addNewPlayer(var2);
++      var10.addNewPlayer(var2);
        this.server.getCustomBossEvents().onPlayerConnect(var2);
 -      this.sendLevelInfo(var2, var8);
-+      this.sendLevelInfo(var2, var9);
++      this.sendLevelInfo(var2, var10);
        if (!this.server.getResourcePack().isEmpty()) {
           var2.sendTexturePack(this.server.getResourcePack(), this.server.getResourcePackHash());
        }
  
 -      Iterator var21 = var2.getActiveEffects().iterator();
-+      Iterator var23 = var2.getActiveEffects().iterator();
++      Iterator var24 = var2.getActiveEffects().iterator();
  
 -      while(var21.hasNext()) {
 -         MobEffectInstance var17 = (MobEffectInstance)var21.next();
 -         var11.send(new ClientboundUpdateMobEffectPacket(var2.getId(), var17));
-+      while(var23.hasNext()) {
-+         MobEffectInstance var18 = (MobEffectInstance)var23.next();
-+         var12.send(new ClientboundUpdateMobEffectPacket(var2.getId(), var18));
++      while(var24.hasNext()) {
++         MobEffectInstance var19 = (MobEffectInstance)var24.next();
++         var13.send(new ClientboundUpdateMobEffectPacket(var2.getId(), var19));
        }
  
        if (var7 != null && var7.contains("RootVehicle", 10)) {
 -         CompoundTag var22 = var7.getCompound("RootVehicle");
 -         Entity var23 = EntityType.loadEntityRecursive(var22.getCompound("Entity"), var8, (var1x) -> {
 -            return !var8.addWithUUID(var1x) ? null : var1x;
-+         CompoundTag var24 = var7.getCompound("RootVehicle");
-+         Entity var25 = EntityType.loadEntityRecursive(var24.getCompound("Entity"), var9, (var1x) -> {
-+            return !var9.addWithUUID(var1x) ? null : var1x;
++         CompoundTag var25 = var7.getCompound("RootVehicle");
++         Entity var26 = EntityType.loadEntityRecursive(var25.getCompound("Entity"), var10, (var1x) -> {
++            return !var10.addWithUUID(var1x) ? null : var1x;
           });
 -         if (var23 != null) {
 -            UUID var18 = var22.getUUID("Attach");
@@ -234,30 +242,30 @@
 -            Entity var20;
 -            if (var23.getUUID().equals(var18)) {
 -               var2.startRiding(var23, true);
-+         if (var25 != null) {
-+            UUID var19;
-+            if (var24.hasUUID("Attach")) {
-+               var19 = var24.getUUID("Attach");
++         if (var26 != null) {
++            UUID var20;
++            if (var25.hasUUID("Attach")) {
++               var20 = var25.getUUID("Attach");
              } else {
 -               var19 = var23.getIndirectPassengers().iterator();
-+               var19 = null;
++               var20 = null;
 +            }
  
 -               while(var19.hasNext()) {
 -                  var20 = (Entity)var19.next();
 -                  if (var20.getUUID().equals(var18)) {
 -                     var2.startRiding(var20, true);
-+            Iterator var20;
-+            Entity var21;
-+            if (var25.getUUID().equals(var19)) {
-+               var2.startRiding(var25, true);
++            Iterator var21;
++            Entity var22;
++            if (var26.getUUID().equals(var20)) {
++               var2.startRiding(var26, true);
 +            } else {
-+               var20 = var25.getIndirectPassengers().iterator();
++               var21 = var26.getIndirectPassengers().iterator();
 +
-+               while(var20.hasNext()) {
-+                  var21 = (Entity)var20.next();
-+                  if (var21.getUUID().equals(var19)) {
-+                     var2.startRiding(var21, true);
++               while(var21.hasNext()) {
++                  var22 = (Entity)var21.next();
++                  if (var22.getUUID().equals(var20)) {
++                     var2.startRiding(var22, true);
                       break;
                    }
                 }
@@ -267,21 +275,21 @@
                 LOGGER.warn("Couldn't reattach entity to player");
 -               var8.despawn(var23);
 -               var19 = var23.getIndirectPassengers().iterator();
-+               var9.despawn(var25);
-+               var20 = var25.getIndirectPassengers().iterator();
++               var10.despawn(var26);
++               var21 = var26.getIndirectPassengers().iterator();
  
 -               while(var19.hasNext()) {
 -                  var20 = (Entity)var19.next();
 -                  var8.despawn(var20);
-+               while(var20.hasNext()) {
-+                  var21 = (Entity)var20.next();
-+                  var9.despawn(var21);
++               while(var21.hasNext()) {
++                  var22 = (Entity)var21.next();
++                  var10.despawn(var22);
                 }
              }
           }
        }
  
-@@ -240,11 +272,10 @@
+@@ -240,11 +278,10 @@
        }
  
     }
@@ -293,7 +301,7 @@
              PlayerList.this.broadcastAll(new ClientboundSetBorderPacket(var1, ClientboundSetBorderPacket.Type.SET_SIZE));
           }
  
-@@ -272,11 +303,11 @@
+@@ -272,11 +309,11 @@
        });
     }
  
@@ -306,7 +314,7 @@
           var3 = var2;
           var1.load(var2);
           LOGGER.debug("loading single player");
-@@ -309,14 +340,15 @@
+@@ -309,14 +346,15 @@
           Entity var3 = var1.getRootVehicle();
           if (var3.hasOnePlayerPassenger()) {
              LOGGER.debug("Removing player mount");
@@ -325,7 +333,7 @@
  
              var2.getChunk(var1.xChunk, var1.zChunk).markUnsaved();
           }
-@@ -348,21 +380,21 @@
+@@ -348,21 +386,21 @@
              var4.append((Component)(new TranslatableComponent("multiplayer.disconnect.banned.expiration", new Object[]{BAN_DATE_FORMAT.format(var5.getExpires())})));
           }
  
@@ -349,7 +357,7 @@
  
     public ServerPlayer getPlayerForLogin(GameProfile var1) {
        UUID var2 = Player.createPlayerUUID(var1);
-@@ -382,80 +414,90 @@
+@@ -382,80 +420,90 @@
  
        Iterator var8 = var3.iterator();
  
@@ -359,7 +367,7 @@
 +         var6.connection.disconnect(new TranslatableComponent("multiplayer.disconnect.duplicate_login"));
        }
  
-+      ServerLevel var10 = this.server.getLevel(Level.OVERWORLD);
++      ServerLevel var10 = this.server.overworld();
        Object var9;
        if (this.server.isDemo()) {
 -         var9 = new DemoMode(this.server.getLevel(DimensionType.OVERWORLD));
@@ -383,15 +391,15 @@
 -      Object var6;
 +      BlockPos var3 = var1.getRespawnPosition();
 +      boolean var4 = var1.isRespawnForced();
-+      Optional var5;
-+      if (var3 != null) {
-+         var5 = Player.findRespawnPositionAndUseSpawnBlock(this.server.getLevel(var1.getRespawnDimension()), var3, var4, var2);
++      ServerLevel var5 = this.server.getLevel(var1.getRespawnDimension());
++      Optional var6;
++      if (var5 != null && var3 != null) {
++         var6 = Player.findRespawnPositionAndUseSpawnBlock(var5, var3, var4, var2);
 +      } else {
-+         var5 = Optional.empty();
++         var6 = Optional.empty();
 +      }
 +
-+      ResourceKey var6 = var5.isPresent() ? var1.getRespawnDimension() : Level.OVERWORLD;
-+      ServerLevel var8 = this.server.getLevel(var6);
++      ServerLevel var8 = var5 != null && var6.isPresent() ? var5 : this.server.overworld();
 +      Object var7;
        if (this.server.isDemo()) {
 -         var6 = new DemoMode(this.server.getLevel(var1.dimension));
@@ -435,13 +443,13 @@
 -         }
 +      this.updatePlayerGameMode(var9, var1, var8);
 +      boolean var12 = false;
-+      if (var5.isPresent()) {
-+         Vec3 var13 = (Vec3)var5.get();
++      if (var6.isPresent()) {
++         Vec3 var13 = (Vec3)var6.get();
 +         var9.moveTo(var13.x, var13.y, var13.z, 0.0F, 0.0F);
-+         var9.setRespawnPosition(var6, var3, var4, false);
++         var9.setRespawnPosition(var8.dimension(), var3, var4, false);
 +         var12 = !var2 && var8.getBlockState(var3).getBlock() instanceof RespawnAnchorBlock;
 +      } else if (var3 != null) {
-+         var9.connection.send(new ClientboundGameEventPacket(0, 0.0F));
++         var9.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.NO_RESPAWN_BLOCK_AVAILABLE, 0.0F));
        }
  
 -      while(!var12.noCollision(var7) && var7.getY() < 256.0D) {
@@ -488,7 +496,7 @@
     public void sendPlayerPermissionLevel(ServerPlayer var1) {
        GameProfile var2 = var1.getGameProfile();
        int var3 = this.server.getProfilePermissions(var2);
-@@ -475,14 +517,14 @@
+@@ -475,14 +523,14 @@
           ((ServerPlayer)this.players.get(var2)).connection.send(var1);
        }
  
@@ -505,7 +513,7 @@
        }
  
     }
-@@ -495,26 +537,26 @@
+@@ -495,26 +543,26 @@
  
           while(var5.hasNext()) {
              String var6 = (String)var5.next();
@@ -535,7 +543,7 @@
  
        }
     }
-@@ -575,11 +617,11 @@
+@@ -575,11 +623,11 @@
     public boolean isWhiteListed(GameProfile var1) {
        return !this.doWhiteList || this.ops.contains(var1) || this.whitelist.contains(var1);
     }
@@ -548,7 +556,7 @@
     @Nullable
     public ServerPlayer getPlayerByName(String var1) {
        Iterator var2 = this.players.iterator();
-@@ -594,14 +636,14 @@
+@@ -594,14 +642,14 @@
        } while(!var3.getGameProfile().getName().equalsIgnoreCase(var1));
  
        return var3;
@@ -565,32 +573,39 @@
              double var18 = var6 - var13.getZ();
              if (var14 * var14 + var16 * var16 + var18 * var18 < var8 * var8) {
                 var13.connection.send(var11);
-@@ -636,15 +678,14 @@
+@@ -636,19 +684,18 @@
  
     public void reloadWhiteList() {
     }
  
     public void sendLevelInfo(ServerPlayer var1, ServerLevel var2) {
 -      WorldBorder var3 = this.server.getLevel(DimensionType.OVERWORLD).getWorldBorder();
-+      WorldBorder var3 = this.server.getLevel(Level.OVERWORLD).getWorldBorder();
++      WorldBorder var3 = this.server.overworld().getWorldBorder();
        var1.connection.send(new ClientboundSetBorderPacket(var3, ClientboundSetBorderPacket.Type.INITIALIZE));
        var1.connection.send(new ClientboundSetTimePacket(var2.getGameTime(), var2.getDayTime(), var2.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)));
 -      BlockPos var4 = var2.getSharedSpawnPos();
 -      var1.connection.send(new ClientboundSetSpawnPositionPacket(var4));
 +      var1.connection.send(new ClientboundSetDefaultSpawnPositionPacket(var2.getSharedSpawnPos()));
        if (var2.isRaining()) {
-          var1.connection.send(new ClientboundGameEventPacket(1, 0.0F));
-          var1.connection.send(new ClientboundGameEventPacket(7, var2.getRainLevel(1.0F)));
-          var1.connection.send(new ClientboundGameEventPacket(8, var2.getThunderLevel(1.0F)));
+-         var1.connection.send(new ClientboundGameEventPacket(1, 0.0F));
+-         var1.connection.send(new ClientboundGameEventPacket(7, var2.getRainLevel(1.0F)));
+-         var1.connection.send(new ClientboundGameEventPacket(8, var2.getThunderLevel(1.0F)));
++         var1.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.START_RAINING, 0.0F));
++         var1.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, var2.getRainLevel(1.0F)));
++         var1.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, var2.getThunderLevel(1.0F)));
        }
-@@ -701,46 +742,41 @@
+ 
+    }
+ 
+    public void sendAllPlayerInfo(ServerPlayer var1) {
+@@ -701,46 +748,41 @@
  
     public void setOverrideGameMode(GameType var1) {
        this.overrideGameMode = var1;
     }
  
 -   private void updatePlayerGameMode(ServerPlayer var1, ServerPlayer var2, LevelAccessor var3) {
-+   private void updatePlayerGameMode(ServerPlayer var1, ServerPlayer var2, ServerLevel var3) {
++   private void updatePlayerGameMode(ServerPlayer var1, @Nullable ServerPlayer var2, ServerLevel var3) {
        if (var2 != null) {
           var1.gameMode.setGameModeForPlayer(var2.gameMode.getGameModeForPlayer());
        } else if (this.overrideGameMode != null) {
@@ -637,7 +652,7 @@
              File var6 = new File(var4, var1.getName().getString() + ".json");
              if (var6.exists() && var6.isFile()) {
                 var6.renameTo(var5);
-@@ -756,13 +792,13 @@
+@@ -756,13 +798,13 @@
  
     public PlayerAdvancements getPlayerAdvancements(ServerPlayer var1) {
        UUID var2 = var1.getUUID();
@@ -653,7 +668,7 @@
  
        var3.setPlayer(var1);
        return var3;
-@@ -798,11 +834,11 @@
+@@ -798,11 +840,11 @@
     public void reloadResources() {
        Iterator var1 = this.advancements.values().iterator();
  

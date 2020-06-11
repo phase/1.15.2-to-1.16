@@ -38,7 +38,24 @@
              return false;
           }
        }
-@@ -94,11 +92,6 @@
+@@ -81,24 +79,19 @@
+       return !this.passed;
+    }
+ 
+    public void start() {
+       this.passed = false;
+-      this.doorOpenDirX = (float)((double)((float)this.doorPos.getX() + 0.5F) - this.mob.getX());
+-      this.doorOpenDirZ = (float)((double)((float)this.doorPos.getZ() + 0.5F) - this.mob.getZ());
++      this.doorOpenDirX = (float)((double)this.doorPos.getX() + 0.5D - this.mob.getX());
++      this.doorOpenDirZ = (float)((double)this.doorPos.getZ() + 0.5D - this.mob.getZ());
+    }
+ 
+    public void tick() {
+-      float var1 = (float)((double)((float)this.doorPos.getX() + 0.5F) - this.mob.getX());
+-      float var2 = (float)((double)((float)this.doorPos.getZ() + 0.5F) - this.mob.getZ());
++      float var1 = (float)((double)this.doorPos.getX() + 0.5D - this.mob.getX());
++      float var2 = (float)((double)this.doorPos.getZ() + 0.5D - this.mob.getZ());
+       float var3 = this.doorOpenDirX * var1 + this.doorOpenDirZ * var2;
        if (var3 < 0.0F) {
           this.passed = true;
        }

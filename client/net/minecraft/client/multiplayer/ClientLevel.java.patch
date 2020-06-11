@@ -1,6 +1,15 @@
 --- net/minecraft/client/multiplayer/ClientLevel.java
 +++ net/minecraft/client/multiplayer/ClientLevel.java
-@@ -11,20 +11,22 @@
+@@ -1,8 +1,7 @@
+ package net.minecraft.client.multiplayer;
+ 
+-import com.google.common.collect.Iterables;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
+@@ -11,20 +10,22 @@
  import java.util.Iterator;
  import java.util.List;
  import java.util.Map;
@@ -23,7 +32,7 @@
  import net.minecraft.client.resources.sounds.SimpleSoundInstance;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Cursor3D;
-@@ -33,89 +35,113 @@
+@@ -33,139 +34,148 @@
  import net.minecraft.core.particles.ParticleOptions;
  import net.minecraft.core.particles.ParticleTypes;
  import net.minecraft.nbt.CompoundTag;
@@ -40,7 +49,7 @@
  import net.minecraft.util.profiling.ProfilerFiller;
 +import net.minecraft.world.Difficulty;
  import net.minecraft.world.entity.Entity;
- import net.minecraft.world.entity.global.LightningBolt;
+-import net.minecraft.world.entity.global.LightningBolt;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.crafting.RecipeManager;
@@ -72,7 +81,7 @@
  import net.minecraft.world.scores.Scoreboard;
  
  public class ClientLevel extends Level {
-    private final List<Entity> globalEntities = Lists.newArrayList();
+-   private final List<Entity> globalEntities = Lists.newArrayList();
     private final Int2ObjectMap<Entity> entitiesById = new Int2ObjectOpenHashMap();
     private final ClientPacketListener connection;
     private final LevelRenderer levelRenderer;
@@ -157,11 +166,55 @@
 +   }
 +
     public Iterable<Entity> entitiesForRendering() {
-       return Iterables.concat(this.entitiesById.values(), this.globalEntities);
+-      return Iterables.concat(this.entitiesById.values(), this.globalEntities);
++      return this.entitiesById.values();
     }
  
     public void tickEntities() {
-@@ -161,11 +187,13 @@
+       ProfilerFiller var1 = this.getProfiler();
+       var1.push("entities");
+-      var1.push("global");
++      ObjectIterator var2 = this.entitiesById.int2ObjectEntrySet().iterator();
+ 
+-      for(int var2 = 0; var2 < this.globalEntities.size(); ++var2) {
+-         Entity var3 = (Entity)this.globalEntities.get(var2);
+-         this.guardEntityTick((var0) -> {
+-            ++var0.tickCount;
+-            var0.tick();
+-         }, var3);
+-         if (var3.removed) {
+-            this.globalEntities.remove(var2--);
+-         }
+-      }
+-
+-      var1.popPush("regular");
+-      ObjectIterator var5 = this.entitiesById.int2ObjectEntrySet().iterator();
+-
+-      while(var5.hasNext()) {
+-         Entry var6 = (Entry)var5.next();
+-         Entity var4 = (Entity)var6.getValue();
++      while(var2.hasNext()) {
++         Entry var3 = (Entry)var2.next();
++         Entity var4 = (Entity)var3.getValue();
+          if (!var4.isPassenger()) {
+             var1.push("tick");
+             if (!var4.removed) {
+                this.guardEntityTick(this::tickNonPassenger, var4);
+             }
+ 
+             var1.pop();
+             var1.push("remove");
+             if (var4.removed) {
+-               var5.remove();
++               var2.remove();
+                this.onEntityRemoved(var4);
+             }
+ 
+             var1.pop();
+          }
+       }
+ 
+-      var1.pop();
        this.tickBlockEntities();
        var1.pop();
     }
@@ -176,7 +229,7 @@
           var1.xRotO = var1.xRot;
           if (var1.inChunk || var1.isSpectator()) {
              ++var1.tickCount;
-@@ -214,28 +242,34 @@
+@@ -214,28 +224,34 @@
        } else {
           var2.stopRiding();
        }
@@ -226,7 +279,7 @@
     public void unload(LevelChunk var1) {
        this.blockEntitiesToUnload.addAll(var1.getBlockEntities().values());
        this.chunkSource.getLightEngine().enableLightSources(var1.getPos(), false);
-@@ -255,30 +289,10 @@
+@@ -255,38 +271,14 @@
  
     public boolean hasChunk(int var1, int var2) {
        return true;
@@ -256,8 +309,16 @@
        return this.entitiesById.size();
     }
  
-    public void addLightning(LightningBolt var1) {
-@@ -341,11 +355,11 @@
+-   public void addLightning(LightningBolt var1) {
+-      this.globalEntities.add(var1);
+-   }
+-
+    public void addPlayer(int var1, AbstractClientPlayer var2) {
+       this.addEntity(var1, var2);
+       this.players.add(var2);
+    }
+ 
+@@ -341,11 +333,11 @@
     public void setKnownState(BlockPos var1, BlockState var2) {
        this.setBlock(var1, var2, 19);
     }
@@ -270,7 +331,7 @@
     public void animateTick(int var1, int var2, int var3) {
        boolean var4 = true;
        Random var5 = new Random();
-@@ -387,14 +401,23 @@
+@@ -387,14 +379,23 @@
              BlockPos var15 = var7.below();
              this.trySpawnDripParticles(var15, this.getBlockState(var15), var13, var14);
           }
@@ -284,7 +345,7 @@
 +      if (!var11.isCollisionShapeFullBlock(this, var7)) {
 +         this.getBiome(var7).getAmbientParticle().ifPresent((var2x) -> {
 +            if (var2x.canSpawn(this.random)) {
-+               this.addParticle(var2x.getOptions(), (double)((float)var7.getX() + this.random.nextFloat()), (double)((float)var7.getY() + this.random.nextFloat()), (double)((float)var7.getZ() + this.random.nextFloat()), 0.0D, 0.0D, 0.0D);
++               this.addParticle(var2x.getOptions(), (double)var7.getX() + this.random.nextDouble(), (double)var7.getY() + this.random.nextDouble(), (double)var7.getZ() + this.random.nextDouble(), 0.0D, 0.0D, 0.0D);
 +            }
 +
 +         });
@@ -295,7 +356,20 @@
     private void trySpawnDripParticles(BlockPos var1, BlockState var2, ParticleOptions var3, boolean var4) {
        if (var2.getFluidState().isEmpty()) {
           VoxelShape var5 = var2.getCollisionShape(this, var1);
-@@ -498,31 +521,20 @@
+@@ -472,11 +473,11 @@
+       this.playLocalSound((double)var1.getX() + 0.5D, (double)var1.getY() + 0.5D, (double)var1.getZ() + 0.5D, var2, var3, var4, var5, var6);
+    }
+ 
+    public void playLocalSound(double var1, double var3, double var5, SoundEvent var7, SoundSource var8, float var9, float var10, boolean var11) {
+       double var12 = this.minecraft.gameRenderer.getMainCamera().getPosition().distanceToSqr(var1, var3, var5);
+-      SimpleSoundInstance var14 = new SimpleSoundInstance(var7, var8, var9, var10, (float)var1, (float)var3, (float)var5);
++      SimpleSoundInstance var14 = new SimpleSoundInstance(var7, var8, var9, var10, var1, var3, var5);
+       if (var11 && var12 > 100.0D) {
+          double var15 = Math.sqrt(var12) / 40.0D;
+          this.minecraft.getSoundManager().playDelayed(var14, (int)(var15 * 20.0D));
+       } else {
+          this.minecraft.getSoundManager().play(var14);
+@@ -498,31 +499,20 @@
  
     public void setScoreboard(Scoreboard var1) {
        this.scoreboard = var1;
@@ -328,7 +402,7 @@
     @Nullable
     public MapItemSavedData getMapData(String var1) {
        return (MapItemSavedData)this.mapData.get(var1);
-@@ -690,34 +702,47 @@
+@@ -690,34 +680,47 @@
        }
  
        return new Vec3((double)var4, (double)var5, (double)var6);
@@ -359,7 +433,7 @@
     }
  
 +   public float getShade(Direction var1, boolean var2) {
-+      boolean var3 = this.dimensionType().isNether();
++      boolean var3 = this.effects().constantAmbientLight();
 +      if (!var2) {
 +         return var3 ? 0.9F : 1.0F;
 +      } else {
@@ -385,7 +459,7 @@
        return var3.getColor(var1, () -> {
           return this.calculateBlockTint(var1, var2);
        });
-@@ -743,6 +768,142 @@
+@@ -743,6 +746,142 @@
           }
  
           return (var5 / var4 & 255) << 16 | (var6 / var4 & 255) << 8 | var7 / var4 & 255;

@@ -1,17 +1,16 @@
 --- net/minecraft/world/level/storage/LevelStorageSource.java
 +++ net/minecraft/world/level/storage/LevelStorageSource.java
-@@ -1,31 +1,55 @@
+@@ -1,31 +1,56 @@
  package net.minecraft.world.level.storage;
  
 +import com.google.common.collect.ImmutableList;
 +import com.google.common.collect.Maps;
 +import com.google.common.collect.UnmodifiableIterator;
-+import com.google.gson.Gson;
-+import com.google.gson.GsonBuilder;
  import com.mojang.datafixers.DataFixer;
 +import com.mojang.datafixers.util.Pair;
 +import com.mojang.serialization.DataResult;
 +import com.mojang.serialization.Dynamic;
++import com.mojang.serialization.DynamicOps;
 +import com.mojang.serialization.Lifecycle;
  import java.io.File;
  import java.io.FileInputStream;
@@ -30,17 +29,20 @@
  import javax.annotation.Nullable;
 +import net.minecraft.SharedConstants;
 +import net.minecraft.Util;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtIo;
 -import net.minecraft.nbt.NbtUtils;
 -import net.minecraft.server.MinecraftServer;
 +import net.minecraft.nbt.NbtOps;
++import net.minecraft.nbt.Tag;
 +import net.minecraft.resources.ResourceKey;
 +import net.minecraft.util.DirectoryLock;
  import net.minecraft.util.ProgressListener;
  import net.minecraft.util.datafix.DataFixTypes;
 +import net.minecraft.util.datafix.DataFixers;
 +import net.minecraft.util.datafix.fixes.References;
++import net.minecraft.world.level.DataPackConfig;
 +import net.minecraft.world.level.Level;
 +import net.minecraft.world.level.LevelSettings;
 +import net.minecraft.world.level.dimension.DimensionType;
@@ -52,13 +54,12 @@
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DateTimeFormatter FORMATTER;
 +   private static final ImmutableList<String> OLD_SETTINGS_KEYS;
-+   private static final Gson WORLD_GEN_SETTINGS_GSON;
     private final Path baseDir;
     private final Path backupDir;
     private final DataFixer fixerUpper;
  
     public LevelStorageSource(Path var1, Path var2, DataFixer var3) {
-@@ -39,73 +63,166 @@
+@@ -39,73 +64,226 @@
  
        this.baseDir = var1;
        this.backupDir = var2;
@@ -100,16 +101,21 @@
  
 -   public boolean convertLevel(String var1, ProgressListener var2) {
 -      return McRegionUpgrader.convertLevel(this.baseDir, this.fixerUpper, var1, var2);
++   private static DataPackConfig readDataPackConfig(Dynamic<?> var0) {
++      DataResult var10000 = DataPackConfig.CODEC.parse(var0);
++      Logger var10001 = LOGGER;
++      var10001.getClass();
++      return (DataPackConfig)var10000.resultOrPartial(var10001::error).orElse(DataPackConfig.DEFAULT);
+    }
+ 
+-   @Nullable
+-   public LevelData getDataTagFor(String var1) {
+-      return getDataTagFor(this.baseDir, this.fixerUpper, var1);
 +   private int getStorageVersion() {
 +      return 19133;
     }
  
     @Nullable
--   public LevelData getDataTagFor(String var1) {
--      return getDataTagFor(this.baseDir, this.fixerUpper, var1);
--   }
--
--   @Nullable
 -   protected static LevelData getDataTagFor(Path var0, DataFixer var1, String var2) {
 -      File var3 = new File(var0.toFile(), var2);
 -      if (!var3.exists()) {
@@ -139,37 +145,78 @@
  
     @Nullable
 -   public static LevelData getLevelData(File var0, DataFixer var1) {
-+   private static WorldData getLevelData(File var0, DataFixer var1) {
++   private static DataPackConfig getDataPacks(File var0, DataFixer var1) {
        try {
           CompoundTag var2 = NbtIo.readCompressed(new FileInputStream(var0));
           CompoundTag var3 = var2.getCompound("Data");
-          CompoundTag var4 = var3.contains("Player", 10) ? var3.getCompound("Player") : null;
+-         CompoundTag var4 = var3.contains("Player", 10) ? var3.getCompound("Player") : null;
           var3.remove("Player");
-          int var5 = var3.contains("DataVersion", 99) ? var3.getInt("DataVersion") : -1;
+-         int var5 = var3.contains("DataVersion", 99) ? var3.getInt("DataVersion") : -1;
 -         return new LevelData(NbtUtils.update(var1, DataFixTypes.LEVEL, var3, var5), var1, var5, var4);
--      } catch (Exception var6) {
--         LOGGER.error((String)"Exception reading {}", (Object)var0, (Object)var6);
-+         Dynamic var6 = var1.update(DataFixTypes.LEVEL.getType(), new Dynamic(NbtOps.INSTANCE, var3), var5, SharedConstants.getCurrentVersion().getWorldVersion());
-+         Pair var7 = readWorldGenSettings(var6, var1, var5);
-+         LevelVersion var8 = LevelVersion.parse(var6);
-+         LevelSettings var9 = LevelSettings.parse(var6, (WorldGenSettings)var7.getFirst());
-+         return PrimaryLevelData.parse(var6, var1, var5, var4, var9, var8);
-+      } catch (Exception var10) {
-+         LOGGER.error((String)"Exception reading {}", (Object)var0, (Object)var10);
++         int var4 = var3.contains("DataVersion", 99) ? var3.getInt("DataVersion") : -1;
++         Dynamic var5 = var1.update(DataFixTypes.LEVEL.getType(), new Dynamic(NbtOps.INSTANCE, var3), var4, SharedConstants.getCurrentVersion().getWorldVersion());
++         return (DataPackConfig)var5.get("DataPacks").result().map(LevelStorageSource::readDataPackConfig).orElse(DataPackConfig.DEFAULT);
+       } catch (Exception var6) {
+          LOGGER.error((String)"Exception reading {}", (Object)var0, (Object)var6);
           return null;
        }
     }
  
 -   public File getFile(String var1, String var2) {
 -      return this.baseDir.resolve(var1).resolve(var2).toFile();
-+   public LevelStorageSource.LevelStorageAccess createAccess(String var1) throws IOException {
-+      return new LevelStorageSource.LevelStorageAccess(var1);
++   private static BiFunction<File, DataFixer, PrimaryLevelData> getLevelData(DynamicOps<Tag> var0, DataPackConfig var1) {
++      return (var2, var3) -> {
++         try {
++            CompoundTag var4 = NbtIo.readCompressed(new FileInputStream(var2));
++            CompoundTag var5 = var4.getCompound("Data");
++            CompoundTag var6 = var5.contains("Player", 10) ? var5.getCompound("Player") : null;
++            var5.remove("Player");
++            int var7 = var5.contains("DataVersion", 99) ? var5.getInt("DataVersion") : -1;
++            Dynamic var8 = var3.update(DataFixTypes.LEVEL.getType(), new Dynamic(var0, var5), var7, SharedConstants.getCurrentVersion().getWorldVersion());
++            Pair var9 = readWorldGenSettings(var8, var3, var7);
++            LevelVersion var10 = LevelVersion.parse(var8);
++            LevelSettings var11 = LevelSettings.parse(var8, var1);
++            return PrimaryLevelData.parse(var8, var3, var7, var6, var11, var10, (WorldGenSettings)var9.getFirst(), (Lifecycle)var9.getSecond());
++         } catch (Exception var12) {
++            LOGGER.error((String)"Exception reading {}", (Object)var2, (Object)var12);
++            return null;
++         }
++      };
     }
  
++   private BiFunction<File, DataFixer, LevelSummary> levelSummaryReader(File var1, boolean var2) {
++      return (var3, var4) -> {
++         try {
++            CompoundTag var5 = NbtIo.readCompressed(new FileInputStream(var3));
++            CompoundTag var6 = var5.getCompound("Data");
++            var6.remove("Player");
++            int var7 = var6.contains("DataVersion", 99) ? var6.getInt("DataVersion") : -1;
++            Dynamic var8 = var4.update(DataFixTypes.LEVEL.getType(), new Dynamic(NbtOps.INSTANCE, var6), var7, SharedConstants.getCurrentVersion().getWorldVersion());
++            LevelVersion var9 = LevelVersion.parse(var8);
++            int var10 = var9.levelDataVersion();
++            if (var10 != 19132 && var10 != 19133) {
++               return null;
++            } else {
++               boolean var11 = var10 != this.getStorageVersion();
++               File var12 = new File(var1, "icon.png");
++               DataPackConfig var13 = (DataPackConfig)var8.get("DataPacks").result().map(LevelStorageSource::readDataPackConfig).orElse(DataPackConfig.DEFAULT);
++               LevelSettings var14 = LevelSettings.parse(var8, var13);
++               return new LevelSummary(var14, var9, var1.getName(), var11, var2, var12);
++            }
++         } catch (Exception var15) {
++            LOGGER.error((String)"Exception reading {}", (Object)var3, (Object)var15);
++            return null;
++         }
++      };
++   }
++
++   public LevelStorageSource.LevelStorageAccess createAccess(String var1) throws IOException {
++      return new LevelStorageSource.LevelStorageAccess(var1);
++   }
++
     static {
        FORMATTER = (new DateTimeFormatterBuilder()).appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD).appendLiteral('-').appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-').appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral('_').appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral('-').appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral('-').appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
 +      OLD_SETTINGS_KEYS = ImmutableList.of("RandomSeed", "generatorName", "generatorOptions", "generatorVersion", "legacy_custom_options", "MapFeatures", "BonusChest");
-+      WORLD_GEN_SETTINGS_GSON = (new GsonBuilder()).setPrettyPrinting().serializeNulls().disableHtmlEscaping().create();
     }
 +
 +   public class LevelStorageAccess implements AutoCloseable {
@@ -210,8 +257,8 @@
 +      }
 +
 +      public boolean requiresConversion() {
-+         WorldData var1 = this.getDataTag();
-+         return var1 != null && var1.getVersion() != LevelStorageSource.this.getStorageVersion();
++         LevelSummary var1 = this.getSummary();
++         return var1 != null && var1.levelVersion().levelDataVersion() != LevelStorageSource.this.getStorageVersion();
 +      }
 +
 +      public boolean convertLevel(ProgressListener var1) {
@@ -220,31 +267,43 @@
 +      }
 +
 +      @Nullable
-+      public WorldData getDataTag() {
++      public LevelSummary getSummary() {
 +         this.checkLock();
-+         return (WorldData)LevelStorageSource.this.readLevelData(this.levelPath.toFile(), (var0, var1) -> {
-+            return LevelStorageSource.getLevelData(var0, var1);
++         return (LevelSummary)LevelStorageSource.this.readLevelData(this.levelPath.toFile(), LevelStorageSource.this.levelSummaryReader(this.levelPath.toFile(), false));
++      }
++
++      @Nullable
++      public WorldData getDataTag(DynamicOps<Tag> var1, DataPackConfig var2) {
++         this.checkLock();
++         return (WorldData)LevelStorageSource.this.readLevelData(this.levelPath.toFile(), LevelStorageSource.getLevelData(var1, var2));
++      }
++
++      @Nullable
++      public DataPackConfig getDataPacks() {
++         this.checkLock();
++         return (DataPackConfig)LevelStorageSource.this.readLevelData(this.levelPath.toFile(), (var0, var1) -> {
++            return LevelStorageSource.getDataPacks(var0, var1);
 +         });
 +      }
 +
-+      public void saveDataTag(WorldData var1) {
-+         this.saveDataTag(var1, (CompoundTag)null);
++      public void saveDataTag(RegistryAccess var1, WorldData var2) {
++         this.saveDataTag(var1, var2, (CompoundTag)null);
 +      }
 +
-+      public void saveDataTag(WorldData var1, @Nullable CompoundTag var2) {
-+         File var3 = this.levelPath.toFile();
-+         CompoundTag var4 = var1.createTag(var2);
-+         CompoundTag var5 = new CompoundTag();
-+         var5.put("Data", var4);
++      public void saveDataTag(RegistryAccess var1, WorldData var2, @Nullable CompoundTag var3) {
++         File var4 = this.levelPath.toFile();
++         CompoundTag var5 = var2.createTag(var1, var3);
++         CompoundTag var6 = new CompoundTag();
++         var6.put("Data", var5);
 +
 +         try {
-+            File var6 = File.createTempFile("level", ".dat", var3);
-+            NbtIo.writeCompressed(var5, new FileOutputStream(var6));
-+            File var7 = new File(var3, "level.dat_old");
-+            File var8 = new File(var3, "level.dat");
-+            Util.safeReplaceFile(var8, var6, var7);
-+         } catch (Exception var9) {
-+            LevelStorageSource.LOGGER.error((String)"Failed to save level {}", (Object)var3, (Object)var9);
++            File var7 = File.createTempFile("level", ".dat", var4);
++            NbtIo.writeCompressed(var6, new FileOutputStream(var7));
++            File var8 = new File(var4, "level.dat_old");
++            File var9 = new File(var4, "level.dat");
++            Util.safeReplaceFile(var9, var7, var8);
++         } catch (Exception var10) {
++            LevelStorageSource.LOGGER.error((String)"Failed to save level {}", (Object)var4, (Object)var10);
 +         }
 +
 +      }

@@ -1,6 +1,13 @@
 --- net/minecraft/world/entity/ExperienceOrb.java
 +++ net/minecraft/world/entity/ExperienceOrb.java
-@@ -57,11 +57,11 @@
+@@ -51,17 +51,17 @@
+       }
+ 
+       this.xo = this.getX();
+       this.yo = this.getY();
+       this.zo = this.getZ();
+-      if (this.isUnderLiquid(FluidTags.WATER)) {
++      if (this.isEyeInFluid(FluidTags.WATER)) {
           this.setUnderwaterMovement();
        } else if (!this.isNoGravity()) {
           this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.03D, 0.0D));

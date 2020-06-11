@@ -40,6 +40,26 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_FLAGS_ID, (byte)0);
+@@ -93,15 +91,15 @@
+       }
+ 
+       super.aiStep();
+    }
+ 
+-   protected void customServerAiStep() {
+-      if (this.isInWaterRainOrBubble()) {
+-         this.hurt(DamageSource.DROWN, 1.0F);
+-      }
++   public boolean isSensitiveToWater() {
++      return true;
++   }
+ 
++   protected void customServerAiStep() {
+       --this.nextHeightOffsetChangeTick;
+       if (this.nextHeightOffsetChangeTick <= 0) {
+          this.nextHeightOffsetChangeTick = 100;
+          this.allowedHeightOffset = 0.5F + (float)this.random.nextGaussian() * 3.0F;
+       }
 @@ -208,11 +206,13 @@
                       this.blaze.setCharged(false);
                    }

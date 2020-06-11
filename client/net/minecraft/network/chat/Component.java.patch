@@ -100,12 +100,12 @@
     List<Component> getSiblings();
  
 -   Stream<Component> stream();
-+   MutableComponent toMutable();
++   MutableComponent plainCopy();
  
 -   default Stream<Component> flatStream() {
 -      return this.stream().map(Component::flattenStyle);
 -   }
-+   MutableComponent mutableCopy();
++   MutableComponent copy();
  
 -   default Iterator<Component> iterator() {
 -      return this.flatStream().iterator();

@@ -114,7 +114,7 @@
     }
  
     public float getDestroySpeed(ItemStack var1, BlockState var2) {
-@@ -161,11 +135,11 @@
+@@ -161,16 +135,16 @@
  
     public boolean mineBlock(ItemStack var1, Level var2, BlockState var3, BlockPos var4, LivingEntity var5) {
        return false;
@@ -125,8 +125,15 @@
        return false;
     }
  
-    public boolean interactEnemy(ItemStack var1, Player var2, LivingEntity var3, InteractionHand var4) {
-       return false;
+-   public boolean interactEnemy(ItemStack var1, Player var2, LivingEntity var3, InteractionHand var4) {
+-      return false;
++   public InteractionResult interactLivingEntity(ItemStack var1, Player var2, LivingEntity var3, InteractionHand var4) {
++      return InteractionResult.PASS;
+    }
+ 
+    public String toString() {
+       return Registry.ITEM.getKey(this).getPath();
+    }
 @@ -228,11 +202,11 @@
  
     public void releaseUsing(ItemStack var1, Level var2, LivingEntity var3, int var4) {
@@ -153,7 +160,7 @@
        Vec3 var5 = var1.getEyePosition(1.0F);
        float var6 = Mth.cos(-var4 * 0.017453292F - 3.1415927F);
        float var7 = Mth.sin(-var4 * 0.017453292F - 3.1415927F);
-@@ -296,12 +270,12 @@
+@@ -296,18 +270,22 @@
  
     public boolean isValidRepairItem(ItemStack var1, ItemStack var2) {
        return false;
@@ -168,7 +175,17 @@
     public boolean useOnRelease(ItemStack var1) {
        return var1.getItem() == Items.CROSSBOW;
     }
-@@ -325,17 +299,26 @@
+ 
++   public ItemStack getDefaultInstance() {
++      return new ItemStack(this);
++   }
++
+    public boolean is(Tag<Item> var1) {
+       return var1.contains(this);
+    }
+ 
+    public boolean isEdible() {
+@@ -325,17 +303,26 @@
  
     public SoundEvent getEatingSound() {
        return SoundEvents.GENERIC_EAT;
@@ -195,7 +212,7 @@
           this.rarity = Rarity.COMMON;
        }
  
-@@ -375,7 +358,12 @@
+@@ -375,7 +362,12 @@
  
        public Item.Properties rarity(Rarity var1) {
           this.rarity = var1;

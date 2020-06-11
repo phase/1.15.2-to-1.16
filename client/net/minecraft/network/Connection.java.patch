@@ -26,7 +26,19 @@
                 if (var3) {
                    LOGGER.debug("Failed to sent packet", var2);
                    this.send(new ClientboundDisconnectPacket(var4), (var2x) -> {
-@@ -346,11 +346,11 @@
+@@ -140,11 +140,10 @@
+       var0.handle(var1);
+    }
+ 
+    public void setListener(PacketListener var1) {
+       Validate.notNull(var1, "packetListener", new Object[0]);
+-      LOGGER.debug("Set listener of {} to {}", this, var1);
+       this.packetListener = var1;
+    }
+ 
+    public void send(Packet<?> var1) {
+       this.send(var1, (GenericFutureListener)null);
+@@ -346,11 +345,11 @@
           } else {
              this.disconnectionHandled = true;
              if (this.getDisconnectedReason() != null) {

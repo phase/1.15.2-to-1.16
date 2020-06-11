@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/ItemUtils.java
 +++ net/minecraft/world/item/ItemUtils.java
-@@ -1,0 +1,13 @@
+@@ -1,0 +1,34 @@
 +package net.minecraft.world.item;
 +
 +import net.minecraft.world.InteractionHand;
@@ -12,5 +12,26 @@
 +   public static InteractionResultHolder<ItemStack> useDrink(Level var0, Player var1, InteractionHand var2) {
 +      var1.startUsingItem(var2);
 +      return InteractionResultHolder.consume(var1.getItemInHand(var2));
++   }
++
++   public static ItemStack createBucketResult(ItemStack var0, Player var1, ItemStack var2) {
++      if (var1.abilities.instabuild) {
++         if (!var1.inventory.contains(var2)) {
++            var1.inventory.add(var2);
++         }
++
++         return var0;
++      } else {
++         var0.shrink(1);
++         if (var0.isEmpty()) {
++            return var2;
++         } else {
++            if (!var1.inventory.add(var2)) {
++               var1.drop(var2, false);
++            }
++
++            return var0;
++         }
++      }
 +   }
 +}

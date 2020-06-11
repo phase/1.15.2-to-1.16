@@ -32,7 +32,7 @@
  
     public Component getNameForDisplay(PlayerInfo var1) {
 -      return var1.getTabListDisplayName() != null ? var1.getTabListDisplayName() : PlayerTeam.formatNameForTeam(var1.getTeam(), new TextComponent(var1.getProfile().getName()));
-+      return var1.getTabListDisplayName() != null ? this.decorateName(var1, var1.getTabListDisplayName().mutableCopy()) : this.decorateName(var1, PlayerTeam.formatNameForTeam(var1.getTeam(), new TextComponent(var1.getProfile().getName())));
++      return var1.getTabListDisplayName() != null ? this.decorateName(var1, var1.getTabListDisplayName().copy()) : this.decorateName(var1, PlayerTeam.formatNameForTeam(var1.getTeam(), new TextComponent(var1.getProfile().getName())));
     }
  
 +   private Component decorateName(PlayerInfo var1, MutableComponent var2) {

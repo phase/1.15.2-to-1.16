@@ -1,6 +1,6 @@
 --- net/minecraft/server/MinecraftServer.java
 +++ net/minecraft/server/MinecraftServer.java
-@@ -1,21 +1,21 @@
+@@ -1,21 +1,20 @@
  package net.minecraft.server;
  
  import com.google.common.base.Splitter;
@@ -14,7 +14,6 @@
  import com.mojang.authlib.minecraft.MinecraftSessionService;
 -import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
  import com.mojang.datafixers.DataFixer;
-+import com.mojang.datafixers.util.Pair;
  import io.netty.buffer.ByteBuf;
  import io.netty.buffer.ByteBufOutputStream;
  import io.netty.buffer.Unpooled;
@@ -25,7 +24,7 @@
  import java.io.File;
  import java.io.IOException;
  import java.io.UnsupportedEncodingException;
-@@ -26,110 +26,124 @@
+@@ -26,256 +25,264 @@
  import java.net.URLEncoder;
  import java.nio.ByteBuffer;
  import java.nio.charset.StandardCharsets;
@@ -42,7 +41,6 @@
  import java.util.Comparator;
  import java.util.Date;
  import java.util.Iterator;
-+import java.util.LinkedHashMap;
 +import java.util.LinkedHashSet;
  import java.util.List;
  import java.util.Map;
@@ -54,7 +52,9 @@
  import java.util.Map.Entry;
  import java.util.concurrent.CompletableFuture;
  import java.util.concurrent.Executor;
++import java.util.concurrent.atomic.AtomicReference;
  import java.util.function.BooleanSupplier;
++import java.util.function.Function;
 +import java.util.stream.Stream;
  import javax.annotation.Nullable;
  import javax.imageio.ImageIO;
@@ -73,6 +73,7 @@
  import net.minecraft.commands.CommandSourceStack;
  import net.minecraft.commands.Commands;
  import net.minecraft.core.BlockPos;
++import net.minecraft.core.MappedRegistry;
  import net.minecraft.core.Registry;
 +import net.minecraft.core.RegistryAccess;
  import net.minecraft.gametest.framework.GameTestTicker;
@@ -98,11 +99,11 @@
 -import net.minecraft.server.level.progress.LoggerChunkProgressListener;
  import net.minecraft.server.network.ServerConnectionListener;
 -import net.minecraft.server.packs.PackType;
- import net.minecraft.server.packs.repository.FolderRepositorySource;
+-import net.minecraft.server.packs.repository.FolderRepositorySource;
++import net.minecraft.server.packs.repository.Pack;
  import net.minecraft.server.packs.repository.PackRepository;
-+import net.minecraft.server.packs.repository.RepositorySource;
- import net.minecraft.server.packs.repository.ServerPacksSource;
- import net.minecraft.server.packs.repository.UnopenedPack;
+-import net.minecraft.server.packs.repository.ServerPacksSource;
+-import net.minecraft.server.packs.repository.UnopenedPack;
 -import net.minecraft.server.packs.resources.ReloadableResourceManager;
 -import net.minecraft.server.packs.resources.SimpleReloadableResourceManager;
  import net.minecraft.server.players.GameProfileCache;
@@ -134,6 +135,7 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.crafting.RecipeManager;
  import net.minecraft.world.level.ChunkPos;
++import net.minecraft.world.level.DataPackConfig;
  import net.minecraft.world.level.ForcedChunksSavedData;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.GameType;
@@ -149,6 +151,7 @@
 +import net.minecraft.world.level.border.WorldBorder;
 +import net.minecraft.world.level.chunk.ChunkGenerator;
  import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.dimension.LevelStem;
 +import net.minecraft.world.level.levelgen.PatrolSpawner;
 +import net.minecraft.world.level.levelgen.PhantomSpawner;
 +import net.minecraft.world.level.levelgen.WorldGenSettings;
@@ -172,10 +175,12 @@
  import net.minecraft.world.phys.Vec2;
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.scores.ScoreboardSaveData;
-@@ -138,144 +152,127 @@
+ import org.apache.commons.lang3.Validate;
+ import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
  
- public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements SnooperPopulator, CommandSource, AutoCloseable, Runnable {
+-public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements SnooperPopulator, CommandSource, AutoCloseable, Runnable {
++public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements SnooperPopulator, CommandSource, AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final File USERID_CACHE_FILE = new File("usercache.json");
 -   private static final CompletableFuture<Unit> DATA_RELOAD_INITIAL_TASK;
@@ -258,12 +263,13 @@
     private boolean mayHaveDelayedTasks;
     private boolean hasWorldScreenshot;
 -   private final ReloadableResourceManager resources;
-    private final PackRepository<UnopenedPack> packRepository;
+-   private final PackRepository<UnopenedPack> packRepository;
 -   @Nullable
 -   private FolderRepositorySource folderPackSource;
 -   private final Commands commands;
 -   private final RecipeManager recipes;
 -   private final TagManager tags;
++   private final PackRepository<Pack> packRepository;
     private final ServerScoreboard scoreboard;
     @Nullable
     private CommandStorage commandStorage;
@@ -286,7 +292,21 @@
 +   protected final WorldData worldData;
  
 -   public MinecraftServer(File var1, Proxy var2, DataFixer var3, Commands var4, YggdrasilAuthenticationService var5, MinecraftSessionService var6, GameProfileRepository var7, GameProfileCache var8, ChunkProgressListenerFactory var9, String var10) {
-+   public MinecraftServer(LevelStorageSource.LevelStorageAccess var1, WorldData var2, PackRepository<UnopenedPack> var3, Proxy var4, DataFixer var5, ServerResources var6, MinecraftSessionService var7, GameProfileRepository var8, GameProfileCache var9, ChunkProgressListenerFactory var10) {
++   public static <S extends MinecraftServer> S spin(Function<Thread, S> var0) {
++      AtomicReference var1 = new AtomicReference();
++      Thread var2 = new Thread(() -> {
++         ((MinecraftServer)var1.get()).runServer();
++      }, "Server thread");
++      var2.setUncaughtExceptionHandler((var0x, var1x) -> {
++         LOGGER.error(var1x);
++      });
++      MinecraftServer var3 = (MinecraftServer)var0.apply(var2);
++      var1.set(var3);
++      var2.start();
++      return var3;
++   }
++
++   public MinecraftServer(Thread var1, RegistryAccess.RegistryHolder var2, LevelStorageSource.LevelStorageAccess var3, WorldData var4, PackRepository<Pack> var5, Proxy var6, DataFixer var7, ServerResources var8, MinecraftSessionService var9, GameProfileRepository var10, GameProfileCache var11, ChunkProgressListenerFactory var12) {
        super("Server");
 -      this.resources = new SimpleReloadableResourceManager(PackType.SERVER_DATA, this.serverThread);
 -      this.packRepository = new PackRepository(UnopenedPack::new);
@@ -297,17 +317,11 @@
 +      this.status = new ServerStatus();
 +      this.random = new Random();
 +      this.port = -1;
-+      this.registryHolder = new RegistryAccess.RegistryHolder();
 +      this.levels = Maps.newLinkedHashMap();
 +      this.running = true;
 +      this.tickTimes = new long[100];
 +      this.resourcePack = "";
 +      this.resourcePackHash = "";
-+      this.serverThread = (Thread)Util.make(new Thread(this, "Server thread"), (var0) -> {
-+         var0.setUncaughtExceptionHandler((var0x, var1) -> {
-+            LOGGER.error(var1);
-+         });
-+      });
 +      this.nextTickTime = Util.getMillis();
        this.scoreboard = new ServerScoreboard(this);
 -      this.customBossEvents = new CustomBossEvents(this);
@@ -324,13 +338,14 @@
 -      this.profileRepository = var7;
 -      this.profileCache = var8;
 -      this.universe = var1;
-+      this.worldData = var2;
-+      this.proxy = var4;
-+      this.packRepository = var3;
-+      this.resources = var6;
-+      this.sessionService = var7;
-+      this.profileRepository = var8;
-+      this.profileCache = var9;
++      this.registryHolder = var2;
++      this.worldData = var4;
++      this.proxy = var6;
++      this.packRepository = var5;
++      this.resources = var8;
++      this.sessionService = var9;
++      this.profileRepository = var10;
++      this.profileCache = var11;
        this.connection = new ServerConnectionListener(this);
 -      this.progressListenerFactory = var9;
 -      this.storageSource = new LevelStorageSource(var1.toPath(), var1.toPath().resolve("../backups"), var3);
@@ -341,12 +356,13 @@
 -      this.resources.registerReloadListener(this.lootTables);
 -      this.resources.registerReloadListener(this.functions);
 -      this.resources.registerReloadListener(this.advancements);
-+      this.progressListenerFactory = var10;
-+      this.storageSource = var1;
-+      this.playerDataStorage = var1.createPlayerStorage();
-+      this.fixerUpper = var5;
-+      this.functionManager = new ServerFunctionManager(this, var6.getFunctionLibrary());
-+      this.structureManager = new StructureManager(var6.getResourceManager(), var1, var5);
++      this.progressListenerFactory = var12;
++      this.storageSource = var3;
++      this.playerDataStorage = var3.createPlayerStorage();
++      this.fixerUpper = var7;
++      this.functionManager = new ServerFunctionManager(this, var8.getFunctionLibrary());
++      this.structureManager = new StructureManager(var8.getResourceManager(), var3, var7);
++      this.serverThread = var1;
        this.executor = Util.backgroundExecutor();
 -      this.levelIdName = var10;
     }
@@ -372,7 +388,7 @@
              public void progressStartNoAbort(Component var1) {
              }
  
-@@ -296,171 +293,171 @@
+@@ -296,171 +303,175 @@
              public void progressStage(Component var1) {
              }
           });
@@ -451,18 +467,18 @@
 +      long var5 = var3.seed();
 +      long var7 = BiomeManager.obfuscateSeed(var5);
 +      ImmutableList var9 = ImmutableList.of(new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(var2));
-+      LinkedHashMap var10 = var3.dimensions();
-+      Pair var12 = (Pair)var10.get(Level.OVERWORLD);
++      MappedRegistry var10 = var3.dimensions();
++      LevelStem var12 = (LevelStem)var10.get(LevelStem.OVERWORLD);
 +      Object var11;
 +      DimensionType var13;
 +      if (var12 == null) {
-+         var13 = DimensionType.makeDefaultOverworld();
++         var13 = DimensionType.defaultOverworld();
 +         var11 = WorldGenSettings.makeDefaultOverworld((new Random()).nextLong());
        } else {
 -         var9.setLevelName(var2);
 -         var8 = new LevelSettings(var9);
-+         var13 = (DimensionType)var12.getFirst();
-+         var11 = (ChunkGenerator)var12.getSecond();
++         var13 = var12.type();
++         var11 = var12.generator();
        }
  
 -      var9.setModdedInfo(this.getServerModName(), this.getModdedStatus().isPresent());
@@ -485,26 +501,28 @@
 -      this.commandStorage = new CommandStorage(var6);
 -      var5.getWorldBorder().readBorderData(var2);
 -      ServerLevel var7 = this.getLevel(DimensionType.OVERWORLD);
-+      this.registryHolder.registerDimension(DimensionType.OVERWORLD_LOCATION, var13);
-+      ServerLevel var14 = new ServerLevel(this, this.executor, this.storageSource, var2, Level.OVERWORLD, DimensionType.OVERWORLD_LOCATION, var13, var1, (ChunkGenerator)var11, var4, var7, var9, true);
-+      this.levels.put(Level.OVERWORLD, var14);
-+      DimensionDataStorage var15 = var14.getDataStorage();
-+      this.readScoreboard(var15);
-+      this.commandStorage = new CommandStorage(var15);
-+      WorldBorder var16 = var14.getWorldBorder();
-+      var16.applySettings(var2.getWorldBorder());
++      ResourceKey var14 = (ResourceKey)this.registryHolder.dimensionTypes().getResourceKey(var13).orElseThrow(() -> {
++         return new IllegalStateException("Unregistered dimension type: " + var13);
++      });
++      ServerLevel var15 = new ServerLevel(this, this.executor, this.storageSource, var2, Level.OVERWORLD, var14, var13, var1, (ChunkGenerator)var11, var4, var7, var9, true);
++      this.levels.put(Level.OVERWORLD, var15);
++      DimensionDataStorage var16 = var15.getDataStorage();
++      this.readScoreboard(var16);
++      this.commandStorage = new CommandStorage(var16);
++      WorldBorder var17 = var15.getWorldBorder();
++      var17.applySettings(var2.getWorldBorder());
        if (!var2.isInitialized()) {
           try {
 -            var7.setInitialSpawn(var3);
 -            if (var2.getGeneratorType() == LevelType.DEBUG_ALL_BLOCK_STATES) {
 -               this.setupDebugLevel(var2);
-+            setInitialSpawn(var14, var2, var3.generateBonusChest(), var4, true);
++            setInitialSpawn(var15, var2, var3.generateBonusChest(), var4, true);
 +            var2.setInitialized(true);
 +            if (var4) {
 +               this.setupDebugLevel(this.worldData);
              }
-+         } catch (Throwable var26) {
-+            CrashReport var18 = CrashReport.forThrowable(var26, "Exception initializing level");
++         } catch (Throwable var28) {
++            CrashReport var19 = CrashReport.forThrowable(var28, "Exception initializing level");
  
 -            var2.setInitialized(true);
 -         } catch (Throwable var12) {
@@ -513,12 +531,12 @@
              try {
 -               var7.fillReportDetails(var9);
 -            } catch (Throwable var11) {
-+               var14.fillReportDetails(var18);
-+            } catch (Throwable var25) {
++               var15.fillReportDetails(var19);
++            } catch (Throwable var27) {
              }
  
 -            throw new ReportedException(var9);
-+            throw new ReportedException(var18);
++            throw new ReportedException(var19);
           }
  
           var2.setInitialized(true);
@@ -527,30 +545,32 @@
 -      this.getPlayerList().setLevel(var7);
 -      if (var2.getCustomBossEvents() != null) {
 -         this.getCustomBossEvents().load(var2.getCustomBossEvents());
-+      this.getPlayerList().setLevel(var14);
++      this.getPlayerList().setLevel(var15);
 +      if (this.worldData.getCustomBossEvents() != null) {
 +         this.getCustomBossEvents().load(this.worldData.getCustomBossEvents());
        }
  
 -      Iterator var8 = DimensionType.getAllTypes().iterator();
-+      Iterator var17 = var10.entrySet().iterator();
++      Iterator var18 = var10.entrySet().iterator();
  
 -      while(var8.hasNext()) {
 -         DimensionType var13 = (DimensionType)var8.next();
 -         if (var13 != DimensionType.OVERWORLD) {
 -            this.levels.put(var13, new DerivedServerLevel(var7, this, this.executor, var1, var13, this.profiler, var4));
-+      while(var17.hasNext()) {
-+         Entry var27 = (Entry)var17.next();
-+         ResourceKey var19 = (ResourceKey)var27.getKey();
-+         if (var19 != Level.OVERWORLD) {
-+            DimensionType var20 = (DimensionType)((Pair)var27.getValue()).getFirst();
-+            ResourceKey var21 = ResourceKey.create(Registry.DIMENSION_TYPE_REGISTRY, var19.location());
-+            this.registryHolder.registerDimension(var21, var20);
-+            ChunkGenerator var22 = (ChunkGenerator)((Pair)var27.getValue()).getSecond();
-+            DerivedLevelData var23 = new DerivedLevelData(var20, this.worldData, var2);
-+            ServerLevel var24 = new ServerLevel(this, this.executor, this.storageSource, var23, var19, var21, var20, var1, var22, var4, var7, ImmutableList.of(), false);
-+            var16.addListener(new BorderChangeListener.DelegateBorderChangeListener(var24.getWorldBorder()));
-+            this.levels.put(var19, var24);
++      while(var18.hasNext()) {
++         Entry var29 = (Entry)var18.next();
++         ResourceKey var20 = (ResourceKey)var29.getKey();
++         if (var20 != LevelStem.OVERWORLD) {
++            ResourceKey var21 = ResourceKey.create(Registry.DIMENSION_REGISTRY, var20.location());
++            DimensionType var22 = ((LevelStem)var29.getValue()).type();
++            ResourceKey var23 = (ResourceKey)this.registryHolder.dimensionTypes().getResourceKey(var22).orElseThrow(() -> {
++               return new IllegalStateException("Unregistered dimension type: " + var22);
++            });
++            ChunkGenerator var24 = ((LevelStem)var29.getValue()).generator();
++            DerivedLevelData var25 = new DerivedLevelData(this.worldData, var2);
++            ServerLevel var26 = new ServerLevel(this, this.executor, this.storageSource, var25, var21, var23, var22, var1, var24, var4, var7, ImmutableList.of(), false);
++            var17.addListener(new BorderChangeListener.DelegateBorderChangeListener(var26.getWorldBorder()));
++            this.levels.put(var21, var26);
           }
        }
  
@@ -663,14 +683,14 @@
 -      ServerLevel var2 = this.getLevel(DimensionType.OVERWORLD);
 -      LOGGER.info("Preparing start region for dimension " + DimensionType.getName(var2.dimension.getType()));
 +   private void prepareLevels(ChunkProgressListener var1) {
-+      ServerLevel var2 = this.getLevel(Level.OVERWORLD);
++      ServerLevel var2 = this.overworld();
 +      LOGGER.info("Preparing start region for dimension {}", var2.dimension().location());
        BlockPos var3 = var2.getSharedSpawnPos();
        var1.updateSpawnPos(new ChunkPos(var3));
        ServerChunkCache var4 = var2.getChunkSource();
        var4.getLightEngine().setTaskPerBatch(500);
        this.nextTickTime = Util.getMillis();
-@@ -471,59 +468,61 @@
+@@ -471,59 +482,61 @@
           this.waitUntilNextTick();
        }
  
@@ -754,7 +774,7 @@
     public abstract int getFunctionCompilationLevel();
  
     public abstract boolean shouldRconBroadcast();
-@@ -532,25 +531,21 @@
+@@ -532,25 +545,21 @@
        boolean var4 = false;
  
        for(Iterator var5 = this.getAllLevels().iterator(); var5.hasNext(); var4 = true) {
@@ -777,17 +797,17 @@
 -      var9.getWorldBorder().saveWorldBorderData(var10);
 -      var10.setCustomBossEvents(this.getCustomBossEvents().save());
 -      var9.getLevelStorage().saveLevelData(var10, this.getPlayerList().getSingleplayerData());
-+      ServerLevel var7 = this.getLevel(Level.OVERWORLD);
++      ServerLevel var7 = this.overworld();
 +      ServerLevelData var8 = this.worldData.overworldData();
 +      var8.setWorldBorder(var7.getWorldBorder().createSettings());
 +      this.worldData.setCustomBossEvents(this.getCustomBossEvents().save());
-+      this.storageSource.saveDataTag(this.worldData, this.getPlayerList().getSingleplayerData());
++      this.storageSource.saveDataTag(this.registryHolder, this.worldData, this.getPlayerList().getSingleplayerData());
        return var4;
     }
  
     public void close() {
        this.stopServer();
-@@ -585,20 +580,26 @@
+@@ -585,20 +594,28 @@
        while(var1.hasNext()) {
           var2 = (ServerLevel)var1.next();
           if (var2 != null) {
@@ -805,6 +825,8 @@
           this.snooper.interrupt();
        }
  
++      this.resources.close();
++
 +      try {
 +         this.storageSource.close();
 +      } catch (IOException var4) {
@@ -816,7 +838,20 @@
     public String getLocalIp() {
        return this.localIp;
     }
-@@ -639,24 +640,22 @@
+@@ -621,11 +638,11 @@
+          }
+       }
+ 
+    }
+ 
+-   public void run() {
++   protected void runServer() {
+       try {
+          if (this.initServer()) {
+             this.nextTickTime = Util.getMillis();
+             this.status.setDescription(new TextComponent(this.motd));
+             this.status.setVersion(new ServerStatus.Version(SharedConstants.getCurrentVersion().getName(), SharedConstants.getCurrentVersion().getProtocolVersion()));
+@@ -639,24 +656,22 @@
                    this.nextTickTime += var46 * 50L;
                    this.lastOverloadWarning = this.nextTickTime;
                 }
@@ -844,7 +879,7 @@
           } else {
              this.onServerCrash((CrashReport)null);
           }
-@@ -738,14 +737,14 @@
+@@ -738,14 +753,14 @@
     protected void doRunTask(TickTask var1) {
        this.getProfiler().incrementCounter("runTask");
        super.doRunTask(var1);
@@ -861,7 +896,7 @@
        if (var2.isFile()) {
           ByteBuf var3 = Unpooled.buffer();
  
-@@ -769,11 +768,11 @@
+@@ -769,11 +784,11 @@
        this.hasWorldScreenshot = this.hasWorldScreenshot || this.getWorldScreenshotFile().isFile();
        return this.hasWorldScreenshot;
     }
@@ -874,15 +909,39 @@
     public File getServerDirectory() {
        return new File(".");
     }
-@@ -856,18 +855,18 @@
-                this.profiler.pop();
-                return;
-             }
+@@ -833,41 +848,18 @@
+       this.profiler.push("commandFunctions");
+       this.getFunctions().tick();
+       this.profiler.popPush("levels");
+       Iterator var2 = this.getAllLevels().iterator();
  
-             var3 = (ServerLevel)var2.next();
+-      while(true) {
+-         ServerLevel var3;
+-         do {
+-            if (!var2.hasNext()) {
+-               this.profiler.popPush("connection");
+-               this.getConnection().tick();
+-               this.profiler.popPush("players");
+-               this.playerList.tick();
+-               if (SharedConstants.IS_RUNNING_IN_IDE) {
+-                  GameTestTicker.singleton.tick();
+-               }
+-
+-               this.profiler.popPush("server gui refresh");
+-
+-               for(int var7 = 0; var7 < this.tickables.size(); ++var7) {
+-                  ((Runnable)this.tickables.get(var7)).run();
+-               }
+-
+-               this.profiler.pop();
+-               return;
+-            }
+-
+-            var3 = (ServerLevel)var2.next();
 -         } while(var3.dimension.getType() != DimensionType.OVERWORLD && !this.isNetherEnabled());
-+         } while(!var3.dimensionType().isOverworld() && !this.isNetherEnabled());
- 
+-
++      while(var2.hasNext()) {
++         ServerLevel var3 = (ServerLevel)var2.next();
           this.profiler.push(() -> {
 -            return var3.getLevelData().getLevelName() + " " + Registry.DIMENSION_TYPE.getKey(var3.dimension.getType());
 +            return var3 + " " + var3.dimension().location();
@@ -896,7 +955,33 @@
  
           this.profiler.push("tick");
  
-@@ -890,96 +889,14 @@
+@@ -880,128 +872,59 @@
+          }
+ 
+          this.profiler.pop();
+          this.profiler.pop();
+       }
++
++      this.profiler.popPush("connection");
++      this.getConnection().tick();
++      this.profiler.popPush("players");
++      this.playerList.tick();
++      if (SharedConstants.IS_RUNNING_IN_IDE) {
++         GameTestTicker.singleton.tick();
++      }
++
++      this.profiler.popPush("server gui refresh");
++
++      for(int var7 = 0; var7 < this.tickables.size(); ++var7) {
++         ((Runnable)this.tickables.get(var7)).run();
++      }
++
++      this.profiler.pop();
+    }
+ 
+    public boolean isNetherEnabled() {
+       return true;
+    }
  
     public void addTickable(Runnable var1) {
        this.tickables.add(var1);
@@ -988,12 +1073,13 @@
 -      this.eraseCache = var1;
 -   }
 -
-    public void forkAndRun() {
-       this.serverThread.start();
-    }
- 
+-   public void forkAndRun() {
+-      this.serverThread.start();
+-   }
+-
     public boolean isShutdown() {
-@@ -988,22 +905,18 @@
+       return !this.serverThread.isAlive();
+    }
  
     public File getFile(String var1) {
        return new File(this.getServerDirectory(), var1);
@@ -1001,26 +1087,27 @@
  
 -   public void info(String var1) {
 -      LOGGER.info(var1);
-+   public ServerLevel getLevel(ResourceKey<Level> var1) {
-+      return (ServerLevel)this.levels.get(var1);
++   public final ServerLevel overworld() {
++      return (ServerLevel)this.levels.get(Level.OVERWORLD);
     }
  
 -   public void warn(String var1) {
 -      LOGGER.warn(var1);
-+   public Set<ResourceKey<Level>> levelKeys() {
-+      return this.levels.keySet();
++   @Nullable
++   public ServerLevel getLevel(ResourceKey<Level> var1) {
++      return (ServerLevel)this.levels.get(var1);
     }
  
 -   public ServerLevel getLevel(DimensionType var1) {
 -      return (ServerLevel)this.levels.get(var1);
--   }
--
++   public Set<ResourceKey<Level>> levelKeys() {
++      return this.levels.keySet();
+    }
+ 
     public Iterable<ServerLevel> getAllLevels() {
        return this.levels.values();
     }
- 
-    public String getServerVersion() {
-@@ -1020,25 +933,10 @@
+@@ -1020,25 +943,10 @@
  
     public String[] getPlayerNames() {
        return this.playerList.getPlayerNamesArray();
@@ -1046,7 +1133,7 @@
     }
  
     public CrashReport fillReport(CrashReport var1) {
-@@ -1048,11 +946,11 @@
+@@ -1048,14 +956,14 @@
           });
        }
  
@@ -1056,10 +1143,14 @@
 +         Iterator var2 = this.packRepository.getSelectedPacks().iterator();
  
           while(var2.hasNext()) {
-             UnopenedPack var3 = (UnopenedPack)var2.next();
+-            UnopenedPack var3 = (UnopenedPack)var2.next();
++            Pack var3 = (Pack)var2.next();
              if (var1.length() > 0) {
                 var1.append(", ");
-@@ -1075,15 +973,11 @@
+             }
+ 
+             var1.append(var3.getId());
+@@ -1075,15 +983,11 @@
        return var1;
     }
  
@@ -1076,7 +1167,7 @@
  
     public KeyPair getKeyPair() {
        return this.keyPair;
-@@ -1107,92 +1001,58 @@
+@@ -1107,92 +1011,58 @@
  
     public boolean isSingleplayer() {
        return this.singleplayerName != null;
@@ -1187,7 +1278,7 @@
     }
  
     public String getResourcePackHash() {
-@@ -1208,11 +1068,11 @@
+@@ -1208,11 +1078,11 @@
        var1.setDynamicData("whitelist_enabled", false);
        var1.setDynamicData("whitelist_count", 0);
        if (this.playerList != null) {
@@ -1200,7 +1291,7 @@
        var1.setDynamicData("uses_auth", this.onlineMode);
        var1.setDynamicData("gui_state", this.hasGui() ? "enabled" : "disabled");
        var1.setDynamicData("run_time", (Util.getMillis() - var1.getStartupTime()) / 60L * 1000L);
-@@ -1221,17 +1081,14 @@
+@@ -1221,17 +1091,14 @@
        Iterator var3 = this.getAllLevels().iterator();
  
        while(var3.hasNext()) {
@@ -1221,7 +1312,7 @@
              ++var2;
           }
        }
-@@ -1255,28 +1112,20 @@
+@@ -1255,28 +1122,20 @@
  
     public void setPreventProxyConnections(boolean var1) {
        this.preventProxyConnections = var1;
@@ -1254,7 +1345,7 @@
     }
  
     public void setPvpAllowed(boolean var1) {
-@@ -1321,18 +1170,12 @@
+@@ -1321,18 +1180,12 @@
        this.playerList = var1;
     }
  
@@ -1275,7 +1366,7 @@
     @Nullable
     public ServerConnectionListener getConnection() {
        return this.connection;
-@@ -1350,23 +1193,19 @@
+@@ -1350,23 +1203,19 @@
  
     public int getTickCount() {
        return this.tickCount;
@@ -1300,7 +1391,7 @@
  
     public void setForceGameType(boolean var1) {
        this.forceGameType = var1;
-@@ -1374,10 +1213,14 @@
+@@ -1374,10 +1223,14 @@
  
     public boolean getForceGameType() {
        return this.forceGameType;
@@ -1315,7 +1406,7 @@
     }
  
     public void setPlayerIdleTimeout(int var1) {
-@@ -1431,70 +1274,94 @@
+@@ -1431,103 +1284,119 @@
     public int getSpawnRadius(@Nullable ServerLevel var1) {
        return var1 != null ? var1.getGameRules().getInt(GameRules.RULE_SPAWN_RADIUS) : 10;
     }
@@ -1339,13 +1430,14 @@
 +         Stream var10000 = var1.stream();
 +         PackRepository var10001 = this.packRepository;
 +         var10001.getClass();
-+         return (ImmutableList)var10000.map(var10001::getPack).filter(Objects::nonNull).map(UnopenedPack::open).collect(ImmutableList.toImmutableList());
++         return (ImmutableList)var10000.map(var10001::getPack).filter(Objects::nonNull).map(Pack::open).collect(ImmutableList.toImmutableList());
 +      }, this).thenCompose((var1x) -> {
-+         return ServerResources.loadResources(var1x, this.isDedicatedServer(), this.getFunctionCompilationLevel(), this.executor, this);
++         return ServerResources.loadResources(var1x, this.isDedicatedServer() ? Commands.CommandSelection.DEDICATED : Commands.CommandSelection.INTEGRATED, this.getFunctionCompilationLevel(), this.executor, this);
 +      }).thenAcceptAsync((var2x) -> {
++         this.resources.close();
 +         this.resources = var2x;
 +         this.packRepository.setSelected(var1);
-+         storeSelectedPacks(this.packRepository, this.worldData);
++         this.worldData.setDataPackConfig(getSelectedPacks(this.packRepository));
 +         var2x.updateGlobals();
           this.getPlayerList().saveAll();
 -         this.packRepository.reload();
@@ -1365,15 +1457,14 @@
 -   private void updateSelectedPacks(LevelData var1) {
 -      ArrayList var2 = Lists.newArrayList(this.packRepository.getSelected());
 -      Iterator var3 = this.packRepository.getAvailable().iterator();
-+   public static PackRepository<UnopenedPack> createPackRepository(Path var0, WorldData var1, boolean var2) {
-+      PackRepository var3 = new PackRepository(UnopenedPack::new, new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var0.toFile())});
-+      var3.reload();
++   public static DataPackConfig configurePackRepository(PackRepository<Pack> var0, DataPackConfig var1, boolean var2) {
++      var0.reload();
 +      if (var2) {
-+         var3.setSelected(Collections.singleton("vanilla"));
-+         return var3;
++         var0.setSelected(Collections.singleton("vanilla"));
++         return new DataPackConfig(ImmutableList.of("vanilla"), ImmutableList.of());
 +      } else {
-+         LinkedHashSet var4 = Sets.newLinkedHashSet();
-+         Iterator var5 = var1.getEnabledDataPacks().iterator();
++         LinkedHashSet var3 = Sets.newLinkedHashSet();
++         Iterator var4 = var1.getEnabled().iterator();
  
 -      while(var3.hasNext()) {
 -         UnopenedPack var4 = (UnopenedPack)var3.next();
@@ -1382,13 +1473,12 @@
 -            var4.getDefaultPosition().insert(var2, var4, (var0) -> {
 -               return var0;
 -            }, false);
-+         String var6;
-+         while(var5.hasNext()) {
-+            var6 = (String)var5.next();
-+            if (var3.isAvailable(var6)) {
-+               var4.add(var6);
++         while(var4.hasNext()) {
++            String var5 = (String)var4.next();
++            if (var0.isAvailable(var5)) {
++               var3.add(var5);
 +            } else {
-+               LOGGER.warn("Missing data pack {}", var6);
++               LOGGER.warn("Missing data pack {}", var5);
 +            }
           }
 -      }
@@ -1400,18 +1490,19 @@
 -      });
 -      CompletableFuture var8 = this.resources.reload(this.executor, this, var7, DATA_RELOAD_INITIAL_TASK);
 -      this.managedBlock(var8::isDone);
-+         var5 = var3.getAvailableIds().iterator();
++         var4 = var0.getAvailablePacks().iterator();
  
 -      try {
 -         var8.get();
 -      } catch (Exception var6) {
 -         LOGGER.error("Failed to reload data packs", var6);
 -      }
-+         while(var5.hasNext()) {
-+            var6 = (String)var5.next();
-+            if (!var1.getDisabledDataPacks().contains(var6) && !var4.contains(var6)) {
++         while(var4.hasNext()) {
++            Pack var7 = (Pack)var4.next();
++            String var6 = var7.getId();
++            if (!var1.getDisabled().contains(var6) && !var3.contains(var6)) {
 +               LOGGER.info("Found new data pack {}, loading it automatically", var6);
-+               var4.add(var6);
++               var3.add(var6);
 +            }
 +         }
  
@@ -1423,46 +1514,49 @@
 -      this.packRepository.getAvailable().forEach((var2x) -> {
 -         if (!this.packRepository.getSelected().contains(var2x)) {
 -            var1.getDisabledDataPacks().add(var2x.getId());
-+         if (var4.isEmpty()) {
++         if (var3.isEmpty()) {
 +            LOGGER.info("No datapacks selected, forcing vanilla");
-+            var4.add("vanilla");
++            var3.add("vanilla");
           }
  
 -      });
-+         var3.setSelected(var4);
-+         storeSelectedPacks(var3, var1);
-+         return var3;
++         var0.setSelected(var3);
++         return getSelectedPacks(var0);
 +      }
     }
  
-+   private static void storeSelectedPacks(PackRepository<?> var0, WorldData var1) {
-+      Set var2 = var1.getEnabledDataPacks();
-+      Set var3 = var1.getDisabledDataPacks();
-+      var2.clear();
-+      var3.clear();
-+      var2.addAll(var0.getSelectedIds());
-+      var0.getAvailableIds().stream().filter((var1x) -> {
-+         return !var2.contains(var1x);
-+      }).forEach(var3::add);
++   private static DataPackConfig getSelectedPacks(PackRepository<?> var0) {
++      Collection var1 = var0.getSelectedIds();
++      ImmutableList var2 = ImmutableList.copyOf(var1);
++      List var3 = (List)var0.getAvailableIds().stream().filter((var1x) -> {
++         return !var1.contains(var1x);
++      }).collect(ImmutableList.toImmutableList());
++      return new DataPackConfig(var2, var3);
 +   }
 +
     public void kickUnlistedPlayers(CommandSourceStack var1) {
        if (this.isEnforceWhitelist()) {
           PlayerList var2 = var1.getServer().getPlayerList();
           UserWhiteList var3 = var2.getWhiteList();
-          if (var3.isEnabled()) {
-@@ -1502,32 +1369,29 @@
-             Iterator var5 = var4.iterator();
+-         if (var3.isEnabled()) {
+-            ArrayList var4 = Lists.newArrayList(var2.getPlayers());
+-            Iterator var5 = var4.iterator();
++         ArrayList var4 = Lists.newArrayList(var2.getPlayers());
++         Iterator var5 = var4.iterator();
  
-             while(var5.hasNext()) {
-                ServerPlayer var6 = (ServerPlayer)var5.next();
-                if (!var3.isWhiteListed(var6.getGameProfile())) {
+-            while(var5.hasNext()) {
+-               ServerPlayer var6 = (ServerPlayer)var5.next();
+-               if (!var3.isWhiteListed(var6.getGameProfile())) {
 -                  var6.connection.disconnect(new TranslatableComponent("multiplayer.disconnect.not_whitelisted", new Object[0]));
-+                  var6.connection.disconnect(new TranslatableComponent("multiplayer.disconnect.not_whitelisted"));
-                }
+-               }
++         while(var5.hasNext()) {
++            ServerPlayer var6 = (ServerPlayer)var5.next();
++            if (!var3.isWhiteListed(var6.getGameProfile())) {
++               var6.connection.disconnect(new TranslatableComponent("multiplayer.disconnect.not_whitelisted"));
              }
- 
+-
           }
++
        }
     }
  
@@ -1470,7 +1564,8 @@
 -      return this.resources;
 -   }
 -
-    public PackRepository<UnopenedPack> getPackRepository() {
+-   public PackRepository<UnopenedPack> getPackRepository() {
++   public PackRepository<Pack> getPackRepository() {
        return this.packRepository;
     }
  
@@ -1481,14 +1576,14 @@
  
     public CommandSourceStack createCommandSourceStack() {
 -      return new CommandSourceStack(this, this.getLevel(DimensionType.OVERWORLD) == null ? Vec3.ZERO : new Vec3(this.getLevel(DimensionType.OVERWORLD).getSharedSpawnPos()), Vec2.ZERO, this.getLevel(DimensionType.OVERWORLD), 4, "Server", new TextComponent("Server"), this, (Entity)null);
-+      ServerLevel var1 = this.getLevel(Level.OVERWORLD);
++      ServerLevel var1 = this.overworld();
 +      return new CommandSourceStack(this, var1 == null ? Vec3.ZERO : Vec3.atLowerCornerOf(var1.getSharedSpawnPos()), Vec2.ZERO, var1, 4, "Server", new TextComponent("Server"), this, (Entity)null);
     }
  
     public boolean acceptsSuccess() {
        return true;
     }
-@@ -1535,15 +1399,15 @@
+@@ -1535,15 +1404,15 @@
     public boolean acceptsFailure() {
        return true;
     }
@@ -1506,7 +1601,7 @@
     public ServerScoreboard getScoreboard() {
        return this.scoreboard;
     }
-@@ -1555,19 +1419,19 @@
+@@ -1555,19 +1424,19 @@
           return this.commandStorage;
        }
     }
@@ -1523,13 +1618,13 @@
  
     public GameRules getGameRules() {
 -      return this.getLevel(DimensionType.OVERWORLD).getGameRules();
-+      return this.getLevel(Level.OVERWORLD).getGameRules();
++      return this.overworld().getGameRules();
     }
  
     public CustomBossEvents getCustomBossEvents() {
        return this.customBossEvents;
     }
-@@ -1603,27 +1467,23 @@
+@@ -1603,27 +1472,23 @@
  
     public FrameTimer getFrameTimer() {
        return this.frameTimer;
@@ -1559,7 +1654,7 @@
           ((ServerLevel)var4.getValue()).saveDebugReport(var6);
        }
  
-@@ -1797,14 +1657,56 @@
+@@ -1797,14 +1662,56 @@
  
        }
  
@@ -1617,6 +1712,6 @@
     static {
 -      DATA_RELOAD_INITIAL_TASK = CompletableFuture.completedFuture(Unit.INSTANCE);
 -      DEMO_SETTINGS = (new LevelSettings((long)"North Carolina".hashCode(), GameType.SURVIVAL, true, false, LevelType.NORMAL)).enableStartingBonusItems();
-+      DEMO_SETTINGS = new LevelSettings("Demo World", GameType.SURVIVAL, false, Difficulty.NORMAL, false, new GameRules(), WorldGenSettings.DEMO_SETTINGS);
++      DEMO_SETTINGS = new LevelSettings("Demo World", GameType.SURVIVAL, false, Difficulty.NORMAL, false, new GameRules(), DataPackConfig.DEFAULT);
     }
  }

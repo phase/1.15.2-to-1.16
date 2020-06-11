@@ -51,6 +51,19 @@
        this.goalSelector.addGoal(6, new Fox.SeekShelterGoal(1.25D));
        this.goalSelector.addGoal(7, new Fox.FoxMeleeAttackGoal(1.2000000476837158D, true));
        this.goalSelector.addGoal(7, new Fox.SleepGoal());
+@@ -192,11 +197,11 @@
+       }
+ 
+    }
+ 
+    protected boolean isImmobile() {
+-      return this.getHealth() <= 0.0F;
++      return this.isDeadOrDying();
+    }
+ 
+    private boolean canEat(ItemStack var1) {
+       return var1.getItem().isEdible() && this.getTarget() == null && this.onGround && !this.isSleeping();
+    }
 @@ -222,27 +227,23 @@
           this.setItemSlot(EquipmentSlot.MAINHAND, var3);
        }

@@ -35,3 +35,16 @@
     protected float getStandingEyeHeight(Pose var1, EntityDimensions var2) {
        return var2.height * 0.5F;
     }
+@@ -266,11 +267,11 @@
+ 
+       public void tick() {
+          int var1 = this.squid.getNoActionTime();
+          if (var1 > 100) {
+             this.squid.setMovementVector(0.0F, 0.0F, 0.0F);
+-         } else if (this.squid.getRandom().nextInt(50) == 0 || !this.squid.wasInWater || !this.squid.hasMovementVector()) {
++         } else if (this.squid.getRandom().nextInt(50) == 0 || !this.squid.wasTouchingWater || !this.squid.hasMovementVector()) {
+             float var2 = this.squid.getRandom().nextFloat() * 6.2831855F;
+             float var3 = Mth.cos(var2) * 0.2F;
+             float var4 = -0.1F + this.squid.getRandom().nextFloat() * 0.2F;
+             float var5 = Mth.sin(var2) * 0.2F;
+             this.squid.setMovementVector(var3, var4, var5);

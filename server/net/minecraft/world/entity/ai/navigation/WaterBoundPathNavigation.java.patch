@@ -24,7 +24,7 @@
              if (Mth.floor(this.mob.getX()) == Mth.floor(var1.x) && Mth.floor(this.mob.getY()) == Mth.floor(var1.y) && Mth.floor(this.mob.getZ()) == Mth.floor(var1.z)) {
                 this.path.setIndex(this.path.getIndex() + 1);
              }
-@@ -57,22 +58,22 @@
+@@ -57,23 +58,23 @@
              this.mob.getMoveControl().setWantedPosition(var1.x, var1.y, var1.z, this.speedModifier);
           }
        }
@@ -43,12 +43,14 @@
  
           boolean var5 = true;
 -         Vec3 var6 = this.path.currentPos();
-+         Vec3 var6 = Vec3.atCenterOf(this.path.currentPos());
-          if (Math.abs(this.mob.getX() - (var6.x + 0.5D)) < (double)var3 && Math.abs(this.mob.getZ() - (var6.z + 0.5D)) < (double)var3 && Math.abs(this.mob.getY() - var6.y) < (double)(var3 * 2.0F)) {
+-         if (Math.abs(this.mob.getX() - (var6.x + 0.5D)) < (double)var3 && Math.abs(this.mob.getZ() - (var6.z + 0.5D)) < (double)var3 && Math.abs(this.mob.getY() - var6.y) < (double)(var3 * 2.0F)) {
++         Vec3 var6 = Vec3.atBottomCenterOf(this.path.currentPos());
++         if (Math.abs(this.mob.getX() - var6.x) < (double)var3 && Math.abs(this.mob.getZ() - var6.z) < (double)var3 && Math.abs(this.mob.getY() - var6.y) < (double)(var3 * 2.0F)) {
              this.path.next();
           }
  
           for(int var7 = Math.min(this.path.getIndex() + 6, this.path.getSize() - 1); var7 > this.path.getIndex(); --var7) {
+             var6 = this.path.getPos(this.mob, var7);
 @@ -96,21 +97,21 @@
           this.lastStuckCheck = this.tick;
           this.lastStuckCheckPos = var1;

@@ -9,7 +9,7 @@
  import com.mojang.authlib.GameProfile;
  import com.mojang.authlib.GameProfileRepository;
  import com.mojang.authlib.minecraft.MinecraftSessionService;
-@@ -13,10 +14,11 @@
+@@ -13,12 +14,17 @@
  import com.mojang.blaze3d.platform.Window;
  import com.mojang.blaze3d.platform.WindowEventHandler;
  import com.mojang.blaze3d.systems.RenderSystem;
@@ -18,12 +18,22 @@
 +import com.mojang.blaze3d.vertex.PoseStack;
  import com.mojang.blaze3d.vertex.Tesselator;
  import com.mojang.datafixers.DataFixer;
++import com.mojang.datafixers.util.Function4;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.JsonOps;
++import com.mojang.serialization.Lifecycle;
  import java.io.File;
  import java.io.IOException;
  import java.io.InputStream;
-@@ -35,17 +37,15 @@
+ import java.net.Proxy;
+ import java.net.SocketAddress;
+@@ -32,20 +38,19 @@
+ import java.util.List;
+ import java.util.Locale;
+ import java.util.Queue;
  import java.util.UUID;
  import java.util.concurrent.CompletableFuture;
++import java.util.concurrent.ExecutionException;
  import java.util.concurrent.atomic.AtomicReference;
  import java.util.function.Function;
  import java.util.function.Supplier;
@@ -39,11 +49,15 @@
  import net.minecraft.Util;
  import net.minecraft.client.color.block.BlockColors;
  import net.minecraft.client.color.item.ItemColors;
-@@ -55,10 +55,11 @@
+@@ -53,12 +58,15 @@
+ import net.minecraft.client.gui.Gui;
+ import net.minecraft.client.gui.chat.NarratorChatListener;
  import net.minecraft.client.gui.components.toasts.SystemToast;
  import net.minecraft.client.gui.components.toasts.ToastComponent;
  import net.minecraft.client.gui.font.FontManager;
++import net.minecraft.client.gui.screens.BackupConfirmScreen;
  import net.minecraft.client.gui.screens.ChatScreen;
++import net.minecraft.client.gui.screens.ConfirmScreen;
  import net.minecraft.client.gui.screens.ConnectScreen;
 +import net.minecraft.client.gui.screens.DatapackLoadFailureScreen;
  import net.minecraft.client.gui.screens.DeathScreen;
@@ -51,22 +65,85 @@
  import net.minecraft.client.gui.screens.InBedChatScreen;
  import net.minecraft.client.gui.screens.LevelLoadingScreen;
  import net.minecraft.client.gui.screens.LoadingOverlay;
-@@ -137,38 +138,44 @@
+@@ -72,10 +80,11 @@
+ import net.minecraft.client.gui.screens.WinScreen;
+ import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
+ import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
++import net.minecraft.client.gui.screens.worldselection.EditWorldScreen;
+ import net.minecraft.client.main.GameConfig;
+ import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
+ import net.minecraft.client.multiplayer.ClientLevel;
+ import net.minecraft.client.multiplayer.ClientPacketListener;
+ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+@@ -98,17 +107,17 @@
+ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+ import net.minecraft.client.renderer.texture.TextureManager;
+ import net.minecraft.client.resources.ClientPackSource;
+ import net.minecraft.client.resources.FoliageColorReloadListener;
+ import net.minecraft.client.resources.GrassColorReloadListener;
+-import net.minecraft.client.resources.LegacyResourcePackAdapter;
++import net.minecraft.client.resources.LegacyPackResourcesAdapter;
+ import net.minecraft.client.resources.MobEffectTextureManager;
+-import net.minecraft.client.resources.PackAdapterV4;
++import net.minecraft.client.resources.PackResourcesAdapterV4;
+ import net.minecraft.client.resources.PaintingTextureManager;
++import net.minecraft.client.resources.ResourcePack;
+ import net.minecraft.client.resources.SkinManager;
+ import net.minecraft.client.resources.SplashManager;
+-import net.minecraft.client.resources.UnopenedResourcePack;
+ import net.minecraft.client.resources.language.I18n;
+ import net.minecraft.client.resources.language.LanguageManager;
+ import net.minecraft.client.resources.model.BakedModel;
+ import net.minecraft.client.resources.model.ModelManager;
+ import net.minecraft.client.searchtree.MutableSearchTree;
+@@ -117,58 +126,72 @@
+ import net.minecraft.client.searchtree.SearchRegistry;
+ import net.minecraft.client.server.IntegratedServer;
+ import net.minecraft.client.sounds.MusicManager;
+ import net.minecraft.client.sounds.SoundManager;
+ import net.minecraft.client.tutorial.Tutorial;
++import net.minecraft.commands.Commands;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
++import net.minecraft.core.MappedRegistry;
+ import net.minecraft.core.NonNullList;
+ import net.minecraft.core.Registry;
++import net.minecraft.core.RegistryAccess;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.ListTag;
++import net.minecraft.nbt.NbtOps;
+ import net.minecraft.nbt.StringTag;
+ import net.minecraft.network.Connection;
+ import net.minecraft.network.ConnectionProtocol;
++import net.minecraft.network.chat.CommonComponents;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.KeybindComponent;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.network.protocol.Packet;
+ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
  import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
  import net.minecraft.network.protocol.login.ServerboundHelloPacket;
++import net.minecraft.resources.RegistryReadOps;
  import net.minecraft.resources.ResourceLocation;
  import net.minecraft.server.Bootstrap;
  import net.minecraft.server.MinecraftServer;
 +import net.minecraft.server.ServerResources;
  import net.minecraft.server.level.progress.ProcessorChunkProgressListener;
  import net.minecraft.server.level.progress.StoringChunkProgressListener;
- import net.minecraft.server.packs.Pack;
+-import net.minecraft.server.packs.Pack;
++import net.minecraft.server.packs.PackResources;
  import net.minecraft.server.packs.PackType;
  import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
  import net.minecraft.server.packs.repository.FolderRepositorySource;
++import net.minecraft.server.packs.repository.Pack;
  import net.minecraft.server.packs.repository.PackRepository;
+-import net.minecraft.server.packs.repository.UnopenedPack;
++import net.minecraft.server.packs.repository.PackSource;
 +import net.minecraft.server.packs.repository.RepositorySource;
- import net.minecraft.server.packs.repository.UnopenedPack;
++import net.minecraft.server.packs.repository.ServerPacksSource;
  import net.minecraft.server.packs.resources.ReloadableResourceManager;
  import net.minecraft.server.packs.resources.ResourceManager;
  import net.minecraft.server.packs.resources.SimpleReloadableResourceManager;
@@ -98,7 +175,16 @@
  import net.minecraft.world.entity.decoration.ItemFrame;
  import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
  import net.minecraft.world.entity.decoration.Painting;
-@@ -189,15 +196,14 @@
+@@ -182,22 +205,25 @@
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.item.PlayerHeadItem;
+ import net.minecraft.world.item.SpawnEggItem;
+ import net.minecraft.world.item.TooltipFlag;
++import net.minecraft.world.level.DataPackConfig;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelSettings;
+ import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.RenderShape;
  import net.minecraft.world.level.block.entity.BlockEntity;
@@ -108,6 +194,8 @@
 -import net.minecraft.world.level.dimension.end.TheEndDimension;
 -import net.minecraft.world.level.storage.LevelData;
 -import net.minecraft.world.level.storage.LevelStorage;
++import net.minecraft.world.level.dimension.LevelStem;
++import net.minecraft.world.level.levelgen.WorldGenSettings;
 +import net.minecraft.world.level.storage.LevelResource;
  import net.minecraft.world.level.storage.LevelStorageSource;
 +import net.minecraft.world.level.storage.PrimaryLevelData;
@@ -117,7 +205,7 @@
  import net.minecraft.world.phys.HitResult;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
-@@ -205,10 +211,11 @@
+@@ -205,10 +231,11 @@
  public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements SnooperPopulator, WindowEventHandler {
     private static Minecraft instance;
     private static final Logger LOGGER = LogManager.getLogger();
@@ -129,7 +217,7 @@
     private final File resourcePackDirectory;
     private final PropertyMap profileProperties;
     private final TextureManager textureManager;
-@@ -240,13 +247,12 @@
+@@ -240,16 +267,15 @@
     private final Proxy proxy;
     private final LevelStorageSource levelSource;
     public final FrameTimer frameTimer = new FrameTimer();
@@ -142,10 +230,14 @@
 +   private final boolean allowsChat;
     private final ReloadableResourceManager resourceManager;
     private final ClientPackSource clientPackSource;
-    private final PackRepository<UnopenedResourcePack> resourcePackRepository;
+-   private final PackRepository<UnopenedResourcePack> resourcePackRepository;
++   private final PackRepository<ResourcePack> resourcePackRepository;
     private final LanguageManager languageManager;
     private final BlockColors blockColors;
-@@ -309,53 +315,60 @@
+    private final ItemColors itemColors;
+    private final RenderTarget mainRenderTarget;
+    private final SoundManager soundManager;
+@@ -309,53 +335,60 @@
     public boolean smartCull = true;
     private boolean windowActive;
     private final Queue<Runnable> progressTasks = Queues.newConcurrentLinkedQueue();
@@ -177,7 +269,7 @@
 -      this.resourcePackRepository = new PackRepository(Minecraft::createClientPackAdapter);
 -      this.resourcePackRepository.addSource(this.clientPackSource);
 -      this.resourcePackRepository.addSource(new FolderRepositorySource(this.resourcePackDirectory));
-+      this.resourcePackRepository = new PackRepository(Minecraft::createClientPackAdapter, new RepositorySource[]{this.clientPackSource, new FolderRepositorySource(this.resourcePackDirectory)});
++      this.resourcePackRepository = new PackRepository(Minecraft::createClientPackAdapter, new RepositorySource[]{this.clientPackSource, new FolderRepositorySource(this.resourcePackDirectory, PackSource.DEFAULT)});
        this.proxy = var1.user.proxy;
        this.minecraftSessionService = (new YggdrasilAuthenticationService(this.proxy, UUID.randomUUID().toString())).createMinecraftSessionService();
        this.user = var1.user.user;
@@ -215,7 +307,7 @@
        if (this.options.overrideHeight > 0 && this.options.overrideWidth > 0) {
           var5 = new DisplayData(this.options.overrideWidth, this.options.overrideHeight, var1.display.fullscreenWidth, var1.display.fullscreenHeight, var1.display.isFullscreen);
        } else {
-@@ -381,13 +394,13 @@
+@@ -381,13 +414,13 @@
        this.keyboardHandler = new KeyboardHandler(this);
        this.keyboardHandler.setup(this.window.getWindow());
        RenderSystem.initRenderer(this.options.glDebugVerbosity, false);
@@ -231,7 +323,7 @@
        this.textureManager = new TextureManager(this.resourceManager);
        this.resourceManager.registerReloadListener(this.textureManager);
        this.skinManager = new SkinManager(this.textureManager, new File(var2, "skins"), this.minecraftSessionService);
-@@ -395,76 +408,70 @@
+@@ -395,76 +428,70 @@
        this.soundManager = new SoundManager(this.resourceManager, this.options);
        this.resourceManager.registerReloadListener(this.soundManager);
        this.splashManager = new SplashManager(this.user);
@@ -364,7 +456,7 @@
     public void updateTitle() {
        this.window.setTitle(this.createTitle());
     }
-@@ -497,11 +504,11 @@
+@@ -497,11 +524,11 @@
     public boolean isProbablyModded() {
        return !"vanilla".equals(ClientBrandRetriever.getClientModName()) || Minecraft.class.getSigners() == null;
     }
@@ -377,7 +469,7 @@
              var2 = new TextComponent(((SimpleReloadableResourceManager.ResourcePackLoadingFailure)var1).getPack().getName());
           } else {
              var2 = null;
-@@ -512,11 +519,11 @@
+@@ -512,11 +539,11 @@
           this.options.resourcePacks.clear();
           this.options.incompatibleResourcePacks.clear();
           this.options.save();
@@ -390,7 +482,7 @@
           Util.throwAsRuntime(var1);
        }
  
-@@ -533,37 +540,47 @@
+@@ -533,37 +560,47 @@
                 crash(this.delayedCrash);
                 return;
              }
@@ -448,7 +540,7 @@
           return var0.getTooltipLines((Player)null, TooltipFlag.Default.NORMAL).stream().map((var0x) -> {
              return ChatFormatting.stripFormatting(var0x.getString()).trim();
           }).filter((var0x) -> {
-@@ -636,27 +653,10 @@
+@@ -636,27 +673,10 @@
  
     public String getVersionType() {
        return this.versionType;
@@ -476,7 +568,7 @@
     }
  
     public static void crash(CrashReport var0) {
-@@ -688,14 +688,13 @@
+@@ -688,14 +708,13 @@
           if (this.overlay instanceof LoadingOverlay) {
              this.pendingReload = var1;
              return var1;
@@ -494,7 +586,7 @@
                 });
              }, true));
              return var1;
-@@ -752,11 +751,11 @@
+@@ -752,11 +771,11 @@
           Iterator var20 = var14.iterator();
  
           while(var20.hasNext()) {
@@ -507,7 +599,7 @@
              }
           }
        }
-@@ -769,10 +768,21 @@
+@@ -769,18 +788,29 @@
  
     public LevelStorageSource getLevelSource() {
        return this.levelSource;
@@ -529,20 +621,30 @@
           this.screen.removed();
        }
  
-@@ -853,11 +863,11 @@
+       if (var1 == null && this.level == null) {
+          var1 = new TitleScreen();
+-      } else if (var1 == null && this.player.getHealth() <= 0.0F) {
++      } else if (var1 == null && this.player.isDeadOrDying()) {
+          if (this.player.shouldShowDeathScreen()) {
+             var1 = new DeathScreen((Component)null, this.level.getLevelData().isHardcore());
+          } else {
+             this.player.respawn();
+          }
+@@ -853,11 +883,12 @@
           this.resourcePackRepository.close();
           this.particleEngine.close();
           this.mobEffectTextures.close();
           this.paintingTextures.close();
           this.textureManager.close();
 -         Util.shutdownBackgroundExecutor();
++         this.resourceManager.close();
 +         Util.shutdownExecutors();
        } catch (Throwable var5) {
           LOGGER.error("Shutdown failure!", var5);
           throw var5;
        } finally {
           this.virtualScreen.close();
-@@ -867,11 +877,10 @@
+@@ -867,11 +898,10 @@
     }
  
     private void runTick(boolean var1) {
@@ -554,7 +656,7 @@
        }
  
        if (this.pendingReload != null && !(this.overlay instanceof LoadingOverlay)) {
-@@ -885,61 +894,61 @@
+@@ -885,61 +915,61 @@
        Runnable var9;
        while((var9 = (Runnable)this.progressTasks.poll()) != null) {
           var9.run();
@@ -632,7 +734,7 @@
        if ((double)var5 < Option.FRAMERATE_LIMIT.getMaxValue()) {
           RenderSystem.limitDisplayFPS(var5);
        }
-@@ -947,24 +956,25 @@
+@@ -947,39 +977,73 @@
        this.profiler.popPush("yield");
        Thread.yield();
        this.profiler.pop();
@@ -659,9 +761,11 @@
  
        while(Util.getMillis() >= this.lastTime + 1000L) {
           fps = this.frames;
-          this.fpsString = String.format("%d fps T: %s%s%s%s B: %d", fps, (double)this.options.framerateLimit == Option.FRAMERATE_LIMIT.getMaxValue() ? "inf" : this.options.framerateLimit, this.options.enableVsync ? " vsync" : "", this.options.fancyGraphics ? "" : " fast", this.options.renderClouds == CloudStatus.OFF ? "" : (this.options.renderClouds == CloudStatus.FAST ? " fast-clouds" : " fancy-clouds"), this.options.biomeBlendRadius);
+-         this.fpsString = String.format("%d fps T: %s%s%s%s B: %d", fps, (double)this.options.framerateLimit == Option.FRAMERATE_LIMIT.getMaxValue() ? "inf" : this.options.framerateLimit, this.options.enableVsync ? " vsync" : "", this.options.fancyGraphics ? "" : " fast", this.options.renderClouds == CloudStatus.OFF ? "" : (this.options.renderClouds == CloudStatus.FAST ? " fast-clouds" : " fancy-clouds"), this.options.biomeBlendRadius);
++         this.fpsString = String.format("%d fps T: %s%s%s%s B: %d", fps, (double)this.options.framerateLimit == Option.FRAMERATE_LIMIT.getMaxValue() ? "inf" : this.options.framerateLimit, this.options.enableVsync ? " vsync" : "", this.options.graphicsMode.toString(), this.options.renderClouds == CloudStatus.OFF ? "" : (this.options.renderClouds == CloudStatus.FAST ? " fast-clouds" : " fancy-clouds"), this.options.biomeBlendRadius);
           this.lastTime += 1000L;
-@@ -973,13 +983,46 @@
+          this.frames = 0;
+          this.snooper.prepare();
           if (!this.snooper.isStarted()) {
              this.snooper.start();
           }
@@ -709,7 +813,7 @@
        this.window.setGuiScale((double)var1);
        if (this.screen != null) {
           this.screen.resize(this, this.window.getGuiScaledWidth(), this.window.getGuiScaledHeight());
-@@ -1006,149 +1049,147 @@
+@@ -1006,149 +1070,147 @@
           System.gc();
           if (this.isLocalServer && this.singleplayerServer != null) {
              this.singleplayerServer.halt(true);
@@ -968,7 +1072,20 @@
     public void stop() {
        this.running = false;
     }
-@@ -1383,11 +1424,10 @@
+@@ -1322,11 +1384,11 @@
+       if (this.level != null) {
+          this.textureManager.tick();
+       }
+ 
+       if (this.screen == null && this.player != null) {
+-         if (this.player.getHealth() <= 0.0F && !(this.screen instanceof DeathScreen)) {
++         if (this.player.isDeadOrDying() && !(this.screen instanceof DeathScreen)) {
+             this.setScreen((Screen)null);
+          } else if (this.player.isSleeping() && this.level != null) {
+             this.setScreen(new InBedChatScreen());
+          }
+       } else if (this.screen != null && this.screen instanceof InBedChatScreen && !this.player.isSleeping()) {
+@@ -1383,11 +1445,10 @@
        }
  
        this.soundManager.tick(this.pause);
@@ -980,7 +1097,23 @@
              try {
                 this.level.tick(() -> {
                    return true;
-@@ -1482,15 +1522,15 @@
+@@ -1467,13 +1528,13 @@
+ 
+       while(this.options.keyAdvancements.consumeClick()) {
+          this.setScreen(new AdvancementsScreen(this.player.connection.getAdvancements()));
+       }
+ 
+-      while(this.options.keySwapHands.consumeClick()) {
++      while(this.options.keySwapOffhand.consumeClick()) {
+          if (!this.player.isSpectator()) {
+-            this.getConnection().send((Packet)(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_HELD_ITEMS, BlockPos.ZERO, Direction.DOWN)));
++            this.getConnection().send((Packet)(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN)));
+          }
+       }
+ 
+       while(this.options.keyDrop.consumeClick()) {
+          if (!this.player.isSpectator() && this.player.drop(Screen.hasControlDown())) {
+@@ -1482,15 +1543,15 @@
        }
  
        boolean var4 = this.options.chatVisibility != ChatVisiblity.HIDDEN;
@@ -998,58 +1131,61 @@
  
        if (this.player.isUsingItem()) {
           if (!this.options.keyUse.isDown()) {
-@@ -1530,85 +1570,127 @@
+@@ -1530,85 +1591,238 @@
        }
  
        this.continueAttack(this.screen == null && this.options.keyAttack.isDown() && this.mouseHandler.isMouseGrabbed());
     }
  
 -   public void selectLevel(String var1, String var2, @Nullable LevelSettings var3) {
-+   public void selectLevel(String var1, @Nullable LevelSettings var2) {
-+      this.selectLevel(var1, var2, false);
-+   }
-+
-+   public void selectLevel(String var1, @Nullable LevelSettings var2, boolean var3) {
-       this.clearLevel();
+-      this.clearLevel();
 -      LevelStorage var4 = this.levelSource.selectLevel(var1, (MinecraftServer)null);
 -      LevelData var5 = var4.prepareLevel();
 -      if (var5 == null && var3 != null) {
 -         var5 = new LevelData(var3, var1);
 -         var4.saveLevelData(var5);
-+
-+      LevelStorageSource.LevelStorageAccess var4;
-+      try {
-+         var4 = this.levelSource.createAccess(var1);
-+      } catch (IOException var18) {
-+         LOGGER.warn("Failed to read level {} data", var1, var18);
-+         SystemToast.onWorldAccessFailure(this, var1);
-+         this.setScreen((Screen)null);
-+         return;
++   public static DataPackConfig loadDataPacks(LevelStorageSource.LevelStorageAccess var0) {
++      MinecraftServer.convertFromRegionFormatIfNeeded(var0);
++      DataPackConfig var1 = var0.getDataPacks();
++      if (var1 == null) {
++         throw new IllegalStateException("Failed to load data pack config");
++      } else {
++         return var1;
        }
++   }
  
 -      if (var3 == null) {
 -         var3 = new LevelSettings(var5);
-+      MinecraftServer.convertFromRegionFormatIfNeeded(var4);
-+      Object var5 = var4.getDataTag();
-+      String var6;
++   public static WorldData loadWorldData(LevelStorageSource.LevelStorageAccess var0, RegistryAccess.RegistryHolder var1, ResourceManager var2, DataPackConfig var3) {
++      RegistryReadOps var4 = RegistryReadOps.create(NbtOps.INSTANCE, var2, var1);
++      WorldData var5 = var0.getDataTag(var4, var3);
 +      if (var5 == null) {
-+         if (var2 == null) {
-+            throw new IllegalStateException("Requested world creation without any settings");
-+         }
-+
-+         var5 = new PrimaryLevelData(var2);
-+         var6 = var2.levelName();
-+         var4.saveDataTag((WorldData)var5);
++         throw new IllegalStateException("Failed to load world");
 +      } else {
-+         var6 = ((WorldData)var5).getLevelName();
++         return var5;
        }
++   }
  
-       this.progressListener.set((Object)null);
-+      PackRepository var7 = MinecraftServer.createPackRepository(var4.getLevelPath(LevelResource.DATAPACK_DIR), (WorldData)var5, var3);
-+      CompletableFuture var8 = ServerResources.loadResources(var7.openAllSelected(), true, 2, Util.backgroundExecutor(), this);
-+      this.managedBlock(var8::isDone);
+-      this.progressListener.set((Object)null);
++   public void loadLevel(String var1) {
++      this.doLoadLevel(var1, RegistryAccess.builtin(), Minecraft::loadDataPacks, Minecraft::loadWorldData, false, Minecraft.ExperimentalDialogType.BACKUP);
++   }
  
-+      ServerResources var9;
++   public void createLevel(String var1, LevelSettings var2, RegistryAccess.RegistryHolder var3, WorldGenSettings var4) {
++      this.doLoadLevel(var1, var3, (var1x) -> {
++         return var2.getDataPackConfig();
++      }, (var3x, var4x, var5, var6) -> {
++         RegistryReadOps var7 = RegistryReadOps.create(JsonOps.INSTANCE, var5, var3);
++         DataResult var8 = var7.decodeElements(var4.dimensions(), Registry.LEVEL_STEM_REGISTRY, LevelStem.CODEC);
++         Logger var10001 = LOGGER;
++         var10001.getClass();
++         MappedRegistry var9 = (MappedRegistry)var8.resultOrPartial(var10001::error).orElse(var4.dimensions());
++         return new PrimaryLevelData(var2, var4.withDimensions(var9), var8.lifecycle());
++      }, false, Minecraft.ExperimentalDialogType.CREATE);
++   }
++
++   private void doLoadLevel(String var1, RegistryAccess.RegistryHolder var2, Function<LevelStorageSource.LevelStorageAccess, DataPackConfig> var3, Function4<LevelStorageSource.LevelStorageAccess, RegistryAccess.RegistryHolder, ResourceManager, DataPackConfig, WorldData> var4, boolean var5, Minecraft.ExperimentalDialogType var6) {
++      LevelStorageSource.LevelStorageAccess var7;
        try {
 -         YggdrasilAuthenticationService var6 = new YggdrasilAuthenticationService(this.proxy, UUID.randomUUID().toString());
 -         MinecraftSessionService var13 = var6.createMinecraftSessionService();
@@ -1057,98 +1193,227 @@
 -         GameProfileCache var9 = new GameProfileCache(var15, new File(this.gameDirectory, MinecraftServer.USERID_CACHE_FILE.getName()));
 -         SkullBlockEntity.setProfileCache(var9);
 -         SkullBlockEntity.setSessionService(var13);
-+         var9 = (ServerResources)var8.get();
-+         var9.updateGlobals();
-+      } catch (Exception var17) {
-+         LOGGER.warn("Failed to load datapacks, can't proceed with server load", var17);
-+         this.setScreen(new DatapackLoadFailureScreen(var1, var2));
-+
-+         try {
-+            var4.close();
-+            var7.close();
-+         } catch (IOException var14) {
-+            LOGGER.warn("Failed to unlock access to level {}", var1, var17);
-+         }
-+
-+         return;
-+      }
-+
-+      try {
-+         YggdrasilAuthenticationService var10 = new YggdrasilAuthenticationService(this.proxy, UUID.randomUUID().toString());
-+         MinecraftSessionService var20 = var10.createMinecraftSessionService();
-+         GameProfileRepository var22 = var10.createProfileRepository();
-+         GameProfileCache var13 = new GameProfileCache(var22, new File(this.gameDirectory, MinecraftServer.USERID_CACHE_FILE.getName()));
-+         SkullBlockEntity.setProfileCache(var13);
-+         SkullBlockEntity.setSessionService(var20);
-          GameProfileCache.setUsesAuthentication(false);
+-         GameProfileCache.setUsesAuthentication(false);
 -         this.singleplayerServer = new IntegratedServer(this, var1, var2, var3, var6, var13, var15, var9, (var1x) -> {
-+         this.singleplayerServer = new IntegratedServer(this, var4, var7, var9, (WorldData)var5, var20, var22, var13, (var1x) -> {
-             StoringChunkProgressListener var2 = new StoringChunkProgressListener(var1x + 0);
-             var2.start();
-             this.progressListener.set(var2);
-             Queue var10003 = this.progressTasks;
-             var10003.getClass();
-             return new ProcessorChunkProgressListener(var2, var10003::add);
-          });
-          this.singleplayerServer.forkAndRun();
-          this.isLocalServer = true;
+-            StoringChunkProgressListener var2 = new StoringChunkProgressListener(var1x + 0);
+-            var2.start();
+-            this.progressListener.set(var2);
+-            Queue var10003 = this.progressTasks;
+-            var10003.getClass();
+-            return new ProcessorChunkProgressListener(var2, var10003::add);
+-         });
+-         this.singleplayerServer.forkAndRun();
+-         this.isLocalServer = true;
 -      } catch (Throwable var11) {
 -         CrashReport var7 = CrashReport.forThrowable(var11, "Starting integrated server");
 -         CrashReportCategory var8 = var7.addCategory("Starting integrated server");
 -         var8.setDetail("Level ID", (Object)var1);
 -         var8.setDetail("Level Name", (Object)var2);
 -         throw new ReportedException(var7);
-+      } catch (Throwable var16) {
-+         CrashReport var11 = CrashReport.forThrowable(var16, "Starting integrated server");
-+         CrashReportCategory var12 = var11.addCategory("Starting integrated server");
-+         var12.setDetail("Level ID", (Object)var1);
-+         var12.setDetail("Level Name", (Object)var6);
-+         throw new ReportedException(var11);
++         var7 = this.levelSource.createAccess(var1);
++      } catch (IOException var21) {
++         LOGGER.warn("Failed to read level {} data", var1, var21);
++         SystemToast.onWorldAccessFailure(this, var1);
++         this.setScreen((Screen)null);
++         return;
        }
  
-       while(this.progressListener.get() == null) {
-          Thread.yield();
+-      while(this.progressListener.get() == null) {
+-         Thread.yield();
++      Minecraft.ServerStem var8;
++      try {
++         var8 = this.makeServerStem(var2, var3, var4, var5, var7);
++      } catch (Exception var20) {
++         LOGGER.warn("Failed to load datapacks, can't proceed with server load", var20);
++         this.setScreen(new DatapackLoadFailureScreen(() -> {
++            this.doLoadLevel(var1, var2, var3, var4, true, var6);
++         }));
++
++         try {
++            var7.close();
++         } catch (IOException var16) {
++            LOGGER.warn("Failed to unlock access to level {}", var1, var16);
++         }
++
++         return;
        }
  
 -      LevelLoadingScreen var12 = new LevelLoadingScreen((StoringChunkProgressListener)this.progressListener.get());
 -      this.setScreen(var12);
-+      LevelLoadingScreen var19 = new LevelLoadingScreen((StoringChunkProgressListener)this.progressListener.get());
-+      this.setScreen(var19);
-+      this.profiler.push("waitForServer");
++      WorldData var9 = var8.worldData();
++      boolean var10 = var9.worldGenSettings().isOldCustomizedWorld();
++      boolean var11 = var9.worldGenSettingsLifecycle() != Lifecycle.stable();
++      if (var6 == Minecraft.ExperimentalDialogType.NONE || !var10 && !var11) {
++         this.clearLevel();
++         this.progressListener.set((Object)null);
  
-       while(!this.singleplayerServer.isReady()) {
+-      while(!this.singleplayerServer.isReady()) {
 -         var12.tick();
-+         var19.tick();
-          this.runTick(false);
+-         this.runTick(false);
++         try {
++            var7.saveDataTag(var2, var9);
++            var8.serverResources().updateGlobals();
++            YggdrasilAuthenticationService var12 = new YggdrasilAuthenticationService(this.proxy, UUID.randomUUID().toString());
++            MinecraftSessionService var23 = var12.createMinecraftSessionService();
++            GameProfileRepository var25 = var12.createProfileRepository();
++            GameProfileCache var15 = new GameProfileCache(var25, new File(this.gameDirectory, MinecraftServer.USERID_CACHE_FILE.getName()));
++            SkullBlockEntity.setProfileCache(var15);
++            SkullBlockEntity.setSessionService(var23);
++            GameProfileCache.setUsesAuthentication(false);
++            this.singleplayerServer = (IntegratedServer)MinecraftServer.spin((var8x) -> {
++               return new IntegratedServer(var8x, this, var2, var7, var8.packRepository(), var8.serverResources(), var9, var23, var25, var15, (var1) -> {
++                  StoringChunkProgressListener var2 = new StoringChunkProgressListener(var1 + 0);
++                  var2.start();
++                  this.progressListener.set(var2);
++                  Queue var10003 = this.progressTasks;
++                  var10003.getClass();
++                  return new ProcessorChunkProgressListener(var2, var10003::add);
++               });
++            });
++            this.isLocalServer = true;
++         } catch (Throwable var19) {
++            CrashReport var13 = CrashReport.forThrowable(var19, "Starting integrated server");
++            CrashReportCategory var14 = var13.addCategory("Starting integrated server");
++            var14.setDetail("Level ID", (Object)var1);
++            var14.setDetail("Level Name", (Object)var9.getLevelName());
++            throw new ReportedException(var13);
++         }
  
++         while(this.progressListener.get() == null) {
++            Thread.yield();
++         }
++
++         LevelLoadingScreen var22 = new LevelLoadingScreen((StoringChunkProgressListener)this.progressListener.get());
++         this.setScreen(var22);
++         this.profiler.push("waitForServer");
++
++         while(!this.singleplayerServer.isReady()) {
++            var22.tick();
++            this.runTick(false);
++
++            try {
++               Thread.sleep(16L);
++            } catch (InterruptedException var18) {
++            }
++
++            if (this.delayedCrash != null) {
++               crash(this.delayedCrash);
++               return;
++            }
++         }
++
++         this.profiler.pop();
++         SocketAddress var24 = this.singleplayerServer.getConnection().startMemoryChannel();
++         Connection var26 = Connection.connectToLocalServer(var24);
++         var26.setListener(new ClientHandshakePacketListenerImpl(var26, this, (Screen)null, (var0) -> {
++         }));
++         var26.send(new ClientIntentionPacket(var24.toString(), 0, ConnectionProtocol.LOGIN));
++         var26.send(new ServerboundHelloPacket(this.getUser().getGameProfile()));
++         this.pendingConnection = var26;
++      } else {
++         this.displayExperimentalConfirmationDialog(var6, var1, var10, () -> {
++            this.doLoadLevel(var1, var2, var3, var4, var5, Minecraft.ExperimentalDialogType.NONE);
++         });
++         var8.close();
++
           try {
-             Thread.sleep(16L);
+-            Thread.sleep(16L);
 -         } catch (InterruptedException var10) {
-+         } catch (InterruptedException var15) {
++            var7.close();
++         } catch (IOException var17) {
++            LOGGER.warn("Failed to unlock access to level {}", var1, var17);
           }
  
-          if (this.delayedCrash != null) {
-             crash(this.delayedCrash);
-             return;
+-         if (this.delayedCrash != null) {
+-            crash(this.delayedCrash);
+-            return;
++      }
++   }
++
++   private void displayExperimentalConfirmationDialog(Minecraft.ExperimentalDialogType var1, String var2, boolean var3, Runnable var4) {
++      if (var1 == Minecraft.ExperimentalDialogType.BACKUP) {
++         TranslatableComponent var5;
++         TranslatableComponent var6;
++         if (var3) {
++            var5 = new TranslatableComponent("selectWorld.backupQuestion.customized");
++            var6 = new TranslatableComponent("selectWorld.backupWarning.customized");
++         } else {
++            var5 = new TranslatableComponent("selectWorld.backupQuestion.experimental");
++            var6 = new TranslatableComponent("selectWorld.backupWarning.experimental");
           }
++
++         this.setScreen(new BackupConfirmScreen((Screen)null, (var3x, var4x) -> {
++            if (var3x) {
++               EditWorldScreen.makeBackupAndShowToast(this.levelSource, var2);
++            }
++
++            var4.run();
++         }, var5, var6, false));
++      } else {
++         this.setScreen(new ConfirmScreen((var3x) -> {
++            if (var3x) {
++               var4.run();
++            } else {
++               this.setScreen((Screen)null);
++
++               try {
++                  LevelStorageSource.LevelStorageAccess var4x = this.levelSource.createAccess(var2);
++                  Throwable var5 = null;
++
++                  try {
++                     var4x.deleteLevel();
++                  } catch (Throwable var15) {
++                     var5 = var15;
++                     throw var15;
++                  } finally {
++                     if (var4x != null) {
++                        if (var5 != null) {
++                           try {
++                              var4x.close();
++                           } catch (Throwable var14) {
++                              var5.addSuppressed(var14);
++                           }
++                        } else {
++                           var4x.close();
++                        }
++                     }
++
++                  }
++               } catch (IOException var17) {
++                  SystemToast.onWorldDeleteFailure(this, var2);
++                  LOGGER.error("Failed to delete world {}", var2, var17);
++               }
++            }
++
++         }, new TranslatableComponent("selectWorld.backupQuestion.experimental"), new TranslatableComponent("selectWorld.backupWarning.experimental"), CommonComponents.GUI_PROCEED, CommonComponents.GUI_CANCEL));
        }
  
 -      SocketAddress var14 = this.singleplayerServer.getConnection().startMemoryChannel();
 -      Connection var16 = Connection.connectToLocalServer(var14);
 -      var16.setListener(new ClientHandshakePacketListenerImpl(var16, this, (Screen)null, (var0) -> {
-+      this.profiler.pop();
-+      SocketAddress var21 = this.singleplayerServer.getConnection().startMemoryChannel();
-+      Connection var23 = Connection.connectToLocalServer(var21);
-+      var23.setListener(new ClientHandshakePacketListenerImpl(var23, this, (Screen)null, (var0) -> {
-       }));
+-      }));
 -      var16.send(new ClientIntentionPacket(var14.toString(), 0, ConnectionProtocol.LOGIN));
 -      var16.send(new ServerboundHelloPacket(this.getUser().getGameProfile()));
 -      this.pendingConnection = var16;
-+      var23.send(new ClientIntentionPacket(var21.toString(), 0, ConnectionProtocol.LOGIN));
-+      var23.send(new ServerboundHelloPacket(this.getUser().getGameProfile()));
-+      this.pendingConnection = var23;
     }
  
++   public Minecraft.ServerStem makeServerStem(RegistryAccess.RegistryHolder var1, Function<LevelStorageSource.LevelStorageAccess, DataPackConfig> var2, Function4<LevelStorageSource.LevelStorageAccess, RegistryAccess.RegistryHolder, ResourceManager, DataPackConfig, WorldData> var3, boolean var4, LevelStorageSource.LevelStorageAccess var5) throws InterruptedException, ExecutionException {
++      DataPackConfig var6 = (DataPackConfig)var2.apply(var5);
++      PackRepository var7 = new PackRepository(Pack::new, new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var5.getLevelPath(LevelResource.DATAPACK_DIR).toFile(), PackSource.WORLD)});
++
++      try {
++         DataPackConfig var8 = MinecraftServer.configurePackRepository(var7, var6, var4);
++         CompletableFuture var9 = ServerResources.loadResources(var7.openAllSelected(), Commands.CommandSelection.INTEGRATED, 2, Util.backgroundExecutor(), this);
++         this.managedBlock(var9::isDone);
++         ServerResources var10 = (ServerResources)var9.get();
++         WorldData var11 = (WorldData)var3.apply(var5, var1, var10.getResourceManager(), var8);
++         return new Minecraft.ServerStem(var7, var10, var11);
++      } catch (ExecutionException | InterruptedException var12) {
++         var7.close();
++         throw var12;
++      }
++   }
++
     public void setLevel(ClientLevel var1) {
        ProgressScreen var2 = new ProgressScreen();
 -      var2.progressStartNoAbort(new TranslatableComponent("connect.joining", new Object[0]));
@@ -1158,7 +1423,7 @@
        this.updateLevelInEngines(var1);
        if (!this.isLocalServer) {
           YggdrasilAuthenticationService var3 = new YggdrasilAuthenticationService(this.proxy, UUID.randomUUID().toString());
-@@ -1639,13 +1721,17 @@
+@@ -1639,13 +1853,17 @@
        this.gameMode = null;
        NarratorChatListener.INSTANCE.clear();
        this.updateScreenAndTick(var1);
@@ -1176,14 +1441,14 @@
           this.clientPackSource.clearServerPack();
           this.gui.onDisconnected();
           this.currentServer = null;
-@@ -1657,25 +1743,43 @@
+@@ -1657,25 +1875,49 @@
        this.updateLevelInEngines((ClientLevel)null);
        this.player = null;
     }
  
     private void updateScreenAndTick(Screen var1) {
+-      this.musicManager.stopPlaying();
 +      this.profiler.push("forcedTick");
-       this.musicManager.stopPlaying();
        this.soundManager.stop();
        this.cameraEntity = null;
        this.pendingConnection = null;
@@ -1192,6 +1457,13 @@
 +      this.profiler.pop();
     }
  
++   public void forceSetScreen(Screen var1) {
++      this.profiler.push("forcedTick");
++      this.setScreen(var1);
++      this.runTick(false);
++      this.profiler.pop();
++   }
++
     private void updateLevelInEngines(@Nullable ClientLevel var1) {
        this.levelRenderer.setLevel(var1);
        this.particleEngine.setLevel(var1);
@@ -1220,7 +1492,26 @@
     }
  
     @Nullable
-@@ -1807,12 +1911,12 @@
+@@ -1686,13 +1928,17 @@
+    public static boolean renderNames() {
+       return !instance.options.hideGui;
+    }
+ 
+    public static boolean useFancyGraphics() {
+-      return instance.options.fancyGraphics;
++      return instance.options.graphicsMode.getId() >= GraphicsStatus.FANCY.getId();
+    }
+ 
++   public static boolean useShaderTransparency() {
++      return instance.options.graphicsMode.getId() >= GraphicsStatus.FABULOUS.getId();
++   }
++
+    public static boolean useAmbientOcclusion() {
+       return instance.options.ambientOcclusion != AmbientOcclusionStatus.OFF;
+    }
+ 
+    private void pickBlock() {
+@@ -1807,12 +2053,12 @@
     }
  
     private ItemStack addCustomNbtData(ItemStack var1, BlockEntity var2) {
@@ -1235,7 +1526,7 @@
        } else {
           var1.addTagElement("BlockEntityTag", var3);
           var4 = new CompoundTag();
-@@ -1904,11 +2008,11 @@
+@@ -1904,14 +2150,14 @@
        String var2 = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ? "little" : "big";
        var1.setDynamicData("endianness", var2);
        var1.setDynamicData("subtitles", this.options.showSubtitles);
@@ -1245,10 +1536,27 @@
 +      Iterator var4 = this.resourcePackRepository.getSelectedPacks().iterator();
  
        while(var4.hasNext()) {
-          UnopenedResourcePack var5 = (UnopenedResourcePack)var4.next();
+-         UnopenedResourcePack var5 = (UnopenedResourcePack)var4.next();
++         ResourcePack var5 = (ResourcePack)var4.next();
           if (!var5.isRequired() && !var5.isFixedPosition()) {
              var1.setDynamicData("resource_pack[" + var3++ + "]", var5.getId());
-@@ -2014,26 +2118,26 @@
+          }
+       }
+ 
+@@ -1981,11 +2227,11 @@
+ 
+    public ResourceManager getResourceManager() {
+       return this.resourceManager;
+    }
+ 
+-   public PackRepository<UnopenedResourcePack> getResourcePackRepository() {
++   public PackRepository<ResourcePack> getResourcePackRepository() {
+       return this.resourcePackRepository;
+    }
+ 
+    public ClientPackSource getClientPackSource() {
+       return this.clientPackSource;
+@@ -2014,26 +2260,26 @@
  
     public SoundManager getSoundManager() {
        return this.soundManager;
@@ -1270,7 +1578,7 @@
 -            return MusicManager.Music.UNDER_WATER;
 +         return Musics.CREDITS;
 +      } else if (this.player != null) {
-+         if (this.player.level.dimensionType().isEnd()) {
++         if (this.player.level.dimension() == Level.END) {
 +            return this.gui.getBossOverlay().shouldPlayMusic() ? Musics.END_BOSS : Musics.END;
           } else {
 -            return this.player.abilities.instabuild && this.player.abilities.mayfly ? MusicManager.Music.CREATIVE : MusicManager.Music.GAME;
@@ -1288,7 +1596,7 @@
  
     public MinecraftSessionService getMinecraftSessionService() {
        return this.minecraftSessionService;
-@@ -2051,10 +2155,14 @@
+@@ -2051,10 +2297,14 @@
     public void setCameraEntity(Entity var1) {
        this.cameraEntity = var1;
        this.gameRenderer.checkEntityPostEffect(var1);
@@ -1303,7 +1611,7 @@
     }
  
     protected Runnable wrapRunnable(Runnable var1) {
-@@ -2135,14 +2243,10 @@
+@@ -2135,14 +2385,10 @@
  
     public ModelManager getModelManager() {
        return this.modelManager;
@@ -1318,7 +1626,52 @@
     }
  
     public MobEffectTextureManager getMobEffectTextures() {
-@@ -2213,10 +2317,11 @@
+@@ -2180,43 +2426,82 @@
+ 
+    public RenderBuffers renderBuffers() {
+       return this.renderBuffers;
+    }
+ 
+-   private static UnopenedResourcePack createClientPackAdapter(String var0, boolean var1, Supplier<Pack> var2, Pack var3, PackMetadataSection var4, UnopenedPack.Position var5) {
+-      int var6 = var4.getPackFormat();
+-      Supplier var7 = var2;
+-      if (var6 <= 3) {
+-         var7 = adaptV3(var2);
++   private static ResourcePack createClientPackAdapter(String var0, boolean var1, Supplier<PackResources> var2, PackResources var3, PackMetadataSection var4, Pack.Position var5, PackSource var6) {
++      int var7 = var4.getPackFormat();
++      Supplier var8 = var2;
++      if (var7 <= 3) {
++         var8 = adaptV3(var2);
+       }
+ 
+-      if (var6 <= 4) {
+-         var7 = adaptV4(var7);
++      if (var7 <= 4) {
++         var8 = adaptV4(var8);
+       }
+ 
+-      return new UnopenedResourcePack(var0, var1, var7, var3, var4, var5);
++      return new ResourcePack(var0, var1, var8, var3, var4, var5, var6);
+    }
+ 
+-   private static Supplier<Pack> adaptV3(Supplier<Pack> var0) {
++   private static Supplier<PackResources> adaptV3(Supplier<PackResources> var0) {
+       return () -> {
+-         return new LegacyResourcePackAdapter((Pack)var0.get(), LegacyResourcePackAdapter.V3);
++         return new LegacyPackResourcesAdapter((PackResources)var0.get(), LegacyPackResourcesAdapter.V3);
+       };
+    }
+ 
+-   private static Supplier<Pack> adaptV4(Supplier<Pack> var0) {
++   private static Supplier<PackResources> adaptV4(Supplier<PackResources> var0) {
+       return () -> {
+-         return new PackAdapterV4((Pack)var0.get());
++         return new PackResourcesAdapterV4((PackResources)var0.get());
+       };
+    }
+ 
+    public void updateMaxMipLevel(int var1) {
+       this.modelManager.updateMaxMipLevel(var1);
     }
  
     static {
@@ -1329,4 +1682,42 @@
        RESOURCE_RELOAD_INITIAL_TASK = CompletableFuture.completedFuture(Unit.INSTANCE);
        reserve = new byte[10485760];
     }
++
++   public static final class ServerStem implements AutoCloseable {
++      private final PackRepository<Pack> packRepository;
++      private final ServerResources serverResources;
++      private final WorldData worldData;
++
++      private ServerStem(PackRepository<Pack> var1, ServerResources var2, WorldData var3) {
++         this.packRepository = var1;
++         this.serverResources = var2;
++         this.worldData = var3;
++      }
++
++      public PackRepository<Pack> packRepository() {
++         return this.packRepository;
++      }
++
++      public ServerResources serverResources() {
++         return this.serverResources;
++      }
++
++      public WorldData worldData() {
++         return this.worldData;
++      }
++
++      public void close() {
++         this.packRepository.close();
++         this.serverResources.close();
++      }
++   }
++
++   static enum ExperimentalDialogType {
++      NONE,
++      CREATE,
++      BACKUP;
++
++      private ExperimentalDialogType() {
++      }
++   }
  }

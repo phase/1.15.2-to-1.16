@@ -1,22 +1,25 @@
 --- net/minecraft/world/level/storage/WorldData.java
 +++ net/minecraft/world/level/storage/WorldData.java
-@@ -1,0 +1,88 @@
+@@ -1,0 +1,93 @@
 +package net.minecraft.world.level.storage;
 +
++import com.mojang.serialization.Lifecycle;
 +import java.util.Set;
 +import javax.annotation.Nullable;
 +import net.minecraft.CrashReportCategory;
++import net.minecraft.core.RegistryAccess;
 +import net.minecraft.nbt.CompoundTag;
 +import net.minecraft.world.Difficulty;
++import net.minecraft.world.level.DataPackConfig;
 +import net.minecraft.world.level.GameRules;
 +import net.minecraft.world.level.GameType;
 +import net.minecraft.world.level.LevelSettings;
 +import net.minecraft.world.level.levelgen.WorldGenSettings;
 +
 +public interface WorldData {
-+   Set<String> getDisabledDataPacks();
++   DataPackConfig getDataPackConfig();
 +
-+   Set<String> getEnabledDataPacks();
++   void setDataPackConfig(DataPackConfig var1);
 +
 +   boolean wasModded();
 +
@@ -57,7 +60,7 @@
 +
 +   LevelSettings getLevelSettings();
 +
-+   CompoundTag createTag(@Nullable CompoundTag var1);
++   CompoundTag createTag(RegistryAccess var1, @Nullable CompoundTag var2);
 +
 +   boolean isHardcore();
 +
@@ -88,4 +91,6 @@
 +   void setEndDragonFightData(CompoundTag var1);
 +
 +   WorldGenSettings worldGenSettings();
++
++   Lifecycle worldGenSettingsLifecycle();
 +}

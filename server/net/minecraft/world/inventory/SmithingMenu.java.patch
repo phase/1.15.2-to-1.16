@@ -3,19 +3,21 @@
 @@ -1,0 +1,62 @@
 +package net.minecraft.world.inventory;
 +
-+import com.google.common.collect.ImmutableMap;
-+import java.util.Map;
-+import net.minecraft.nbt.CompoundTag;
++import java.util.List;
++import javax.annotation.Nullable;
 +import net.minecraft.world.entity.player.Inventory;
 +import net.minecraft.world.entity.player.Player;
-+import net.minecraft.world.item.Item;
 +import net.minecraft.world.item.ItemStack;
-+import net.minecraft.world.item.Items;
++import net.minecraft.world.item.crafting.RecipeType;
++import net.minecraft.world.item.crafting.UpgradeRecipe;
++import net.minecraft.world.level.Level;
 +import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.block.state.BlockState;
 +
 +public class SmithingMenu extends ItemCombinerMenu {
-+   private static final Map<Item, Item> DIAMOND_TO_NETHERITE;
++   private final Level level;
++   @Nullable
++   private UpgradeRecipe selectedRecipe;
 +
 +   public SmithingMenu(int var1, Inventory var2) {
 +      this(var1, var2, ContainerLevelAccess.NULL);
@@ -23,6 +25,7 @@
 +
 +   public SmithingMenu(int var1, Inventory var2, ContainerLevelAccess var3) {
 +      super(MenuType.SMITHING, var1, var2, var3);
++      this.level = var2.player.level;
 +   }
 +
 +   protected boolean isValidBlock(BlockState var1) {
@@ -30,36 +33,33 @@
 +   }
 +
 +   protected boolean mayPickup(Player var1, boolean var2) {
-+      return DIAMOND_TO_NETHERITE.containsKey(this.inputSlots.getItem(0).getItem()) && this.inputSlots.getItem(1).getItem() == Items.NETHERITE_INGOT;
++      return this.selectedRecipe != null && this.selectedRecipe.matches(this.inputSlots, this.level);
 +   }
 +
 +   protected ItemStack onTake(Player var1, ItemStack var2) {
-+      this.inputSlots.setItem(0, ItemStack.EMPTY);
-+      ItemStack var3 = this.inputSlots.getItem(1);
-+      var3.shrink(1);
-+      this.inputSlots.setItem(1, var3);
++      this.shrinkStackInSlot(0);
++      this.shrinkStackInSlot(1);
 +      this.access.execute((var0, var1x) -> {
 +         var0.levelEvent(1044, var1x, 0);
 +      });
 +      return var2;
 +   }
 +
-+   public void createResult() {
-+      ItemStack var1 = this.inputSlots.getItem(0);
-+      ItemStack var2 = this.inputSlots.getItem(1);
-+      Item var3 = (Item)DIAMOND_TO_NETHERITE.get(var1.getItem());
-+      if (var2.getItem() == Items.NETHERITE_INGOT && var3 != null) {
-+         ItemStack var4 = new ItemStack(var3);
-+         CompoundTag var5 = var1.getTag();
-+         var4.setTag(var5 != null ? var5.copy() : null);
-+         this.resultSlots.setItem(0, var4);
-+      } else {
-+         this.resultSlots.setItem(0, ItemStack.EMPTY);
-+      }
-+
++   private void shrinkStackInSlot(int var1) {
++      ItemStack var2 = this.inputSlots.getItem(var1);
++      var2.shrink(1);
++      this.inputSlots.setItem(var1, var2);
 +   }
 +
-+   static {
-+      DIAMOND_TO_NETHERITE = ImmutableMap.builder().put(Items.DIAMOND_CHESTPLATE, Items.NETHERITE_CHESTPLATE).put(Items.DIAMOND_LEGGINGS, Items.NETHERITE_LEGGINGS).put(Items.DIAMOND_HELMET, Items.NETHERITE_HELMET).put(Items.DIAMOND_BOOTS, Items.NETHERITE_BOOTS).put(Items.DIAMOND_SWORD, Items.NETHERITE_SWORD).put(Items.DIAMOND_AXE, Items.NETHERITE_AXE).put(Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE).put(Items.DIAMOND_HOE, Items.NETHERITE_HOE).put(Items.DIAMOND_SHOVEL, Items.NETHERITE_SHOVEL).build();
++   public void createResult() {
++      List var1 = this.level.getRecipeManager().getRecipesFor(RecipeType.SMITHING, this.inputSlots, this.level);
++      if (var1.isEmpty()) {
++         this.resultSlots.setItem(0, ItemStack.EMPTY);
++      } else {
++         this.selectedRecipe = (UpgradeRecipe)var1.get(0);
++         ItemStack var2 = this.selectedRecipe.assemble(this.inputSlots);
++         this.resultSlots.setItem(0, var2);
++      }
++
 +   }
 +}

@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/worldselection/WorldPreset.java
 +++ net/minecraft/client/gui/screens/worldselection/WorldPreset.java
-@@ -1,0 +1,137 @@
+@@ -1,0 +1,142 @@
 +package net.minecraft.client.gui.screens.worldselection;
 +
 +import com.google.common.collect.ImmutableMap;
@@ -11,6 +11,7 @@
 +import net.minecraft.client.gui.screens.CreateBuffetWorldScreen;
 +import net.minecraft.client.gui.screens.CreateFlatWorldScreen;
 +import net.minecraft.client.gui.screens.Screen;
++import net.minecraft.core.RegistryAccess;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.TranslatableComponent;
 +import net.minecraft.world.level.biome.Biome;
@@ -53,13 +54,17 @@
 +      }
 +   };
 +   private static final WorldPreset SINGLE_BIOME_CAVES = new WorldPreset("single_biome_caves") {
++      public WorldGenSettings create(RegistryAccess.RegistryHolder var1, long var2, boolean var4, boolean var5) {
++         return new WorldGenSettings(var2, var4, var5, WorldGenSettings.withOverworld(DimensionType.defaultDimensions(var2), DimensionType::defaultOverworldCaves, this.generator(var2)));
++      }
++
 +      protected ChunkGenerator generator(long var1) {
-+         return new NoiseBasedChunkGenerator(new FixedBiomeSource(Biomes.OCEAN), var1, NoiseGeneratorSettings.Preset.NETHER.settings());
++         return new NoiseBasedChunkGenerator(new FixedBiomeSource(Biomes.OCEAN), var1, NoiseGeneratorSettings.Preset.CAVES.settings());
 +      }
 +   };
 +   private static final WorldPreset SINGLE_BIOME_FLOATING_ISLANDS = new WorldPreset("single_biome_floating_islands") {
 +      protected ChunkGenerator generator(long var1) {
-+         return new NoiseBasedChunkGenerator(new FixedBiomeSource(Biomes.OCEAN), var1, NoiseGeneratorSettings.Preset.END.settings());
++         return new NoiseBasedChunkGenerator(new FixedBiomeSource(Biomes.OCEAN), var1, NoiseGeneratorSettings.Preset.FLOATING_ISLANDS.settings());
 +      }
 +   };
 +   private static final WorldPreset DEBUG = new WorldPreset("debug_all_block_states") {
@@ -79,9 +84,9 @@
 +      FixedBiomeSource var3 = new FixedBiomeSource(var2);
 +      NoiseGeneratorSettings var4;
 +      if (var1 == SINGLE_BIOME_CAVES) {
-+         var4 = NoiseGeneratorSettings.Preset.NETHER.settings();
++         var4 = NoiseGeneratorSettings.Preset.CAVES.settings();
 +      } else if (var1 == SINGLE_BIOME_FLOATING_ISLANDS) {
-+         var4 = NoiseGeneratorSettings.Preset.END.settings();
++         var4 = NoiseGeneratorSettings.Preset.FLOATING_ISLANDS.settings();
 +      } else {
 +         var4 = NoiseGeneratorSettings.Preset.OVERWORLD.settings();
 +      }
@@ -106,8 +111,8 @@
 +      return this.description;
 +   }
 +
-+   public WorldGenSettings create(long var1, boolean var3, boolean var4) {
-+      return new WorldGenSettings(var1, var3, var4, WorldGenSettings.withOverworld(DimensionType.defaultDimensions(var1), this.generator(var1)));
++   public WorldGenSettings create(RegistryAccess.RegistryHolder var1, long var2, boolean var4, boolean var5) {
++      return new WorldGenSettings(var2, var4, var5, WorldGenSettings.withOverworld(DimensionType.defaultDimensions(var2), this.generator(var2)));
 +   }
 +
 +   protected abstract ChunkGenerator generator(long var1);

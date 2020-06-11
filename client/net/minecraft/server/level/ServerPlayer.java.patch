@@ -49,10 +49,14 @@
  import net.minecraft.server.PlayerAdvancements;
  import net.minecraft.server.network.ServerGamePacketListenerImpl;
  import net.minecraft.server.players.PlayerList;
-@@ -81,10 +87,11 @@
+@@ -79,12 +85,15 @@
+ import net.minecraft.world.effect.MobEffectInstance;
+ import net.minecraft.world.effect.MobEffects;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.HumanoidArm;
  import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.entity.Mob;
++import net.minecraft.world.entity.NeutralMob;
  import net.minecraft.world.entity.animal.horse.AbstractHorse;
  import net.minecraft.world.entity.item.ItemEntity;
 +import net.minecraft.world.entity.monster.Monster;
@@ -61,7 +65,7 @@
  import net.minecraft.world.entity.projectile.AbstractArrow;
  import net.minecraft.world.inventory.AbstractContainerMenu;
  import net.minecraft.world.inventory.ContainerListener;
-@@ -100,17 +107,20 @@
+@@ -100,28 +109,30 @@
  import net.minecraft.world.item.crafting.Recipe;
  import net.minecraft.world.item.trading.MerchantOffers;
  import net.minecraft.world.level.ChunkPos;
@@ -83,7 +87,18 @@
  import net.minecraft.world.scores.Score;
  import net.minecraft.world.scores.Team;
  import net.minecraft.world.scores.criteria.ObjectiveCriteria;
-@@ -141,37 +151,40 @@
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class ServerPlayer extends Player implements ContainerListener {
+    private static final Logger LOGGER = LogManager.getLogger();
+-   private String language = "en_US";
+    public ServerGamePacketListenerImpl connection;
+    public final MinecraftServer server;
+    public final ServerPlayerGameMode gameMode;
+    private final List<Integer> entitiesToRemove = Lists.newLinkedList();
+    private final PlayerAdvancements advancements;
+@@ -141,37 +152,41 @@
     private boolean canChatColor = true;
     private long lastActionTime = Util.getMillis();
     private Entity camera;
@@ -98,6 +113,7 @@
     private Vec3 enteredNetherPosition;
     private SectionPos lastSectionPos = SectionPos.of(0, 0, 0);
 +   private ResourceKey<Level> respawnDimension;
++   @Nullable
 +   private BlockPos respawnPosition;
 +   private boolean respawnForced;
     private int containerCounter;
@@ -128,20 +144,20 @@
           if (var4 < var3) {
              var3 = var4;
           }
-@@ -188,11 +201,11 @@
+@@ -188,11 +203,11 @@
  
           for(int var12 = 0; var12 < var9; ++var12) {
              int var13 = (var11 + var10 * var12) % var9;
              int var14 = var13 % (var3 * 2 + 1);
              int var15 = var13 / (var3 * 2 + 1);
 -            BlockPos var16 = var1.getDimension().getValidSpawnPosition(var2.getX() + var14 - var3, var2.getZ() + var15 - var3, false);
-+            BlockPos var16 = PlayerRespawnLogic.validSpawnPosition(var1, var2, var3, var14, var15);
++            BlockPos var16 = PlayerRespawnLogic.getOverworldRespawnPos(var1, var2.getX() + var14 - var3, var2.getZ() + var15 - var3, false);
              if (var16 != null) {
                 this.moveTo(var16, 0.0F, 0.0F);
                 if (var1.noCollision(this)) {
                    break;
                 }
-@@ -227,17 +240,28 @@
+@@ -227,17 +242,28 @@
           this.enteredNetherPosition = new Vec3(var2.getDouble("x"), var2.getDouble("y"), var2.getDouble("z"));
        }
  
@@ -171,7 +187,7 @@
     public void addAdditionalSaveData(CompoundTag var1) {
        super.addAdditionalSaveData(var1);
        var1.putInt("playerGameType", this.gameMode.getGameModeForPlayer().getId());
-@@ -260,10 +284,24 @@
+@@ -260,10 +286,24 @@
           var4.put("Entity", var5);
           var1.put("RootVehicle", var4);
        }
@@ -196,7 +212,7 @@
     public void setExperiencePoints(int var1) {
        float var2 = (float)this.getXpNeededForNextLevel();
        float var3 = (var2 - 1.0F) / var2;
-@@ -356,11 +394,11 @@
+@@ -356,11 +396,11 @@
        this.advancements.flushDirty(this);
     }
  
@@ -209,7 +225,7 @@
  
           for(int var1 = 0; var1 < this.inventory.getContainerSize(); ++var1) {
              ItemStack var5 = this.inventory.getItem(var1);
-@@ -439,12 +477,12 @@
+@@ -439,12 +479,12 @@
           this.connection.send(new ClientboundPlayerCombatPacket(this.getCombatTracker(), ClientboundPlayerCombatPacket.Event.ENTITY_DIED, var3), (var2x) -> {
              if (!var2x.isSuccess()) {
                 boolean var3x = true;
@@ -224,7 +240,7 @@
              }
  
           });
-@@ -454,11 +492,11 @@
+@@ -454,17 +494,21 @@
                 this.server.getPlayerList().broadcastToTeam(this, var3);
              } else if (var4.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OWN_TEAM) {
                 this.server.getPlayerList().broadcastToAllExceptTeam(this, var3);
@@ -237,49 +253,85 @@
           this.connection.send(new ClientboundPlayerCombatPacket(this.getCombatTracker(), ClientboundPlayerCombatPacket.Event.ENTITY_DIED));
        }
  
-@@ -550,14 +588,14 @@
+       this.removeEntitiesOnShoulder();
++      if (this.level.getGameRules().getBoolean(GameRules.RULE_FORGIVE_DEAD_PLAYERS)) {
++         this.tellNeutralMobsThatIDied();
++      }
++
+       if (!this.isSpectator()) {
+          this.dropAllDeathLoot(var1);
+       }
+ 
+       this.getScoreboard().forAllObjectives(ObjectiveCriteria.DEATH_COUNT, this.getScoreboardName(), Score::increment);
+@@ -482,10 +526,19 @@
+       this.clearFire();
+       this.setSharedFlag(0, false);
+       this.getCombatTracker().recheckStatus();
+    }
+ 
++   private void tellNeutralMobsThatIDied() {
++      AABB var1 = (new AABB(this.blockPosition())).inflate(32.0D, 10.0D, 32.0D);
++      this.level.getLoadedEntitiesOfClass(Mob.class, var1).stream().filter((var0) -> {
++         return var0 instanceof NeutralMob;
++      }).forEach((var1x) -> {
++         ((NeutralMob)var1x).playerDied(this);
++      });
++   }
++
+    public void awardKillScore(Entity var1, int var2, DamageSource var3) {
+       if (var1 != this) {
+          super.awardKillScore(var1, var2, var3);
+          this.increaseScore(var2);
+          String var4 = this.getScoreboardName();
+@@ -550,108 +603,100 @@
     private boolean isPvpAllowed() {
        return this.server.isPvpAllowed();
     }
  
     @Nullable
 -   public Entity changeDimension(DimensionType var1) {
-+   public Entity changeDimension(ResourceKey<Level> var1) {
++   public Entity changeDimension(ServerLevel var1) {
        this.isChangingDimension = true;
 -      DimensionType var2 = this.dimension;
 -      if (var2 == DimensionType.THE_END && var1 == DimensionType.OVERWORLD) {
-+      ResourceKey var2 = this.level.dimension();
-+      if (var2 == Level.END && var1 == Level.OVERWORLD) {
++      ServerLevel var2 = this.getLevel();
++      ResourceKey var3 = var2.dimension();
++      if (var3 == Level.END && var1.dimension() == Level.OVERWORLD) {
           this.unRide();
           this.getLevel().removePlayerImmediately(this);
           if (!this.wonGame) {
              this.wonGame = true;
-             this.connection.send(new ClientboundGameEventPacket(4, this.seenCredits ? 0.0F : 1.0F));
-@@ -565,77 +603,70 @@
+-            this.connection.send(new ClientboundGameEventPacket(4, this.seenCredits ? 0.0F : 1.0F));
++            this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.WIN_GAME, this.seenCredits ? 0.0F : 1.0F));
+             this.seenCredits = true;
           }
  
           return this;
        } else {
-          ServerLevel var3 = this.server.getLevel(var2);
+-         ServerLevel var3 = this.server.getLevel(var2);
 -         this.dimension = var1;
-          ServerLevel var4 = this.server.getLevel(var1);
-          LevelData var5 = var4.getLevelData();
+-         ServerLevel var4 = this.server.getLevel(var1);
+-         LevelData var5 = var4.getLevelData();
 -         this.connection.send(new ClientboundRespawnPacket(var1, LevelData.obfuscateSeed(var5.getSeed()), var5.getGeneratorType(), this.gameMode.getGameModeForPlayer()));
-+         this.connection.send(new ClientboundRespawnPacket(var4.dimensionTypeKey(), var1, BiomeManager.obfuscateSeed(var4.getSeed()), this.gameMode.getGameModeForPlayer(), var4.isDebug(), var4.isFlat(), true));
-          this.connection.send(new ClientboundChangeDifficultyPacket(var5.getDifficulty(), var5.isDifficultyLocked()));
-          PlayerList var6 = this.server.getPlayerList();
-          var6.sendPlayerPermissionLevel(this);
-          var3.removePlayerImmediately(this);
+-         this.connection.send(new ClientboundChangeDifficultyPacket(var5.getDifficulty(), var5.isDifficultyLocked()));
+-         PlayerList var6 = this.server.getPlayerList();
+-         var6.sendPlayerPermissionLevel(this);
+-         var3.removePlayerImmediately(this);
++         LevelData var4 = var1.getLevelData();
++         this.connection.send(new ClientboundRespawnPacket(var1.dimensionTypeKey(), var1.dimension(), BiomeManager.obfuscateSeed(var1.getSeed()), this.gameMode.getGameModeForPlayer(), var1.isDebug(), var1.isFlat(), true));
++         this.connection.send(new ClientboundChangeDifficultyPacket(var4.getDifficulty(), var4.isDifficultyLocked()));
++         PlayerList var5 = this.server.getPlayerList();
++         var5.sendPlayerPermissionLevel(this);
++         var2.removePlayerImmediately(this);
           this.removed = false;
-          double var7 = this.getX();
-          double var9 = this.getY();
-          double var11 = this.getZ();
-          float var13 = this.xRot;
-          float var14 = this.yRot;
+-         double var7 = this.getX();
+-         double var9 = this.getY();
+-         double var11 = this.getZ();
+-         float var13 = this.xRot;
+-         float var14 = this.yRot;
 -         double var15 = 8.0D;
 -         float var17 = var14;
-+         float var15 = var14;
-          var3.getProfiler().push("moving");
+-         var3.getProfiler().push("moving");
 -         if (var2 == DimensionType.OVERWORLD && var1 == DimensionType.NETHER) {
 -            this.enteredNetherPosition = this.position();
 -            var7 /= 8.0D;
@@ -292,47 +344,39 @@
 -            var7 = (double)var18.getX();
 -            var9 = (double)var18.getY();
 -            var11 = (double)var18.getZ();
-+         double var18;
-+         if (var2 == Level.OVERWORLD && var1 == Level.END) {
-+            BlockPos var29 = ServerLevel.END_SPAWN_POINT;
-+            var7 = (double)var29.getX();
-+            var9 = (double)var29.getY();
-+            var11 = (double)var29.getZ();
-             var14 = 90.0F;
-             var13 = 0.0F;
+-            var14 = 90.0F;
+-            var13 = 0.0F;
+-         }
++         double var6 = this.getX();
++         double var8 = this.getY();
++         double var10 = this.getZ();
++         float var12 = this.xRot;
++         float var13 = this.yRot;
++         float var14 = var13;
++         var2.getProfiler().push("moving");
++         double var17;
++         if (var1.dimension() == Level.END) {
++            BlockPos var15 = ServerLevel.END_SPAWN_POINT;
++            var6 = (double)var15.getX();
++            var8 = (double)var15.getY();
++            var10 = (double)var15.getZ();
++            var13 = 90.0F;
++            var12 = 0.0F;
 +         } else {
-+            if (var2 == Level.OVERWORLD && var1 == Level.NETHER) {
++            if (var3 == Level.OVERWORLD && var1.dimension() == Level.NETHER) {
 +               this.enteredNetherPosition = this.position();
 +            }
-+
-+            DimensionType var16 = var3.dimensionType();
-+            DimensionType var17 = var4.dimensionType();
-+            var18 = 8.0D;
-+            if (!var16.shrunk() && var17.shrunk()) {
-+               var7 /= 8.0D;
-+               var11 /= 8.0D;
-+            } else if (var16.shrunk() && !var17.shrunk()) {
-+               var7 *= 8.0D;
-+               var11 *= 8.0D;
-+            }
-          }
  
-          this.moveTo(var7, var9, var11, var14, var13);
-          var3.getProfiler().pop();
-          var3.getProfiler().push("placing");
+-         this.moveTo(var7, var9, var11, var14, var13);
+-         var3.getProfiler().pop();
+-         var3.getProfiler().push("placing");
 -         double var38 = Math.min(-2.9999872E7D, var4.getWorldBorder().getMinX() + 16.0D);
 -         double var20 = Math.min(-2.9999872E7D, var4.getWorldBorder().getMinZ() + 16.0D);
 -         double var22 = Math.min(2.9999872E7D, var4.getWorldBorder().getMaxX() - 16.0D);
 -         double var24 = Math.min(2.9999872E7D, var4.getWorldBorder().getMaxZ() - 16.0D);
 -         var7 = Mth.clamp(var7, var38, var22);
 -         var11 = Mth.clamp(var11, var20, var24);
-+         double var30 = Math.min(-2.9999872E7D, var4.getWorldBorder().getMinX() + 16.0D);
-+         var18 = Math.min(-2.9999872E7D, var4.getWorldBorder().getMinZ() + 16.0D);
-+         double var20 = Math.min(2.9999872E7D, var4.getWorldBorder().getMaxX() - 16.0D);
-+         double var22 = Math.min(2.9999872E7D, var4.getWorldBorder().getMaxZ() - 16.0D);
-+         var7 = Mth.clamp(var7, var30, var20);
-+         var11 = Mth.clamp(var11, var18, var22);
-          this.moveTo(var7, var9, var11, var14, var13);
+-         this.moveTo(var7, var9, var11, var14, var13);
 -         if (var1 == DimensionType.THE_END) {
 -            int var26 = Mth.floor(this.getX());
 -            int var27 = Mth.floor(this.getY()) - 1;
@@ -350,47 +394,76 @@
 -                     var4.setBlockAndUpdate(new BlockPos(var34, var35, var36), var37 ? Blocks.OBSIDIAN.defaultBlockState() : Blocks.AIR.defaultBlockState());
 -                  }
 -               }
--            }
--
++            DimensionType var28 = var2.dimensionType();
++            DimensionType var16 = var1.dimensionType();
++            var17 = 8.0D;
++            if (!var28.shrunk() && var16.shrunk()) {
++               var6 /= 8.0D;
++               var10 /= 8.0D;
++            } else if (var28.shrunk() && !var16.shrunk()) {
++               var6 *= 8.0D;
++               var10 *= 8.0D;
+             }
++         }
+ 
 -            this.moveTo((double)var26, (double)var27, (double)var28, var14, 0.0F);
-+         if (var1 == Level.END) {
-+            int var24 = Mth.floor(this.getX());
-+            int var25 = Mth.floor(this.getY()) - 1;
-+            int var26 = Mth.floor(this.getZ());
-+            ServerLevel.makeObsidianPlatform(var4);
-+            this.moveTo((double)var24, (double)var25, (double)var26, var14, 0.0F);
++         this.moveTo(var6, var8, var10, var13, var12);
++         var2.getProfiler().pop();
++         var2.getProfiler().push("placing");
++         double var29 = Math.min(-2.9999872E7D, var1.getWorldBorder().getMinX() + 16.0D);
++         var17 = Math.min(-2.9999872E7D, var1.getWorldBorder().getMinZ() + 16.0D);
++         double var19 = Math.min(2.9999872E7D, var1.getWorldBorder().getMaxX() - 16.0D);
++         double var21 = Math.min(2.9999872E7D, var1.getWorldBorder().getMaxZ() - 16.0D);
++         var6 = Mth.clamp(var6, var29, var19);
++         var10 = Mth.clamp(var10, var17, var21);
++         this.moveTo(var6, var8, var10, var13, var12);
++         if (var1.dimension() == Level.END) {
++            int var23 = Mth.floor(this.getX());
++            int var24 = Mth.floor(this.getY()) - 1;
++            int var25 = Mth.floor(this.getZ());
++            ServerLevel.makeObsidianPlatform(var1);
++            this.moveTo((double)var23, (double)var24, (double)var25, var13, 0.0F);
              this.setDeltaMovement(Vec3.ZERO);
 -         } else if (!var4.getPortalForcer().findAndMoveToPortal(this, var17)) {
-+         } else if (!var4.getPortalForcer().findAndMoveToPortal(this, var15)) {
-             var4.getPortalForcer().createPortal(this);
+-            var4.getPortalForcer().createPortal(this);
 -            var4.getPortalForcer().findAndMoveToPortal(this, var17);
-+            var4.getPortalForcer().findAndMoveToPortal(this, var15);
++         } else if (!var1.getPortalForcer().findAndMoveToPortal(this, var14)) {
++            var1.getPortalForcer().createPortal(this);
++            var1.getPortalForcer().findAndMoveToPortal(this, var14);
           }
  
-          var3.getProfiler().pop();
-          this.setLevel(var4);
-          var4.addDuringPortalTeleport(this);
-@@ -643,15 +674,15 @@
-          this.connection.teleport(this.getX(), this.getY(), this.getZ(), var14, var13);
-          this.gameMode.setLevel(var4);
+-         var3.getProfiler().pop();
+-         this.setLevel(var4);
+-         var4.addDuringPortalTeleport(this);
+-         this.triggerDimensionChangeTriggers(var3);
+-         this.connection.teleport(this.getX(), this.getY(), this.getZ(), var14, var13);
+-         this.gameMode.setLevel(var4);
++         var2.getProfiler().pop();
++         this.setLevel(var1);
++         var1.addDuringPortalTeleport(this);
++         this.triggerDimensionChangeTriggers(var2);
++         this.connection.teleport(this.getX(), this.getY(), this.getZ(), var13, var12);
++         this.gameMode.setLevel(var1);
           this.connection.send(new ClientboundPlayerAbilitiesPacket(this.abilities));
-          var6.sendLevelInfo(this, var4);
-          var6.sendAllPlayerInfo(this);
+-         var6.sendLevelInfo(this, var4);
+-         var6.sendAllPlayerInfo(this);
 -         Iterator var39 = this.getActiveEffects().iterator();
-+         Iterator var27 = this.getActiveEffects().iterator();
++         var5.sendLevelInfo(this, var1);
++         var5.sendAllPlayerInfo(this);
++         Iterator var26 = this.getActiveEffects().iterator();
  
 -         while(var39.hasNext()) {
 -            MobEffectInstance var40 = (MobEffectInstance)var39.next();
 -            this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), var40));
-+         while(var27.hasNext()) {
-+            MobEffectInstance var28 = (MobEffectInstance)var27.next();
-+            this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), var28));
++         while(var26.hasNext()) {
++            MobEffectInstance var27 = (MobEffectInstance)var26.next();
++            this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), var27));
           }
  
           this.connection.send(new ClientboundLevelEventPacket(1032, BlockPos.ZERO, 0, false));
           this.lastSentExp = -1;
           this.lastSentHealth = -1.0F;
-@@ -659,18 +690,20 @@
+@@ -659,18 +704,18 @@
           return this;
        }
     }
@@ -398,25 +471,22 @@
     private void triggerDimensionChangeTriggers(ServerLevel var1) {
 -      DimensionType var2 = var1.dimension.getType();
 -      DimensionType var3 = this.level.dimension.getType();
--      CriteriaTriggers.CHANGED_DIMENSION.trigger(this, var2, var3);
++      ResourceKey var2 = var1.dimension();
++      ResourceKey var3 = this.level.dimension();
+       CriteriaTriggers.CHANGED_DIMENSION.trigger(this, var2, var3);
 -      if (var2 == DimensionType.NETHER && var3 == DimensionType.OVERWORLD && this.enteredNetherPosition != null) {
-+      DimensionType var2 = var1.dimensionType();
-+      DimensionType var3 = this.level.dimensionType();
-+      ResourceKey var4 = var1.dimension();
-+      ResourceKey var5 = this.level.dimension();
-+      CriteriaTriggers.CHANGED_DIMENSION.trigger(this, var4, var5);
-+      if (var2.isNether() && var3.isOverworld() && this.enteredNetherPosition != null) {
++      if (var2 == Level.NETHER && var3 == Level.OVERWORLD && this.enteredNetherPosition != null) {
           CriteriaTriggers.NETHER_TRAVEL.trigger(this, this.enteredNetherPosition);
        }
  
 -      if (var3 != DimensionType.NETHER) {
-+      if (var5 != Level.NETHER) {
++      if (var3 != Level.NETHER) {
           this.enteredNetherPosition = null;
        }
  
     }
  
-@@ -696,16 +729,67 @@
+@@ -696,16 +741,67 @@
        super.take(var1, var2);
        this.containerMenu.broadcastChanges();
     }
@@ -488,7 +558,7 @@
           this.getLevel().getChunkSource().broadcastAndSend(this, new ClientboundAnimatePacket(this, 2));
        }
  
-@@ -755,12 +839,11 @@
+@@ -755,12 +851,11 @@
     }
  
     public void doCheckFallDamage(double var1, boolean var3) {
@@ -502,7 +572,7 @@
  
     public void openTextEdit(SignBlockEntity var1) {
        var1.setAllowedPlayerEditor(this);
-@@ -781,11 +864,11 @@
+@@ -781,11 +876,11 @@
  
           this.nextContainerCounter();
           AbstractContainerMenu var2 = var1.createMenu(this.containerCounter, this.inventory, this);
@@ -515,7 +585,7 @@
              return OptionalInt.empty();
           } else {
              this.connection.send(new ClientboundOpenScreenPacket(var2.containerId, var2.getType(), var1.getDisplayName()));
-@@ -829,11 +912,11 @@
+@@ -829,11 +924,11 @@
     }
  
     public void slotChanged(AbstractContainerMenu var1, int var2, ItemStack var3) {
@@ -528,7 +598,7 @@
           if (!this.ignoreSlotUpdateHack) {
              this.connection.send(new ClientboundContainerSetSlotPacket(var1.containerId, var2, var3));
           }
-@@ -939,11 +1022,11 @@
+@@ -939,11 +1034,11 @@
     public void resetSentInfo() {
        this.lastSentHealth = -1.0E8F;
     }
@@ -541,7 +611,7 @@
     protected void completeUsingItem() {
        if (!this.useItem.isEmpty() && this.isUsingItem()) {
           this.connection.send(new ClientboundEntityEventPacket(this, (byte)9));
-@@ -1026,11 +1109,11 @@
+@@ -1026,11 +1121,11 @@
  
     public void teleportTo(double var1, double var3, double var5) {
        this.connection.teleport(var1, var3, var5, this.yRot, this.xRot);
@@ -554,7 +624,20 @@
     }
  
     public void crit(Entity var1) {
-@@ -1072,21 +1155,21 @@
+@@ -1052,11 +1147,11 @@
+       return (ServerLevel)this.level;
+    }
+ 
+    public void setGameMode(GameType var1) {
+       this.gameMode.setGameModeForPlayer(var1);
+-      this.connection.send(new ClientboundGameEventPacket(3, (float)var1.getId()));
++      this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.CHANGE_GAME_MODE, (float)var1.getId()));
+       if (var1 == GameType.SPECTATOR) {
+          this.removeEntitiesOnShoulder();
+          this.stopRiding();
+       } else {
+          this.setCamera(this);
+@@ -1072,21 +1167,21 @@
  
     public boolean isCreative() {
        return this.gameMode.getGameModeForPlayer() == GameType.CREATIVE;
@@ -585,7 +668,19 @@
        });
     }
  
-@@ -1213,13 +1296,12 @@
+@@ -1096,11 +1191,10 @@
+       var1 = var1.substring(0, var1.indexOf(":"));
+       return var1;
+    }
+ 
+    public void updateOptions(ServerboundClientInformationPacket var1) {
+-      this.language = var1.getLanguage();
+       this.chatVisibility = var1.getChatVisibility();
+       this.canChatColor = var1.getChatColors();
+       this.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, (byte)var1.getModelCustomisation());
+       this.getEntityData().set(DATA_PLAYER_MAIN_HAND, (byte)(var1.getMainHand() == HumanoidArm.LEFT ? 0 : 1));
+    }
+@@ -1213,13 +1307,12 @@
        this.stopRiding();
        if (var1 == this.level) {
           this.connection.teleport(var2, var4, var6, var8, var9);
@@ -600,7 +695,7 @@
           var10.removePlayerImmediately(this);
           this.removed = false;
           this.moveTo(var2, var4, var6, var8, var9);
-@@ -1232,10 +1314,41 @@
+@@ -1232,10 +1325,41 @@
           this.server.getPlayerList().sendAllPlayerInfo(this);
        }
  
@@ -619,7 +714,7 @@
 +      return this.respawnForced;
 +   }
 +
-+   public void setRespawnPosition(ResourceKey<Level> var1, BlockPos var2, boolean var3, boolean var4) {
++   public void setRespawnPosition(ResourceKey<Level> var1, @Nullable BlockPos var2, boolean var3, boolean var4) {
 +      if (var2 != null) {
 +         boolean var5 = var2.equals(this.respawnPosition) && var1.equals(this.respawnDimension);
 +         if (var4 && !var5) {

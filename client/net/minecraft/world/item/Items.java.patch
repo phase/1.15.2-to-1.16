@@ -358,7 +358,7 @@
     public static final Item PUFFERFISH_SPAWN_EGG;
     public static final Item RABBIT_SPAWN_EGG;
     public static final Item RAVAGER_SPAWN_EGG;
-@@ -754,23 +818,25 @@
+@@ -754,24 +818,26 @@
     public static final Item SKELETON_HORSE_SPAWN_EGG;
     public static final Item SLIME_SPAWN_EGG;
     public static final Item SPIDER_SPAWN_EGG;
@@ -379,12 +379,13 @@
     public static final Item ZOMBIE_SPAWN_EGG;
     public static final Item ZOMBIE_HORSE_SPAWN_EGG;
 -   public static final Item ZOMBIE_PIGMAN_SPAWN_EGG;
-+   public static final Item ZOMBIFIED_PIGLIN_SPAWN_EGG;
     public static final Item ZOMBIE_VILLAGER_SPAWN_EGG;
++   public static final Item ZOMBIFIED_PIGLIN_SPAWN_EGG;
     public static final Item EXPERIENCE_BOTTLE;
     public static final Item FIRE_CHARGE;
     public static final Item WRITABLE_BOOK;
     public static final Item WRITTEN_BOOK;
+    public static final Item EMERALD;
 @@ -788,10 +854,11 @@
     public static final Item PLAYER_HEAD;
     public static final Item ZOMBIE_HEAD;
@@ -835,7 +836,7 @@
        PUFFERFISH_SPAWN_EGG = registerItem((String)"pufferfish_spawn_egg", new SpawnEggItem(EntityType.PUFFERFISH, 16167425, 3654642, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        RABBIT_SPAWN_EGG = registerItem((String)"rabbit_spawn_egg", new SpawnEggItem(EntityType.RABBIT, 10051392, 7555121, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        RAVAGER_SPAWN_EGG = registerItem((String)"ravager_spawn_egg", new SpawnEggItem(EntityType.RAVAGER, 7697520, 5984329, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
-@@ -1668,23 +1823,25 @@
+@@ -1668,24 +1823,26 @@
        SKELETON_HORSE_SPAWN_EGG = registerItem((String)"skeleton_horse_spawn_egg", new SpawnEggItem(EntityType.SKELETON_HORSE, 6842447, 15066584, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        SLIME_SPAWN_EGG = registerItem((String)"slime_spawn_egg", new SpawnEggItem(EntityType.SLIME, 5349438, 8306542, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        SPIDER_SPAWN_EGG = registerItem((String)"spider_spawn_egg", new SpawnEggItem(EntityType.SPIDER, 3419431, 11013646, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
@@ -856,12 +857,13 @@
        ZOMBIE_SPAWN_EGG = registerItem((String)"zombie_spawn_egg", new SpawnEggItem(EntityType.ZOMBIE, 44975, 7969893, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        ZOMBIE_HORSE_SPAWN_EGG = registerItem((String)"zombie_horse_spawn_egg", new SpawnEggItem(EntityType.ZOMBIE_HORSE, 3232308, 9945732, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
 -      ZOMBIE_PIGMAN_SPAWN_EGG = registerItem((String)"zombie_pigman_spawn_egg", new SpawnEggItem(EntityType.ZOMBIE_PIGMAN, 15373203, 5009705, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
-+      ZOMBIFIED_PIGLIN_SPAWN_EGG = registerItem((String)"zombified_piglin_spawn_egg", new SpawnEggItem(EntityType.ZOMBIFIED_PIGLIN, 15373203, 5009705, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        ZOMBIE_VILLAGER_SPAWN_EGG = registerItem((String)"zombie_villager_spawn_egg", new SpawnEggItem(EntityType.ZOMBIE_VILLAGER, 5651507, 7969893, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
++      ZOMBIFIED_PIGLIN_SPAWN_EGG = registerItem((String)"zombified_piglin_spawn_egg", new SpawnEggItem(EntityType.ZOMBIFIED_PIGLIN, 15373203, 5009705, (new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        EXPERIENCE_BOTTLE = registerItem((String)"experience_bottle", new ExperienceBottleItem((new Item.Properties()).tab(CreativeModeTab.TAB_MISC).rarity(Rarity.UNCOMMON)));
        FIRE_CHARGE = registerItem((String)"fire_charge", new FireChargeItem((new Item.Properties()).tab(CreativeModeTab.TAB_MISC)));
        WRITABLE_BOOK = registerItem((String)"writable_book", new WritableBookItem((new Item.Properties()).stacksTo(1).tab(CreativeModeTab.TAB_MISC)));
        WRITTEN_BOOK = registerItem((String)"written_book", new WrittenBookItem((new Item.Properties()).stacksTo(16)));
+       EMERALD = registerItem("emerald", new Item((new Item.Properties()).tab(CreativeModeTab.TAB_MATERIALS)));
 @@ -1701,11 +1858,12 @@
        WITHER_SKELETON_SKULL = registerBlock((BlockItem)(new StandingAndWallBlockItem(Blocks.WITHER_SKELETON_SKULL, Blocks.WITHER_SKELETON_WALL_SKULL, (new Item.Properties()).tab(CreativeModeTab.TAB_DECORATIONS).rarity(Rarity.UNCOMMON))));
        PLAYER_HEAD = registerBlock((BlockItem)(new PlayerHeadItem(Blocks.PLAYER_HEAD, Blocks.PLAYER_WALL_HEAD, (new Item.Properties()).tab(CreativeModeTab.TAB_DECORATIONS).rarity(Rarity.UNCOMMON))));

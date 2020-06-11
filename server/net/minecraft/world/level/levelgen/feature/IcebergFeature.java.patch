@@ -40,7 +40,7 @@
 -      if (!var12 && var3.nextDouble() > 0.9D) {
 -         var14 += var3.nextInt(19) + 7;
 +   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, BlockStateConfiguration var6) {
-+      var5 = new BlockPos(var5.getX(), var1.getSeaLevel(), var5.getZ());
++      var5 = new BlockPos(var5.getX(), var3.getSeaLevel(), var5.getZ());
 +      boolean var7 = var4.nextDouble() > 0.7D;
 +      BlockState var8 = var6.state;
 +      double var9 = var4.nextDouble() * 2.0D * 3.141592653589793D;

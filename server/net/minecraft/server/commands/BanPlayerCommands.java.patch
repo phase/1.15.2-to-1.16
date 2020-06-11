@@ -1,6 +1,6 @@
 --- net/minecraft/server/commands/BanPlayerCommands.java
 +++ net/minecraft/server/commands/BanPlayerCommands.java
-@@ -20,11 +20,11 @@
+@@ -20,15 +20,15 @@
  import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.server.players.UserBanList;
  import net.minecraft.server.players.UserBanListEntry;
@@ -11,8 +11,13 @@
  
     public static void register(CommandDispatcher<CommandSourceStack> var0) {
        var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("ban").requires((var0x) -> {
-          return var0x.getServer().getPlayerList().getBans().isEnabled() && var0x.hasPermission(3);
+-         return var0x.getServer().getPlayerList().getBans().isEnabled() && var0x.hasPermission(3);
++         return var0x.hasPermission(3);
        })).then(((RequiredArgumentBuilder)Commands.argument("targets", GameProfileArgument.gameProfile()).executes((var0x) -> {
+          return banPlayers((CommandSourceStack)var0x.getSource(), GameProfileArgument.getGameProfiles(var0x, "targets"), (Component)null);
+       })).then(Commands.argument("reason", MessageArgument.message()).executes((var0x) -> {
+          return banPlayers((CommandSourceStack)var0x.getSource(), GameProfileArgument.getGameProfiles(var0x, "targets"), MessageArgument.getMessage(var0x, "reason"));
+       }))));
 @@ -46,11 +46,11 @@
              var3.add(var7);
              ++var4;

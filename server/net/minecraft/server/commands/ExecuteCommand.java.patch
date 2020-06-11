@@ -61,7 +61,7 @@
 -      })))).then(Commands.literal("in").then(Commands.argument("dimension", DimensionTypeArgument.dimension()).redirect(var1, (var0x) -> {
 -         return ((CommandSourceStack)var0x.getSource()).withLevel(((CommandSourceStack)var0x.getSource()).getServer().getLevel(DimensionTypeArgument.getDimension(var0x, "dimension")));
 +      })))).then(Commands.literal("in").then(Commands.argument("dimension", DimensionArgument.dimension()).redirect(var1, (var0x) -> {
-+         return ((CommandSourceStack)var0x.getSource()).withLevel(((CommandSourceStack)var0x.getSource()).getServer().getLevel(DimensionArgument.getDimension(var0x, "dimension")));
++         return ((CommandSourceStack)var0x.getSource()).withLevel(DimensionArgument.getDimension(var0x, "dimension"));
        }))));
     }
  

@@ -114,7 +114,7 @@
 -         Block var5 = var2.getBlockState(var3.below()).getBlock();
 -         boolean var6 = var2.dimension instanceof TheEndDimension && var5 == Blocks.BEDROCK || var5 == Blocks.NETHERRACK || var5 == Blocks.MAGMA_BLOCK;
 +         BlockState var5 = var2.getBlockState(var3.below());
-+         boolean var6 = var2.dimensionType().isEnd() && var5.is(Blocks.BEDROCK) || var5.is(Blocks.NETHERRACK) || var5.is(Blocks.MAGMA_BLOCK);
++         boolean var6 = var5.is(var2.dimensionType().infiniburn());
           int var7 = (Integer)var1.getValue(AGE);
           if (!var6 && var2.isRaining() && this.isNearRain(var2, var3) && var4.nextFloat() < 0.2F + (float)var7 * 0.03F) {
              var2.removeBlock(var3, false);

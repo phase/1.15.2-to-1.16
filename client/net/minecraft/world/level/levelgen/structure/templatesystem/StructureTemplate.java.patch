@@ -463,7 +463,7 @@
 +                        var19.nbt.putInt("y", var20.getY());
 +                        var19.nbt.putInt("z", var20.getZ());
 +                        if (var23 instanceof RandomizableContainerBlockEntity) {
-+                           var19.nbt.putLong("LootTable", var5.nextLong());
++                           var19.nbt.putLong("LootTableSeed", var5.nextLong());
 +                        }
 +
 +                        var23.load(var19.state, var19.nbt);

@@ -18,7 +18,7 @@
  import net.minecraft.data.HashCache;
  import net.minecraft.tags.ItemTags;
  import net.minecraft.tags.Tag;
-@@ -46,882 +48,1068 @@
+@@ -46,882 +48,1081 @@
     }
  
     public void run(HashCache var1) throws IOException {
@@ -1750,6 +1750,15 @@
 +      SingleItemRecipeBuilder.stonecutting(Ingredient.of(Blocks.POLISHED_BLACKSTONE_BRICKS), Blocks.POLISHED_BLACKSTONE_BRICK_SLAB, 2).unlocks("has_polished_blackstone_bricks", has((ItemLike)Blocks.POLISHED_BLACKSTONE_BRICKS)).save(var0, "polished_blackstone_brick_slab_from_polished_blackstone_bricks_stonecutting");
 +      SingleItemRecipeBuilder.stonecutting(Ingredient.of(Blocks.POLISHED_BLACKSTONE_BRICKS), Blocks.POLISHED_BLACKSTONE_BRICK_STAIRS).unlocks("has_polished_blackstone_bricks", has((ItemLike)Blocks.POLISHED_BLACKSTONE_BRICKS)).save(var0, "polished_blackstone_brick_stairs_from_polished_blackstone_bricks_stonecutting");
 +      SingleItemRecipeBuilder.stonecutting(Ingredient.of(Blocks.POLISHED_BLACKSTONE_BRICKS), Blocks.POLISHED_BLACKSTONE_BRICK_WALL).unlocks("has_polished_blackstone_bricks", has((ItemLike)Blocks.POLISHED_BLACKSTONE_BRICKS)).save(var0, "polished_blackstone_brick_wall_from_polished_blackstone_bricks_stonecutting");
++      netheriteSmithing(var0, Items.DIAMOND_CHESTPLATE, Items.NETHERITE_CHESTPLATE);
++      netheriteSmithing(var0, Items.DIAMOND_LEGGINGS, Items.NETHERITE_LEGGINGS);
++      netheriteSmithing(var0, Items.DIAMOND_HELMET, Items.NETHERITE_HELMET);
++      netheriteSmithing(var0, Items.DIAMOND_BOOTS, Items.NETHERITE_BOOTS);
++      netheriteSmithing(var0, Items.DIAMOND_SWORD, Items.NETHERITE_SWORD);
++      netheriteSmithing(var0, Items.DIAMOND_AXE, Items.NETHERITE_AXE);
++      netheriteSmithing(var0, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE);
++      netheriteSmithing(var0, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
++      netheriteSmithing(var0, Items.DIAMOND_SHOVEL, Items.NETHERITE_SHOVEL);
     }
  
 -   private void cookRecipes(Consumer<FinishedRecipe> var1, String var2, SimpleCookingSerializer<?> var3, int var4) {
@@ -1762,34 +1771,38 @@
 -      SimpleCookingRecipeBuilder.cooking(Ingredient.of(Items.PORKCHOP), Items.COOKED_PORKCHOP, 0.35F, var4, var3).unlocks("has_porkchop", this.has((ItemLike)Items.PORKCHOP)).save(var1, "cooked_porkchop_from_" + var2);
 -      SimpleCookingRecipeBuilder.cooking(Ingredient.of(Items.POTATO), Items.BAKED_POTATO, 0.35F, var4, var3).unlocks("has_potato", this.has((ItemLike)Items.POTATO)).save(var1, "baked_potato_from_" + var2);
 -      SimpleCookingRecipeBuilder.cooking(Ingredient.of(Items.RABBIT), Items.COOKED_RABBIT, 0.35F, var4, var3).unlocks("has_rabbit", this.has((ItemLike)Items.RABBIT)).save(var1, "cooked_rabbit_from_" + var2);
-+   private static void planksFromLog(Consumer<FinishedRecipe> var0, ItemLike var1, Tag<Item> var2) {
-+      ShapelessRecipeBuilder.shapeless(var1, 4).requires(var2).group("planks").unlockedBy("has_log", has(var2)).save(var0);
++   private static void netheriteSmithing(Consumer<FinishedRecipe> var0, Item var1, Item var2) {
++      UpgradeRecipeBuilder.smithing(Ingredient.of(var1), Ingredient.of(Items.NETHERITE_INGOT), var2).unlocks("has_netherite_ingot", has((ItemLike)Items.NETHERITE_INGOT)).save(var0, Registry.ITEM.getKey(var2.asItem()).getPath() + "_smithing");
     }
  
 -   private EnterBlockTrigger.TriggerInstance insideOf(Block var1) {
 -      return new EnterBlockTrigger.TriggerInstance(var1, StatePropertiesPredicate.ANY);
++   private static void planksFromLog(Consumer<FinishedRecipe> var0, ItemLike var1, Tag<Item> var2) {
++      ShapelessRecipeBuilder.shapeless(var1, 4).requires(var2).group("planks").unlockedBy("has_log", has(var2)).save(var0);
+    }
+ 
+-   private InventoryChangeTrigger.TriggerInstance has(ItemLike var1) {
+-      return this.inventoryTrigger(ItemPredicate.Builder.item().of(var1).build());
 +   private static void planksFromLogs(Consumer<FinishedRecipe> var0, ItemLike var1, Tag<Item> var2) {
 +      ShapelessRecipeBuilder.shapeless(var1, 4).requires(var2).group("planks").unlockedBy("has_logs", has(var2)).save(var0);
     }
  
--   private InventoryChangeTrigger.TriggerInstance has(ItemLike var1) {
+-   private InventoryChangeTrigger.TriggerInstance has(Tag<Item> var1) {
 -      return this.inventoryTrigger(ItemPredicate.Builder.item().of(var1).build());
 +   private static void woodFromLogs(Consumer<FinishedRecipe> var0, ItemLike var1, ItemLike var2) {
 +      ShapedRecipeBuilder.shaped(var1, 3).define('#', var2).pattern("##").pattern("##").group("bark").unlockedBy("has_log", has(var2)).save(var0);
     }
  
--   private InventoryChangeTrigger.TriggerInstance has(Tag<Item> var1) {
--      return this.inventoryTrigger(ItemPredicate.Builder.item().of(var1).build());
+-   private InventoryChangeTrigger.TriggerInstance inventoryTrigger(ItemPredicate... var1) {
+-      return new InventoryChangeTrigger.TriggerInstance(MinMaxBounds.Ints.ANY, MinMaxBounds.Ints.ANY, MinMaxBounds.Ints.ANY, var1);
 +   private static void woodenBoat(Consumer<FinishedRecipe> var0, ItemLike var1, ItemLike var2) {
 +      ShapedRecipeBuilder.shaped(var1).define('#', var2).pattern("# #").pattern("###").group("boat").unlockedBy("in_water", insideOf(Blocks.WATER)).save(var0);
     }
  
--   private InventoryChangeTrigger.TriggerInstance inventoryTrigger(ItemPredicate... var1) {
--      return new InventoryChangeTrigger.TriggerInstance(MinMaxBounds.Ints.ANY, MinMaxBounds.Ints.ANY, MinMaxBounds.Ints.ANY, var1);
 +   private static void woodenButton(Consumer<FinishedRecipe> var0, ItemLike var1, ItemLike var2) {
 +      ShapelessRecipeBuilder.shapeless(var1).requires(var2).group("wooden_button").unlockedBy("has_planks", has(var2)).save(var0);
-    }
- 
++   }
++
 +   private static void woodenDoor(Consumer<FinishedRecipe> var0, ItemLike var1, ItemLike var2) {
 +      ShapedRecipeBuilder.shaped(var1, 3).define('#', var2).pattern("##").pattern("##").pattern("##").group("wooden_door").unlockedBy("has_planks", has(var2)).save(var0);
 +   }

@@ -1,10 +1,9 @@
 --- net/minecraft/world/entity/ai/behavior/SetWalkTargetAwayFrom.java
 +++ net/minecraft/world/entity/ai/behavior/SetWalkTargetAwayFrom.java
-@@ -1,0 +1,70 @@
+@@ -1,0 +1,74 @@
 +package net.minecraft.world.entity.ai.behavior;
 +
 +import com.google.common.collect.ImmutableMap;
-+import java.util.Optional;
 +import java.util.function.Function;
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.server.level.ServerLevel;
@@ -39,20 +38,25 @@
 +   }
 +
 +   protected boolean checkExtraStartConditions(ServerLevel var1, PathfinderMob var2) {
-+      return this.alreadyWalkingAwayFromPos(var2) ? false : var2.position().closerThan(this.getPosToAvoid(var2), (double)this.desiredDistance);
++      return this.alreadyWalkingAwayFromPosWithSameSpeed(var2) ? false : var2.position().closerThan(this.getPosToAvoid(var2), (double)this.desiredDistance);
 +   }
 +
 +   private Vec3 getPosToAvoid(PathfinderMob var1) {
 +      return (Vec3)this.toPosition.apply(var1.getBrain().getMemory(this.walkAwayFromMemory).get());
 +   }
 +
-+   private boolean alreadyWalkingAwayFromPos(PathfinderMob var1) {
++   private boolean alreadyWalkingAwayFromPosWithSameSpeed(PathfinderMob var1) {
 +      if (!var1.getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET)) {
 +         return false;
 +      } else {
-+         Optional var2 = var1.getBrain().getMemory(MemoryModuleType.WALK_TARGET);
-+         PositionTracker var3 = ((WalkTarget)var2.get()).getTarget();
-+         return var2.isPresent() && !var3.currentBlockPosition().closerThan(this.getPosToAvoid(var1), (double)this.desiredDistance);
++         WalkTarget var2 = (WalkTarget)var1.getBrain().getMemory(MemoryModuleType.WALK_TARGET).get();
++         if (var2.getSpeedModifier() != this.speedModifier) {
++            return false;
++         } else {
++            Vec3 var3 = var2.getTarget().currentPosition().subtract(var1.position());
++            Vec3 var4 = this.getPosToAvoid(var1).subtract(var1.position());
++            return var3.dot(var4) < 0.0D;
++         }
 +      }
 +   }
 +

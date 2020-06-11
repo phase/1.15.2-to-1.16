@@ -139,8 +139,10 @@
        return false;
     }
  
-    public boolean interactEnemy(ItemStack var1, Player var2, LivingEntity var3, InteractionHand var4) {
-       return false;
+-   public boolean interactEnemy(ItemStack var1, Player var2, LivingEntity var3, InteractionHand var4) {
+-      return false;
++   public InteractionResult interactLivingEntity(ItemStack var1, Player var2, LivingEntity var3, InteractionHand var4) {
++      return InteractionResult.PASS;
     }
  
     public Component getDescription() {

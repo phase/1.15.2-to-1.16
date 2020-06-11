@@ -1,6 +1,18 @@
 --- net/minecraft/client/renderer/block/BlockRenderDispatcher.java
 +++ net/minecraft/client/renderer/block/BlockRenderDispatcher.java
-@@ -86,11 +86,11 @@
+@@ -8,10 +8,11 @@
+ import net.minecraft.ReportedException;
+ import net.minecraft.client.color.block.BlockColors;
+ import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+ import net.minecraft.client.renderer.ItemBlockRenderTypes;
+ import net.minecraft.client.renderer.MultiBufferSource;
++import net.minecraft.client.renderer.block.model.ItemTransforms;
+ import net.minecraft.client.renderer.texture.OverlayTexture;
+ import net.minecraft.client.resources.model.BakedModel;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.server.packs.resources.ResourceManager;
+ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+@@ -86,14 +87,14 @@
              BakedModel var7 = this.getBlockModel(var1);
              int var8 = this.blockColors.getColor(var1, (BlockAndTintGetter)null, (BlockPos)null, 0);
              float var9 = (float)(var8 >> 16 & 255) / 255.0F;
@@ -10,6 +22,10 @@
 +            this.modelRenderer.renderModel(var2.last(), var3.getBuffer(ItemBlockRenderTypes.getRenderType(var1, false)), var1, var7, var9, var10, var11, var4, var5);
              break;
           case ENTITYBLOCK_ANIMATED:
-             BlockEntityWithoutLevelRenderer.instance.renderByItem(new ItemStack(var1.getBlock()), var2, var3, var4, var5);
+-            BlockEntityWithoutLevelRenderer.instance.renderByItem(new ItemStack(var1.getBlock()), var2, var3, var4, var5);
++            BlockEntityWithoutLevelRenderer.instance.renderByItem(new ItemStack(var1.getBlock()), ItemTransforms.TransformType.NONE, var2, var3, var4, var5);
           }
+ 
+       }
+    }
  

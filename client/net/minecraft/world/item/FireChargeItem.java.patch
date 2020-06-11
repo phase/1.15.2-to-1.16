@@ -19,7 +19,7 @@
  public class FireChargeItem extends Item {
     public FireChargeItem(Item.Properties var1) {
        super(var1);
-@@ -19,28 +19,30 @@
+@@ -19,28 +19,31 @@
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();
        BlockPos var3 = var1.getClickedPos();
@@ -36,10 +36,12 @@
           }
        } else {
           var3 = var3.relative(var1.getClickedFace());
-          if (var2.getBlockState(var3).isAir()) {
+-         if (var2.getBlockState(var3).isAir()) {
++         BlockState var6 = BaseFireBlock.getState(var2, var3);
++         if (var2.getBlockState(var3).isAir() && var6.canSurvive(var2, var3)) {
              this.playSound(var2, var3);
 -            var2.setBlockAndUpdate(var3, ((FireBlock)Blocks.FIRE).getStateForPlacement(var2, var3));
-+            var2.setBlockAndUpdate(var3, BaseFireBlock.getState(var2, var3));
++            var2.setBlockAndUpdate(var3, var6);
              var5 = true;
           }
        }

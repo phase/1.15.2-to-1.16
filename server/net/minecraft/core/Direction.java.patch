@@ -1,6 +1,6 @@
 --- net/minecraft/core/Direction.java
 +++ net/minecraft/core/Direction.java
-@@ -1,18 +1,21 @@
+@@ -1,18 +1,22 @@
  package net.minecraft.core;
  
  import com.google.common.collect.Iterators;
@@ -15,6 +15,7 @@
  import java.util.Random;
  import java.util.function.Predicate;
  import java.util.stream.Collectors;
++import java.util.stream.Stream;
  import javax.annotation.Nullable;
 +import net.minecraft.Util;
  import net.minecraft.util.Mth;
@@ -22,7 +23,7 @@
  import net.minecraft.world.entity.Entity;
  
  public enum Direction implements StringRepresentable {
-@@ -196,12 +199,12 @@
+@@ -196,12 +200,12 @@
  
     public float toYRot() {
        return (float)((this.data2d & 3) * 90);
@@ -37,7 +38,7 @@
     public static Direction getNearest(double var0, double var2, double var4) {
        return getNearest((float)var0, (float)var2, (float)var4);
     }
-@@ -231,11 +234,11 @@
+@@ -231,11 +235,11 @@
     public String getSerializedName() {
        return this.name;
     }
@@ -50,7 +51,7 @@
        for(int var4 = 0; var4 < var3; ++var4) {
           Direction var5 = var2[var4];
           if (var5.getAxisDirection() == var0 && var5.getAxis() == var1) {
-@@ -261,11 +264,11 @@
+@@ -261,20 +265,24 @@
           this.faces = var3;
           this.axis = var4;
        }
@@ -63,7 +64,20 @@
        public boolean test(@Nullable Direction var1) {
           return var1 != null && var1.getAxis().getPlane() == this;
        }
-@@ -292,10 +295,14 @@
+ 
+       public Iterator<Direction> iterator() {
+          return Iterators.forArray(this.faces);
+       }
++
++      public Stream<Direction> stream() {
++         return Arrays.stream(this.faces);
++      }
+    }
+ 
+    public static enum AxisDirection {
+       POSITIVE(1, "Towards positive"),
+       NEGATIVE(-1, "Towards negative");
+@@ -292,10 +300,14 @@
        }
  
        public String toString() {
@@ -78,7 +92,7 @@
     public static enum Axis implements StringRepresentable, Predicate<Direction> {
        X("x") {
           public int choose(int var1, int var2, int var3) {
-@@ -323,19 +330,26 @@
+@@ -323,19 +335,26 @@
           public double choose(double var1, double var3, double var5) {
              return var5;
           }
@@ -106,7 +120,7 @@
        }
  
        public boolean isVertical() {
-@@ -348,12 +362,12 @@
+@@ -348,12 +367,12 @@
  
        public String toString() {
           return this.name;

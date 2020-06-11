@@ -1,6 +1,6 @@
 --- net/minecraft/client/model/HoglinModel.java
 +++ net/minecraft/client/model/HoglinModel.java
-@@ -1,0 +1,89 @@
+@@ -1,0 +1,98 @@
 +package net.minecraft.client.model;
 +
 +import com.google.common.collect.ImmutableList;
@@ -18,6 +18,7 @@
 +   private final ModelPart frontLeftLeg;
 +   private final ModelPart backRightLeg;
 +   private final ModelPart backLeftLeg;
++   private final ModelPart mane;
 +
 +   public HoglinModel() {
 +      super(true, 8.0F, 6.0F, 1.9F, 2.0F, 24.0F);
@@ -26,10 +27,10 @@
 +      this.body = new ModelPart(this);
 +      this.body.setPos(0.0F, 7.0F, 0.0F);
 +      this.body.texOffs(1, 1).addBox(-8.0F, -7.0F, -13.0F, 16.0F, 14.0F, 26.0F);
-+      ModelPart var1 = new ModelPart(this);
-+      var1.setPos(0.0F, -14.0F, -7.0F);
-+      var1.texOffs(90, 33).addBox(0.0F, 0.0F, -9.0F, 0.0F, 10.0F, 19.0F, 0.001F);
-+      this.body.addChild(var1);
++      this.mane = new ModelPart(this);
++      this.mane.setPos(0.0F, -14.0F, -5.0F);
++      this.mane.texOffs(90, 33).addBox(0.0F, 0.0F, -9.0F, 0.0F, 10.0F, 19.0F, 0.001F);
++      this.body.addChild(this.mane);
 +      this.head = new ModelPart(this);
 +      this.head.setPos(0.0F, 2.0F, -12.0F);
 +      this.head.texOffs(61, 1).addBox(-7.0F, -3.0F, -19.0F, 14.0F, 6.0F, 19.0F);
@@ -43,17 +44,17 @@
 +      this.leftEar.texOffs(1, 6).addBox(0.0F, -1.0F, -2.0F, 6.0F, 1.0F, 4.0F);
 +      this.leftEar.zRot = 0.6981317F;
 +      this.head.addChild(this.leftEar);
++      ModelPart var1 = new ModelPart(this);
++      var1.setPos(-7.0F, 2.0F, -12.0F);
++      var1.texOffs(1, 13).addBox(-1.0F, -11.0F, -1.0F, 2.0F, 11.0F, 2.0F);
++      this.head.addChild(var1);
 +      ModelPart var2 = new ModelPart(this);
-+      var2.setPos(-7.0F, 2.0F, -12.0F);
++      var2.setPos(7.0F, 2.0F, -12.0F);
 +      var2.texOffs(1, 13).addBox(-1.0F, -11.0F, -1.0F, 2.0F, 11.0F, 2.0F);
 +      this.head.addChild(var2);
-+      ModelPart var3 = new ModelPart(this);
-+      var3.setPos(7.0F, 2.0F, -12.0F);
-+      var3.texOffs(1, 13).addBox(-1.0F, -11.0F, -1.0F, 2.0F, 11.0F, 2.0F);
-+      this.head.addChild(var3);
 +      this.head.xRot = 0.87266463F;
++      boolean var3 = true;
 +      boolean var4 = true;
-+      boolean var5 = true;
 +      this.frontRightLeg = new ModelPart(this);
 +      this.frontRightLeg.setPos(-4.0F, 10.0F, -8.5F);
 +      this.frontRightLeg.texOffs(66, 42).addBox(-3.0F, 0.0F, -3.0F, 6.0F, 14.0F, 6.0F);
@@ -83,6 +84,14 @@
 +      int var7 = ((HoglinBase)var1).getAttackAnimationRemainingTicks();
 +      float var8 = 1.0F - (float)Mth.abs(10 - 2 * var7) / 10.0F;
 +      this.head.xRot = Mth.lerp(var8, 0.87266463F, -0.34906584F);
++      if (var1.isBaby()) {
++         this.head.y = Mth.lerp(var8, 2.0F, 5.0F);
++         this.mane.z = -3.0F;
++      } else {
++         this.head.y = 2.0F;
++         this.mane.z = -7.0F;
++      }
++
 +      float var9 = 1.2F;
 +      this.frontRightLeg.xRot = Mth.cos(var2) * 1.2F * var3;
 +      this.frontLeftLeg.xRot = Mth.cos(var2 + 3.1415927F) * 1.2F * var3;

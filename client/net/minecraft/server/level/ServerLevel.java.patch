@@ -34,7 +34,7 @@
  import java.util.concurrent.Executor;
  import java.util.function.BooleanSupplier;
  import java.util.function.Predicate;
-@@ -36,10 +35,11 @@
+@@ -36,45 +35,46 @@
  import javax.annotation.Nonnull;
  import javax.annotation.Nullable;
  import net.minecraft.CrashReport;
@@ -46,7 +46,10 @@
  import net.minecraft.core.particles.ParticleOptions;
  import net.minecraft.network.chat.Component;
  import net.minecraft.network.chat.TranslatableComponent;
-@@ -50,27 +50,27 @@
+ import net.minecraft.network.protocol.Packet;
+-import net.minecraft.network.protocol.game.ClientboundAddGlobalEntityPacket;
+ import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+ import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
  import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
  import net.minecraft.network.protocol.game.ClientboundExplodePacket;
  import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
@@ -75,12 +78,19 @@
  import net.minecraft.world.damagesource.DamageSource;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.entity.LightningBolt;
  import net.minecraft.world.entity.LivingEntity;
-@@ -86,130 +86,153 @@
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.MobCategory;
+ import net.minecraft.world.entity.ReputationEventHandler;
+ import net.minecraft.world.entity.ai.navigation.PathNavigation;
+@@ -84,132 +84,153 @@
+ import net.minecraft.world.entity.animal.Animal;
+ import net.minecraft.world.entity.animal.WaterAnimal;
  import net.minecraft.world.entity.animal.horse.SkeletonHorse;
  import net.minecraft.world.entity.boss.EnderDragonPart;
  import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
- import net.minecraft.world.entity.global.LightningBolt;
+-import net.minecraft.world.entity.global.LightningBolt;
  import net.minecraft.world.entity.npc.Npc;
 -import net.minecraft.world.entity.npc.WanderingTraderSpawner;
  import net.minecraft.world.entity.player.Player;
@@ -91,6 +101,7 @@
  import net.minecraft.world.level.ChunkPos;
 +import net.minecraft.world.level.CustomSpawner;
  import net.minecraft.world.level.Explosion;
++import net.minecraft.world.level.ExplosionDamageCalculator;
  import net.minecraft.world.level.ForcedChunksSavedData;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
@@ -145,7 +156,7 @@
 +public class ServerLevel extends Level implements WorldGenLevel {
 +   public static final BlockPos END_SPAWN_POINT = new BlockPos(100, 50, 0);
     private static final Logger LOGGER = LogManager.getLogger();
-    private final List<Entity> globalEntities = Lists.newArrayList();
+-   private final List<Entity> globalEntities = Lists.newArrayList();
     private final Int2ObjectMap<Entity> entitiesById = new Int2ObjectLinkedOpenHashMap();
     private final Map<UUID, Entity> entitiesByUuid = Maps.newHashMap();
     private final Queue<Entity> toAddAfterTick = Queues.newArrayDeque();
@@ -196,7 +207,7 @@
 +      this.customSpawners = var13;
 +      this.serverLevelData = var4;
 +      this.chunkSource = new ServerChunkCache(this, var3, var1.getFixerUpper(), var1.getStructureManager(), var2, var9, var1.getPlayerList().getViewDistance(), var1.forceSynchronousWrites(), var8, () -> {
-+         return var1.getLevel(Level.OVERWORLD).getDataStorage();
++         return var1.overworld().getDataStorage();
 +      });
        this.portalForcer = new PortalForcer(this);
        this.updateSkyBrightness();
@@ -244,7 +255,7 @@
        this.getWorldBorder().tick();
        var2.popPush("weather");
        boolean var3 = this.isRaining();
-       int var5;
+-      int var5;
 -      if (this.dimension.isHasSkyLight()) {
 +      if (this.dimensionType().hasSkyLight()) {
           if (this.getGameRules().getBoolean(GameRules.RULE_WEATHER_CYCLE)) {
@@ -252,14 +263,14 @@
 -            var5 = this.levelData.getThunderTime();
 -            int var6 = this.levelData.getRainTime();
 +            int var4 = this.serverLevelData.getClearWeatherTime();
-+            var5 = this.serverLevelData.getThunderTime();
++            int var5 = this.serverLevelData.getThunderTime();
 +            int var6 = this.serverLevelData.getRainTime();
              boolean var7 = this.levelData.isThundering();
              boolean var8 = this.levelData.isRaining();
              if (var4 > 0) {
                 --var4;
                 var5 = var7 ? 0 : 1;
-@@ -238,15 +261,15 @@
+@@ -238,15 +259,15 @@
                 } else {
                    var6 = this.random.nextInt(168000) + 12000;
                 }
@@ -280,28 +291,34 @@
           this.oThunderLevel = this.thunderLevel;
           if (this.levelData.isThundering()) {
              this.thunderLevel = (float)((double)this.thunderLevel + 0.01D);
-@@ -264,15 +287,15 @@
+@@ -264,32 +285,28 @@
  
           this.rainLevel = Mth.clamp(this.rainLevel, 0.0F, 1.0F);
        }
  
        if (this.oRainLevel != this.rainLevel) {
 -         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(7, this.rainLevel), this.dimension.getType());
-+         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(7, this.rainLevel), this.dimension());
++         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel), this.dimension());
        }
  
        if (this.oThunderLevel != this.thunderLevel) {
 -         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(8, this.thunderLevel), this.dimension.getType());
-+         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(8, this.thunderLevel), this.dimension());
++         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, this.thunderLevel), this.dimension());
        }
  
        if (var3 != this.isRaining()) {
           if (var3) {
-             this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(2, 0.0F));
-@@ -282,14 +305,10 @@
+-            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(2, 0.0F));
++            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.STOP_RAINING, 0.0F));
+          } else {
+-            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(1, 0.0F));
++            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.START_RAINING, 0.0F));
+          }
  
-          this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(7, this.rainLevel));
-          this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(8, this.thunderLevel));
+-         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(7, this.rainLevel));
+-         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(8, this.thunderLevel));
++         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel));
++         this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, this.thunderLevel));
        }
  
 -      if (this.getLevelData().isHardcore() && this.getDifficulty() != Difficulty.HARD) {
@@ -313,7 +330,7 @@
        })) {
           this.allPlayersSleeping = false;
           if (this.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
-@@ -306,32 +325,31 @@
+@@ -306,113 +323,123 @@
        this.updateSkyBrightness();
        this.tickTime();
        var2.popPush("chunkSource");
@@ -342,54 +359,109 @@
  
        if (var10 || this.emptyTime++ < 300) {
 -         this.dimension.tick();
+-         var2.push("global");
+-
+-         Entity var11;
+-         for(var5 = 0; var5 < this.globalEntities.size(); ++var5) {
+-            var11 = (Entity)this.globalEntities.get(var5);
+-            this.guardEntityTick((var0) -> {
+-               ++var0.tickCount;
+-               var0.tick();
+-            }, var11);
+-            if (var11.removed) {
+-               this.globalEntities.remove(var5--);
+-            }
 +         if (this.dragonFight != null) {
 +            this.dragonFight.tick();
-+         }
-+
-          var2.push("global");
+          }
  
-          Entity var11;
-          for(var5 = 0; var5 < this.globalEntities.size(); ++var5) {
-             var11 = (Entity)this.globalEntities.get(var5);
-@@ -346,11 +364,11 @@
- 
-          var2.popPush("regular");
+-         var2.popPush("regular");
           this.tickingEntities = true;
-          ObjectIterator var12 = this.entitiesById.int2ObjectEntrySet().iterator();
+-         ObjectIterator var12 = this.entitiesById.int2ObjectEntrySet().iterator();
++         ObjectIterator var11 = this.entitiesById.int2ObjectEntrySet().iterator();
  
 -         label174:
-+         label171:
++         label164:
           while(true) {
-             Entity var14;
+-            Entity var14;
++            Entity var13;
              while(true) {
-                if (!var12.hasNext()) {
+-               if (!var12.hasNext()) {
++               if (!var11.hasNext()) {
                    this.tickingEntities = false;
-@@ -359,21 +377,21 @@
-                      this.add(var11);
+ 
+-                  while((var11 = (Entity)this.toAddAfterTick.poll()) != null) {
+-                     this.add(var11);
++                  Entity var14;
++                  while((var14 = (Entity)this.toAddAfterTick.poll()) != null) {
++                     this.add(var14);
                    }
  
-                   var2.pop();
+-                  var2.pop();
                    this.tickBlockEntities();
 -                  break label174;
-+                  break label171;
++                  break label164;
                 }
  
-                Entry var13 = (Entry)var12.next();
-                var14 = (Entity)var13.getValue();
-                Entity var15 = var14.getVehicle();
+-               Entry var13 = (Entry)var12.next();
+-               var14 = (Entity)var13.getValue();
+-               Entity var15 = var14.getVehicle();
 -               if (!this.server.isAnimals() && (var14 instanceof Animal || var14 instanceof WaterAnimal)) {
-+               if (!this.server.isSpawningAnimals() && (var14 instanceof Animal || var14 instanceof WaterAnimal)) {
-                   var14.remove();
+-                  var14.remove();
++               Entry var12 = (Entry)var11.next();
++               var13 = (Entity)var12.getValue();
++               Entity var15 = var13.getVehicle();
++               if (!this.server.isSpawningAnimals() && (var13 instanceof Animal || var13 instanceof WaterAnimal)) {
++                  var13.remove();
                 }
  
 -               if (!this.server.isNpcsEnabled() && var14 instanceof Npc) {
-+               if (!this.server.areNpcsEnabled() && var14 instanceof Npc) {
-                   var14.remove();
+-                  var14.remove();
++               if (!this.server.areNpcsEnabled() && var13 instanceof Npc) {
++                  var13.remove();
                 }
  
                 var2.push("checkDespawn");
-                if (!var14.removed) {
-@@ -409,10 +427,36 @@
+-               if (!var14.removed) {
+-                  var14.checkDespawn();
++               if (!var13.removed) {
++                  var13.checkDespawn();
+                }
+ 
+                var2.pop();
+                if (var15 == null) {
+                   break;
+                }
+ 
+-               if (var15.removed || !var15.hasPassenger(var14)) {
+-                  var14.stopRiding();
++               if (var15.removed || !var15.hasPassenger(var13)) {
++                  var13.stopRiding();
+                   break;
+                }
+             }
+ 
+             var2.push("tick");
+-            if (!var14.removed && !(var14 instanceof EnderDragonPart)) {
+-               this.guardEntityTick(this::tickNonPassenger, var14);
++            if (!var13.removed && !(var13 instanceof EnderDragonPart)) {
++               this.guardEntityTick(this::tickNonPassenger, var13);
+             }
+ 
+             var2.pop();
+             var2.push("remove");
+-            if (var14.removed) {
+-               this.removeFromChunk(var14);
+-               var12.remove();
+-               this.onEntityRemoved(var14);
++            if (var13.removed) {
++               this.removeFromChunk(var13);
++               var11.remove();
++               this.onEntityRemoved(var13);
+             }
+ 
+             var2.pop();
+          }
        }
  
        var2.pop();
@@ -426,7 +498,46 @@
           var0.stopSleepInBed(false, false);
        });
     }
-@@ -494,14 +538,14 @@
+@@ -436,11 +463,14 @@
+                var11.setAge(0);
+                var11.setPos((double)var8.getX(), (double)var8.getY(), (double)var8.getZ());
+                this.addFreshEntity(var11);
+             }
+ 
+-            this.addGlobalEntity(new LightningBolt(this, (double)var8.getX() + 0.5D, (double)var8.getY(), (double)var8.getZ() + 0.5D, var10));
++            LightningBolt var22 = (LightningBolt)EntityType.LIGHTNING_BOLT.create(this);
++            var22.moveTo(Vec3.atBottomCenterOf(var8));
++            var22.setVisualOnly(var10);
++            this.addFreshEntity(var22);
+          }
+       }
+ 
+       var7.popPush("iceandsnow");
+       if (this.random.nextInt(16) == 0) {
+@@ -464,18 +494,18 @@
+       if (var2 > 0) {
+          LevelChunkSection[] var17 = var1.getSections();
+          int var19 = var17.length;
+ 
+          for(int var21 = 0; var21 < var19; ++var21) {
+-            LevelChunkSection var22 = var17[var21];
+-            if (var22 != LevelChunk.EMPTY_SECTION && var22.isRandomlyTicking()) {
+-               int var12 = var22.bottomBlockY();
++            LevelChunkSection var23 = var17[var21];
++            if (var23 != LevelChunk.EMPTY_SECTION && var23.isRandomlyTicking()) {
++               int var12 = var23.bottomBlockY();
+ 
+                for(int var13 = 0; var13 < var2; ++var13) {
+                   BlockPos var14 = this.getBlockRandomPos(var5, var12, var6, 15);
+                   var7.push("randomTick");
+-                  BlockState var15 = var22.getBlockState(var14.getX() - var5, var14.getY() - var12, var14.getZ() - var6);
++                  BlockState var15 = var23.getBlockState(var14.getX() - var5, var14.getY() - var12, var14.getZ() - var6);
+                   if (var15.isRandomlyTicking()) {
+                      var15.randomTick(this, var14, this.random);
+                   }
+ 
+                   FluidState var16 = var15.getFluidState();
+@@ -494,14 +524,14 @@
  
     protected BlockPos findLightingTargetAround(BlockPos var1) {
        BlockPos var2 = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, var1);
@@ -443,7 +554,7 @@
              var2 = var2.above(2);
           }
  
-@@ -537,38 +581,16 @@
+@@ -537,38 +567,16 @@
     public ServerScoreboard getScoreboard() {
        return this.server.getScoreboard();
     }
@@ -486,7 +597,7 @@
     }
  
     private void tickLiquid(TickNextTickData<Fluid> var1) {
-@@ -579,18 +601,20 @@
+@@ -579,18 +587,20 @@
  
     }
  
@@ -509,7 +620,7 @@
           var1.xRotO = var1.xRot;
           if (var1.inChunk) {
              ++var1.tickCount;
-@@ -648,121 +672,60 @@
+@@ -648,121 +658,60 @@
           var2.stopRiding();
        }
     }
@@ -656,7 +767,7 @@
  
     public List<Entity> getEntities(@Nullable EntityType<?> var1, Predicate<? super Entity> var2) {
        ArrayList var3 = Lists.newArrayList();
-@@ -817,37 +780,10 @@
+@@ -817,37 +766,10 @@
     public ServerPlayer getRandomPlayer() {
        List var1 = this.getPlayers(LivingEntity::isAlive);
        return var1.isEmpty() ? null : (ServerPlayer)var1.get(this.random.nextInt(var1.size()));
@@ -694,20 +805,23 @@
     }
  
     public boolean addWithUUID(Entity var1) {
-@@ -1032,11 +968,11 @@
+@@ -1030,15 +952,10 @@
+       var1.remove();
+       this.despawn(var1);
        this.updateSleepingPlayerList();
     }
  
-    public void addGlobalEntity(LightningBolt var1) {
-       this.globalEntities.add(var1);
+-   public void addGlobalEntity(LightningBolt var1) {
+-      this.globalEntities.add(var1);
 -      this.server.getPlayerList().broadcast((Player)null, var1.getX(), var1.getY(), var1.getZ(), 512.0D, this.dimension.getType(), new ClientboundAddGlobalEntityPacket(var1));
-+      this.server.getPlayerList().broadcast((Player)null, var1.getX(), var1.getY(), var1.getZ(), 512.0D, this.dimension(), new ClientboundAddGlobalEntityPacket(var1));
-    }
- 
+-   }
+-
     public void destroyBlockProgress(int var1, BlockPos var2, int var3) {
        Iterator var4 = this.server.getPlayerList().getPlayers().iterator();
  
-@@ -1053,23 +989,23 @@
+       while(var4.hasNext()) {
+          ServerPlayer var5 = (ServerPlayer)var4.next();
+@@ -1053,23 +970,23 @@
        }
  
     }
@@ -734,7 +848,7 @@
     public void sendBlockUpdated(BlockPos var1, BlockState var2, BlockState var3, int var4) {
        this.getChunkSource().blockChanged(var1);
        VoxelShape var5 = var2.getCollisionShape(this, var1);
-@@ -1090,11 +1026,11 @@
+@@ -1090,54 +1007,50 @@
     public void broadcastEntityEvent(Entity var1, byte var2) {
        this.getChunkSource().broadcastAndSend(var1, new ClientboundEntityEventPacket(var1, var2));
     }
@@ -744,10 +858,45 @@
 +      return this.chunkSource;
     }
  
-    public Explosion explode(@Nullable Entity var1, @Nullable DamageSource var2, double var3, double var5, double var7, float var9, boolean var10, Explosion.BlockInteraction var11) {
-       Explosion var12 = new Explosion(this, var1, var3, var5, var7, var9, var10, var11);
-       if (var2 != null) {
-@@ -1125,19 +1061,19 @@
+-   public Explosion explode(@Nullable Entity var1, @Nullable DamageSource var2, double var3, double var5, double var7, float var9, boolean var10, Explosion.BlockInteraction var11) {
+-      Explosion var12 = new Explosion(this, var1, var3, var5, var7, var9, var10, var11);
+-      if (var2 != null) {
+-         var12.setDamageSource(var2);
++   public Explosion explode(@Nullable Entity var1, @Nullable DamageSource var2, @Nullable ExplosionDamageCalculator var3, double var4, double var6, double var8, float var10, boolean var11, Explosion.BlockInteraction var12) {
++      Explosion var13 = new Explosion(this, var1, var2, var3, var4, var6, var8, var10, var11, var12);
++      var13.explode();
++      var13.finalizeExplosion(false);
++      if (var12 == Explosion.BlockInteraction.NONE) {
++         var13.clearToBlow();
+       }
+ 
+-      var12.explode();
+-      var12.finalizeExplosion(false);
+-      if (var11 == Explosion.BlockInteraction.NONE) {
+-         var12.clearToBlow();
+-      }
++      Iterator var14 = this.players.iterator();
+ 
+-      Iterator var13 = this.players.iterator();
+-
+-      while(var13.hasNext()) {
+-         ServerPlayer var14 = (ServerPlayer)var13.next();
+-         if (var14.distanceToSqr(var3, var5, var7) < 4096.0D) {
+-            var14.connection.send(new ClientboundExplodePacket(var3, var5, var7, var9, var12.getToBlow(), (Vec3)var12.getHitPlayers().get(var14)));
++      while(var14.hasNext()) {
++         ServerPlayer var15 = (ServerPlayer)var14.next();
++         if (var15.distanceToSqr(var4, var6, var8) < 4096.0D) {
++            var15.connection.send(new ClientboundExplodePacket(var4, var6, var8, var10, var13.getToBlow(), (Vec3)var13.getHitPlayers().get(var15)));
+          }
+       }
+ 
+-      return var12;
++      return var13;
+    }
+ 
+    public void blockEvent(BlockPos var1, Block var2, int var3, int var4) {
+       this.blockEvents.add(new BlockEventData(var1, var2, var3, var4));
+    }
  
     private void runBlockEvents() {
        while(!this.blockEvents.isEmpty()) {
@@ -769,7 +918,7 @@
     public ServerTickList<Block> getBlockTicks() {
        return this.blockTicks;
     }
-@@ -1154,11 +1090,11 @@
+@@ -1154,11 +1067,11 @@
     public PortalForcer getPortalForcer() {
        return this.portalForcer;
     }
@@ -782,7 +931,7 @@
     public <T extends ParticleOptions> int sendParticles(T var1, double var2, double var4, double var6, int var8, double var9, double var11, double var13, double var15) {
        ClientboundLevelParticlesPacket var17 = new ClientboundLevelParticlesPacket(var1, false, var2, var4, var6, (float)var9, (float)var11, (float)var13, (float)var15, var8);
        int var18 = 0;
-@@ -1180,11 +1116,11 @@
+@@ -1180,11 +1093,11 @@
  
     private boolean sendParticles(ServerPlayer var1, boolean var2, double var3, double var5, double var7, Packet<?> var9) {
        if (var1.getLevel() != this) {
@@ -795,7 +944,7 @@
              return true;
           } else {
              return false;
-@@ -1201,65 +1137,67 @@
+@@ -1201,65 +1114,67 @@
     public Entity getEntity(UUID var1) {
        return (Entity)this.entitiesByUuid.get(var1);
     }
@@ -844,19 +993,19 @@
     @Nullable
     public MapItemSavedData getMapData(String var1) {
 -      return (MapItemSavedData)this.getServer().getLevel(DimensionType.OVERWORLD).getDataStorage().get(() -> {
-+      return (MapItemSavedData)this.getServer().getLevel(Level.OVERWORLD).getDataStorage().get(() -> {
++      return (MapItemSavedData)this.getServer().overworld().getDataStorage().get(() -> {
           return new MapItemSavedData(var1);
        }, var1);
     }
  
     public void setMapData(MapItemSavedData var1) {
 -      this.getServer().getLevel(DimensionType.OVERWORLD).getDataStorage().set(var1);
-+      this.getServer().getLevel(Level.OVERWORLD).getDataStorage().set(var1);
++      this.getServer().overworld().getDataStorage().set(var1);
     }
  
     public int getFreeMapId() {
 -      return ((MapIndex)this.getServer().getLevel(DimensionType.OVERWORLD).getDataStorage().computeIfAbsent(MapIndex::new, "idcounts")).getFreeAuxValueForMap();
-+      return ((MapIndex)this.getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(MapIndex::new, "idcounts")).getFreeAuxValueForMap();
++      return ((MapIndex)this.getServer().overworld().getDataStorage().computeIfAbsent(MapIndex::new, "idcounts")).getFreeAuxValueForMap();
     }
  
 -   public void setSpawnPos(BlockPos var1) {
@@ -883,7 +1032,7 @@
        return (LongSet)(var1 != null ? LongSets.unmodifiable(var1.getChunks()) : LongSets.EMPTY_SET);
     }
  
-@@ -1312,18 +1250,18 @@
+@@ -1312,18 +1227,18 @@
     public PoiManager getPoiManager() {
        return this.getChunkSource().getPoiManager();
     }
@@ -904,7 +1053,7 @@
        } else {
           return this.sectionsToVillage(SectionPos.of(var1)) <= var2;
        }
-@@ -1355,160 +1293,160 @@
+@@ -1355,165 +1270,141 @@
        BufferedWriter var3 = Files.newBufferedWriter(var1.resolve("stats.txt"));
        Throwable var4 = null;
  
@@ -942,9 +1091,9 @@
 +         var3.write(String.format("fluid_ticks: %d\n", this.getLiquidTicks().size()));
 +         var3.write("distance_manager: " + var2.getDistanceManager().getDebugStatus() + "\n");
 +         var3.write(String.format("pending_tasks: %d\n", this.getChunkSource().getPendingTasksCount()));
-+      } catch (Throwable var165) {
-+         var4 = var165;
-+         throw var165;
++      } catch (Throwable var121) {
++         var4 = var121;
++         throw var121;
        } finally {
           if (var3 != null) {
              if (var4 != null) {
@@ -952,8 +1101,8 @@
                    var3.close();
 -               } catch (Throwable var148) {
 -                  var4.addSuppressed(var148);
-+               } catch (Throwable var154) {
-+                  var4.addSuppressed(var154);
++               } catch (Throwable var112) {
++                  var4.addSuppressed(var112);
                 }
              } else {
                 var3.close();
@@ -966,36 +1115,36 @@
 -      this.fillReportDetails(var166);
 -      BufferedWriter var167 = Files.newBufferedWriter(var1.resolve("example_crash.txt"));
 -      Throwable var168 = null;
-+      CrashReport var167 = new CrashReport("Level dump", new Exception("dummy"));
-+      this.fillReportDetails(var167);
-+      BufferedWriter var168 = Files.newBufferedWriter(var1.resolve("example_crash.txt"));
-+      Throwable var169 = null;
++      CrashReport var123 = new CrashReport("Level dump", new Exception("dummy"));
++      this.fillReportDetails(var123);
++      BufferedWriter var124 = Files.newBufferedWriter(var1.resolve("example_crash.txt"));
++      Throwable var125 = null;
  
        try {
 -         var167.write(var166.getFriendlyReport());
 -      } catch (Throwable var158) {
 -         var168 = var158;
 -         throw var158;
-+         var168.write(var167.getFriendlyReport());
-+      } catch (Throwable var159) {
-+         var169 = var159;
-+         throw var159;
++         var124.write(var123.getFriendlyReport());
++      } catch (Throwable var116) {
++         var125 = var116;
++         throw var116;
        } finally {
 -         if (var167 != null) {
 -            if (var168 != null) {
-+         if (var168 != null) {
-+            if (var169 != null) {
++         if (var124 != null) {
++            if (var125 != null) {
                 try {
 -                  var167.close();
 -               } catch (Throwable var149) {
 -                  var168.addSuppressed(var149);
-+                  var168.close();
-+               } catch (Throwable var151) {
-+                  var169.addSuppressed(var151);
++                  var124.close();
++               } catch (Throwable var108) {
++                  var125.addSuppressed(var108);
                 }
              } else {
 -               var167.close();
-+               var168.close();
++               var124.close();
              }
           }
  
@@ -1004,34 +1153,35 @@
 -      Path var169 = var1.resolve("chunks.csv");
 -      BufferedWriter var170 = Files.newBufferedWriter(var169);
 -      Throwable var171 = null;
-+      Path var170 = var1.resolve("chunks.csv");
-+      BufferedWriter var171 = Files.newBufferedWriter(var170);
-+      Throwable var172 = null;
++      Path var126 = var1.resolve("chunks.csv");
++      BufferedWriter var127 = Files.newBufferedWriter(var126);
++      Throwable var128 = null;
  
        try {
 -         var2.dumpChunks(var170);
 -      } catch (Throwable var157) {
 -         var171 = var157;
 -         throw var157;
-+         var2.dumpChunks(var171);
-+      } catch (Throwable var158) {
-+         var172 = var158;
-+         throw var158;
++         var2.dumpChunks(var127);
++      } catch (Throwable var115) {
++         var128 = var115;
++         throw var115;
        } finally {
 -         if (var170 != null) {
 -            if (var171 != null) {
-+         if (var171 != null) {
-+            if (var172 != null) {
++         if (var127 != null) {
++            if (var128 != null) {
                 try {
 -                  var170.close();
-+                  var171.close();
-                } catch (Throwable var150) {
+-               } catch (Throwable var150) {
 -                  var171.addSuppressed(var150);
-+                  var172.addSuppressed(var150);
++                  var127.close();
++               } catch (Throwable var111) {
++                  var128.addSuppressed(var111);
                 }
              } else {
 -               var170.close();
-+               var171.close();
++               var127.close();
              }
           }
  
@@ -1040,35 +1190,35 @@
 -      Path var172 = var1.resolve("entities.csv");
 -      BufferedWriter var173 = Files.newBufferedWriter(var172);
 -      Throwable var7 = null;
-+      Path var173 = var1.resolve("entities.csv");
-+      BufferedWriter var174 = Files.newBufferedWriter(var173);
-+      Throwable var175 = null;
++      Path var129 = var1.resolve("entities.csv");
++      BufferedWriter var130 = Files.newBufferedWriter(var129);
++      Throwable var131 = null;
  
        try {
 -         dumpEntities(var173, this.entitiesById.values());
 -      } catch (Throwable var156) {
 -         var7 = var156;
 -         throw var156;
-+         dumpEntities(var174, this.entitiesById.values());
-+      } catch (Throwable var157) {
-+         var175 = var157;
-+         throw var157;
++         dumpEntities(var130, this.entitiesById.values());
++      } catch (Throwable var114) {
++         var131 = var114;
++         throw var114;
        } finally {
 -         if (var173 != null) {
 -            if (var7 != null) {
-+         if (var174 != null) {
-+            if (var175 != null) {
++         if (var130 != null) {
++            if (var131 != null) {
                 try {
 -                  var173.close();
 -               } catch (Throwable var153) {
 -                  var7.addSuppressed(var153);
-+                  var174.close();
-+               } catch (Throwable var152) {
-+                  var175.addSuppressed(var152);
++                  var130.close();
++               } catch (Throwable var109) {
++                  var131.addSuppressed(var109);
                 }
              } else {
 -               var173.close();
-+               var174.close();
++               var130.close();
              }
           }
  
@@ -1076,8 +1226,8 @@
  
 -      Path var174 = var1.resolve("global_entities.csv");
 -      BufferedWriter var175 = Files.newBufferedWriter(var174);
-+      Path var176 = var1.resolve("global_entities.csv");
-+      BufferedWriter var177 = Files.newBufferedWriter(var176);
++      Path var132 = var1.resolve("block_entities.csv");
++      BufferedWriter var133 = Files.newBufferedWriter(var132);
        Throwable var8 = null;
  
        try {
@@ -1085,25 +1235,25 @@
 -      } catch (Throwable var155) {
 -         var8 = var155;
 -         throw var155;
-+         dumpEntities(var177, this.globalEntities);
-+      } catch (Throwable var156) {
-+         var8 = var156;
-+         throw var156;
++         this.dumpBlockEntities(var133);
++      } catch (Throwable var113) {
++         var8 = var113;
++         throw var113;
        } finally {
 -         if (var175 != null) {
-+         if (var177 != null) {
++         if (var133 != null) {
              if (var8 != null) {
                 try {
 -                  var175.close();
 -               } catch (Throwable var151) {
 -                  var8.addSuppressed(var151);
-+                  var177.close();
-+               } catch (Throwable var153) {
-+                  var8.addSuppressed(var153);
++                  var133.close();
++               } catch (Throwable var110) {
++                  var8.addSuppressed(var110);
                 }
              } else {
 -               var175.close();
-+               var177.close();
++               var133.close();
              }
           }
  
@@ -1111,40 +1261,34 @@
  
 -      Path var176 = var1.resolve("block_entities.csv");
 -      BufferedWriter var177 = Files.newBufferedWriter(var176);
-+      Path var178 = var1.resolve("block_entities.csv");
-+      BufferedWriter var179 = Files.newBufferedWriter(var178);
-       Throwable var9 = null;
- 
-       try {
+-      Throwable var9 = null;
+-
+-      try {
 -         this.dumpBlockEntities(var177);
 -      } catch (Throwable var154) {
 -         var9 = var154;
 -         throw var154;
-+         this.dumpBlockEntities(var179);
-+      } catch (Throwable var155) {
-+         var9 = var155;
-+         throw var155;
-       } finally {
+-      } finally {
 -         if (var177 != null) {
-+         if (var179 != null) {
-             if (var9 != null) {
-                try {
+-            if (var9 != null) {
+-               try {
 -                  var177.close();
 -               } catch (Throwable var152) {
 -                  var9.addSuppressed(var152);
-+                  var179.close();
-+               } catch (Throwable var149) {
-+                  var9.addSuppressed(var149);
-                }
-             } else {
+-               }
+-            } else {
 -               var177.close();
-+               var179.close();
-             }
-          }
+-            }
+-         }
+-
+-      }
+-
+    }
  
-       }
- 
-@@ -1543,6 +1481,51 @@
+    private static void dumpEntities(Writer var0, Iterable<Entity> var1) throws IOException {
+       CsvOutput var2 = CsvOutput.builder().addColumn("x").addColumn("y").addColumn("z").addColumn("uuid").addColumn("type").addColumn("alive").addColumn("display_name").addColumn("custom_name").build(var0);
+       Iterator var3 = var1.iterator();
+@@ -1543,6 +1434,51 @@
     public void clearBlockEvents(BoundingBox var1) {
        this.blockEvents.removeIf((var1x) -> {
           return var1.isInside(var1x.getPos());

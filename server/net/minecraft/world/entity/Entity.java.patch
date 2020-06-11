@@ -1,12 +1,13 @@
 --- net/minecraft/world/entity/Entity.java
 +++ net/minecraft/world/entity/Entity.java
-@@ -1,11 +1,12 @@
+@@ -1,11 +1,13 @@
  package net.minecraft.world.entity;
  
 -import com.google.common.collect.ImmutableSet;
  import com.google.common.collect.Iterables;
  import com.google.common.collect.Lists;
  import com.google.common.collect.Sets;
++import com.google.gson.JsonSyntaxException;
 +import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap;
 +import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
  import java.util.Arrays;
@@ -14,7 +15,7 @@
  import java.util.Collections;
  import java.util.HashSet;
  import java.util.Iterator;
-@@ -25,27 +26,27 @@
+@@ -25,27 +27,27 @@
  import net.minecraft.commands.CommandSource;
  import net.minecraft.commands.CommandSourceStack;
  import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -44,6 +45,18 @@
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.server.level.TicketType;
+@@ -59,11 +61,10 @@
+ import net.minecraft.util.RewindableStream;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.Nameable;
+ import net.minecraft.world.damagesource.DamageSource;
+-import net.minecraft.world.entity.global.LightningBolt;
+ import net.minecraft.world.entity.item.ItemEntity;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.entity.vehicle.Boat;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 @@ -120,23 +121,21 @@
     public boolean forcedLoading;
     public Level level;
@@ -71,20 +84,28 @@
     public boolean removed;
     public float walkDistO;
     public float walkDist;
-@@ -152,11 +151,11 @@
+@@ -151,14 +150,16 @@
+    public boolean noPhysics;
     public float pushthrough;
     protected final Random random;
     public int tickCount;
     private int remainingFireTicks;
-    protected boolean wasInWater;
+-   protected boolean wasInWater;
 -   protected double waterHeight;
+-   protected boolean wasUnderWater;
+-   protected boolean isInLava;
++   protected boolean wasTouchingWater;
 +   protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
-    protected boolean wasUnderWater;
-    protected boolean isInLava;
++   protected boolean wasEyeInWater;
++   @Nullable
++   protected Tag<Fluid> fluidOnEyes;
++   protected boolean isTouchingLava;
     public int invulnerableTime;
     protected boolean firstTick;
     protected final SynchedEntityData entityData;
-@@ -169,28 +168,28 @@
+    protected static final EntityDataAccessor<Byte> DATA_SHARED_FLAGS_ID;
+    private static final EntityDataAccessor<Integer> DATA_AIR_SUPPLY_ID;
+@@ -169,28 +170,28 @@
     protected static final EntityDataAccessor<Pose> DATA_POSE;
     public boolean inChunk;
     public int xChunk;
@@ -115,7 +136,7 @@
     private EntityDimensions dimensions;
     private float eyeHeight;
  
-@@ -202,23 +201,22 @@
+@@ -202,23 +203,22 @@
        this.stuckSpeedMultiplier = Vec3.ZERO;
        this.nextStep = 1.0F;
        this.nextFlap = 1.0F;
@@ -142,7 +163,7 @@
        this.entityData.define(DATA_AIR_SUPPLY_ID, this.getMaxAirSupply());
        this.entityData.define(DATA_CUSTOM_NAME_VISIBLE, false);
        this.entityData.define(DATA_CUSTOM_NAME, Optional.empty());
-@@ -298,18 +296,25 @@
+@@ -298,18 +298,25 @@
  
     public void remove() {
        this.removed = true;
@@ -169,7 +190,7 @@
        this.xRot = var2 % 360.0F;
     }
  
-@@ -319,11 +324,11 @@
+@@ -319,11 +326,11 @@
        float var8 = this.dimensions.height;
        this.setBoundingBox(new AABB(var1 - (double)var7, var3, var5 - (double)var7, var1 + (double)var7, var3 + (double)var8, var5 + (double)var7));
     }
@@ -182,7 +203,7 @@
     public void tick() {
        if (!this.level.isClientSide) {
           this.setSharedFlag(6, this.isGlowing());
-@@ -344,12 +349,17 @@
+@@ -344,12 +351,17 @@
  
        this.walkDistO = this.walkDist;
        this.xRotO = this.xRot;
@@ -195,14 +216,14 @@
 +      }
 +
 +      this.updateInWaterStateAndDoFluidPushing();
-+      this.updateUnderWaterState();
++      this.updateFluidOnEyes();
 +      this.updateSwimming();
        if (this.level.isClientSide) {
           this.clearFire();
        } else if (this.remainingFireTicks > 0) {
           if (this.fireImmune()) {
              this.remainingFireTicks -= 4;
-@@ -434,10 +444,18 @@
+@@ -434,10 +446,18 @@
  
     private boolean isFree(AABB var1) {
        return this.level.noCollision(this, var1) && !this.level.containsAnyLiquid(var1);
@@ -221,7 +242,7 @@
           this.setBoundingBox(this.getBoundingBox().move(var2));
           this.setLocationFromBoundingbox();
        } else {
-@@ -465,11 +483,10 @@
+@@ -465,11 +485,10 @@
           this.level.getProfiler().pop();
           this.level.getProfiler().push("rest");
           this.horizontalCollision = !Mth.equal(var2.x, var3.x) || !Mth.equal(var2.z, var3.z);
@@ -233,7 +254,7 @@
           this.checkFallDamage(var3.y, this.onGround, var5, var4);
           Vec3 var6 = this.getDeltaMovement();
           if (var2.x != var3.x) {
-@@ -491,11 +508,11 @@
+@@ -491,11 +510,11 @@
  
           if (this.isMovementNoisy() && !this.isPassenger()) {
              double var8 = var3.x;
@@ -246,7 +267,17 @@
  
              this.walkDist = (float)((double)this.walkDist + (double)Mth.sqrt(getHorizontalDistanceSqr(var3)) * 0.6D);
              this.moveDist = (float)((double)this.moveDist + (double)Mth.sqrt(var8 * var8 + var10 * var10 + var12 * var12) * 0.6D);
-@@ -527,69 +544,60 @@
+@@ -518,78 +537,71 @@
+                this.nextFlap = this.playFlySound(this.moveDist);
+             }
+          }
+ 
+          try {
+-            this.isInLava = false;
++            this.isTouchingLava = false;
+             this.checkInsideBlocks();
+          } catch (Throwable var18) {
+             CrashReport var9 = CrashReport.forThrowable(var18, "Checking entity block collision");
              CrashReportCategory var20 = var9.addCategory("Entity being checked for collision");
              this.fillCrashReportCategory(var20);
              throw new ReportedException(var9);
@@ -266,7 +297,9 @@
 -         } else if (this.remainingFireTicks <= 0) {
 +         float var19 = this.getBlockSpeedFactor();
 +         this.setDeltaMovement(this.getDeltaMovement().multiply((double)var19, 1.0D, (double)var19));
-+         if (!this.level.containsFireBlock(this.getBoundingBox().deflate(0.001D)) && this.remainingFireTicks <= 0) {
++         if (this.level.getBlockStatesIfLoaded(this.getBoundingBox().deflate(0.001D)).noneMatch((var0) -> {
++            return var0.is(BlockTags.FIRE) || var0.is(Blocks.LAVA);
++         }) && this.remainingFireTicks <= 0) {
              this.remainingFireTicks = -this.getFireImmuneTicks();
           }
  
@@ -327,7 +360,7 @@
     protected Vec3 maybeBackOffFromEdge(Vec3 var1, MoverType var2) {
        return var1;
     }
-@@ -631,11 +639,13 @@
+@@ -631,11 +643,13 @@
     private Vec3 collide(Vec3 var1) {
        AABB var2 = this.getBoundingBox();
        CollisionContext var3 = CollisionContext.of(this);
@@ -342,7 +375,7 @@
        boolean var9 = var1.x != var8.x;
        boolean var10 = var1.y != var8.y;
        boolean var11 = var1.z != var8.z;
-@@ -761,103 +771,43 @@
+@@ -761,103 +775,43 @@
        return SoundEvents.GENERIC_SPLASH;
     }
  
@@ -463,7 +496,7 @@
     }
  
     protected void playSwimSound(float var1) {
-@@ -915,18 +865,11 @@
+@@ -915,18 +869,11 @@
     @Nullable
     public AABB getCollideBox() {
        return null;
@@ -483,9 +516,14 @@
  
     public boolean causeFallDamage(float var1, float var2) {
        if (this.isVehicle()) {
-@@ -944,39 +887,16 @@
+@@ -940,43 +887,20 @@
+ 
+       return false;
+    }
+ 
     public boolean isInWater() {
-       return this.wasInWater;
+-      return this.wasInWater;
++      return this.wasTouchingWater;
     }
  
     private boolean isInRain() {
@@ -526,10 +564,14 @@
     public boolean isInWaterOrRain() {
        return this.isInWater() || this.isInRain();
     }
-@@ -991,29 +911,34 @@
+@@ -988,48 +912,72 @@
+    public boolean isInWaterOrBubble() {
+       return this.isInWater() || this.isInBubbleColumn();
+    }
  
     public boolean isUnderWater() {
-       return this.wasUnderWater && this.isInWater();
+-      return this.wasUnderWater && this.isInWater();
++      return this.wasEyeInWater && this.isInWater();
     }
  
 -   private void updateWaterState() {
@@ -554,40 +596,89 @@
 +      if (this.isInWater()) {
 +         return true;
 +      } else {
-+         double var1 = this.level.dimensionType().hasCeiling() ? 0.007D : 0.0023333333333333335D;
++         double var1 = this.level.dimensionType().ultraWarm() ? 0.007D : 0.0023333333333333335D;
 +         return this.updateFluidHeightAndDoFluidPushing(FluidTags.LAVA, var1);
 +      }
 +   }
 +
 +   void updateInWaterStateAndDoWaterCurrentPushing() {
        if (this.getVehicle() instanceof Boat) {
-          this.wasInWater = false;
+-         this.wasInWater = false;
 -      } else if (this.checkAndHandleWater(FluidTags.WATER)) {
+-         if (!this.wasInWater && !this.firstTick) {
++         this.wasTouchingWater = false;
 +      } else if (this.updateFluidHeightAndDoFluidPushing(FluidTags.WATER, 0.014D)) {
-          if (!this.wasInWater && !this.firstTick) {
++         if (!this.wasTouchingWater && !this.firstTick) {
              this.doWaterSplashEffect();
           }
  
           this.fallDistance = 0.0F;
-@@ -1021,15 +946,14 @@
+-         this.wasInWater = true;
++         this.wasTouchingWater = true;
           this.clearFire();
        } else {
-          this.wasInWater = false;
+-         this.wasInWater = false;
++         this.wasTouchingWater = false;
        }
  
 -      return this.wasInWater;
     }
  
-    private void updateUnderWaterState() {
+-   private void updateUnderWaterState() {
 -      this.wasUnderWater = this.isUnderLiquid(FluidTags.WATER, true);
-+      this.wasUnderWater = this.isUnderLiquid(FluidTags.WATER);
++   private void updateFluidOnEyes() {
++      this.wasEyeInWater = this.isEyeInFluid(FluidTags.WATER);
++      this.fluidOnEyes = null;
++      double var1 = this.getEyeY() - 0.1111111119389534D;
++      BlockPos var3 = new BlockPos(this.getX(), var1, this.getZ());
++      FluidState var4 = this.level.getFluidState(var3);
++      Iterator var5 = FluidTags.getWrappers().iterator();
++
++      Tag var6;
++      do {
++         if (!var5.hasNext()) {
++            return;
++         }
++
++         var6 = (Tag)var5.next();
++      } while(!var4.is(var6));
++
++      double var7 = (double)((float)var3.getY() + var4.getHeight(this.level, var3));
++      if (var7 > var1) {
++         this.fluidOnEyes = var6;
++      }
++
     }
  
     protected void doWaterSplashEffect() {
        Entity var1 = this.isVehicle() && this.getControllingPassenger() != null ? this.getControllingPassenger() : this;
        float var2 = var1 == this ? 0.2F : 0.9F;
-@@ -1062,18 +986,19 @@
-          this.level.addParticle(ParticleTypes.SPLASH, this.getX() + (double)var7, (double)(var5 + 1.0F), this.getZ() + (double)var8, var3.x, var3.y, var3.z);
+@@ -1046,71 +994,57 @@
+       }
+ 
+       float var5 = (float)Mth.floor(this.getY());
+ 
+       int var6;
+-      float var7;
+-      float var8;
++      double var7;
++      double var9;
+       for(var6 = 0; (float)var6 < 1.0F + this.dimensions.width * 20.0F; ++var6) {
+-         var7 = (this.random.nextFloat() * 2.0F - 1.0F) * this.dimensions.width;
+-         var8 = (this.random.nextFloat() * 2.0F - 1.0F) * this.dimensions.width;
+-         this.level.addParticle(ParticleTypes.BUBBLE, this.getX() + (double)var7, (double)(var5 + 1.0F), this.getZ() + (double)var8, var3.x, var3.y - (double)(this.random.nextFloat() * 0.2F), var3.z);
++         var7 = (this.random.nextDouble() * 2.0D - 1.0D) * (double)this.dimensions.width;
++         var9 = (this.random.nextDouble() * 2.0D - 1.0D) * (double)this.dimensions.width;
++         this.level.addParticle(ParticleTypes.BUBBLE, this.getX() + var7, (double)(var5 + 1.0F), this.getZ() + var9, var3.x, var3.y - this.random.nextDouble() * 0.20000000298023224D, var3.z);
+       }
+ 
+       for(var6 = 0; (float)var6 < 1.0F + this.dimensions.width * 20.0F; ++var6) {
+-         var7 = (this.random.nextFloat() * 2.0F - 1.0F) * this.dimensions.width;
+-         var8 = (this.random.nextFloat() * 2.0F - 1.0F) * this.dimensions.width;
+-         this.level.addParticle(ParticleTypes.SPLASH, this.getX() + (double)var7, (double)(var5 + 1.0F), this.getZ() + (double)var8, var3.x, var3.y, var3.z);
++         var7 = (this.random.nextDouble() * 2.0D - 1.0D) * (double)this.dimensions.width;
++         var9 = (this.random.nextDouble() * 2.0D - 1.0D) * (double)this.dimensions.width;
++         this.level.addParticle(ParticleTypes.SPLASH, this.getX() + var7, (double)(var5 + 1.0F), this.getZ() + var9, var3.x, var3.y, var3.z);
        }
  
     }
@@ -611,14 +702,18 @@
        int var3 = Mth.floor(this.getZ());
        BlockPos var4 = new BlockPos(var1, var2, var3);
        BlockState var5 = this.level.getBlockState(var4);
-@@ -1083,28 +1008,13 @@
+       if (var5.getRenderShape() != RenderShape.INVISIBLE) {
+          Vec3 var6 = this.getDeltaMovement();
+-         this.level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, var5), this.getX() + ((double)this.random.nextFloat() - 0.5D) * (double)this.dimensions.width, this.getY() + 0.1D, this.getZ() + ((double)this.random.nextFloat() - 0.5D) * (double)this.dimensions.width, var6.x * -4.0D, 1.5D, var6.z * -4.0D);
++         this.level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, var5), this.getX() + (this.random.nextDouble() - 0.5D) * (double)this.dimensions.width, this.getY() + 0.1D, this.getZ() + (this.random.nextDouble() - 0.5D) * (double)this.dimensions.width, var6.x * -4.0D, 1.5D, var6.z * -4.0D);
        }
  
     }
  
-    public boolean isUnderLiquid(Tag<Fluid> var1) {
+-   public boolean isUnderLiquid(Tag<Fluid> var1) {
 -      return this.isUnderLiquid(var1, false);
-+      return (double)this.getEyeHeight() < this.getFluidHeight(var1);
++   public boolean isEyeInFluid(Tag<Fluid> var1) {
++      return this.fluidOnEyes == var1;
     }
  
 -   public boolean isUnderLiquid(Tag<Fluid> var1, boolean var2) {
@@ -637,16 +732,28 @@
 -   }
 -
     public void setInLava() {
-       this.isInLava = true;
+-      this.isInLava = true;
++      this.isTouchingLava = true;
     }
  
     public boolean isInLava() {
-@@ -1153,10 +1063,14 @@
+-      return this.isInLava;
++      return this.isTouchingLava;
+    }
+ 
+    public void moveRelative(float var1, Vec3 var2) {
+       Vec3 var3 = getInputVector(var2, var1, this.yRot);
+       this.setDeltaMovement(this.getDeltaMovement().add(var3));
+@@ -1153,10 +1087,18 @@
        this.xRot = Mth.clamp(var8, -90.0F, 90.0F) % 360.0F;
        this.yRotO = this.yRot;
        this.xRotO = this.xRot;
     }
  
++   public void moveTo(Vec3 var1) {
++      this.moveTo(var1.x, var1.y, var1.z);
++   }
++
 +   public void moveTo(double var1, double var3, double var5) {
 +      this.moveTo(var1, var3, var5, this.yRot, this.xRot);
 +   }
@@ -656,7 +763,7 @@
     }
  
     public void moveTo(double var1, double var3, double var5, float var7, float var8) {
-@@ -1334,19 +1248,23 @@
+@@ -1334,19 +1276,23 @@
        return this.isPassenger() ? false : this.saveAsPassenger(var1);
     }
  
@@ -682,7 +789,31 @@
           var1.putUUID("UUID", this.getUUID());
           Component var9 = this.getCustomName();
           if (var9 != null) {
-@@ -1428,14 +1346,10 @@
+@@ -1411,31 +1357,27 @@
+    }
+ 
+    public void load(CompoundTag var1) {
+       try {
+          ListTag var2 = var1.getList("Pos", 6);
+-         ListTag var15 = var1.getList("Motion", 6);
+-         ListTag var16 = var1.getList("Rotation", 5);
+-         double var5 = var15.getDouble(0);
+-         double var7 = var15.getDouble(1);
+-         double var9 = var15.getDouble(2);
++         ListTag var16 = var1.getList("Motion", 6);
++         ListTag var17 = var1.getList("Rotation", 5);
++         double var5 = var16.getDouble(0);
++         double var7 = var16.getDouble(1);
++         double var9 = var16.getDouble(2);
+          this.setDeltaMovement(Math.abs(var5) > 10.0D ? 0.0D : var5, Math.abs(var7) > 10.0D ? 0.0D : var7, Math.abs(var9) > 10.0D ? 0.0D : var9);
+          this.setPosAndOldPos(var2.getDouble(0), var2.getDouble(1), var2.getDouble(2));
+-         this.yRot = var16.getFloat(0);
+-         this.xRot = var16.getFloat(1);
++         this.yRot = var17.getFloat(0);
++         this.xRot = var17.getFloat(1);
+          this.yRotO = this.yRot;
+          this.xRotO = this.xRot;
+          this.setYHeadRot(this.yRot);
           this.setYBodyRot(this.yRot);
           this.fallDistance = var1.getFloat("FallDistance");
           this.remainingFireTicks = var1.getShort("Fire");
@@ -697,7 +828,57 @@
           if (var1.hasUUID("UUID")) {
              this.uuid = var1.getUUID("UUID");
              this.stringUUID = this.uuid.toString();
-@@ -1558,42 +1472,22 @@
+@@ -1444,24 +1386,30 @@
+          if (Double.isFinite(this.getX()) && Double.isFinite(this.getY()) && Double.isFinite(this.getZ())) {
+             if (Double.isFinite((double)this.yRot) && Double.isFinite((double)this.xRot)) {
+                this.reapplyPosition();
+                this.setRot(this.yRot, this.xRot);
+                if (var1.contains("CustomName", 8)) {
+-                  this.setCustomName(Component.Serializer.fromJson(var1.getString("CustomName")));
++                  String var11 = var1.getString("CustomName");
++
++                  try {
++                     this.setCustomName(Component.Serializer.fromJson(var11));
++                  } catch (JsonSyntaxException var14) {
++                     LOGGER.warn((String)"Failed to parse entity custom name {}", (Object)var11, (Object)var14);
++                  }
+                }
+ 
+                this.setCustomNameVisible(var1.getBoolean("CustomNameVisible"));
+                this.setSilent(var1.getBoolean("Silent"));
+                this.setNoGravity(var1.getBoolean("NoGravity"));
+                this.setGlowing(var1.getBoolean("Glowing"));
+                if (var1.contains("Tags", 9)) {
+                   this.tags.clear();
+-                  ListTag var11 = var1.getList("Tags", 8);
+-                  int var12 = Math.min(var11.size(), 1024);
++                  ListTag var18 = var1.getList("Tags", 8);
++                  int var12 = Math.min(var18.size(), 1024);
+ 
+                   for(int var13 = 0; var13 < var12; ++var13) {
+-                     this.tags.add(var11.getString(var13));
++                     this.tags.add(var18.getString(var13));
+                   }
+                }
+ 
+                this.readAdditionalSaveData(var1);
+                if (this.repositionEntityAfterLoad()) {
+@@ -1472,12 +1420,12 @@
+                throw new IllegalStateException("Entity has invalid rotation");
+             }
+          } else {
+             throw new IllegalStateException("Entity has invalid position");
+          }
+-      } catch (Throwable var14) {
+-         CrashReport var3 = CrashReport.forThrowable(var14, "Loading entity NBT");
++      } catch (Throwable var15) {
++         CrashReport var3 = CrashReport.forThrowable(var15, "Loading entity NBT");
+          CrashReportCategory var4 = var3.addCategory("Entity being loaded");
+          this.fillCrashReportCategory(var4);
+          throw new ReportedException(var3);
+       }
+    }
+@@ -1558,50 +1506,30 @@
  
     public boolean isInWall() {
        if (this.noPhysics) {
@@ -749,7 +930,17 @@
           return false;
        }
     }
-@@ -1617,21 +1511,22 @@
+ 
+-   public boolean interact(Player var1, InteractionHand var2) {
+-      return false;
++   public InteractionResult interact(Player var1, InteractionHand var2) {
++      return InteractionResult.PASS;
+    }
+ 
+    @Nullable
+    public AABB getCollideAgainstBox(Entity var1) {
+       return null;
+@@ -1617,21 +1545,22 @@
  
     public void positionRider(Entity var1) {
        this.positionRider(var1, Entity::setPos);
@@ -776,7 +967,7 @@
  
     public boolean startRiding(Entity var1) {
        return this.startRiding(var1, false);
-@@ -1649,40 +1544,45 @@
+@@ -1649,40 +1578,45 @@
        } else {
           if (this.isPassenger()) {
              this.stopRiding();
@@ -825,7 +1016,7 @@
           throw new IllegalStateException("Use x.startRiding(y), not y.addPassenger(x)");
        } else {
           if (!this.level.isClientSide && var1 instanceof Player && !(this.getControllingPassenger() instanceof Player)) {
-@@ -1726,12 +1626,12 @@
+@@ -1726,12 +1660,12 @@
           if (!this.level.isClientSide && !var1.equals(this.portalEntranceBlock)) {
              this.portalEntranceBlock = new BlockPos(var1);
              NetherPortalBlock var10000 = (NetherPortalBlock)Blocks.NETHER_PORTAL;
@@ -840,21 +1031,30 @@
           }
  
           this.isInsidePortal = true;
-@@ -1744,11 +1644,12 @@
+@@ -1739,16 +1673,20 @@
+    }
+ 
+    protected void handleNetherPortal() {
+       if (this.level instanceof ServerLevel) {
+          int var1 = this.getPortalWaitTime();
++         ServerLevel var2 = (ServerLevel)this.level;
           if (this.isInsidePortal) {
-             if (this.level.getServer().isNetherEnabled() && !this.isPassenger() && this.portalTime++ >= var1) {
+-            if (this.level.getServer().isNetherEnabled() && !this.isPassenger() && this.portalTime++ >= var1) {
++            MinecraftServer var3 = var2.getServer();
++            ResourceKey var4 = this.level.dimension() == Level.NETHER ? Level.OVERWORLD : Level.NETHER;
++            ServerLevel var5 = var3.getLevel(var4);
++            if (var5 != null && var3.isNetherEnabled() && !this.isPassenger() && this.portalTime++ >= var1) {
                 this.level.getProfiler().push("portal");
                 this.portalTime = var1;
                 this.changingDimensionDelay = this.getDimensionChangingDelay();
 -               this.changeDimension(this.level.dimension.getType() == DimensionType.NETHER ? DimensionType.OVERWORLD : DimensionType.NETHER);
-+               ResourceKey var2 = this.level.dimensionType().isNether() ? Level.OVERWORLD : Level.NETHER;
-+               this.changeDimension(var2);
++               this.changeDimension(var5);
                 this.level.getProfiler().pop();
              }
  
              this.isInsidePortal = false;
           } else {
-@@ -1954,11 +1855,11 @@
+@@ -1954,11 +1892,11 @@
        Direction[] var13 = new Direction[]{Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.UP};
        int var14 = var13.length;
  
@@ -867,7 +1067,7 @@
              double var19 = var16.getAxisDirection() == Direction.AxisDirection.POSITIVE ? 1.0D - var17 : var17;
              if (var19 < var11) {
                 var11 = var19;
-@@ -1983,25 +1884,27 @@
+@@ -1983,25 +1921,25 @@
     public void makeStuckInBlock(BlockState var1, Vec3 var2) {
        this.fallDistance = 0.0F;
        this.stuckSpeedMultiplier = var2;
@@ -878,9 +1078,7 @@
 -         var0x.setClickEvent((ClickEvent)null);
 -      }).getSiblings().forEach(Entity::removeAction);
 +   private static Component removeAction(Component var0) {
-+      MutableComponent var1 = var0.toMutable().withStyle((var0x) -> {
-+         return var0x.withClickEvent((ClickEvent)null);
-+      });
++      MutableComponent var1 = var0.plainCopy().setStyle(var0.getStyle().withClickEvent((ClickEvent)null));
 +      Iterator var2 = var0.getSiblings().iterator();
 +
 +      while(var2.hasNext()) {
@@ -906,7 +1104,7 @@
     protected Component getTypeName() {
        return this.type.getDescription();
     }
-@@ -2027,11 +1930,11 @@
+@@ -2027,11 +1965,11 @@
     public boolean skipAttackInteraction(Entity var1) {
        return false;
     }
@@ -919,49 +1117,59 @@
     public boolean isInvulnerableTo(DamageSource var1) {
        return this.invulnerable && var1 != DamageSource.OUT_OF_WORLD && !var1.isCreativePlayer();
     }
-@@ -2057,72 +1960,76 @@
+@@ -2057,72 +1995,72 @@
        this.portalEntranceOffset = var1.portalEntranceOffset;
        this.portalEntranceForwards = var1.portalEntranceForwards;
     }
  
     @Nullable
 -   public Entity changeDimension(DimensionType var1) {
-+   public Entity changeDimension(ResourceKey<Level> var1) {
-       if (!this.level.isClientSide && !this.removed) {
+-      if (!this.level.isClientSide && !this.removed) {
++   public Entity changeDimension(ServerLevel var1) {
++      if (this.level instanceof ServerLevel && !this.removed) {
           this.level.getProfiler().push("changeDimension");
-          MinecraftServer var2 = this.getServer();
+-         MinecraftServer var2 = this.getServer();
 -         DimensionType var3 = this.dimension;
-+         ResourceKey var3 = this.level.dimension();
-          ServerLevel var4 = var2.getLevel(var3);
-          ServerLevel var5 = var2.getLevel(var1);
+-         ServerLevel var4 = var2.getLevel(var3);
+-         ServerLevel var5 = var2.getLevel(var1);
 -         this.dimension = var1;
           this.unRide();
           this.level.getProfiler().push("reposition");
-          Vec3 var7 = this.getDeltaMovement();
-          float var8 = 0.0F;
-          BlockPos var6;
+-         Vec3 var7 = this.getDeltaMovement();
+-         float var8 = 0.0F;
+-         BlockPos var6;
 -         if (var3 == DimensionType.THE_END && var1 == DimensionType.OVERWORLD) {
-+         if (var3 == Level.END && var1 == Level.OVERWORLD) {
-             var6 = var5.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, var5.getSharedSpawnPos());
+-            var6 = var5.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, var5.getSharedSpawnPos());
 -         } else if (var1 == DimensionType.THE_END) {
 -            var6 = var5.getDimensionSpecificSpawn();
-+         } else if (var1 == Level.END) {
-+            var6 = ServerLevel.END_SPAWN_POINT;
++         Vec3 var3 = this.getDeltaMovement();
++         float var4 = 0.0F;
++         BlockPos var2;
++         if (this.level.dimension() == Level.END && var1.dimension() == Level.OVERWORLD) {
++            var2 = var1.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, var1.getSharedSpawnPos());
++         } else if (var1.dimension() == Level.END) {
++            var2 = ServerLevel.END_SPAWN_POINT;
           } else {
-             double var9 = this.getX();
-             double var11 = this.getZ();
+-            double var9 = this.getX();
+-            double var11 = this.getZ();
 -            double var13 = 8.0D;
 -            if (var3 == DimensionType.OVERWORLD && var1 == DimensionType.NETHER) {
-+            DimensionType var13 = var4.dimensionType();
-+            DimensionType var14 = var5.dimensionType();
-+            double var15 = 8.0D;
-+            if (!var13.shrunk() && var14.shrunk()) {
-                var9 /= 8.0D;
-                var11 /= 8.0D;
+-               var9 /= 8.0D;
+-               var11 /= 8.0D;
 -            } else if (var3 == DimensionType.NETHER && var1 == DimensionType.OVERWORLD) {
-+            } else if (var13.shrunk() && !var14.shrunk()) {
-                var9 *= 8.0D;
-                var11 *= 8.0D;
+-               var9 *= 8.0D;
+-               var11 *= 8.0D;
++            double var5 = this.getX();
++            double var7 = this.getZ();
++            DimensionType var9 = this.level.dimensionType();
++            DimensionType var10 = var1.dimensionType();
++            double var11 = 8.0D;
++            if (!var9.shrunk() && var10.shrunk()) {
++               var5 /= 8.0D;
++               var7 /= 8.0D;
++            } else if (var9.shrunk() && !var10.shrunk()) {
++               var5 *= 8.0D;
++               var7 *= 8.0D;
              }
  
 -            double var15 = Math.min(-2.9999872E7D, var5.getWorldBorder().getMinX() + 16.0D);
@@ -971,27 +1179,28 @@
 -            var9 = Mth.clamp(var9, var15, var19);
 -            var11 = Mth.clamp(var11, var17, var21);
 -            Vec3 var23 = this.getPortalEntranceOffset();
-+            double var17 = Math.min(-2.9999872E7D, var5.getWorldBorder().getMinX() + 16.0D);
-+            double var19 = Math.min(-2.9999872E7D, var5.getWorldBorder().getMinZ() + 16.0D);
-+            double var21 = Math.min(2.9999872E7D, var5.getWorldBorder().getMaxX() - 16.0D);
-+            double var23 = Math.min(2.9999872E7D, var5.getWorldBorder().getMaxZ() - 16.0D);
-+            var9 = Mth.clamp(var9, var17, var21);
-+            var11 = Mth.clamp(var11, var19, var23);
-+            Vec3 var25 = this.getPortalEntranceOffset();
-             var6 = new BlockPos(var9, this.getY(), var11);
+-            var6 = new BlockPos(var9, this.getY(), var11);
 -            BlockPattern.PortalInfo var24 = var5.getPortalForcer().findPortal(var6, var7, this.getPortalEntranceForwards(), var23.x, var23.y, this instanceof Player);
 -            if (var24 == null) {
-+            BlockPattern.PortalInfo var26 = var5.getPortalForcer().findPortal(var6, var7, this.getPortalEntranceForwards(), var25.x, var25.y, this instanceof Player);
-+            if (var26 == null) {
++            double var13 = Math.min(-2.9999872E7D, var1.getWorldBorder().getMinX() + 16.0D);
++            double var15 = Math.min(-2.9999872E7D, var1.getWorldBorder().getMinZ() + 16.0D);
++            double var17 = Math.min(2.9999872E7D, var1.getWorldBorder().getMaxX() - 16.0D);
++            double var19 = Math.min(2.9999872E7D, var1.getWorldBorder().getMaxZ() - 16.0D);
++            var5 = Mth.clamp(var5, var13, var17);
++            var7 = Mth.clamp(var7, var15, var19);
++            Vec3 var21 = this.getPortalEntranceOffset();
++            var2 = new BlockPos(var5, this.getY(), var7);
++            BlockPattern.PortalInfo var22 = var1.getPortalForcer().findPortal(var2, var3, this.getPortalEntranceForwards(), var21.x, var21.y, this instanceof Player);
++            if (var22 == null) {
                 return null;
              }
  
 -            var6 = new BlockPos(var24.pos);
 -            var7 = var24.speed;
 -            var8 = (float)var24.angle;
-+            var6 = new BlockPos(var26.pos);
-+            var7 = var26.speed;
-+            var8 = (float)var26.angle;
++            var2 = new BlockPos(var22.pos);
++            var3 = var22.speed;
++            var4 = (float)var22.angle;
           }
  
           this.level.getProfiler().popPush("reloading");
@@ -1001,30 +1210,32 @@
 -            var25.moveTo(var6, var25.yRot + var8, var25.xRot);
 -            var25.setDeltaMovement(var7);
 -            var5.addFromAnotherDimension(var25);
-+         Entity var27 = this.getType().create(var5);
-+         if (var27 != null) {
-+            var27.restoreFrom(this);
-+            var27.moveTo(var6, var27.yRot + var8, var27.xRot);
-+            var27.setDeltaMovement(var7);
-+            var5.addFromAnotherDimension(var27);
-+            if (var1 == Level.END) {
-+               ServerLevel.makeObsidianPlatform(var5);
++         Entity var23 = this.getType().create(var1);
++         if (var23 != null) {
++            var23.restoreFrom(this);
++            var23.moveTo(var2, var23.yRot + var4, var23.xRot);
++            var23.setDeltaMovement(var3);
++            var1.addFromAnotherDimension(var23);
++            if (var1.dimension() == Level.END) {
++               ServerLevel.makeObsidianPlatform(var1);
 +            }
           }
  
           this.removed = true;
           this.level.getProfiler().pop();
-          var4.resetEmptyTime();
-          var5.resetEmptyTime();
+-         var4.resetEmptyTime();
+-         var5.resetEmptyTime();
++         ((ServerLevel)this.level).resetEmptyTime();
++         var1.resetEmptyTime();
           this.level.getProfiler().pop();
 -         return var25;
-+         return var27;
++         return var23;
        } else {
           return null;
        }
     }
  
-@@ -2189,17 +2096,17 @@
+@@ -2189,17 +2127,17 @@
  
     public String getScoreboardName() {
        return this.stringUUID;
@@ -1044,7 +1255,7 @@
  
     public void setCustomName(@Nullable Component var1) {
        this.entityData.set(DATA_CUSTOM_NAME, Optional.ofNullable(var1));
-@@ -2235,12 +2142,18 @@
+@@ -2235,12 +2173,18 @@
        if (this.level instanceof ServerLevel) {
           ServerLevel var7 = (ServerLevel)this.level;
           this.moveTo(var1, var3, var5, this.yRot, this.xRot);
@@ -1065,7 +1276,7 @@
     }
  
     public void onSyncedDataUpdated(EntityDataAccessor<?> var1) {
-@@ -2277,19 +2190,11 @@
+@@ -2277,19 +2221,11 @@
     public Direction getMotionDirection() {
        return this.getDirection();
     }
@@ -1086,7 +1297,7 @@
     public boolean broadcastToPlayer(ServerPlayer var1) {
        return true;
     }
-@@ -2320,21 +2225,13 @@
+@@ -2320,21 +2256,13 @@
  
     public boolean setSlot(int var1, ItemStack var2) {
        return false;
@@ -1109,7 +1320,7 @@
     }
  
     @Nullable
-@@ -2348,11 +2245,11 @@
+@@ -2348,11 +2276,11 @@
  
     public boolean ignoreExplosion() {
        return false;
@@ -1122,7 +1333,7 @@
        }
  
        EnchantmentHelper.doPostDamageEffects(var1, var2);
-@@ -2392,16 +2289,22 @@
+@@ -2392,16 +2320,22 @@
  
     public boolean onlyOpCanSetNbt() {
        return false;
@@ -1148,7 +1359,7 @@
        return null;
     }
  
-@@ -2483,47 +2386,31 @@
+@@ -2483,47 +2417,31 @@
  
     public boolean isPassengerOfSameVehicle(Entity var1) {
        return this.getRootVehicle() == var1.getRootVehicle();
@@ -1208,7 +1419,7 @@
        return this.vehicle;
     }
  
-@@ -2574,93 +2461,78 @@
+@@ -2574,93 +2492,78 @@
        this.setYHeadRot(this.yRot);
        this.xRotO = this.xRot;
        this.yRotO = this.yRot;
@@ -1347,7 +1558,7 @@
     }
  
     public final float getBbHeight() {
-@@ -2672,13 +2544,17 @@
+@@ -2672,13 +2575,17 @@
     public EntityDimensions getDimensions(Pose var1) {
        return this.type.getDimensions();
     }
@@ -1366,7 +1577,7 @@
     }
  
     public void setDeltaMovement(Vec3 var1) {
-@@ -2688,62 +2564,67 @@
+@@ -2688,62 +2595,67 @@
     public void setDeltaMovement(double var1, double var3, double var5) {
        this.setDeltaMovement(new Vec3(var1, var3, var5));
     }
@@ -1448,7 +1659,7 @@
        DATA_AIR_SUPPLY_ID = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.INT);
        DATA_CUSTOM_NAME = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.OPTIONAL_COMPONENT);
        DATA_CUSTOM_NAME_VISIBLE = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.BOOLEAN);
-@@ -2751,9 +2632,9 @@
+@@ -2751,9 +2663,9 @@
        DATA_NO_GRAVITY = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.BOOLEAN);
        DATA_POSE = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.POSE);
     }

@@ -1,16 +1,48 @@
 --- net/minecraft/client/gui/components/OptionsList.java
 +++ net/minecraft/client/gui/components/OptionsList.java
-@@ -1,8 +1,9 @@
+@@ -1,9 +1,12 @@
  package net.minecraft.client.gui.components;
  
  import com.google.common.collect.ImmutableList;
 +import com.mojang.blaze3d.vertex.PoseStack;
++import java.util.Iterator;
  import java.util.List;
++import java.util.Optional;
  import javax.annotation.Nullable;
  import net.minecraft.client.Minecraft;
  import net.minecraft.client.Option;
  import net.minecraft.client.Options;
-@@ -51,14 +52,14 @@
+ import net.minecraft.client.gui.components.events.GuiEventListener;
+@@ -35,10 +38,28 @@
+ 
+    protected int getScrollbarPosition() {
+       return super.getScrollbarPosition() + 32;
+    }
+ 
++   public Optional<AbstractWidget> getMouseOver(double var1, double var3) {
++      Iterator var5 = this.children().iterator();
++
++      while(var5.hasNext()) {
++         OptionsList.Entry var6 = (OptionsList.Entry)var5.next();
++         Iterator var7 = var6.children.iterator();
++
++         while(var7.hasNext()) {
++            AbstractWidget var8 = (AbstractWidget)var7.next();
++            if (var8.isMouseOver(var1, var3)) {
++               return Optional.of(var8);
++            }
++         }
++      }
++
++      return Optional.empty();
++   }
++
+    public static class Entry extends ContainerObjectSelectionList.Entry<OptionsList.Entry> {
+       private final List<AbstractWidget> children;
+ 
+       private Entry(List<AbstractWidget> var1) {
+          this.children = var1;
+@@ -51,14 +72,14 @@
        public static OptionsList.Entry small(Options var0, int var1, Option var2, @Nullable Option var3) {
           AbstractWidget var4 = var2.createButton(var0, var1 / 2 - 155, 0, 150);
           return var3 == null ? new OptionsList.Entry(ImmutableList.of(var4)) : new OptionsList.Entry(ImmutableList.of(var4, var3.createButton(var0, var1 / 2 - 155 + 160, 0, 150)));

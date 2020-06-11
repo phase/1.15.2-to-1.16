@@ -1,0 +1,17 @@
+--- net/minecraft/world/level/lighting/LayerLightEngine.java
++++ net/minecraft/world/level/lighting/LayerLightEngine.java
+@@ -167,12 +167,12 @@
+       this.runningLightUpdates = false;
+       this.storage.swapSectionMap();
+       return var1;
+    }
+ 
+-   protected void queueSectionData(long var1, @Nullable DataLayer var3) {
+-      this.storage.queueSectionData(var1, var3);
++   protected void queueSectionData(long var1, @Nullable DataLayer var3, boolean var4) {
++      this.storage.queueSectionData(var1, var3, var4);
+    }
+ 
+    @Nullable
+    public DataLayer getDataLayerData(SectionPos var1) {
+       return this.storage.getDataLayerData(var1.asLong());

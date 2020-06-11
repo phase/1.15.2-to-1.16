@@ -102,7 +102,7 @@
 -      ScoreComponent var1 = new ScoreComponent(this.name, this.objective);
 -      var1.setValue(this.value);
 -      return var1;
-+   public ScoreComponent toMutable() {
++   public ScoreComponent plainCopy() {
 +      return new ScoreComponent(this.name, this.selector, this.objective);
     }
  

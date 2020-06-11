@@ -93,7 +93,17 @@
              }
  
              return true;
-@@ -436,83 +438,83 @@
+@@ -427,92 +429,92 @@
+       protected boolean createChest(LevelAccessor var1, BoundingBox var2, Random var3, int var4, int var5, int var6, ResourceLocation var7) {
+          BlockPos var8 = new BlockPos(this.getWorldX(var4, var6), this.getWorldY(var5), this.getWorldZ(var4, var6));
+          if (var2.isInside(var8) && var1.getBlockState(var8).isAir() && !var1.getBlockState(var8.below()).isAir()) {
+             BlockState var9 = (BlockState)Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, var3.nextBoolean() ? RailShape.NORTH_SOUTH : RailShape.EAST_WEST);
+             this.placeBlock(var1, var9, var4, var5, var6, var2);
+-            MinecartChest var10 = new MinecartChest(var1.getLevel(), (double)((float)var8.getX() + 0.5F), (double)((float)var8.getY() + 0.5F), (double)((float)var8.getZ() + 0.5F));
++            MinecartChest var10 = new MinecartChest(var1.getLevel(), (double)var8.getX() + 0.5D, (double)var8.getY() + 0.5D, (double)var8.getZ() + 0.5D);
+             var10.setLootTable(var7, var3.nextLong());
+             var1.addFreshEntity(var10);
+             return true;
           } else {
              return false;
           }

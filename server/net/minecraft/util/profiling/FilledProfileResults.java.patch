@@ -1,0 +1,27 @@
+--- net/minecraft/util/profiling/FilledProfileResults.java
++++ net/minecraft/util/profiling/FilledProfileResults.java
+@@ -20,10 +20,11 @@
+ import java.util.TreeMap;
+ import java.util.Map.Entry;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+ import org.apache.commons.io.IOUtils;
++import org.apache.commons.lang3.ObjectUtils;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class FilledProfileResults implements ProfileResults {
+    private static final Logger LOGGER = LogManager.getLogger();
+@@ -208,11 +209,11 @@
+       return var0;
+    }
+ 
+    private void appendProfilerResults(int var1, String var2, StringBuilder var3) {
+       List var4 = this.getTimes(var2);
+-      Object2LongMap var5 = ((ProfilerPathEntry)this.entries.get(var2)).getCounters();
++      Object2LongMap var5 = ((ProfilerPathEntry)ObjectUtils.firstNonNull((ProfilerPathEntry)this.entries.get(var2), EMPTY)).getCounters();
+       var5.forEach((var3x, var4x) -> {
+          indentLine(var3, var1).append('#').append(var3x).append(' ').append(var4x).append('/').append(var4x / (long)this.tickDuration).append('\n');
+       });
+       if (var4.size() >= 3) {
+          for(int var6 = 1; var6 < var4.size(); ++var6) {

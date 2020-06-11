@@ -12,6 +12,23 @@
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.block.state.StateDefinition;
  
+@@ -39,13 +40,13 @@
+ 
+    public void animateTick(Level var1, BlockPos var2, FluidState var3, Random var4) {
+       BlockPos var5 = var2.above();
+       if (var1.getBlockState(var5).isAir() && !var1.getBlockState(var5).isSolidRender(var1, var5)) {
+          if (var4.nextInt(100) == 0) {
+-            double var6 = (double)((float)var2.getX() + var4.nextFloat());
+-            double var8 = (double)(var2.getY() + 1);
+-            double var10 = (double)((float)var2.getZ() + var4.nextFloat());
++            double var6 = (double)var2.getX() + var4.nextDouble();
++            double var8 = (double)var2.getY() + 1.0D;
++            double var10 = (double)var2.getZ() + var4.nextDouble();
+             var1.addParticle(ParticleTypes.LAVA, var6, var8, var10, 0.0D, 0.0D, 0.0D);
+             var1.playLocalSound(var6, var8, var10, SoundEvents.LAVA_POP, SoundSource.BLOCKS, 0.2F + var4.nextFloat() * 0.2F, 0.9F + var4.nextFloat() * 0.15F, false);
+          }
+ 
+          if (var4.nextInt(200) == 0) {
 @@ -68,11 +69,11 @@
                 }
  
@@ -67,7 +84,7 @@
  
     public int getTickDelay(LevelReader var1) {
 -      return var1.getDimension().isHasCeiling() ? 10 : 30;
-+      return var1.dimensionType().hasCeiling() ? 10 : 30;
++      return var1.dimensionType().ultraWarm() ? 10 : 30;
     }
  
     public int getSpreadDelay(Level var1, BlockPos var2, FluidState var3, FluidState var4) {

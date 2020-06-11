@@ -1,21 +1,31 @@
 --- net/minecraft/client/Screenshot.java
 +++ net/minecraft/client/Screenshot.java
-@@ -10,10 +10,11 @@
+@@ -8,15 +8,16 @@
+ import java.text.SimpleDateFormat;
+ import java.util.Date;
  import java.util.function.Consumer;
  import javax.annotation.Nullable;
  import net.minecraft.ChatFormatting;
++import net.minecraft.Util;
  import net.minecraft.network.chat.ClickEvent;
  import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.MutableComponent;
  import net.minecraft.network.chat.TextComponent;
  import net.minecraft.network.chat.TranslatableComponent;
- import net.minecraft.server.packs.resources.SimpleResource;
+-import net.minecraft.server.packs.resources.SimpleResource;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
-@@ -49,12 +50,12 @@
+ 
+ public class Screenshot {
+    private static final Logger LOGGER = LogManager.getLogger();
+@@ -46,15 +47,15 @@
+          var8 = getFile(var7);
+       } else {
+          var8 = new File(var7, var1);
        }
  
-       SimpleResource.IO_EXECUTOR.execute(() -> {
+-      SimpleResource.IO_EXECUTOR.execute(() -> {
++      Util.ioPool().execute(() -> {
           try {
              var6.writeToFile(var8);
 -            Component var3 = (new TextComponent(var8.getName())).withStyle(ChatFormatting.UNDERLINE).withStyle((var1) -> {

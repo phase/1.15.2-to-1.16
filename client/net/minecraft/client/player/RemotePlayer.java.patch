@@ -32,6 +32,27 @@
     public void aiStep() {
        if (this.lerpSteps > 0) {
           double var1 = this.getX() + (this.lerpX - this.getX()) / (double)this.lerpSteps;
+@@ -60,18 +52,18 @@
+       }
+ 
+       this.oBob = this.bob;
+       this.updateSwingTime();
+       float var7;
+-      if (this.onGround && this.getHealth() > 0.0F) {
++      if (this.onGround && !this.isDeadOrDying()) {
+          var7 = Math.min(0.1F, Mth.sqrt(getHorizontalDistanceSqr(this.getDeltaMovement())));
+       } else {
+          var7 = 0.0F;
+       }
+ 
+       float var2;
+-      if (!this.onGround && this.getHealth() > 0.0F) {
++      if (!this.onGround && !this.isDeadOrDying()) {
+          var2 = (float)Math.atan(-this.getDeltaMovement().y * 0.20000000298023224D) * 15.0F;
+       } else {
+          var2 = 0.0F;
+       }
+ 
 @@ -82,9 +74,13 @@
     }
  

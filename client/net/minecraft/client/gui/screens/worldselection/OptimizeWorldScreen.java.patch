@@ -1,8 +1,9 @@
 --- net/minecraft/client/gui/screens/worldselection/OptimizeWorldScreen.java
 +++ net/minecraft/client/gui/screens/worldselection/OptimizeWorldScreen.java
-@@ -1,41 +1,52 @@
+@@ -1,41 +1,94 @@
  package net.minecraft.client.gui.screens.worldselection;
  
++import com.google.common.collect.ImmutableSet;
 +import com.google.common.collect.UnmodifiableIterator;
 +import com.mojang.blaze3d.vertex.PoseStack;
 +import com.mojang.datafixers.DataFixer;
@@ -10,11 +11,14 @@
  import it.unimi.dsi.fastutil.objects.Object2IntMap;
  import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 -import java.util.Iterator;
++import javax.annotation.Nullable;
  import net.minecraft.Util;
++import net.minecraft.client.Minecraft;
  import net.minecraft.client.gui.Font;
  import net.minecraft.client.gui.components.Button;
  import net.minecraft.client.gui.screens.Screen;
  import net.minecraft.client.resources.language.I18n;
++import net.minecraft.core.RegistryAccess;
 +import net.minecraft.network.chat.CommonComponents;
 +import net.minecraft.network.chat.Component;
  import net.minecraft.network.chat.TranslatableComponent;
@@ -23,14 +27,18 @@
  import net.minecraft.util.worldupdate.WorldUpgrader;
 -import net.minecraft.world.level.dimension.DimensionType;
 +import net.minecraft.world.level.Level;
++import net.minecraft.world.level.LevelSettings;
  import net.minecraft.world.level.storage.LevelStorageSource;
 +import net.minecraft.world.level.storage.WorldData;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
  
  public class OptimizeWorldScreen extends Screen {
 -   private static final Object2IntMap<DimensionType> DIMENSION_COLORS = (Object2IntMap)Util.make(new Object2IntOpenCustomHashMap(Util.identityStrategy()), (var0) -> {
 -      var0.put(DimensionType.OVERWORLD, -13408734);
 -      var0.put(DimensionType.NETHER, -10075085);
 -      var0.put(DimensionType.THE_END, -8943531);
++   private static final Logger LOGGER = LogManager.getLogger();
 +   private static final Object2IntMap<ResourceKey<Level>> DIMENSION_COLORS = (Object2IntMap)Util.make(new Object2IntOpenCustomHashMap(Util.identityStrategy()), (var0) -> {
 +      var0.put(Level.OVERWORLD, -13408734);
 +      var0.put(Level.NETHER, -10075085);
@@ -42,16 +50,50 @@
  
 -   public OptimizeWorldScreen(BooleanConsumer var1, String var2, LevelStorageSource var3, boolean var4) {
 -      super(new TranslatableComponent("optimizeWorld.title", new Object[]{var3.getDataTagFor(var2).getLevelName()}));
-+   public static OptimizeWorldScreen create(BooleanConsumer var0, DataFixer var1, LevelStorageSource.LevelStorageAccess var2, boolean var3) {
-+      WorldData var4 = var2.getDataTag();
-+      return new OptimizeWorldScreen(var0, var1, var2, var4, var3);
++   @Nullable
++   public static OptimizeWorldScreen create(Minecraft var0, BooleanConsumer var1, DataFixer var2, LevelStorageSource.LevelStorageAccess var3, boolean var4) {
++      RegistryAccess.RegistryHolder var5 = RegistryAccess.builtin();
++
++      try {
++         Minecraft.ServerStem var6 = var0.makeServerStem(var5, Minecraft::loadDataPacks, Minecraft::loadWorldData, false, var3);
++         Throwable var7 = null;
++
++         OptimizeWorldScreen var10;
++         try {
++            WorldData var8 = var6.worldData();
++            var3.saveDataTag(var5, var8);
++            ImmutableSet var9 = var8.worldGenSettings().levels();
++            var10 = new OptimizeWorldScreen(var1, var2, var3, var8.getLevelSettings(), var4, var9);
++         } catch (Throwable var20) {
++            var7 = var20;
++            throw var20;
++         } finally {
++            if (var6 != null) {
++               if (var7 != null) {
++                  try {
++                     var6.close();
++                  } catch (Throwable var19) {
++                     var7.addSuppressed(var19);
++                  }
++               } else {
++                  var6.close();
++               }
++            }
++
++         }
++
++         return var10;
++      } catch (Exception var22) {
++         LOGGER.warn("Failed to load datapacks, can't optimize world", var22);
++         return null;
++      }
 +   }
 +
-+   private OptimizeWorldScreen(BooleanConsumer var1, DataFixer var2, LevelStorageSource.LevelStorageAccess var3, WorldData var4, boolean var5) {
-+      super(new TranslatableComponent("optimizeWorld.title", new Object[]{var4.getLevelName()}));
++   private OptimizeWorldScreen(BooleanConsumer var1, DataFixer var2, LevelStorageSource.LevelStorageAccess var3, LevelSettings var4, boolean var5, ImmutableSet<ResourceKey<Level>> var6) {
++      super(new TranslatableComponent("optimizeWorld.title", new Object[]{var4.levelName()}));
        this.callback = var1;
 -      this.upgrader = new WorldUpgrader(var2, var3, var3.getDataTagFor(var2), var4);
-+      this.upgrader = new WorldUpgrader(var3, var2, var4, var5);
++      this.upgrader = new WorldUpgrader(var3, var2, var6, var5);
     }
  
     protected void init() {
@@ -63,7 +105,7 @@
        }));
     }
  
-@@ -44,58 +55,62 @@
+@@ -44,58 +97,62 @@
           this.callback.accept(true);
        }
  
@@ -128,7 +170,7 @@
 -            var11 = Mth.floor(this.upgrader.dimensionProgress(var10) * (float)(var5 - var4));
 -            fill(var4 + var8, var6, var4 + var8 + var11, var7, DIMENSION_COLORS.getInt(var10));
 +         int var12;
-+         for(UnmodifiableIterator var10 = this.upgrader.dimensionTypes().iterator(); var10.hasNext(); var9 += var12) {
++         for(UnmodifiableIterator var10 = this.upgrader.levels().iterator(); var10.hasNext(); var9 += var12) {
 +            ResourceKey var11 = (ResourceKey)var10.next();
 +            var12 = Mth.floor(this.upgrader.dimensionProgress(var11) * (float)(var6 - var5));
 +            fill(var1, var5 + var9, var7, var5 + var9 + var12, var8, DIMENSION_COLORS.getInt(var11));

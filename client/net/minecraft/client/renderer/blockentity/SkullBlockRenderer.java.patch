@@ -1,0 +1,37 @@
+--- net/minecraft/client/renderer/blockentity/SkullBlockRenderer.java
++++ net/minecraft/client/renderer/blockentity/SkullBlockRenderer.java
+@@ -64,30 +64,18 @@
+       SkullModel var8 = (SkullModel)MODEL_BY_TYPE.get(var2);
+       var5.pushPose();
+       if (var0 == null) {
+          var5.translate(0.5D, 0.0D, 0.5D);
+       } else {
+-         switch(var0) {
+-         case NORTH:
+-            var5.translate(0.5D, 0.25D, 0.7400000095367432D);
+-            break;
+-         case SOUTH:
+-            var5.translate(0.5D, 0.25D, 0.25999999046325684D);
+-            break;
+-         case WEST:
+-            var5.translate(0.7400000095367432D, 0.25D, 0.5D);
+-            break;
+-         case EAST:
+-         default:
+-            var5.translate(0.25999999046325684D, 0.25D, 0.5D);
+-         }
++         float var9 = 0.25F;
++         var5.translate((double)(0.5F - (float)var0.getStepX() * 0.25F), 0.25D, (double)(0.5F - (float)var0.getStepZ() * 0.25F));
+       }
+ 
+       var5.scale(-1.0F, -1.0F, 1.0F);
+-      VertexConsumer var9 = var6.getBuffer(getRenderType(var2, var3));
++      VertexConsumer var10 = var6.getBuffer(getRenderType(var2, var3));
+       var8.setupAnim(var4, var1, 0.0F);
+-      var8.renderToBuffer(var5, var9, var7, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
++      var8.renderToBuffer(var5, var10, var7, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+       var5.popPose();
+    }
+ 
+    private static RenderType getRenderType(SkullBlock.Type var0, @Nullable GameProfile var1) {
+       ResourceLocation var2 = (ResourceLocation)SKIN_BY_TYPE.get(var0);

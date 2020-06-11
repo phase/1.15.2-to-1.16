@@ -76,7 +76,7 @@
 +   private boolean checkLeftOwner() {
 +      Entity var1 = this.getOwner();
 +      if (var1 != null) {
-+         Iterator var2 = this.level.getEntities((Entity)this, this.getBoundingBox().inflate(1.0D), (var0) -> {
++         Iterator var2 = this.level.getEntities((Entity)this, this.getBoundingBox().expandTowards(this.getDeltaMovement()).inflate(1.0D), (var0) -> {
 +            return !var0.isSpectator() && var0.isPickable();
 +         }).iterator();
 +

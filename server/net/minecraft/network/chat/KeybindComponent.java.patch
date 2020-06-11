@@ -38,7 +38,7 @@
 +      return this.getNestedComponent().visit(var1);
 +   }
 +
-+   public KeybindComponent toMutable() {
++   public KeybindComponent plainCopy() {
        return new KeybindComponent(this.name);
     }
  

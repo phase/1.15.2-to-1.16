@@ -1,0 +1,13 @@
+--- net/minecraft/world/level/pathfinder/Target.java
++++ net/minecraft/world/level/pathfinder/Target.java
+@@ -22,10 +22,6 @@
+    }
+ 
+    public void setReached() {
+       this.reached = true;
+    }
+-
+-   public boolean isReached() {
+-      return this.reached;
+-   }
+ }

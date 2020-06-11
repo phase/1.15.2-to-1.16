@@ -1,6 +1,21 @@
 --- net/minecraft/client/resources/sounds/SoundInstance.java
 +++ net/minecraft/client/resources/sounds/SoundInstance.java
-@@ -36,10 +36,14 @@
+@@ -24,22 +24,26 @@
+ 
+    float getVolume();
+ 
+    float getPitch();
+ 
+-   float getX();
++   double getX();
+ 
+-   float getY();
++   double getY();
+ 
+-   float getZ();
++   double getZ();
+ 
+    SoundInstance.Attenuation getAttenuation();
  
     default boolean canStartSilent() {
        return false;

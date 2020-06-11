@@ -115,7 +115,19 @@
     private final NonNullList<ItemStack> lastHandItemStacks;
     private final NonNullList<ItemStack> lastArmorItemStacks;
     public boolean swinging;
-@@ -175,10 +178,11 @@
+@@ -139,10 +142,11 @@
+    public float yBodyRot;
+    public float yBodyRotO;
+    public float yHeadRot;
+    public float yHeadRotO;
+    public float flyingSpeed;
++   @Nullable
+    protected Player lastHurtByPlayer;
+    protected int lastHurtByPlayerTime;
+    protected boolean dead;
+    protected int noActionTime;
+    protected float oRun;
+@@ -175,10 +179,11 @@
     private float absorptionAmount;
     protected ItemStack useItem;
     protected int useItemRemaining;
@@ -127,7 +139,7 @@
     protected int autoSpinAttackTicks;
     private float swimAmount;
     private float swimAmountO;
-@@ -190,28 +194,34 @@
+@@ -190,28 +195,34 @@
        this.lastArmorItemStacks = NonNullList.withSize(4, ItemStack.EMPTY);
        this.invulnerableDuration = 20;
        this.flyingSpeed = 0.02F;
@@ -165,7 +177,7 @@
     public void kill() {
        this.hurt(DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
     }
-@@ -228,21 +238,17 @@
+@@ -228,23 +239,24 @@
        this.entityData.define(DATA_STINGER_COUNT_ID, 0);
        this.entityData.define(DATA_HEALTH_ID, 1.0F);
        this.entityData.define(SLEEPING_POS_ID, Optional.empty());
@@ -187,10 +199,17 @@
 +         this.updateInWaterStateAndDoWaterCurrentPushing();
        }
  
++      if (!this.level.isClientSide && var3 && this.fallDistance > 0.0F) {
++         this.removeSoulSpeed();
++         this.tryAddSoulSpeed();
++      }
++
        if (!this.level.isClientSide && this.fallDistance > 3.0F && var3) {
           float var6 = (float)Mth.ceil(this.fallDistance - 3.0F);
           if (!var4.isAir()) {
-@@ -263,10 +269,14 @@
+             double var7 = Math.min((double)(0.2F + var6 / 15.0F), 2.5D);
+             int var9 = (int)(150.0D * var7);
+@@ -263,10 +275,14 @@
        this.oAttackAnim = this.attackAnim;
        if (this.firstTick) {
           this.getSleepingPos().ifPresent(this::setPosToBed);
@@ -205,33 +224,72 @@
        boolean var1 = this instanceof Player;
        if (this.isAlive()) {
           if (this.isInWall()) {
-@@ -286,11 +296,11 @@
+@@ -284,24 +300,24 @@
+ 
+       if (this.fireImmune() || this.level.isClientSide) {
           this.clearFire();
        }
  
-       boolean var8 = var1 && ((Player)this).abilities.invulnerable;
+-      boolean var8 = var1 && ((Player)this).abilities.invulnerable;
++      boolean var11 = var1 && ((Player)this).abilities.invulnerable;
        if (this.isAlive()) {
 -         if (this.isUnderLiquid(FluidTags.WATER) && this.level.getBlockState(new BlockPos(this.getX(), this.getEyeY(), this.getZ())).getBlock() != Blocks.BUBBLE_COLUMN) {
-+         if (this.isUnderLiquid(FluidTags.WATER) && !this.level.getBlockState(new BlockPos(this.getX(), this.getEyeY(), this.getZ())).is(Blocks.BUBBLE_COLUMN)) {
-             if (!this.canBreatheUnderwater() && !MobEffectUtil.hasWaterBreathing(this) && !var8) {
+-            if (!this.canBreatheUnderwater() && !MobEffectUtil.hasWaterBreathing(this) && !var8) {
++         if (this.isEyeInFluid(FluidTags.WATER) && !this.level.getBlockState(new BlockPos(this.getX(), this.getEyeY(), this.getZ())).is(Blocks.BUBBLE_COLUMN)) {
++            if (!this.canBreatheUnderwater() && !MobEffectUtil.hasWaterBreathing(this) && !var11) {
                 this.setAirSupply(this.decreaseAirSupply(this.getAirSupply()));
                 if (this.getAirSupply() == -20) {
                    this.setAirSupply(0);
                    Vec3 var3 = this.getDeltaMovement();
-@@ -312,11 +322,11 @@
+ 
+-                  for(int var10 = 0; var10 < 8; ++var10) {
+-                     float var5 = this.random.nextFloat() - this.random.nextFloat();
+-                     float var6 = this.random.nextFloat() - this.random.nextFloat();
+-                     float var7 = this.random.nextFloat() - this.random.nextFloat();
+-                     this.level.addParticle(ParticleTypes.BUBBLE, this.getX() + (double)var5, this.getY() + (double)var6, this.getZ() + (double)var7, var3.x, var3.y, var3.z);
++                  for(int var13 = 0; var13 < 8; ++var13) {
++                     double var5 = this.random.nextDouble() - this.random.nextDouble();
++                     double var7 = this.random.nextDouble() - this.random.nextDouble();
++                     double var9 = this.random.nextDouble() - this.random.nextDouble();
++                     this.level.addParticle(ParticleTypes.BUBBLE, this.getX() + var5, this.getY() + var7, this.getZ() + var9, var3.x, var3.y, var3.z);
+                   }
+ 
+                   this.hurt(DamageSource.DROWN, 2.0F);
+                }
+             }
+@@ -312,14 +328,14 @@
           } else if (this.getAirSupply() < this.getMaxAirSupply()) {
              this.setAirSupply(this.increaseAirSupply(this.getAirSupply()));
           }
  
           if (!this.level.isClientSide) {
 -            BlockPos var9 = new BlockPos(this);
-+            BlockPos var9 = this.blockPosition();
-             if (!Objects.equal(this.lastPos, var9)) {
-                this.lastPos = var9;
-                this.onChangedBlock(var9);
+-            if (!Objects.equal(this.lastPos, var9)) {
+-               this.lastPos = var9;
+-               this.onChangedBlock(var9);
++            BlockPos var12 = this.blockPosition();
++            if (!Objects.equal(this.lastPos, var12)) {
++               this.lastPos = var12;
++               this.onChangedBlock(var12);
              }
           }
-@@ -363,16 +373,53 @@
+       }
+ 
+       if (this.isAlive() && this.isInWaterRainOrBubble()) {
+@@ -332,11 +348,11 @@
+ 
+       if (this.invulnerableTime > 0 && !(this instanceof ServerPlayer)) {
+          --this.invulnerableTime;
+       }
+ 
+-      if (this.getHealth() <= 0.0F) {
++      if (this.isDeadOrDying()) {
+          this.tickDeath();
+       }
+ 
+       if (this.lastHurtByPlayerTime > 0) {
+          --this.lastHurtByPlayerTime;
+@@ -363,26 +379,89 @@
        this.yRotO = this.yRot;
        this.xRotO = this.xRot;
        this.level.getProfiler().pop();
@@ -256,36 +314,72 @@
 +      return this.onSoulSpeedBlock() && EnchantmentHelper.getEnchantmentLevel(Enchantments.SOUL_SPEED, this) > 0 ? 1.0F : super.getBlockSpeedFactor();
 +   }
 +
-    protected void onChangedBlock(BlockPos var1) {
-       int var2 = EnchantmentHelper.getEnchantmentLevel(Enchantments.FROST_WALKER, this);
-       if (var2 > 0) {
-          FrostWalkerEnchantment.onEntityMoved(this, this.level, var1, var2);
-       }
- 
-+      if (!this.getBlockStateOn().isAir()) {
-+         AttributeInstance var3 = this.getAttribute(Attributes.MOVEMENT_SPEED);
-+         if (var3.getModifier(SPEED_MODIFIER_SOUL_SPEED_UUID) != null) {
-+            var3.removeModifier(SPEED_MODIFIER_SOUL_SPEED_UUID);
++   protected boolean shouldRemoveSoulSpeed(BlockState var1) {
++      return !var1.isAir() || this.isFallFlying();
++   }
++
++   protected void removeSoulSpeed() {
++      AttributeInstance var1 = this.getAttribute(Attributes.MOVEMENT_SPEED);
++      if (var1 != null) {
++         if (var1.getModifier(SPEED_MODIFIER_SOUL_SPEED_UUID) != null) {
++            var1.removeModifier(SPEED_MODIFIER_SOUL_SPEED_UUID);
 +         }
 +
-+         int var4 = EnchantmentHelper.getEnchantmentLevel(Enchantments.SOUL_SPEED, this);
-+         if (var4 > 0 && this.onSoulSpeedBlock()) {
-+            var3.addTransientModifier(new AttributeModifier(SPEED_MODIFIER_SOUL_SPEED_UUID, "Soul speed boost", (double)(0.03F * (1.0F + (float)var4 * 0.35F)), AttributeModifier.Operation.ADDITION));
++      }
++   }
++
++   protected void tryAddSoulSpeed() {
++      if (!this.getBlockStateOn().isAir()) {
++         int var1 = EnchantmentHelper.getEnchantmentLevel(Enchantments.SOUL_SPEED, this);
++         if (var1 > 0 && this.onSoulSpeedBlock()) {
++            AttributeInstance var2 = this.getAttribute(Attributes.MOVEMENT_SPEED);
++            if (var2 == null) {
++               return;
++            }
++
++            var2.addTransientModifier(new AttributeModifier(SPEED_MODIFIER_SOUL_SPEED_UUID, "Soul speed boost", (double)(0.03F * (1.0F + (float)var1 * 0.35F)), AttributeModifier.Operation.ADDITION));
 +            if (this.getRandom().nextFloat() < 0.04F) {
-+               ItemStack var5 = this.getItemBySlot(EquipmentSlot.FEET);
-+               var5.hurtAndBreak(1, this, (var0) -> {
++               ItemStack var3 = this.getItemBySlot(EquipmentSlot.FEET);
++               var3.hurtAndBreak(1, this, (var0) -> {
 +                  var0.broadcastBreakEvent(EquipmentSlot.FEET);
 +               });
 +            }
 +         }
 +      }
 +
++   }
++
+    protected void onChangedBlock(BlockPos var1) {
+       int var2 = EnchantmentHelper.getEnchantmentLevel(Enchantments.FROST_WALKER, this);
+       if (var2 > 0) {
+          FrostWalkerEnchantment.onEntityMoved(this, this.level, var1, var2);
+       }
+ 
++      if (this.shouldRemoveSoulSpeed(this.getBlockStateOn())) {
++         this.removeSoulSpeed();
++      }
++
++      this.tryAddSoulSpeed();
     }
  
     public boolean isBaby() {
        return false;
     }
-@@ -402,10 +449,14 @@
+ 
+    public float getScale() {
+       return this.isBaby() ? 0.5F : 1.0F;
+    }
+ 
++   protected boolean isAffectedByFluids() {
++      return true;
++   }
++
+    public boolean rideableUnderWater() {
+       return false;
+    }
+ 
+    protected void tickDeath() {
+@@ -402,10 +481,14 @@
  
     protected boolean shouldDropExperience() {
        return !this.isBaby();
@@ -300,7 +394,23 @@
        return var2 > 0 && this.random.nextInt(var2 + 1) > 0 ? var1 : var1 - 1;
     }
  
-@@ -484,11 +535,11 @@
+@@ -432,10 +515,15 @@
+ 
+    public int getLastHurtByMobTimestamp() {
+       return this.lastHurtByMobTimestamp;
+    }
+ 
++   public void setLastHurtByPlayer(@Nullable Player var1) {
++      this.lastHurtByPlayer = var1;
++      this.lastHurtByPlayerTime = this.tickCount;
++   }
++
+    public void setLastHurtByMob(@Nullable LivingEntity var1) {
+       this.lastHurtByMob = var1;
+       this.lastHurtByMobTimestamp = this.tickCount;
+    }
+ 
+@@ -484,11 +572,11 @@
        var1.putFloat("Health", this.getHealth());
        var1.putShort("HurtTime", (short)this.hurtTime);
        var1.putInt("HurtByTimestamp", this.lastHurtByMobTimestamp);
@@ -313,7 +423,7 @@
           Iterator var3 = this.activeEffects.values().iterator();
  
           while(var3.hasNext()) {
-@@ -503,17 +554,22 @@
+@@ -503,17 +591,22 @@
        this.getSleepingPos().ifPresent((var1x) -> {
           var1.putInt("SleepingX", var1x.getX());
           var1.putInt("SleepingY", var1x.getY());
@@ -338,7 +448,29 @@
        if (var1.contains("ActiveEffects", 9)) {
           ListTag var2 = var1.getList("ActiveEffects", 10);
  
-@@ -917,11 +973,11 @@
+@@ -803,16 +896,20 @@
+ 
+    public void setHealth(float var1) {
+       this.entityData.set(DATA_HEALTH_ID, Mth.clamp(var1, 0.0F, this.getMaxHealth()));
+    }
+ 
++   public boolean isDeadOrDying() {
++      return this.getHealth() <= 0.0F;
++   }
++
+    public boolean hurt(DamageSource var1, float var2) {
+       if (this.isInvulnerableTo(var1)) {
+          return false;
+       } else if (this.level.isClientSide) {
+          return false;
+-      } else if (this.getHealth() <= 0.0F) {
++      } else if (this.isDeadOrDying()) {
+          return false;
+       } else if (var1.isFire() && this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
+          return false;
+       } else {
+          if (this.isSleeping() && !this.level.isClientSide) {
+@@ -917,17 +1014,17 @@
                 for(var10 = var7.getZ() - this.getZ(); var14 * var14 + var10 * var10 < 1.0E-4D; var10 = (Math.random() - Math.random()) * 0.01D) {
                    var14 = (Math.random() - Math.random()) * 0.01D;
                 }
@@ -351,7 +483,14 @@
              }
           }
  
-@@ -962,11 +1018,11 @@
+-         if (this.getHealth() <= 0.0F) {
++         if (this.isDeadOrDying()) {
+             if (!this.checkTotemDeathProtection(var1)) {
+                SoundEvent var15 = this.getDeathSound();
+                if (var12 && var15 != null) {
+                   this.playSound(var15, this.getSoundVolume(), this.getVoicePitch());
+                }
+@@ -962,11 +1059,11 @@
     protected void blockUsingShield(LivingEntity var1) {
        var1.blockedByShield(this);
     }
@@ -364,7 +503,7 @@
     private boolean checkTotemDeathProtection(DamageSource var1) {
        if (var1.isBypassInvul()) {
           return false;
-@@ -1076,11 +1132,11 @@
+@@ -1076,11 +1173,11 @@
     protected void createWitherRose(@Nullable LivingEntity var1) {
        if (!this.level.isClientSide) {
           boolean var2 = false;
@@ -377,7 +516,7 @@
                    this.level.setBlock(var3, var4, 3);
                    var2 = true;
                 }
-@@ -1103,11 +1159,11 @@
+@@ -1103,11 +1200,11 @@
        } else {
           var3 = 0;
        }
@@ -390,7 +529,7 @@
        }
  
        this.dropEquipment();
-@@ -1143,24 +1199,25 @@
+@@ -1143,24 +1240,25 @@
        LootContext.Builder var5 = this.createLootContext(var2, var1);
        var4.getRandomItems(var5.create(LootContextParamSets.ENTITY), this::spawnAtLocation);
     }
@@ -422,7 +561,7 @@
  
     @Nullable
     protected SoundEvent getHurtSound(DamageSource var1) {
-@@ -1182,32 +1239,49 @@
+@@ -1182,32 +1280,49 @@
  
     public SoundEvent getEatingSound(ItemStack var1) {
        return var1.getEatingSound();
@@ -480,7 +619,7 @@
        }
  
        return false;
-@@ -1249,24 +1323,23 @@
+@@ -1249,24 +1364,23 @@
  
        }
     }
@@ -509,7 +648,7 @@
        return var2;
     }
  
-@@ -1339,11 +1412,11 @@
+@@ -1339,11 +1453,11 @@
           return this.lastHurtByMob != null ? this.lastHurtByMob : null;
        }
     }
@@ -522,7 +661,7 @@
     public final int getArrowCount() {
        return (Integer)this.entityData.get(DATA_ARROW_COUNT_ID);
     }
-@@ -1407,19 +1480,24 @@
+@@ -1407,19 +1521,24 @@
        }
  
        this.attackAnim = (float)this.swingTime / (float)var1;
@@ -551,7 +690,7 @@
  
     public MobType getMobType() {
        return MobType.UNDEFINED;
-@@ -1431,10 +1509,20 @@
+@@ -1431,10 +1550,20 @@
  
     public ItemStack getOffhandItem() {
        return this.getItemBySlot(EquipmentSlot.OFFHAND);
@@ -572,7 +711,7 @@
           return this.getItemBySlot(EquipmentSlot.MAINHAND);
        } else if (var1 == InteractionHand.OFF_HAND) {
           return this.getItemBySlot(EquipmentSlot.OFFHAND);
-@@ -1481,17 +1569,17 @@
+@@ -1481,17 +1610,17 @@
        return var2 > 0 ? (float)var3 / (float)var2 : 0.0F;
     }
  
@@ -592,7 +731,18 @@
     }
  
     protected float getSoundVolume() {
-@@ -1511,106 +1599,19 @@
+@@ -1501,116 +1630,29 @@
+    protected float getVoicePitch() {
+       return this.isBaby() ? (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.5F : (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F;
+    }
+ 
+    protected boolean isImmobile() {
+-      return this.getHealth() <= 0.0F;
++      return this.isDeadOrDying();
+    }
+ 
+    public void push(Entity var1) {
+       if (!this.isSleeping()) {
           super.push(var1);
        }
  
@@ -706,7 +856,7 @@
     protected float getJumpPower() {
        return 0.42F * this.getBlockJumpFactor();
     }
-@@ -1629,188 +1630,201 @@
+@@ -1629,188 +1671,201 @@
        }
  
        this.hasImpulse = true;
@@ -752,7 +902,7 @@
 +         FluidState var5 = this.level.getFluidState(this.blockPosition());
 +         float var8;
 +         double var24;
-+         if (this.isInWater() && (!(this instanceof Player) || !((Player)this).abilities.flying) && !this.canStandOnFluid(var5.getType())) {
++         if (this.isInWater() && this.isAffectedByFluids() && !this.canStandOnFluid(var5.getType())) {
 +            var24 = this.getY();
 +            var8 = this.isSprinting() ? 0.9F : this.getWaterSlowDown();
 +            float var26 = 0.02F;
@@ -827,7 +977,7 @@
 +            if (this.horizontalCollision && this.isFree(var12.x, var12.y + 0.6000000238418579D - this.getY() + var24, var12.z)) {
 +               this.setDeltaMovement(var12.x, 0.30000001192092896D, var12.z);
 +            }
-+         } else if (this.isInLava() && (!(this instanceof Player) || !((Player)this).abilities.flying) && !this.canStandOnFluid(var5.getType())) {
++         } else if (this.isInLava() && this.isAffectedByFluids() && !this.canStandOnFluid(var5.getType())) {
 +            var24 = this.getY();
 +            this.moveRelative(0.02F, var1);
 +            this.move(MoverType.SELF, this.getDeltaMovement());
@@ -1036,7 +1186,7 @@
  
           var1 = new Vec3(var3, var7, var5);
        }
-@@ -1887,11 +1901,11 @@
+@@ -1887,11 +1942,11 @@
                 if (!var7.isEmpty()) {
                    this.getAttributes().removeAttributeModifiers(var7.getAttributeModifiers(var6));
                 }
@@ -1049,7 +1199,7 @@
                 switch(var6.getType()) {
                 case HAND:
                    this.lastHandItemStacks.set(var6.getIndex(), var8.copy());
-@@ -2050,23 +2064,23 @@
+@@ -2050,23 +2105,23 @@
        if (this.lerpHeadSteps > 0) {
           this.yHeadRot = (float)((double)this.yHeadRot + Mth.wrapDegrees(this.lyHeadRot - (double)this.yHeadRot) / (double)this.lerpHeadSteps);
           --this.lerpHeadSteps;
@@ -1080,27 +1230,37 @@
  
        this.setDeltaMovement(var2, var4, var6);
        this.level.getProfiler().push("ai");
-@@ -2081,14 +2095,17 @@
+@@ -2080,46 +2135,55 @@
+          this.level.getProfiler().pop();
        }
  
        this.level.getProfiler().pop();
        this.level.getProfiler().push("jump");
-       if (this.jumping) {
+-      if (this.jumping) {
 -         if (this.waterHeight <= 0.0D || this.onGround && this.waterHeight <= 0.4D) {
+-            if (this.isInLava()) {
+-               this.jumpInLiquid(FluidTags.LAVA);
+-            } else if ((this.onGround || this.waterHeight > 0.0D && this.waterHeight <= 0.4D) && this.noJumpDelay == 0) {
+-               this.jumpFromGround();
+-               this.noJumpDelay = 10;
+-            }
+-         } else {
++      if (this.jumping && this.isAffectedByFluids()) {
 +         double var8 = this.getFluidHeight(FluidTags.WATER);
 +         boolean var10 = this.isInWater() && var8 > 0.0D;
 +         double var11 = this.getFluidJumpThreshold();
-+         if (!var10 || this.onGround && var8 <= var11) {
-             if (this.isInLava()) {
-                this.jumpInLiquid(FluidTags.LAVA);
--            } else if ((this.onGround || this.waterHeight > 0.0D && this.waterHeight <= 0.4D) && this.noJumpDelay == 0) {
-+            } else if ((this.onGround || var10 && var8 <= var11) && this.noJumpDelay == 0) {
-                this.jumpFromGround();
-                this.noJumpDelay = 10;
-             }
-          } else {
++         if (var10 && (!this.onGround || var8 > var11)) {
              this.jumpInLiquid(FluidTags.WATER);
-@@ -2100,26 +2117,26 @@
++         } else if (this.isInLava()) {
++            this.jumpInLiquid(FluidTags.LAVA);
++         } else if ((this.onGround || var10 && var8 <= var11) && this.noJumpDelay == 0) {
++            this.jumpFromGround();
++            this.noJumpDelay = 10;
+          }
+       } else {
+          this.noJumpDelay = 0;
+       }
+ 
        this.level.getProfiler().pop();
        this.level.getProfiler().push("travel");
        this.xxa *= 0.98F;
@@ -1119,8 +1279,16 @@
  
        this.pushEntities();
        this.level.getProfiler().pop();
++      if (!this.level.isClientSide && this.isSensitiveToWater() && this.isInWaterRainOrBubble()) {
++         this.hurt(DamageSource.DROWN, 1.0F);
++      }
++
     }
  
++   public boolean isSensitiveToWater() {
++      return false;
++   }
++
     private void updateFallFlying() {
        boolean var1 = this.getSharedFlag(7);
 -      if (var1 && !this.onGround && !this.isPassenger()) {
@@ -1130,7 +1298,7 @@
              var1 = true;
              if (!this.level.isClientSide && (this.fallFlyTicks + 1) % 20 == 0) {
                 var2.hurtAndBreak(1, this, (var0) -> {
-@@ -2213,11 +2230,11 @@
+@@ -2213,11 +2277,11 @@
  
     public void stopRiding() {
        Entity var1 = this.getVehicle();
@@ -1143,7 +1311,26 @@
     }
  
     public void rideTick() {
-@@ -2255,15 +2272,15 @@
+@@ -2229,10 +2293,18 @@
+ 
+    public void setJumping(boolean var1) {
+       this.jumping = var1;
+    }
+ 
++   public void onItemPickup(ItemEntity var1) {
++      Player var2 = var1.getThrower() != null ? this.level.getPlayerByUUID(var1.getThrower()) : null;
++      if (var2 instanceof ServerPlayer) {
++         CriteriaTriggers.ITEM_PICKED_UP_BY_ENTITY.trigger((ServerPlayer)var2, var1.getItem(), this);
++      }
++
++   }
++
+    public void take(Entity var1, int var2) {
+       if (!var1.removed && !this.level.isClientSide && (var1 instanceof ItemEntity || var1 instanceof AbstractArrow || var1 instanceof ExperienceOrb)) {
+          ((ServerLevel)this.level).getChunkSource().broadcast(var1, new ClientboundTakeItemEntityPacket(var1.getId(), this.getId(), var2));
+       }
+ 
+@@ -2255,15 +2327,15 @@
     public boolean isPickable() {
        return !this.removed;
     }
@@ -1161,7 +1348,7 @@
     public float getYHeadRot() {
        return this.yHeadRot;
     }
-@@ -2309,10 +2326,11 @@
+@@ -2309,10 +2381,11 @@
     }
  
     private void updatingUsingItem() {
@@ -1173,7 +1360,7 @@
                 this.triggerItemUseEffects(this.useItem, 5);
              }
  
-@@ -2559,10 +2577,19 @@
+@@ -2559,10 +2632,19 @@
  
     public EntityDimensions getDimensions(Pose var1) {
        return var1 == Pose.SLEEPING ? SLEEPING_DIMENSIONS : super.getDimensions(var1).scale(this.getScale());
@@ -1193,7 +1380,52 @@
     }
  
     public void setSleepingPos(BlockPos var1) {
-@@ -2694,11 +2721,11 @@
+@@ -2593,11 +2675,11 @@
+       this.setDeltaMovement(Vec3.ZERO);
+       this.hasImpulse = true;
+    }
+ 
+    private void setPosToBed(BlockPos var1) {
+-      this.setPos((double)var1.getX() + 0.5D, (double)((float)var1.getY() + 0.6875F), (double)var1.getZ() + 0.5D);
++      this.setPos((double)var1.getX() + 0.5D, (double)var1.getY() + 0.6875D, (double)var1.getZ() + 0.5D);
+    }
+ 
+    private boolean checkBedExists() {
+       return (Boolean)this.getSleepingPos().map((var1) -> {
+          return this.level.getBlockState(var1).getBlock() instanceof BedBlock;
+@@ -2606,23 +2688,25 @@
+ 
+    public void stopSleeping() {
+       Optional var10000 = this.getSleepingPos();
+       Level var10001 = this.level;
+       var10001.getClass();
+-      var10000.filter(var10001::hasChunkAt).ifPresent((var1) -> {
+-         BlockState var2 = this.level.getBlockState(var1);
++      var10000.filter(var10001::hasChunkAt).ifPresent((var1x) -> {
++         BlockState var2 = this.level.getBlockState(var1x);
+          if (var2.getBlock() instanceof BedBlock) {
+-            this.level.setBlock(var1, (BlockState)var2.setValue(BedBlock.OCCUPIED, false), 3);
+-            Vec3 var3 = (Vec3)BedBlock.findStandUpPosition(this.getType(), this.level, var1, 0).orElseGet(() -> {
+-               BlockPos var1x = var1.above();
+-               return new Vec3((double)var1x.getX() + 0.5D, (double)var1x.getY() + 0.1D, (double)var1x.getZ() + 0.5D);
++            this.level.setBlock(var1x, (BlockState)var2.setValue(BedBlock.OCCUPIED, false), 3);
++            Vec3 var3 = (Vec3)BedBlock.findStandUpPosition(this.getType(), this.level, var1x, 0).orElseGet(() -> {
++               BlockPos var1 = var1x.above();
++               return new Vec3((double)var1.getX() + 0.5D, (double)var1.getY() + 0.1D, (double)var1.getZ() + 0.5D);
+             });
+             this.setPos(var3.x, var3.y, var3.z);
+          }
+ 
+       });
++      Vec3 var1 = this.position();
+       this.setPose(Pose.STANDING);
++      this.setPos(var1.x, var1.y, var1.z);
+       this.clearSleepingPos();
+    }
+ 
+    public boolean isInWall() {
+       return !this.isSleeping() && super.isInWall();
+@@ -2694,11 +2778,11 @@
     public void broadcastBreakEvent(InteractionHand var1) {
        this.broadcastBreakEvent(var1 == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
     }

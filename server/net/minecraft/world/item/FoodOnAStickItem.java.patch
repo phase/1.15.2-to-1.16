@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/FoodOnAStickItem.java
 +++ net/minecraft/world/item/FoodOnAStickItem.java
-@@ -1,0 +1,49 @@
+@@ -1,0 +1,48 @@
 +package net.minecraft.world.item;
 +
 +import net.minecraft.stats.Stats;
@@ -34,14 +34,13 @@
 +               var4.hurtAndBreak(this.consumeItemDamage, var2, (var1x) -> {
 +                  var1x.broadcastBreakEvent(var3);
 +               });
-+               var2.swing(var3, true);
 +               if (var4.isEmpty()) {
 +                  ItemStack var7 = new ItemStack(Items.FISHING_ROD);
 +                  var7.setTag(var4.getTag());
-+                  return InteractionResultHolder.consume(var7);
++                  return InteractionResultHolder.success(var7);
 +               }
 +
-+               return InteractionResultHolder.consume(var4);
++               return InteractionResultHolder.success(var4);
 +            }
 +         }
 +

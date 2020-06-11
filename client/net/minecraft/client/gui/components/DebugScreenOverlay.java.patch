@@ -326,9 +326,10 @@
     }
  
     private Level getLevel() {
-       return (Level)DataFixUtils.orElse(Optional.ofNullable(this.minecraft.getSingleplayerServer()).map((var1) -> {
+-      return (Level)DataFixUtils.orElse(Optional.ofNullable(this.minecraft.getSingleplayerServer()).map((var1) -> {
 -         return var1.getLevel(this.minecraft.level.dimension.getType());
-+         return var1.getLevel(this.minecraft.level.dimension());
++      return (Level)DataFixUtils.orElse(Optional.ofNullable(this.minecraft.getSingleplayerServer()).flatMap((var1) -> {
++         return Optional.ofNullable(var1.getLevel(this.minecraft.level.dimension()));
        }), this.minecraft.level);
     }
  

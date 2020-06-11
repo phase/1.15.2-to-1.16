@@ -1,14 +1,17 @@
 --- net/minecraft/world/level/block/RespawnAnchorBlock.java
 +++ net/minecraft/world/level/block/RespawnAnchorBlock.java
-@@ -1,0 +1,133 @@
+@@ -1,0 +1,171 @@
 +package net.minecraft.world.level.block;
 +
 +import java.util.Iterator;
 +import java.util.Optional;
++import java.util.stream.Stream;
 +import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
 +import net.minecraft.server.level.ServerPlayer;
 +import net.minecraft.sounds.SoundEvents;
 +import net.minecraft.sounds.SoundSource;
++import net.minecraft.tags.FluidTags;
 +import net.minecraft.util.Mth;
 +import net.minecraft.world.InteractionHand;
 +import net.minecraft.world.InteractionResult;
@@ -19,7 +22,9 @@
 +import net.minecraft.world.item.ItemStack;
 +import net.minecraft.world.item.Items;
 +import net.minecraft.world.level.BlockGetter;
++import net.minecraft.world.level.DefaultExplosionDamageCalculator;
 +import net.minecraft.world.level.Explosion;
++import net.minecraft.world.level.ExplosionDamageCalculator;
 +import net.minecraft.world.level.Level;
 +import net.minecraft.world.level.LevelReader;
 +import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -27,6 +32,7 @@
 +import net.minecraft.world.level.block.state.StateDefinition;
 +import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 +import net.minecraft.world.level.block.state.properties.IntegerProperty;
++import net.minecraft.world.level.material.FluidState;
 +import net.minecraft.world.level.pathfinder.PathComputationType;
 +import net.minecraft.world.phys.BlockHitResult;
 +import net.minecraft.world.phys.Vec3;
@@ -54,8 +60,7 @@
 +         return InteractionResult.PASS;
 +      } else if (!canSetSpawn(var2)) {
 +         if (!var2.isClientSide) {
-+            var2.removeBlock(var3, false);
-+            var2.explode((Entity)null, DamageSource.badRespawnPointExplosion(), (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);
++            this.explode(var1, var2, var3);
 +         }
 +
 +         return InteractionResult.sidedSuccess(var2.isClientSide);
@@ -81,8 +86,45 @@
 +      return (Integer)var0.getValue(CHARGE) < 4;
 +   }
 +
++   private static boolean isWaterThatWouldFlow(BlockPos var0, Level var1) {
++      FluidState var2 = var1.getFluidState(var0);
++      if (!var2.is(FluidTags.WATER)) {
++         return false;
++      } else if (var2.isSource()) {
++         return true;
++      } else {
++         float var3 = (float)var2.getAmount();
++         if (var3 < 2.0F) {
++            return false;
++         } else {
++            FluidState var4 = var1.getFluidState(var0.below());
++            return !var4.is(FluidTags.WATER);
++         }
++      }
++   }
++
++   private void explode(BlockState var1, Level var2, final BlockPos var3) {
++      var2.removeBlock(var3, false);
++      Stream var10000 = Direction.Plane.HORIZONTAL.stream();
++      var3.getClass();
++      boolean var4 = var10000.map(var3::relative).anyMatch((var1x) -> {
++         return isWaterThatWouldFlow(var1x, var2);
++      });
++      final boolean var5 = var4 || var2.getFluidState(var3.above()).is(FluidTags.WATER);
++      ExplosionDamageCalculator var6 = new ExplosionDamageCalculator() {
++         public Optional<Float> getBlockExplosionResistance(Explosion var1, BlockGetter var2, BlockPos var3x, BlockState var4, FluidState var5x) {
++            return var3x.equals(var3) && var5 ? Optional.of(Blocks.WATER.getExplosionResistance()) : DefaultExplosionDamageCalculator.INSTANCE.getBlockExplosionResistance(var1, var2, var3x, var4, var5x);
++         }
++
++         public boolean shouldBlockExplode(Explosion var1, BlockGetter var2, BlockPos var3x, BlockState var4, float var5x) {
++            return DefaultExplosionDamageCalculator.INSTANCE.shouldBlockExplode(var1, var2, var3x, var4, var5x);
++         }
++      };
++      var2.explode((Entity)null, DamageSource.badRespawnPointExplosion(), var6, (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);
++   }
++
 +   public static boolean canSetSpawn(Level var0) {
-+      return var0.dimensionType().isNether();
++      return var0.dimensionType().respawnAnchorWorks();
 +   }
 +
 +   public static void charge(Level var0, BlockPos var1, BlockState var2) {
@@ -120,10 +162,6 @@
 +      } while(!var5.isPresent());
 +
 +      return var5;
-+   }
-+
-+   public boolean useShapeForLightOcclusion(BlockState var1) {
-+      return true;
 +   }
 +
 +   public boolean isPathfindable(BlockState var1, BlockGetter var2, BlockPos var3, PathComputationType var4) {

@@ -35,58 +35,22 @@
     private final Map<UUID, GossipContainer.EntityGossips> gossips = Maps.newHashMap();
  
     public GossipContainer() {
-@@ -83,11 +85,11 @@
-    public void transferFrom(GossipContainer var1, Random var2, int var3) {
-       Collection var4 = var1.selectGossipsForTransfer(var2, var3);
-       var4.forEach((var1x) -> {
-          int var2 = var1x.value - var1x.type.decayPerTransfer;
-          if (var2 >= 2) {
--            this.getOrCreate(var1x.target).entries.mergeInt(var1x.type, var2, GossipContainer::mergeValuesForTransfer);
-+            this.getOrCreate(var1x.target.value()).entries.mergeInt(var1x.type, var2, GossipContainer::mergeValuesForTransfer);
-          }
- 
-       });
-    }
- 
-@@ -113,12 +115,14 @@
+@@ -113,11 +115,13 @@
           return var1x.store(var1);
        }).map(Dynamic::getValue)));
     }
  
     public void update(Dynamic<?> var1) {
 -      var1.asStream().map(GossipContainer.GossipEntry::load).flatMap(Util::toStream).forEach((var1x) -> {
--         this.getOrCreate(var1x.target).entries.put(var1x.type, var1x.value);
 +      var1.asStream().map(GossipContainer.GossipEntry::load).flatMap((var0) -> {
 +         return Util.toStream(var0.result());
 +      }).forEach((var1x) -> {
-+         this.getOrCreate(var1x.target.value()).entries.put(var1x.type, var1x.value);
+          this.getOrCreate(var1x.target).entries.put(var1x.type, var1x.value);
        });
     }
  
     private static int mergeValuesForTransfer(int var0, int var1) {
-       return Math.max(var0, var1);
-@@ -185,15 +189,19 @@
-          this.entries.removeInt(var1);
-       }
-    }
- 
-    static class GossipEntry {
--      public final UUID target;
-+      public final SerializableUUID target;
-       public final GossipType type;
-       public final int value;
- 
-       public GossipEntry(UUID var1, GossipType var2, int var3) {
-+         this(new SerializableUUID(var1), var2, var3);
-+      }
-+
-+      public GossipEntry(SerializableUUID var1, GossipType var2, int var3) {
-          this.target = var1;
-          this.type = var2;
-          this.value = var3;
-       }
- 
-@@ -204,19 +212,13 @@
+@@ -204,19 +208,13 @@
        public String toString() {
           return "GossipEntry{target=" + this.target + ", type=" + this.type + ", value=" + this.value + '}';
        }

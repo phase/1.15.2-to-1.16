@@ -1,0 +1,29 @@
+--- net/minecraft/client/renderer/blockentity/BannerRenderer.java
++++ net/minecraft/client/renderer/blockentity/BannerRenderer.java
+@@ -82,16 +82,20 @@
+          var3.popPose();
+       }
+    }
+ 
+    public static void renderPatterns(PoseStack var0, MultiBufferSource var1, int var2, int var3, ModelPart var4, Material var5, boolean var6, List<Pair<BannerPattern, DyeColor>> var7) {
+-      var4.render(var0, var5.buffer(var1, RenderType::entitySolid), var2, var3);
++      renderPatterns(var0, var1, var2, var3, var4, var5, var6, var7, false);
++   }
+ 
+-      for(int var8 = 0; var8 < 17 && var8 < var7.size(); ++var8) {
+-         Pair var9 = (Pair)var7.get(var8);
+-         float[] var10 = ((DyeColor)var9.getSecond()).getTextureDiffuseColors();
+-         Material var11 = new Material(var6 ? Sheets.BANNER_SHEET : Sheets.SHIELD_SHEET, ((BannerPattern)var9.getFirst()).location(var6));
+-         var4.render(var0, var11.buffer(var1, RenderType::entityNoOutline), var2, var3, var10[0], var10[1], var10[2], 1.0F);
++   public static void renderPatterns(PoseStack var0, MultiBufferSource var1, int var2, int var3, ModelPart var4, Material var5, boolean var6, List<Pair<BannerPattern, DyeColor>> var7, boolean var8) {
++      var4.render(var0, var5.buffer(var1, RenderType::entitySolid, var8), var2, var3);
++
++      for(int var9 = 0; var9 < 17 && var9 < var7.size(); ++var9) {
++         Pair var10 = (Pair)var7.get(var9);
++         float[] var11 = ((DyeColor)var10.getSecond()).getTextureDiffuseColors();
++         Material var12 = new Material(var6 ? Sheets.BANNER_SHEET : Sheets.SHIELD_SHEET, ((BannerPattern)var10.getFirst()).location(var6));
++         var4.render(var0, var12.buffer(var1, RenderType::entityNoOutline), var2, var3, var11[0], var11[1], var11[2], 1.0F);
+       }
+ 
+    }
+ }

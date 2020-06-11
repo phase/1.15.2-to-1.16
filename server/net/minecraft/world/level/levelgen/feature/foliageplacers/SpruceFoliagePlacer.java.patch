@@ -73,7 +73,7 @@
 -   public int foliageRadius(Random var1, int var2, int var3, SmallTreeConfiguration var4) {
 -      return this.radius + var1.nextInt(this.radiusRandom + 1);
 +   public int foliageHeight(Random var1, int var2, TreeConfiguration var3) {
-+      return var2 - this.trunkHeight - var1.nextInt(this.trunkHeightRandom + 1);
++      return Math.max(4, var2 - this.trunkHeight - var1.nextInt(this.trunkHeightRandom + 1));
     }
  
 -   protected boolean shouldSkipLocation(Random var1, int var2, int var3, int var4, int var5, int var6) {

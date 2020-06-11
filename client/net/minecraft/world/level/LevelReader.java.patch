@@ -1,6 +1,14 @@
 --- net/minecraft/world/level/LevelReader.java
 +++ net/minecraft/world/level/LevelReader.java
-@@ -8,11 +8,11 @@
+@@ -1,18 +1,19 @@
+ package net.minecraft.world.level;
+ 
++import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.tags.FluidTags;
+ import net.minecraft.util.Mth;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.biome.BiomeManager;
  import net.minecraft.world.level.block.state.BlockState;
@@ -13,7 +21,28 @@
  
  public interface LevelReader extends BlockAndTintGetter, CollisionGetter, BiomeManager.NoiseBiomeSource {
     @Nullable
-@@ -42,13 +42,14 @@
+@@ -29,10 +30,20 @@
+ 
+    default Biome getBiome(BlockPos var1) {
+       return this.getBiomeManager().getBiome(var1);
+    }
+ 
++   default Stream<BlockState> getBlockStatesIfLoaded(AABB var1) {
++      int var2 = Mth.floor(var1.minX);
++      int var3 = Mth.floor(var1.maxX);
++      int var4 = Mth.floor(var1.minY);
++      int var5 = Mth.floor(var1.maxY);
++      int var6 = Mth.floor(var1.minZ);
++      int var7 = Mth.floor(var1.maxZ);
++      return this.hasChunksAt(var2, var4, var6, var3, var5, var7) ? this.getBlockStates(var1) : Stream.empty();
++   }
++
+    default int getBlockTint(BlockPos var1, ColorResolver var2) {
+       return var2.getColor(this.getBiome(var1), (double)var1.getX(), (double)var1.getZ());
+    }
+ 
+    default Biome getNoiseBiome(int var1, int var2, int var3) {
+@@ -42,13 +53,14 @@
  
     Biome getUncachedNoiseBiome(int var1, int var2, int var3);
  
@@ -29,7 +58,7 @@
        return new BlockPos(var2.getX(), this.getHeight(var1, var2.getX(), var2.getZ()), var2.getZ());
     }
  
-@@ -76,11 +77,11 @@
+@@ -76,11 +88,11 @@
        }
     }
  
@@ -42,7 +71,7 @@
     default int getDirectSignal(BlockPos var1, Direction var2) {
        return this.getBlockState(var1).getDirectSignal(this, var1, var2);
     }
-@@ -111,41 +112,21 @@
+@@ -111,41 +123,21 @@
        int var3 = Mth.ceil(var1.maxX);
        int var4 = Mth.floor(var1.minY);
        int var5 = Mth.ceil(var1.maxY);

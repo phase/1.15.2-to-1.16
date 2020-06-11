@@ -1,6 +1,6 @@
 --- net/minecraft/tags/StaticTagHelper.java
 +++ net/minecraft/tags/StaticTagHelper.java
-@@ -1,0 +1,92 @@
+@@ -1,0 +1,96 @@
 +package net.minecraft.tags;
 +
 +import com.google.common.collect.ImmutableSet;
@@ -34,7 +34,7 @@
 +
 +   public void resetToEmpty() {
 +      this.source = this.empty;
-+      Tag var1 = this.empty.getEmptyTag();
++      SetTag var1 = SetTag.empty();
 +      this.wrappers.forEach((var1x) -> {
 +         var1x.rebind((var1xx) -> {
 +            return var1;
@@ -53,13 +53,17 @@
 +      return this.source;
 +   }
 +
++   public List<StaticTagHelper.Wrapper<T>> getWrappers() {
++      return this.wrappers;
++   }
++
 +   public Set<ResourceLocation> getMissingTags(TagCollection<T> var1) {
 +      Set var2 = (Set)this.wrappers.stream().map(StaticTagHelper.Wrapper::getName).collect(Collectors.toSet());
 +      ImmutableSet var3 = ImmutableSet.copyOf(var1.getAvailableTags());
 +      return Sets.difference(var2, var3);
 +   }
 +
-+   static class Wrapper<T> implements Tag.Named<T> {
++   public static class Wrapper<T> implements Tag.Named<T> {
 +      @Nullable
 +      private Tag<T> tag;
 +      protected final ResourceLocation name;

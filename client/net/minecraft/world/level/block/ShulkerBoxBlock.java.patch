@@ -95,7 +95,7 @@
 -               var4.openMenu(var10);
 +               var4.openMenu(var8);
                 var4.awardStat(Stats.OPEN_SHULKER_BOX);
-+               PiglinAi.angerNearbyPiglinsThatSee(var4);
++               PiglinAi.angerNearbyPiglins(var4, true);
              }
  
 -            return InteractionResult.SUCCESS;
@@ -138,7 +138,7 @@
                    if (var7 <= 4) {
                       ++var7;
 -                     Component var11 = var10.getHoverName().deepCopy();
-+                     MutableComponent var11 = var10.getHoverName().mutableCopy();
++                     MutableComponent var11 = var10.getHoverName().copy();
                       var11.append(" x").append(String.valueOf(var10.getCount()));
                       var3.add(var11);
                    }

@@ -125,7 +125,7 @@
  
           return var6;
        }
-@@ -287,12 +304,12 @@
+@@ -287,16 +304,16 @@
           var4.awardStat(Stats.ITEM_USED.get(var5));
        }
  
@@ -137,9 +137,15 @@
 +      return this.getItem().isCorrectToolForDrops(var1);
     }
  
-    public boolean interactEnemy(Player var1, LivingEntity var2, InteractionHand var3) {
-       return this.getItem().interactEnemy(this, var1, var2, var3);
+-   public boolean interactEnemy(Player var1, LivingEntity var2, InteractionHand var3) {
+-      return this.getItem().interactEnemy(this, var1, var2, var3);
++   public InteractionResult interactLivingEntity(Player var1, LivingEntity var2, InteractionHand var3) {
++      return this.getItem().interactLivingEntity(this, var1, var2, var3);
     }
+ 
+    public ItemStack copy() {
+       if (this.isEmpty()) {
+          return EMPTY;
 @@ -469,11 +486,11 @@
  
     public Component getHoverName() {
@@ -362,7 +368,7 @@
 -            if (var6 != null && (!var5.contains("Slot", 8) || var5.getString("Slot").equals(var1.getName())) && var6.getId().getLeastSignificantBits() != 0L && var6.getId().getMostSignificantBits() != 0L) {
 -               ((Multimap)var2).put(var5.getString("AttributeName"), var6);
 +            if (!var5.contains("Slot", 8) || var5.getString("Slot").equals(var1.getName())) {
-+               Optional var6 = Registry.ATTRIBUTES.getOptional(ResourceLocation.tryParse(var5.getString("AttributeName")));
++               Optional var6 = Registry.ATTRIBUTE.getOptional(ResourceLocation.tryParse(var5.getString("AttributeName")));
 +               if (var6.isPresent()) {
 +                  AttributeModifier var7 = AttributeModifier.load(var5);
 +                  if (var7 != null && var7.getId().getLeastSignificantBits() != 0L && var7.getId().getMostSignificantBits() != 0L) {
@@ -392,7 +398,7 @@
 -      CompoundTag var5 = SharedMonsterAttributes.saveAttributeModifier(var2);
 -      var5.putString("AttributeName", var1);
 +      CompoundTag var5 = var2.save();
-+      var5.putString("AttributeName", Registry.ATTRIBUTES.getKey(var1).toString());
++      var5.putString("AttributeName", Registry.ATTRIBUTE.getKey(var1).toString());
        if (var3 != null) {
           var5.putString("Slot", var3.getName());
        }

@@ -12,7 +12,7 @@
     public int time;
     public float flip;
     public float oFlip;
-@@ -34,14 +35,14 @@
+@@ -34,22 +35,22 @@
        }
  
        return var1;
@@ -31,6 +31,15 @@
     }
  
     public void tick() {
+       this.oOpen = this.open;
+       this.oRot = this.rot;
+-      Player var1 = this.level.getNearestPlayer((double)((float)this.worldPosition.getX() + 0.5F), (double)((float)this.worldPosition.getY() + 0.5F), (double)((float)this.worldPosition.getZ() + 0.5F), 3.0D, false);
++      Player var1 = this.level.getNearestPlayer((double)this.worldPosition.getX() + 0.5D, (double)this.worldPosition.getY() + 0.5D, (double)this.worldPosition.getZ() + 0.5D, 3.0D, false);
+       if (var1 != null) {
+          double var2 = var1.getX() - ((double)this.worldPosition.getX() + 0.5D);
+          double var4 = var1.getZ() - ((double)this.worldPosition.getZ() + 0.5D);
+          this.tRot = (float)Mth.atan2(var4, var2);
+          this.open += 0.1F;
 @@ -99,11 +100,11 @@
        this.flipA += (var3 - this.flipA) * 0.9F;
        this.flip += this.flipA;

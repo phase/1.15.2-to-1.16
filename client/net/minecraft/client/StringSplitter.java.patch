@@ -1,6 +1,6 @@
 --- net/minecraft/client/StringSplitter.java
 +++ net/minecraft/client/StringSplitter.java
-@@ -1,0 +1,411 @@
+@@ -1,0 +1,422 @@
 +package net.minecraft.client;
 +
 +import com.google.common.collect.Lists;
@@ -175,53 +175,64 @@
 +   }
 +
 +   public List<FormattedText> splitLines(FormattedText var1, int var2, Style var3) {
-+      ArrayList var4 = Lists.newArrayList();
++      return this.splitLines(var1, var2, var3, (FormattedText)null);
++   }
++
++   public List<FormattedText> splitLines(FormattedText var1, int var2, Style var3, @Nullable FormattedText var4) {
 +      ArrayList var5 = Lists.newArrayList();
++      ArrayList var6 = Lists.newArrayList();
 +      var1.visit((var1x, var2x) -> {
 +         if (!var2x.isEmpty()) {
-+            var5.add(new StringSplitter.LineComponent(var2x, var1x));
++            var6.add(new StringSplitter.LineComponent(var2x, var1x));
 +         }
 +
 +         return Optional.empty();
 +      }, var3);
-+      StringSplitter.FlatComponents var6 = new StringSplitter.FlatComponents(var5);
-+      boolean var7 = true;
-+      boolean var8 = false;
++      StringSplitter.FlatComponents var7 = new StringSplitter.FlatComponents(var6);
++      boolean var8 = true;
++      boolean var9 = false;
++      boolean var10 = false;
 +
 +      while(true) {
-+         while(var7) {
-+            var7 = false;
-+            StringSplitter.LineBreakFinder var9 = new StringSplitter.LineBreakFinder((float)var2);
-+            Iterator var10 = var6.parts.iterator();
++         while(var8) {
++            var8 = false;
++            StringSplitter.LineBreakFinder var11 = new StringSplitter.LineBreakFinder((float)var2);
++            Iterator var12 = var7.parts.iterator();
 +
-+            while(var10.hasNext()) {
-+               StringSplitter.LineComponent var11 = (StringSplitter.LineComponent)var10.next();
-+               boolean var12 = StringDecomposer.iterateFormatted(var11.contents, 0, var11.style, var3, var9);
-+               if (!var12) {
-+                  int var13 = var9.getSplitPosition();
-+                  Style var14 = var9.getSplitStyle();
-+                  char var15 = var6.charAt(var13);
-+                  boolean var16 = var15 == '\n';
-+                  boolean var17 = var16 || var15 == ' ';
-+                  var8 = var16;
-+                  var4.add(var6.splitAt(var13, var17 ? 1 : 0, var14));
-+                  var7 = true;
++            while(var12.hasNext()) {
++               StringSplitter.LineComponent var13 = (StringSplitter.LineComponent)var12.next();
++               boolean var14 = StringDecomposer.iterateFormatted(var13.contents, 0, var13.style, var3, var11);
++               if (!var14) {
++                  int var15 = var11.getSplitPosition();
++                  Style var16 = var11.getSplitStyle();
++                  char var17 = var7.charAt(var15);
++                  boolean var18 = var17 == '\n';
++                  boolean var19 = var18 || var17 == ' ';
++                  var9 = var18;
++                  FormattedText var20 = var7.splitAt(var15, var19 ? 1 : 0, var16);
++                  var5.add(this.formattedLine(var20, var10, var4));
++                  var10 = !var18;
++                  var8 = true;
 +                  break;
 +               }
 +
-+               var9.addToOffset(var11.contents.length());
++               var11.addToOffset(var13.contents.length());
 +            }
 +         }
 +
-+         FormattedText var18 = var6.getRemainder();
-+         if (var18 != null) {
-+            var4.add(var18);
-+         } else if (var8) {
-+            var4.add(FormattedText.EMPTY);
++         FormattedText var21 = var7.getRemainder();
++         if (var21 != null) {
++            var5.add(this.formattedLine(var21, var10, var4));
++         } else if (var9) {
++            var5.add(FormattedText.EMPTY);
 +         }
 +
-+         return var4;
++         return var5;
 +      }
++   }
++
++   private FormattedText formattedLine(FormattedText var1, boolean var2, FormattedText var3) {
++      return var2 && var3 != null ? FormattedText.composite(var3, var1) : var1;
 +   }
 +
 +   static class FlatComponents {

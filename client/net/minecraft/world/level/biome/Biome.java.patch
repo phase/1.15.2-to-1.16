@@ -454,7 +454,7 @@
  
 +   public static class ClimateParameters {
 +      public static final Codec<Biome.ClimateParameters> CODEC = RecordCodecBuilder.create((var0) -> {
-+         return var0.group(Codec.FLOAT.fieldOf("temparature").forGetter((var0x) -> {
++         return var0.group(Codec.FLOAT.fieldOf("temperature").forGetter((var0x) -> {
 +            return var0x.temperature;
 +         }), Codec.FLOAT.fieldOf("humidity").forGetter((var0x) -> {
 +            return var0x.humidity;

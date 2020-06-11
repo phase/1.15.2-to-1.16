@@ -11,7 +11,30 @@
  import net.minecraft.CrashReportCategory;
  import net.minecraft.ReportedException;
  import net.minecraft.commands.CommandSource;
-@@ -39,11 +40,11 @@
+@@ -12,20 +13,22 @@
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.util.StringUtil;
++import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public abstract class BaseCommandBlock implements CommandSource {
+    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
+    private static final Component DEFAULT_NAME = new TextComponent("@");
+    private long lastExecution = -1L;
+    private boolean updateLastExecution = true;
+    private int successCount;
+    private boolean trackOutput = true;
++   @Nullable
+    private Component lastOutput;
+    private String command = "";
+    private Component name;
+ 
+    public BaseCommandBlock() {
+@@ -39,11 +42,11 @@
     public void setSuccessCount(int var1) {
        this.successCount = var1;
     }
@@ -24,20 +47,20 @@
     public CompoundTag save(CompoundTag var1) {
        var1.putString("Command", this.command);
        var1.putInt("SuccessCount", this.successCount);
-@@ -110,11 +111,11 @@
+@@ -110,11 +113,11 @@
              this.successCount = 1;
              return true;
           } else {
              this.successCount = 0;
              MinecraftServer var2 = this.getLevel().getServer();
 -            if (var2 != null && var2.isInitialized() && var2.isCommandBlockEnabled() && !StringUtil.isNullOrEmpty(this.command)) {
-+            if (var2 != null && var2.isCommandBlockEnabled() && !StringUtil.isNullOrEmpty(this.command)) {
++            if (var2.isCommandBlockEnabled() && !StringUtil.isNullOrEmpty(this.command)) {
                 try {
                    this.lastOutput = null;
                    CommandSourceStack var3 = this.createCommandSourceStack().withCallback((var1x, var2x, var3x) -> {
                       if (var2x) {
                          ++this.successCount;
-@@ -157,11 +158,11 @@
+@@ -157,11 +160,11 @@
           this.name = DEFAULT_NAME;
        }
  
@@ -49,4 +72,27 @@
           this.lastOutput = (new TextComponent("[" + TIME_FORMAT.format(new Date()) + "] ")).append(var1);
           this.onUpdated();
        }
+ 
+@@ -181,19 +184,19 @@
+ 
+    public boolean isTrackOutput() {
+       return this.trackOutput;
+    }
+ 
+-   public boolean usedBy(Player var1) {
++   public InteractionResult usedBy(Player var1) {
+       if (!var1.canUseGameMasterBlocks()) {
+-         return false;
++         return InteractionResult.PASS;
+       } else {
+          if (var1.getCommandSenderWorld().isClientSide) {
+             var1.openMinecartCommandBlock(this);
+          }
+ 
+-         return true;
++         return InteractionResult.sidedSuccess(var1.level.isClientSide);
+       }
+    }
+ 
+    public abstract Vec3 getPosition();
  

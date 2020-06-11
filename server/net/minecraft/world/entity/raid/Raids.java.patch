@@ -47,7 +47,7 @@
 -         DimensionType var2 = var1.level.getDimension().getType();
 -         if (var2 == DimensionType.NETHER) {
 +         DimensionType var2 = var1.level.dimensionType();
-+         if (var2.isNether()) {
++         if (!var2.hasRaids()) {
              return null;
           } else {
 -            BlockPos var3 = new BlockPos(var1);

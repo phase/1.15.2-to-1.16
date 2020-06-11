@@ -34,7 +34,7 @@
           this.isListening = true;
        } else if (this.isListening && !this.minecraft.options.showSubtitles) {
           this.minecraft.getSoundManager().removeListener(this);
-@@ -33,71 +36,71 @@
+@@ -33,99 +36,99 @@
  
        if (this.isListening && !this.subtitles.isEmpty()) {
           RenderSystem.pushMatrix();
@@ -143,8 +143,16 @@
  
              while(var4.hasNext()) {
                 SubtitleOverlay.Subtitle var5 = (SubtitleOverlay.Subtitle)var4.next();
-@@ -111,21 +114,21 @@
-          this.subtitles.add(new SubtitleOverlay.Subtitle(var3, new Vec3((double)var1.getX(), (double)var1.getY(), (double)var1.getZ())));
+                if (var5.getText().equals(var3)) {
+-                  var5.refresh(new Vec3((double)var1.getX(), (double)var1.getY(), (double)var1.getZ()));
++                  var5.refresh(new Vec3(var1.getX(), var1.getY(), var1.getZ()));
+                   return;
+                }
+             }
+          }
+ 
+-         this.subtitles.add(new SubtitleOverlay.Subtitle(var3, new Vec3((double)var1.getX(), (double)var1.getY(), (double)var1.getZ())));
++         this.subtitles.add(new SubtitleOverlay.Subtitle(var3, new Vec3(var1.getX(), var1.getY(), var1.getZ())));
        }
     }
  

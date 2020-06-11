@@ -1,6 +1,6 @@
 --- net/minecraft/server/packs/repository/PackRepository.java
 +++ net/minecraft/server/packs/repository/PackRepository.java
-@@ -1,107 +1,107 @@
+@@ -1,107 +1,109 @@
  package net.minecraft.server.packs.repository;
  
  import com.google.common.base.Functions;
@@ -23,25 +23,27 @@
  import java.util.stream.Collectors;
  import java.util.stream.Stream;
  import javax.annotation.Nullable;
-+import net.minecraft.server.packs.Pack;
++import net.minecraft.server.packs.PackResources;
  
- public class PackRepository<T extends UnopenedPack> implements AutoCloseable {
+-public class PackRepository<T extends UnopenedPack> implements AutoCloseable {
 -   private final Set<RepositorySource> sources = Sets.newHashSet();
 -   private final Map<String, T> available = Maps.newLinkedHashMap();
 -   private final List<T> selected = Lists.newLinkedList();
+-   private final UnopenedPack.UnopenedPackConstructor<T> constructor;
++public class PackRepository<T extends Pack> implements AutoCloseable {
 +   private final Set<RepositorySource> sources;
 +   private Map<String, T> available = ImmutableMap.of();
 +   private List<T> selected = ImmutableList.of();
-    private final UnopenedPack.UnopenedPackConstructor<T> constructor;
++   private final Pack.PackConstructor<T> constructor;
  
 -   public PackRepository(UnopenedPack.UnopenedPackConstructor<T> var1) {
-+   public PackRepository(UnopenedPack.UnopenedPackConstructor<T> var1, RepositorySource... var2) {
++   public PackRepository(Pack.PackConstructor<T> var1, RepositorySource... var2) {
        this.constructor = var1;
 +      this.sources = ImmutableSet.copyOf(var2);
     }
  
     public void reload() {
-+      List var1 = (List)this.selected.stream().map(UnopenedPack::getId).collect(ImmutableList.toImmutableList());
++      List var1 = (List)this.selected.stream().map(Pack::getId).collect(ImmutableList.toImmutableList());
        this.close();
 -      Set var1 = (Set)this.selected.stream().map(UnopenedPack::getId).collect(Collectors.toCollection(LinkedHashSet::new));
 -      this.available.clear();
@@ -57,7 +59,9 @@
        while(var2.hasNext()) {
           RepositorySource var3 = (RepositorySource)var2.next();
 -         var3.loadPacks(this.available, this.constructor);
-+         var3.loadPacks(var1, this.constructor);
++         var3.loadPacks((var1x) -> {
++            Pack var10000 = (Pack)var1.put(var1x.getId(), var1x);
++         }, this.constructor);
        }
  
 -      this.sortAvailable();
@@ -101,7 +105,7 @@
 -         if (var3.isRequired() && !this.selected.contains(var3)) {
 -            var3.getDefaultPosition().insert(this.selected, var3, Functions.identity(), false);
 +      while(var3.hasNext()) {
-+         UnopenedPack var4 = (UnopenedPack)var3.next();
++         Pack var4 = (Pack)var3.next();
 +         if (var4.isRequired() && !var2.contains(var4)) {
 +            var4.getDefaultPosition().insert(var2, var4, Functions.identity(), false);
           }
@@ -131,7 +135,7 @@
 -      var1.removeAll(this.selected);
 -      return var1;
 +   public Collection<String> getSelectedIds() {
-+      return (Collection)this.selected.stream().map(UnopenedPack::getId).collect(ImmutableSet.toImmutableSet());
++      return (Collection)this.selected.stream().map(Pack::getId).collect(ImmutableSet.toImmutableSet());
     }
  
 -   public Collection<T> getSelected() {
@@ -141,22 +145,23 @@
  
     @Nullable
     public T getPack(String var1) {
-       return (UnopenedPack)this.available.get(var1);
+-      return (UnopenedPack)this.available.get(var1);
++      return (Pack)this.available.get(var1);
     }
  
 -   public void addSource(RepositorySource var1) {
 -      this.sources.add(var1);
--   }
--
-    public void close() {
-       this.available.values().forEach(UnopenedPack::close);
++   public void close() {
++      this.available.values().forEach(Pack::close);
     }
-+
+ 
+-   public void close() {
+-      this.available.values().forEach(UnopenedPack::close);
 +   public boolean isAvailable(String var1) {
 +      return this.available.containsKey(var1);
-+   }
+    }
 +
-+   public List<Pack> openAllSelected() {
-+      return (List)this.selected.stream().map(UnopenedPack::open).collect(ImmutableList.toImmutableList());
++   public List<PackResources> openAllSelected() {
++      return (List)this.selected.stream().map(Pack::open).collect(ImmutableList.toImmutableList());
 +   }
  }

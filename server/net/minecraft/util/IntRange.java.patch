@@ -1,6 +1,6 @@
 --- net/minecraft/util/IntRange.java
 +++ net/minecraft/util/IntRange.java
-@@ -1,0 +1,29 @@
+@@ -1,0 +1,37 @@
 +package net.minecraft.util;
 +
 +import java.util.Random;
@@ -24,6 +24,14 @@
 +
 +   public int randomValue(Random var1) {
 +      return this.minInclusive == this.maxInclusive ? this.minInclusive : var1.nextInt(this.maxInclusive - this.minInclusive + 1) + this.minInclusive;
++   }
++
++   public int getMinInclusive() {
++      return this.minInclusive;
++   }
++
++   public int getMaxInclusive() {
++      return this.maxInclusive;
 +   }
 +
 +   public String toString() {

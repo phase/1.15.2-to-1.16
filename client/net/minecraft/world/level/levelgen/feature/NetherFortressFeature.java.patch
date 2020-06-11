@@ -44,7 +44,7 @@
 -         return var5 != (var8 << 4) + 4 + var3.nextInt(8) ? false : var2.isBiomeValidStartForStructure(var6, this);
 -      }
 +   protected boolean isFeatureChunk(ChunkGenerator var1, BiomeSource var2, long var3, WorldgenRandom var5, int var6, int var7, Biome var8, ChunkPos var9, NoneFeatureConfiguration var10) {
-+      return var5.nextInt(6) < 2;
++      return var5.nextInt(5) < 2;
     }
  
 -   public StructureFeature.StructureStartFactory getStartFactory() {

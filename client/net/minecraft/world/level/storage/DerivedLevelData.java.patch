@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/storage/DerivedLevelData.java
 +++ net/minecraft/world/level/storage/DerivedLevelData.java
-@@ -1,34 +1,29 @@
+@@ -1,34 +1,26 @@
  package net.minecraft.world.level.storage;
  
 -import javax.annotation.Nullable;
@@ -13,23 +13,21 @@
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.GameType;
 -import net.minecraft.world.level.LevelType;
+-import net.minecraft.world.level.dimension.DimensionType;
 +import net.minecraft.world.level.border.WorldBorder;
- import net.minecraft.world.level.dimension.DimensionType;
  import net.minecraft.world.level.timers.TimerQueue;
  
 -public class DerivedLevelData extends LevelData {
 -   private final LevelData wrapped;
 +public class DerivedLevelData implements ServerLevelData {
-+   private final DimensionType dimensionType;
 +   private final WorldData worldData;
 +   private final ServerLevelData wrapped;
  
 -   public DerivedLevelData(LevelData var1) {
 -      this.wrapped = var1;
-+   public DerivedLevelData(DimensionType var1, WorldData var2, ServerLevelData var3) {
-+      this.dimensionType = var1;
-+      this.worldData = var2;
-+      this.wrapped = var3;
++   public DerivedLevelData(WorldData var1, ServerLevelData var2) {
++      this.worldData = var1;
++      this.wrapped = var2;
     }
  
 -   public CompoundTag createTag(@Nullable CompoundTag var1) {
@@ -45,7 +43,7 @@
     }
  
     public int getYSpawn() {
-@@ -45,24 +40,19 @@
+@@ -45,24 +37,19 @@
  
     public long getDayTime() {
        return this.wrapped.getDayTime();
@@ -74,7 +72,7 @@
     public boolean isThundering() {
        return this.wrapped.isThundering();
     }
-@@ -78,11 +68,11 @@
+@@ -78,11 +65,11 @@
     public int getRainTime() {
        return this.wrapped.getRainTime();
     }
@@ -87,7 +85,7 @@
     public void setXSpawn(int var1) {
     }
  
-@@ -99,16 +89,10 @@
+@@ -99,16 +86,10 @@
     }
  
     public void setSpawn(BlockPos var1) {
@@ -104,7 +102,7 @@
  
     public void setThunderTime(int var1) {
     }
-@@ -117,69 +101,68 @@
+@@ -117,69 +98,68 @@
     }
  
     public void setRainTime(int var1) {

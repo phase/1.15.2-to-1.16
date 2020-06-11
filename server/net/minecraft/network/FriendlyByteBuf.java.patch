@@ -52,3 +52,16 @@
        this.writeBytes(var1);
        return this;
     }
+@@ -319,11 +341,11 @@
+       Direction var2 = (Direction)this.readEnum(Direction.class);
+       float var3 = this.readFloat();
+       float var4 = this.readFloat();
+       float var5 = this.readFloat();
+       boolean var6 = this.readBoolean();
+-      return new BlockHitResult(new Vec3((double)((float)var1.getX() + var3), (double)((float)var1.getY() + var4), (double)((float)var1.getZ() + var5)), var2, var1, var6);
++      return new BlockHitResult(new Vec3((double)var1.getX() + (double)var3, (double)var1.getY() + (double)var4, (double)var1.getZ() + (double)var5), var2, var1, var6);
+    }
+ 
+    public void writeBlockHitResult(BlockHitResult var1) {
+       BlockPos var2 = var1.getBlockPos();
+       this.writeBlockPos(var2);

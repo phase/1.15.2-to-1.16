@@ -1,9 +1,12 @@
 --- net/minecraft/world/level/levelgen/DebugLevelSource.java
 +++ net/minecraft/world/level/levelgen/DebugLevelSource.java
-@@ -1,69 +1,82 @@
+@@ -1,69 +1,85 @@
  package net.minecraft.world.level.levelgen;
  
 +import com.mojang.serialization.Codec;
++import com.mojang.serialization.Decoder;
++import com.mojang.serialization.Encoder;
++import com.mojang.serialization.MapCodec;
  import java.util.List;
  import java.util.stream.Collectors;
  import java.util.stream.StreamSupport;
@@ -27,9 +30,9 @@
 -public class DebugLevelSource extends ChunkGenerator<DebugGeneratorSettings> {
 +public class DebugLevelSource extends ChunkGenerator {
 +   public static final DebugLevelSource INSTANCE = new DebugLevelSource();
-+   public static final Codec<DebugLevelSource> CODEC = Codec.unit(() -> {
++   public static final Codec<DebugLevelSource> CODEC = MapCodec.of(Encoder.empty(), Decoder.unit(() -> {
 +      return INSTANCE;
-+   }).stable();
++   })).stable().codec();
     private static final List<BlockState> ALL_BLOCKS;
     private static final int GRID_WIDTH;
     private static final int GRID_HEIGHT;

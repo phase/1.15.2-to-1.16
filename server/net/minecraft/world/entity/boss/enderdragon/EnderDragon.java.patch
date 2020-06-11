@@ -39,7 +39,7 @@
  import net.minecraft.world.level.material.Material;
  import net.minecraft.world.level.pathfinder.BinaryHeap;
  import net.minecraft.world.level.pathfinder.Node;
-@@ -86,22 +87,21 @@
+@@ -86,31 +87,30 @@
        super(EntityType.ENDER_DRAGON, var2);
        this.subEntities = new EnderDragonPart[]{this.head, this.neck, this.body, this.tail1, this.tail2, this.tail3, this.wing1, this.wing2};
        this.setHealth(this.getMaxHealth());
@@ -66,6 +66,42 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.getEntityData().define(DATA_PHASE, EnderDragonPhase.HOVERING.getId());
+    }
+ 
+    public double[] getLatencyPos(int var1, float var2) {
+-      if (this.getHealth() <= 0.0F) {
++      if (this.isDeadOrDying()) {
+          var2 = 0.0F;
+       }
+ 
+       var2 = 1.0F - var2;
+       int var3 = this.posPointer - var1 & 63;
+@@ -144,11 +144,11 @@
+             }
+          }
+       }
+ 
+       this.oFlapTime = this.flapTime;
+-      if (this.getHealth() <= 0.0F) {
++      if (this.isDeadOrDying()) {
+          var1 = (this.random.nextFloat() - 0.5F) * 8.0F;
+          var2 = (this.random.nextFloat() - 0.5F) * 4.0F;
+          float var32 = (this.random.nextFloat() - 0.5F) * 8.0F;
+          this.level.addParticle(ParticleTypes.EXPLOSION, this.getX() + (double)var1, this.getY() + 2.0D + (double)var2, this.getZ() + (double)var32, 0.0D, 0.0D, 0.0D);
+       } else {
+@@ -447,11 +447,11 @@
+             return false;
+          } else {
+             if (var2.getEntity() instanceof Player || var2.isExplosion()) {
+                float var4 = this.getHealth();
+                this.reallyHurt(var2, var3);
+-               if (this.getHealth() <= 0.0F && !this.phaseManager.getCurrentPhase().isSitting()) {
++               if (this.isDeadOrDying() && !this.phaseManager.getCurrentPhase().isSitting()) {
+                   this.setHealth(1.0F);
+                   this.phaseManager.setPhase(EnderDragonPhase.DYING);
+                }
+ 
+                if (this.phaseManager.getCurrentPhase().isSitting()) {
 @@ -511,12 +511,12 @@
        if (!this.level.isClientSide) {
           if (this.dragonDeathTime > 150 && this.dragonDeathTime % 5 == 0 && var4) {

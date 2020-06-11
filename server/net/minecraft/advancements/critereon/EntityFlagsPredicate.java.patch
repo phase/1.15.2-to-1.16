@@ -1,0 +1,18 @@
+--- net/minecraft/advancements/critereon/EntityFlagsPredicate.java
++++ net/minecraft/advancements/critereon/EntityFlagsPredicate.java
+@@ -105,10 +105,15 @@
+       public EntityFlagsPredicate.Builder setOnFire(@Nullable Boolean var1) {
+          this.isOnFire = var1;
+          return this;
+       }
+ 
++      public EntityFlagsPredicate.Builder setIsBaby(@Nullable Boolean var1) {
++         this.isBaby = var1;
++         return this;
++      }
++
+       public EntityFlagsPredicate build() {
+          return new EntityFlagsPredicate(this.isOnFire, this.isCrouching, this.isSprinting, this.isSwimming, this.isBaby);
+       }
+    }
+ }

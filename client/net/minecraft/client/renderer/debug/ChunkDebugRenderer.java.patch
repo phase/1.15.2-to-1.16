@@ -17,7 +17,7 @@
     private final Minecraft minecraft;
     private double lastUpdateTime = Double.MIN_VALUE;
     private final int radius = 12;
-@@ -85,52 +85,46 @@
+@@ -85,52 +85,50 @@
        private final Map<ChunkPos, String> clientData;
        private final CompletableFuture<Map<ChunkPos, String>> serverData;
  
@@ -75,22 +75,27 @@
 -            Builder var4 = ImmutableMap.builder();
 -            ServerChunkCache var5 = var9.getChunkSource();
 +            ServerLevel var5 = var2.getLevel(var8);
-+            Builder var6 = ImmutableMap.builder();
-+            ServerChunkCache var7 = var5.getChunkSource();
++            if (var5 == null) {
++               return ImmutableMap.of();
++            } else {
++               Builder var6 = ImmutableMap.builder();
++               ServerChunkCache var7 = var5.getChunkSource();
  
 -            for(int var6 = var10 - 12; var6 <= var10 + 12; ++var6) {
 -               for(int var7 = var11 - 12; var7 <= var11 + 12; ++var7) {
 -                  ChunkPos var8 = new ChunkPos(var6, var7);
 -                  var4.put(var8, "Server: " + var5.getChunkDebugData(var8));
-+            for(int var8x = var9 - 12; var8x <= var9 + 12; ++var8x) {
-+               for(int var9x = var10 - 12; var9x <= var10 + 12; ++var9x) {
-+                  ChunkPos var10x = new ChunkPos(var8x, var9x);
-+                  var6.put(var10x, "Server: " + var7.getChunkDebugData(var10x));
++               for(int var8x = var9 - 12; var8x <= var9 + 12; ++var8x) {
++                  for(int var9x = var10 - 12; var9x <= var10 + 12; ++var9x) {
++                     ChunkPos var10x = new ChunkPos(var8x, var9x);
++                     var6.put(var10x, "Server: " + var7.getChunkDebugData(var10x));
++                  }
                 }
-             }
+-            }
  
 -            return var4.build();
-+            return var6.build();
++               return var6.build();
++            }
           });
        }
     }

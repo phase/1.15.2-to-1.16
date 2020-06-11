@@ -1,10 +1,14 @@
 --- net/minecraft/client/Option.java
 +++ net/minecraft/client/Option.java
-@@ -1,13 +1,15 @@
+@@ -1,13 +1,20 @@
  package net.minecraft.client;
  
++import com.mojang.blaze3d.pipeline.RenderTarget;
++import com.mojang.blaze3d.platform.GlStateManager;
  import com.mojang.blaze3d.platform.Window;
 -import net.minecraft.Util;
++import java.util.Optional;
++import net.minecraft.ChatFormatting;
  import net.minecraft.client.gui.chat.NarratorChatListener;
  import net.minecraft.client.gui.components.AbstractWidget;
  import net.minecraft.client.gui.components.ChatComponent;
@@ -12,13 +16,14 @@
 +import net.minecraft.network.chat.CommonComponents;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.MutableComponent;
++import net.minecraft.network.chat.TextComponent;
 +import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.util.Mth;
  import net.minecraft.world.entity.player.ChatVisiblity;
  
  public abstract class Option {
     public static final ProgressOption BIOME_BLEND_RADIUS = new ProgressOption("options.biomeBlendRadius", 0.0D, 7.0D, 1.0F, (var0) -> {
-@@ -15,112 +17,127 @@
+@@ -15,112 +22,127 @@
     }, (var0, var1) -> {
        var0.biomeBlendRadius = Mth.clamp((int)var1, 0, 7);
        Minecraft.getInstance().levelRenderer.allChanged();
@@ -165,7 +170,7 @@
        return var0.rawMouseInput;
     }, (var0, var1) -> {
        var0.rawMouseInput = var1;
-@@ -135,90 +152,99 @@
+@@ -135,90 +157,122 @@
     }, (var0, var1) -> {
        var0.renderDistance = (int)var1;
        Minecraft.getInstance().levelRenderer.needsUpdate();
@@ -227,11 +232,28 @@
 +      return var1.createCaption().append((Component)(new TranslatableComponent(var0.chatVisibility.getKey())));
     });
     public static final CycleOption GRAPHICS = new CycleOption("options.graphics", (var0, var1) -> {
-       var0.fancyGraphics = !var0.fancyGraphics;
+-      var0.fancyGraphics = !var0.fancyGraphics;
++      var0.graphicsMode = var0.graphicsMode.cycleNext();
++      if (var0.graphicsMode == GraphicsStatus.FABULOUS && !GlStateManager.supportsFramebufferBlit()) {
++         var0.graphicsMode = GraphicsStatus.FAST;
++      }
++
        Minecraft.getInstance().levelRenderer.allChanged();
     }, (var0, var1) -> {
 -      return var0.fancyGraphics ? var1.getCaption() + I18n.get("options.graphics.fancy") : var1.getCaption() + I18n.get("options.graphics.fast");
-+      return var0.fancyGraphics ? var1.createCaption().append((Component)(new TranslatableComponent("options.graphics.fancy"))) : var1.createCaption().append((Component)(new TranslatableComponent("options.graphics.fast")));
++      switch(var0.graphicsMode) {
++      case FAST:
++         var1.setTooltip("options.graphics.fast.tooltip");
++         break;
++      case FANCY:
++         var1.setTooltip("options.graphics.fancy.tooltip");
++         break;
++      case FABULOUS:
++         var1.setTooltip("options.graphics.fabulous.tooltip");
++      }
++
++      TranslatableComponent var2 = new TranslatableComponent(var0.graphicsMode.getKey());
++      return var0.graphicsMode == GraphicsStatus.FABULOUS ? var1.createCaption().append((Component)(new TextComponent("")).append(var2).withStyle(ChatFormatting.ITALIC)) : var1.createCaption().append((Component)var2);
     });
     public static final CycleOption GUI_SCALE = new CycleOption("options.guiScale", (var0, var1) -> {
        var0.guiScale = Integer.remainderUnsigned(var0.guiScale + var1, Minecraft.getInstance().getWindow().calculateScale(0, Minecraft.getInstance().isEnforceUnicode()) + 1);
@@ -266,6 +288,13 @@
     });
     public static final CycleOption RENDER_CLOUDS = new CycleOption("options.renderClouds", (var0, var1) -> {
        var0.renderClouds = CloudStatus.byId(var0.renderClouds.getId() + var1);
++      if (Minecraft.useShaderTransparency()) {
++         RenderTarget var2 = Minecraft.getInstance().levelRenderer.getCloudsTarget();
++         if (var2 != null) {
++            var2.clear(Minecraft.ON_OSX);
++         }
++      }
++
     }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.renderClouds.getKey());
 +      return var1.createCaption().append((Component)(new TranslatableComponent(var0.renderClouds.getKey())));
@@ -280,7 +309,7 @@
        return var0.autoJump;
     }, (var0, var1) -> {
        var0.autoJump = var1;
-@@ -265,12 +291,12 @@
+@@ -265,12 +319,12 @@
     public static final BooleanOption FORCE_UNICODE_FONT = new BooleanOption("options.forceUnicodeFont", (var0) -> {
        return var0.forceUnicodeFont;
     }, (var0, var1) -> {
@@ -295,7 +324,7 @@
     });
     public static final BooleanOption INVERT_MOUSE = new BooleanOption("options.invertMouse", (var0) -> {
        return var0.invertYMouse;
-@@ -301,16 +327,16 @@
+@@ -301,16 +355,16 @@
        var0.snooperEnabled = var1;
     });
     public static final CycleOption TOGGLE_CROUCH = new CycleOption("key.sneak", (var0, var1) -> {
@@ -314,8 +343,17 @@
        return var0.touchscreen;
     }, (var0, var1) -> {
        var0.touchscreen = var1;
-@@ -337,9 +363,9 @@
+@@ -330,16 +384,26 @@
+       return var0.bobView;
+    }, (var0, var1) -> {
+       var0.bobView = var1;
+    });
+    private final String captionId;
++   private Optional<TranslatableComponent> toolTip;
+ 
+    public Option(String var1) {
        this.captionId = var1;
++      this.toolTip = Optional.empty();
     }
  
     public abstract AbstractWidget createButton(Options var1, int var2, int var3, int var4);
@@ -325,4 +363,12 @@
 +   public MutableComponent createCaption() {
 +      return (new TranslatableComponent(this.captionId)).append(": ");
     }
++
++   public void setTooltip(String var1) {
++      this.toolTip = Optional.of(new TranslatableComponent(var1));
++   }
++
++   public Optional<TranslatableComponent> getTooltip() {
++      return this.toolTip;
++   }
  }

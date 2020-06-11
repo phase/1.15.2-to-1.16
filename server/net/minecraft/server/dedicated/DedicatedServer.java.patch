@@ -1,6 +1,6 @@
 --- net/minecraft/server/dedicated/DedicatedServer.java
 +++ net/minecraft/server/dedicated/DedicatedServer.java
-@@ -1,63 +1,61 @@
+@@ -1,63 +1,62 @@
  package net.minecraft.server.dedicated;
  
  import com.google.common.base.Strings;
@@ -35,6 +35,7 @@
 -import net.minecraft.commands.Commands;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.NonNullList;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.server.ConsoleInput;
  import net.minecraft.server.MinecraftServer;
  import net.minecraft.server.ServerInterface;
@@ -42,8 +43,8 @@
  import net.minecraft.server.gui.MinecraftServerGui;
 +import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
++import net.minecraft.server.packs.repository.Pack;
 +import net.minecraft.server.packs.repository.PackRepository;
-+import net.minecraft.server.packs.repository.UnopenedPack;
  import net.minecraft.server.players.GameProfileCache;
  import net.minecraft.server.players.OldUsersConverter;
  import net.minecraft.server.rcon.RconConsoleSource;
@@ -71,7 +72,7 @@
  
  public class DedicatedServer extends MinecraftServer implements ServerInterface {
     private static final Logger LOGGER = LogManager.getLogger();
-@@ -65,34 +63,17 @@
+@@ -65,34 +64,17 @@
     private final List<ConsoleInput> consoleInput = Collections.synchronizedList(Lists.newArrayList());
     private QueryThreadGs4 queryThreadGs4;
     private final RconConsoleSource rconConsoleSource;
@@ -84,9 +85,9 @@
 -   public DedicatedServer(File var1, DedicatedServerSettings var2, DataFixer var3, YggdrasilAuthenticationService var4, MinecraftSessionService var5, GameProfileRepository var6, GameProfileCache var7, ChunkProgressListenerFactory var8, String var9) {
 -      super(var1, Proxy.NO_PROXY, var3, new Commands(true), var4, var5, var6, var7, var8, var9);
 -      this.settings = var2;
-+   public DedicatedServer(LevelStorageSource.LevelStorageAccess var1, PackRepository<UnopenedPack> var2, ServerResources var3, WorldData var4, DedicatedServerSettings var5, DataFixer var6, MinecraftSessionService var7, GameProfileRepository var8, GameProfileCache var9, ChunkProgressListenerFactory var10) {
-+      super(var1, var4, var2, Proxy.NO_PROXY, var6, var3, var7, var8, var9, var10);
-+      this.settings = var5;
++   public DedicatedServer(Thread var1, RegistryAccess.RegistryHolder var2, LevelStorageSource.LevelStorageAccess var3, PackRepository<Pack> var4, ServerResources var5, WorldData var6, DedicatedServerSettings var7, DataFixer var8, MinecraftSessionService var9, GameProfileRepository var10, GameProfileCache var11, ChunkProgressListenerFactory var12) {
++      super(var1, var2, var3, var6, var4, Proxy.NO_PROXY, var8, var5, var9, var10, var11, var12);
++      this.settings = var7;
        this.rconConsoleSource = new RconConsoleSource(this);
 -      Thread var10001 = new Thread("Server Infinisleeper") {
 -         {
@@ -109,7 +110,7 @@
     public boolean initServer() throws IOException {
        Thread var1 = new Thread("Server console handler") {
           public void run() {
-@@ -125,21 +106,19 @@
+@@ -125,21 +107,19 @@
           this.setUsesAuthentication(var2.onlineMode);
           this.setPreventProxyConnections(var2.preventProxyConnections);
           this.setLocalIp(var2.serverIp);
@@ -133,7 +134,7 @@
           var3 = InetAddress.getByName(this.getLocalIp());
        }
  
-@@ -151,13 +130,13 @@
+@@ -151,13 +131,13 @@
        this.setKeyPair(Crypt.generateKeyPair());
        LOGGER.info((String)"Starting Minecraft server on {}:{}", (Object)(this.getLocalIp().isEmpty() ? "*" : this.getLocalIp()), (Object)this.getPort());
  
@@ -149,7 +150,7 @@
        }
  
        if (!this.usesAuthentication()) {
-@@ -172,43 +151,21 @@
+@@ -172,43 +152,21 @@
        }
  
        if (!OldUsersConverter.serverReadyAfterUserconversion(this)) {
@@ -198,7 +199,7 @@
           }
  
           if (var2.enableQuery) {
-@@ -222,22 +179,38 @@
+@@ -222,22 +180,38 @@
              this.rconThread = new RconThread(this);
              this.rconThread.start();
           }
@@ -242,7 +243,7 @@
        String var2;
        if (!var1.resourcePackSha1.isEmpty()) {
           var2 = var1.resourcePackSha1;
-@@ -260,31 +233,18 @@
+@@ -260,31 +234,18 @@
        }
  
        return var2;
@@ -276,7 +277,7 @@
     }
  
     public CrashReport fillReport(CrashReport var1) {
-@@ -325,14 +285,10 @@
+@@ -325,14 +286,10 @@
  
     public boolean isNetherEnabled() {
        return this.getProperties().allowNether;
@@ -291,7 +292,7 @@
        var1.setDynamicData("whitelist_count", this.getPlayerList().getWhiteListNames().length);
        super.populateSnooper(var1);
     }
-@@ -398,12 +354,12 @@
+@@ -398,12 +355,12 @@
  
     public int getSpawnProtectionRadius() {
        return this.getProperties().spawnProtection;
@@ -306,7 +307,7 @@
           return false;
        } else if (this.getPlayerList().isOp(var3.getGameProfile())) {
           return false;
-@@ -416,10 +372,14 @@
+@@ -416,10 +373,14 @@
           int var7 = Math.max(var5, var6);
           return var7 <= this.getSpawnProtectionRadius();
        }
@@ -321,7 +322,7 @@
     }
  
     public int getFunctionCompilationLevel() {
-@@ -538,12 +498,24 @@
+@@ -538,12 +499,24 @@
        });
     }
  

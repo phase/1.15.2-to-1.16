@@ -1,0 +1,170 @@
+--- net/minecraft/client/gui/screens/packs/PackSelectionScreen.java
++++ net/minecraft/client/gui/screens/packs/PackSelectionScreen.java
+@@ -1,0 +1,167 @@
++package net.minecraft.client.gui.screens.packs;
++
++import com.mojang.blaze3d.vertex.PoseStack;
++import java.io.File;
++import java.io.IOException;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.List;
++import java.util.function.Function;
++import java.util.stream.Collectors;
++import java.util.stream.Stream;
++import net.minecraft.ChatFormatting;
++import net.minecraft.Util;
++import net.minecraft.client.Minecraft;
++import net.minecraft.client.gui.components.Button;
++import net.minecraft.client.gui.components.toasts.SystemToast;
++import net.minecraft.client.gui.screens.ConfirmScreen;
++import net.minecraft.client.gui.screens.Screen;
++import net.minecraft.network.chat.CommonComponents;
++import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.TextComponent;
++import net.minecraft.network.chat.TranslatableComponent;
++import org.apache.commons.lang3.mutable.MutableBoolean;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
++
++public abstract class PackSelectionScreen extends Screen {
++   private static final Logger LOGGER = LogManager.getLogger();
++   private static final Component DRAG_AND_DROP;
++   private static final Component DIRECTORY_BUTTON_TOOLTIP;
++   private final PackSelectionModel<?> model;
++   private final Screen lastScreen;
++   private boolean shouldCommit;
++   private TransferableSelectionList availablePackList;
++   private TransferableSelectionList selectedPackList;
++   private final File packDir;
++   private Button doneButton;
++
++   public PackSelectionScreen(Screen var1, TranslatableComponent var2, Function<Runnable, PackSelectionModel<?>> var3, File var4) {
++      super(var2);
++      this.lastScreen = var1;
++      this.model = (PackSelectionModel)var3.apply(this::populateLists);
++      this.packDir = var4;
++   }
++
++   public void removed() {
++      if (this.shouldCommit) {
++         this.shouldCommit = false;
++         this.model.commit();
++      }
++
++   }
++
++   public void onClose() {
++      this.shouldCommit = true;
++      this.minecraft.setScreen(this.lastScreen);
++   }
++
++   protected void init() {
++      this.doneButton = (Button)this.addButton(new Button(this.width / 2 + 4, this.height - 48, 150, 20, CommonComponents.GUI_DONE, (var1) -> {
++         this.onClose();
++      }));
++      this.addButton(new Button(this.width / 2 - 154, this.height - 48, 150, 20, new TranslatableComponent("pack.openFolder"), (var1) -> {
++         Util.getPlatform().openFile(this.packDir);
++      }, (var1, var2, var3, var4) -> {
++         this.renderTooltip(var2, DIRECTORY_BUTTON_TOOLTIP, var3, var4);
++      }));
++      this.availablePackList = new TransferableSelectionList(this.minecraft, 200, this.height, new TranslatableComponent("pack.available.title"));
++      this.availablePackList.setLeftPos(this.width / 2 - 4 - 200);
++      this.children.add(this.availablePackList);
++      this.selectedPackList = new TransferableSelectionList(this.minecraft, 200, this.height, new TranslatableComponent("pack.selected.title"));
++      this.selectedPackList.setLeftPos(this.width / 2 + 4);
++      this.children.add(this.selectedPackList);
++      this.populateLists();
++   }
++
++   private void populateLists() {
++      this.updateList(this.selectedPackList, this.model.getSelected());
++      this.updateList(this.availablePackList, this.model.getUnselected());
++      this.doneButton.active = !this.selectedPackList.children().isEmpty();
++   }
++
++   private void updateList(TransferableSelectionList var1, Stream<PackSelectionModel.Entry> var2) {
++      var1.children().clear();
++      var2.forEach((var2x) -> {
++         var1.children().add(new TransferableSelectionList.PackEntry(this.minecraft, var1, this, var2x));
++      });
++   }
++
++   private void reload() {
++      this.model.findNewPacks();
++      this.populateLists();
++      this.shouldCommit = true;
++   }
++
++   public void render(PoseStack var1, int var2, int var3, float var4) {
++      this.renderDirtBackground(0);
++      this.availablePackList.render(var1, var2, var3, var4);
++      this.selectedPackList.render(var1, var2, var3, var4);
++      this.drawCenteredString(var1, this.font, this.title, this.width / 2, 8, 16777215);
++      this.drawCenteredString(var1, this.font, DRAG_AND_DROP, this.width / 2, 20, 16777215);
++      super.render(var1, var2, var3, var4);
++   }
++
++   protected static void copyPacks(Minecraft var0, List<Path> var1, Path var2) {
++      MutableBoolean var3 = new MutableBoolean();
++      var1.forEach((var2x) -> {
++         try {
++            Stream var3x = Files.walk(var2x);
++            Throwable var4 = null;
++
++            try {
++               var3x.forEach((var3xx) -> {
++                  try {
++                     Util.copyBetweenDirs(var2x.getParent(), var2, var3xx);
++                  } catch (IOException var5) {
++                     LOGGER.warn("Failed to copy datapack file  from {} to {}", var3xx, var2, var5);
++                     var3.setTrue();
++                  }
++
++               });
++            } catch (Throwable var14) {
++               var4 = var14;
++               throw var14;
++            } finally {
++               if (var3x != null) {
++                  if (var4 != null) {
++                     try {
++                        var3x.close();
++                     } catch (Throwable var13) {
++                        var4.addSuppressed(var13);
++                     }
++                  } else {
++                     var3x.close();
++                  }
++               }
++
++            }
++         } catch (IOException var16) {
++            LOGGER.warn("Failed to copy datapack file from {} to {}", var2x, var2);
++            var3.setTrue();
++         }
++
++      });
++      if (var3.isTrue()) {
++         SystemToast.onPackCopyFailure(var0, var2.toString());
++      }
++
++   }
++
++   public void onFilesDrop(List<Path> var1) {
++      String var2 = (String)var1.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
++      this.minecraft.setScreen(new ConfirmScreen((var2x) -> {
++         if (var2x) {
++            copyPacks(this.minecraft, var1, this.packDir.toPath());
++            this.reload();
++         }
++
++         this.minecraft.setScreen(this);
++      }, new TranslatableComponent("pack.dropConfirm"), new TextComponent(var2)));
++   }
++
++   static {
++      DRAG_AND_DROP = (new TranslatableComponent("pack.dropInfo")).withStyle(ChatFormatting.DARK_GRAY);
++      DIRECTORY_BUTTON_TOOLTIP = new TranslatableComponent("pack.folderInfo");
++   }
++}

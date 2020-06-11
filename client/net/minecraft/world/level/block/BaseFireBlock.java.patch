@@ -50,7 +50,7 @@
 +
 +   public void animateTick(BlockState var1, Level var2, BlockPos var3, Random var4) {
 +      if (var4.nextInt(24) == 0) {
-+         var2.playLocalSound((double)((float)var3.getX() + 0.5F), (double)((float)var3.getY() + 0.5F), (double)((float)var3.getZ() + 0.5F), SoundEvents.FIRE_AMBIENT, SoundSource.BLOCKS, 1.0F + var4.nextFloat(), var4.nextFloat() * 0.7F + 0.3F, false);
++         var2.playLocalSound((double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, SoundEvents.FIRE_AMBIENT, SoundSource.BLOCKS, 1.0F + var4.nextFloat(), var4.nextFloat() * 0.7F + 0.3F, false);
 +      }
 +
 +      BlockPos var5 = var3.below();
@@ -132,7 +132,7 @@
 +
 +   public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
 +      if (!var4.is(var1.getBlock())) {
-+         if (!var2.dimensionType().isOverworld() && !var2.dimensionType().isNether() || !NetherPortalBlock.trySpawnPortal(var2, var3)) {
++         if (var2.dimension() != Level.OVERWORLD && var2.dimension() != Level.NETHER || !NetherPortalBlock.trySpawnPortal(var2, var3)) {
 +            if (!var1.canSurvive(var2, var3)) {
 +               var2.removeBlock(var3, false);
 +            }

@@ -1,19 +1,18 @@
 --- net/minecraft/tags/TagCollection.java
 +++ net/minecraft/tags/TagCollection.java
-@@ -1,8 +1,11 @@
+@@ -1,8 +1,10 @@
  package net.minecraft.tags;
  
 -import com.google.common.collect.ImmutableMap;
 +import com.google.common.collect.BiMap;
 +import com.google.common.collect.HashBiMap;
 +import com.google.common.collect.ImmutableBiMap;
-+import com.google.common.collect.ImmutableSet;
  import com.google.common.collect.Lists;
  import com.google.common.collect.Maps;
  import com.google.gson.Gson;
  import com.google.gson.JsonObject;
  import java.io.BufferedReader;
-@@ -14,17 +17,18 @@
+@@ -14,17 +16,18 @@
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.HashMap;
@@ -33,14 +32,14 @@
  import net.minecraft.server.packs.resources.ResourceManager;
  import net.minecraft.util.GsonHelper;
  import org.apache.commons.io.IOUtils;
-@@ -33,33 +37,49 @@
+@@ -33,33 +36,45 @@
  
  public class TagCollection<T> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new Gson();
     private static final int PATH_SUFFIX_LENGTH = ".json".length();
 -   private Map<ResourceLocation, Tag<T>> tags = ImmutableMap.of();
-+   private final Tag<T> empty = Tag.fromSet(ImmutableSet.of());
++   private final Tag<T> empty = SetTag.empty();
 +   private volatile BiMap<ResourceLocation, Tag<T>> tags = HashBiMap.create();
     private final Function<ResourceLocation, Optional<T>> idToValue;
     private final String directory;
@@ -67,10 +66,6 @@
 +      return (Tag)this.tags.getOrDefault(var1, this.empty);
     }
  
-+   public Tag<T> getEmptyTag() {
-+      return this.empty;
-+   }
-+
 +   @Nullable
 +   public ResourceLocation getId(Tag<T> var1) {
 +      return var1 instanceof Tag.Named ? ((Tag.Named)var1).getName() : (ResourceLocation)this.tags.inverse().get(var1);
@@ -90,7 +85,7 @@
     }
  
     public Collection<ResourceLocation> getMatchingTags(T var1) {
-@@ -74,11 +94,11 @@
+@@ -74,11 +89,11 @@
        }
  
        return var2;
@@ -103,7 +98,7 @@
           Iterator var3 = var1.listResources(this.directory, (var0) -> {
              return var0.endsWith(".json");
           }).iterator();
-@@ -103,17 +123,15 @@
+@@ -103,17 +118,15 @@
                          Throwable var12 = null;
  
                          try {
@@ -125,7 +120,7 @@
                             var12 = var53;
                             throw var53;
                          } finally {
-@@ -160,45 +178,44 @@
+@@ -160,45 +173,44 @@
  
           return var2;
        }, var2);

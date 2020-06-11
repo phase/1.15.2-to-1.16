@@ -1,6 +1,6 @@
 --- net/minecraft/server/commands/BanIpCommands.java
 +++ net/minecraft/server/commands/BanIpCommands.java
-@@ -22,12 +22,12 @@
+@@ -22,16 +22,16 @@
  import net.minecraft.server.players.IpBanList;
  import net.minecraft.server.players.IpBanListEntry;
  
@@ -13,8 +13,13 @@
  
     public static void register(CommandDispatcher<CommandSourceStack> var0) {
        var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("ban-ip").requires((var0x) -> {
-          return var0x.getServer().getPlayerList().getIpBans().isEnabled() && var0x.hasPermission(3);
+-         return var0x.getServer().getPlayerList().getIpBans().isEnabled() && var0x.hasPermission(3);
++         return var0x.hasPermission(3);
        })).then(((RequiredArgumentBuilder)Commands.argument("target", StringArgumentType.word()).executes((var0x) -> {
+          return banIpOrName((CommandSourceStack)var0x.getSource(), StringArgumentType.getString(var0x, "target"), (Component)null);
+       })).then(Commands.argument("reason", MessageArgument.message()).executes((var0x) -> {
+          return banIpOrName((CommandSourceStack)var0x.getSource(), StringArgumentType.getString(var0x, "target"), MessageArgument.getMessage(var0x, "reason"));
+       }))));
 @@ -66,11 +66,11 @@
  
           Iterator var6 = var4.iterator();

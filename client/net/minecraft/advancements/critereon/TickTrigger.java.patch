@@ -9,7 +9,7 @@
  import net.minecraft.server.level.ServerPlayer;
  
  public class TickTrigger extends SimpleCriterionTrigger<TickTrigger.TriggerInstance> {
-@@ -13,19 +12,19 @@
+@@ -13,19 +12,21 @@
  
     public ResourceLocation getId() {
        return ID;
@@ -22,7 +22,10 @@
     }
  
     public void trigger(ServerPlayer var1) {
-       this.trigger(var1.getAdvancements());
+-      this.trigger(var1.getAdvancements());
++      this.trigger(var1, (var0) -> {
++         return true;
++      });
     }
  
     public static class TriggerInstance extends AbstractCriterionTriggerInstance {

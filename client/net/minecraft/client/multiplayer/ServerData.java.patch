@@ -1,6 +1,6 @@
 --- net/minecraft/client/multiplayer/ServerData.java
 +++ net/minecraft/client/multiplayer/ServerData.java
-@@ -1,23 +1,26 @@
+@@ -1,24 +1,28 @@
  package net.minecraft.client.multiplayer;
  
 +import java.util.Collections;
@@ -27,11 +27,13 @@
 -   public String playerList;
 +   public List<Component> playerList = Collections.emptyList();
     private ServerData.ServerPackStatus packStatus;
++   @Nullable
     private String iconB64;
     private boolean lan;
  
     public ServerData(String var1, String var2, boolean var3) {
-@@ -98,11 +101,11 @@
+       this.packStatus = ServerData.ServerPackStatus.PROMPT;
+@@ -98,11 +102,11 @@
        PROMPT("prompt");
  
        private final Component name;

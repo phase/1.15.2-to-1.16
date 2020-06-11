@@ -1,6 +1,6 @@
 --- net/minecraft/server/dedicated/DedicatedPlayerList.java
 +++ net/minecraft/server/dedicated/DedicatedPlayerList.java
-@@ -1,21 +1,23 @@
+@@ -1,26 +1,23 @@
  package net.minecraft.server.dedicated;
  
  import com.mojang.authlib.GameProfile;
@@ -19,13 +19,18 @@
 -      DedicatedServerProperties var2 = var1.getProperties();
 -      this.setViewDistance(var2.viewDistance);
 -      super.setUsingWhiteList((Boolean)var2.whiteList.get());
+-      if (!var1.isSingleplayer()) {
+-         this.getBans().setEnabled(true);
+-         this.getIpBans().setEnabled(true);
+-      }
+-
 +   public DedicatedPlayerList(DedicatedServer var1, RegistryAccess.RegistryHolder var2, PlayerDataStorage var3) {
 +      super(var1, var2, var3, var1.getProperties().maxPlayers);
 +      DedicatedServerProperties var4 = var1.getProperties();
 +      this.setViewDistance(var4.viewDistance);
 +      super.setUsingWhiteList((Boolean)var4.whiteList.get());
-       if (!var1.isSingleplayer()) {
-          this.getBans().setEnabled(true);
-          this.getIpBans().setEnabled(true);
-       }
- 
+       this.loadUserBanList();
+       this.saveUserBanList();
+       this.loadIpBanList();
+       this.saveIpBanList();
+       this.loadOps();

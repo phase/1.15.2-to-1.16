@@ -60,7 +60,7 @@
 +
 +   public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
 +      if (!var4.is(var1.getBlock())) {
-+         if (!var2.dimensionType().isOverworld() && !var2.dimensionType().isNether() || !NetherPortalBlock.trySpawnPortal(var2, var3)) {
++         if (var2.dimension() != Level.OVERWORLD && var2.dimension() != Level.NETHER || !NetherPortalBlock.trySpawnPortal(var2, var3)) {
 +            if (!var1.canSurvive(var2, var3)) {
 +               var2.removeBlock(var3, false);
 +            }

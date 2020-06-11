@@ -26,3 +26,20 @@
     };
  
     public static Predicate<Entity> withinDistance(double var0, double var2, double var4, double var6) {
+@@ -71,14 +75,14 @@
+             return true;
+          }
+       };
+    }
+ 
+-   public static class MobCanWearArmourEntitySelector implements Predicate<Entity> {
++   public static class MobCanWearArmorEntitySelector implements Predicate<Entity> {
+       private final ItemStack itemStack;
+ 
+-      public MobCanWearArmourEntitySelector(ItemStack var1) {
++      public MobCanWearArmorEntitySelector(ItemStack var1) {
+          this.itemStack = var1;
+       }
+ 
+       public boolean test(@Nullable Entity var1) {
+          if (!var1.isAlive()) {

@@ -82,7 +82,7 @@
           if (var7 != null) {
              var4.openMenu(var7);
              var4.awardStat(this.getOpenChestStat());
-+            PiglinAi.angerNearbyPiglinsThatSee(var4);
++            PiglinAi.angerNearbyPiglins(var4, true);
           }
  
 -         return InteractionResult.SUCCESS;

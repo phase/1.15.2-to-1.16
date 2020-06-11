@@ -126,7 +126,7 @@
 +      for(int var2 = 0; var2 < var1.size(); ++var2) {
 +         CompoundTag var3 = var1.getCompound(var2);
 +         String var4 = var3.getString("Name");
-+         Util.ifElse(Registry.ATTRIBUTES.getOptional(ResourceLocation.tryParse(var4)), (var2x) -> {
++         Util.ifElse(Registry.ATTRIBUTE.getOptional(ResourceLocation.tryParse(var4)), (var2x) -> {
 +            AttributeInstance var3x = this.getInstance(var2x);
 +            if (var3x != null) {
 +               var3x.load(var3);

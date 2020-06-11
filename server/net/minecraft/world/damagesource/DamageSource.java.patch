@@ -1,6 +1,6 @@
 --- net/minecraft/world/damagesource/DamageSource.java
 +++ net/minecraft/world/damagesource/DamageSource.java
-@@ -5,11 +5,13 @@
+@@ -5,16 +5,18 @@
  import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.LivingEntity;
@@ -14,7 +14,13 @@
  import net.minecraft.world.phys.Vec3;
  
  public class DamageSource {
-    public static final DamageSource IN_FIRE = (new DamageSource("inFire")).setIsFire();
+-   public static final DamageSource IN_FIRE = (new DamageSource("inFire")).setIsFire();
++   public static final DamageSource IN_FIRE = (new DamageSource("inFire")).bypassArmor().setIsFire();
+    public static final DamageSource LIGHTNING_BOLT = new DamageSource("lightningBolt");
+    public static final DamageSource ON_FIRE = (new DamageSource("onFire")).bypassArmor().setIsFire();
+    public static final DamageSource LAVA = (new DamageSource("lava")).setIsFire();
+    public static final DamageSource HOT_FLOOR = (new DamageSource("hotFloor")).setIsFire();
+    public static final DamageSource IN_WALL = (new DamageSource("inWall")).bypassArmor();
 @@ -29,11 +31,10 @@
     public static final DamageSource MAGIC = (new DamageSource("magic")).bypassArmor().setMagic();
     public static final DamageSource WITHER = (new DamageSource("wither")).bypassArmor();

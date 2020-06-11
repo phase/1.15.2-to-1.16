@@ -1,0 +1,23 @@
+--- net/minecraft/world/level/lighting/LevelLightEngine.java
++++ net/minecraft/world/level/lighting/LevelLightEngine.java
+@@ -87,17 +87,17 @@
+       } else {
+          return (LayerLightEventListener)(this.skyEngine == null ? LayerLightEventListener.DummyLightLayerEventListener.INSTANCE : this.skyEngine);
+       }
+    }
+ 
+-   public void queueSectionData(LightLayer var1, SectionPos var2, @Nullable DataLayer var3) {
++   public void queueSectionData(LightLayer var1, SectionPos var2, @Nullable DataLayer var3, boolean var4) {
+       if (var1 == LightLayer.BLOCK) {
+          if (this.blockEngine != null) {
+-            this.blockEngine.queueSectionData(var2.asLong(), var3);
++            this.blockEngine.queueSectionData(var2.asLong(), var3, var4);
+          }
+       } else if (this.skyEngine != null) {
+-         this.skyEngine.queueSectionData(var2.asLong(), var3);
++         this.skyEngine.queueSectionData(var2.asLong(), var3, var4);
+       }
+ 
+    }
+ 
+    public void retainData(ChunkPos var1, boolean var2) {

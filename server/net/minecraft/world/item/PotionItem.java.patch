@@ -1,6 +1,21 @@
 --- net/minecraft/world/item/PotionItem.java
 +++ net/minecraft/world/item/PotionItem.java
-@@ -69,12 +69,11 @@
+@@ -20,10 +20,14 @@
+ public class PotionItem extends Item {
+    public PotionItem(Item.Properties var1) {
+       super(var1);
+    }
+ 
++   public ItemStack getDefaultInstance() {
++      return PotionUtils.setPotion(super.getDefaultInstance(), Potions.WATER);
++   }
++
+    public ItemStack finishUsingItem(ItemStack var1, Level var2, LivingEntity var3) {
+       Player var4 = var3 instanceof Player ? (Player)var3 : null;
+       if (var4 instanceof ServerPlayer) {
+          CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayer)var4, var1);
+       }
+@@ -69,12 +73,11 @@
     public UseAnim getUseAnimation(ItemStack var1) {
        return UseAnim.DRINK;
     }

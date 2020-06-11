@@ -1,0 +1,15 @@
+--- net/minecraft/network/protocol/game/ServerboundPlayerActionPacket.java
++++ net/minecraft/network/protocol/game/ServerboundPlayerActionPacket.java
+@@ -47,11 +47,11 @@
+       ABORT_DESTROY_BLOCK,
+       STOP_DESTROY_BLOCK,
+       DROP_ALL_ITEMS,
+       DROP_ITEM,
+       RELEASE_USE_ITEM,
+-      SWAP_HELD_ITEMS;
++      SWAP_ITEM_WITH_OFFHAND;
+ 
+       private Action() {
+       }
+    }
+ }

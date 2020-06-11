@@ -13,7 +13,7 @@
  
     public CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> load(ServerLevel var1, StructureManager var2, ThreadedLevelLightEngine var3, Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> var4, ChunkAccess var5) {
        return this.loadingTask.doWork(this, var1, var2, var3, var4, var5);
-@@ -172,45 +172,45 @@
+@@ -172,45 +172,48 @@
        };
        EMPTY = registerSimple("empty", (ChunkStatus)null, -1, PRE_FEATURES, ChunkStatus.ChunkType.PROTOCHUNK, (var0, var1, var2, var3) -> {
        });
@@ -34,14 +34,16 @@
        });
        STRUCTURE_REFERENCES = registerSimple("structure_references", STRUCTURE_STARTS, 8, PRE_FEATURES, ChunkStatus.ChunkType.PROTOCHUNK, (var0, var1, var2, var3) -> {
 -         var1.createReferences(new WorldGenRegion(var0, var2), var3);
-+         var1.createReferences(new WorldGenRegion(var0, var2), var0.structureFeatureManager(), var3);
++         WorldGenRegion var4 = new WorldGenRegion(var0, var2);
++         var1.createReferences(var4, var0.structureFeatureManager().forWorldGenRegion(var4), var3);
        });
        BIOMES = registerSimple("biomes", STRUCTURE_REFERENCES, 0, PRE_FEATURES, ChunkStatus.ChunkType.PROTOCHUNK, (var0, var1, var2, var3) -> {
           var1.createBiomes(var3);
        });
        NOISE = registerSimple("noise", BIOMES, 8, PRE_FEATURES, ChunkStatus.ChunkType.PROTOCHUNK, (var0, var1, var2, var3) -> {
 -         var1.fillFromNoise(new WorldGenRegion(var0, var2), var3);
-+         var1.fillFromNoise(new WorldGenRegion(var0, var2), var0.structureFeatureManager(), var3);
++         WorldGenRegion var4 = new WorldGenRegion(var0, var2);
++         var1.fillFromNoise(var4, var0.structureFeatureManager().forWorldGenRegion(var4), var3);
        });
        SURFACE = registerSimple("surface", NOISE, 0, PRE_FEATURES, ChunkStatus.ChunkType.PROTOCHUNK, (var0, var1, var2, var3) -> {
           var1.buildSurfaceAndBedrock(new WorldGenRegion(var0, var2), var3);
@@ -60,13 +62,14 @@
           if (!var7.getStatus().isOrAfter(var0)) {
              Heightmap.primeHeightmaps(var7, EnumSet.of(Heightmap.Types.MOTION_BLOCKING, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Heightmap.Types.OCEAN_FLOOR, Heightmap.Types.WORLD_SURFACE));
 -            var2.applyBiomeDecoration(new WorldGenRegion(var1, var6));
-+            var2.applyBiomeDecoration(new WorldGenRegion(var1, var6), var1.structureFeatureManager());
++            WorldGenRegion var9 = new WorldGenRegion(var1, var6);
++            var2.applyBiomeDecoration(var9, var1.structureFeatureManager().forWorldGenRegion(var9));
              var8.setStatus(var0);
           }
  
           return CompletableFuture.completedFuture(Either.left(var7));
        });
-@@ -251,27 +251,27 @@
+@@ -251,27 +254,27 @@
        private ChunkType() {
        }
     }

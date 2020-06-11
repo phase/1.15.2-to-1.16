@@ -99,6 +99,6 @@
 +      TITLE = (new TranslatableComponent("multiplayerWarning.header")).withStyle(ChatFormatting.BOLD);
 +      CONTENT = new TranslatableComponent("multiplayerWarning.message");
 +      CHECK = new TranslatableComponent("multiplayerWarning.check");
-+      NARRATION = TITLE.mutableCopy().append("\n").append(CONTENT);
++      NARRATION = TITLE.copy().append("\n").append(CONTENT);
 +   }
  }

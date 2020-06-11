@@ -42,7 +42,7 @@
  
 +   public static Codec<PoiSection> codec(Runnable var0) {
 +      Codec var10000 = RecordCodecBuilder.create((var1) -> {
-+         return var1.group(RecordCodecBuilder.point(var0), Codec.BOOL.fieldOf("Valid").forGetter((var0x) -> {
++         return var1.group(RecordCodecBuilder.point(var0), Codec.BOOL.optionalFieldOf("Valid", false).forGetter((var0x) -> {
 +            return var0x.isValid;
 +         }), PoiRecord.codec(var0).listOf().fieldOf("Records").forGetter((var0x) -> {
 +            return ImmutableList.copyOf((Collection)var0x.records.values());

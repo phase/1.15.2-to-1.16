@@ -1,9 +1,17 @@
 --- net/minecraft/client/resources/sounds/EntityBoundSoundInstance.java
 +++ net/minecraft/client/resources/sounds/EntityBoundSoundInstance.java
-@@ -19,13 +19,17 @@
-       this.x = (float)this.entity.getX();
-       this.y = (float)this.entity.getY();
-       this.z = (float)this.entity.getZ();
+@@ -14,20 +14,24 @@
+    public EntityBoundSoundInstance(SoundEvent var1, SoundSource var2, float var3, float var4, Entity var5) {
+       super(var1, var2);
+       this.volume = var3;
+       this.pitch = var4;
+       this.entity = var5;
+-      this.x = (float)this.entity.getX();
+-      this.y = (float)this.entity.getY();
+-      this.z = (float)this.entity.getZ();
++      this.x = (double)((float)this.entity.getX());
++      this.y = (double)((float)this.entity.getY());
++      this.z = (double)((float)this.entity.getZ());
     }
  
 +   public boolean canPlaySound() {
@@ -15,7 +23,12 @@
 -         this.stopped = true;
 +         this.stop();
        } else {
-          this.x = (float)this.entity.getX();
-          this.y = (float)this.entity.getY();
-          this.z = (float)this.entity.getZ();
+-         this.x = (float)this.entity.getX();
+-         this.y = (float)this.entity.getY();
+-         this.z = (float)this.entity.getZ();
++         this.x = (double)((float)this.entity.getX());
++         this.y = (double)((float)this.entity.getY());
++         this.z = (double)((float)this.entity.getZ());
        }
+    }
+ }

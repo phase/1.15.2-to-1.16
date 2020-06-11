@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
 +++ net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
-@@ -1,489 +1,222 @@
+@@ -1,489 +1,242 @@
  package net.minecraft.world.level.levelgen.flat;
  
 -import com.google.common.base.Splitter;
@@ -11,10 +11,12 @@
 -import com.mojang.datafixers.types.DynamicOps;
 -import com.mojang.datafixers.util.Pair;
 +import com.mojang.serialization.Codec;
++import com.mojang.serialization.MapCodec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
  import java.util.ArrayList;
 -import java.util.Collections;
 -import java.util.HashMap;
++import java.util.Arrays;
  import java.util.Iterator;
  import java.util.List;
 -import java.util.Locale;
@@ -27,6 +29,7 @@
  import net.minecraft.core.Registry;
 -import net.minecraft.resources.ResourceLocation;
 -import net.minecraft.util.Mth;
++import net.minecraft.util.Codecs;
  import net.minecraft.world.level.biome.Biome;
 +import net.minecraft.world.level.biome.BiomeDefaultFeatures;
  import net.minecraft.world.level.biome.Biomes;
@@ -70,8 +73,12 @@
 -   private static final ConfiguredFeature<?, ?> SHIPWRECK_COMPOSITE_FEATURE;
 -   private static final ConfiguredFeature<?, ?> OCEAN_MONUMENT_COMPOSITE_FEATURE;
 +   public static final Codec<FlatLevelGeneratorSettings> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(StructureSettings.CODEC.fieldOf("structures").forGetter(FlatLevelGeneratorSettings::structureSettings), FlatLayerInfo.CODEC.listOf().fieldOf("layers").forGetter(FlatLevelGeneratorSettings::getLayersInfo), Registry.BIOME.fieldOf("biome").withDefault(() -> {
-+         LOGGER.error("Unknown biome, defaulting to plains");
++      RecordCodecBuilder var10001 = StructureSettings.CODEC.fieldOf("structures").forGetter(FlatLevelGeneratorSettings::structureSettings);
++      RecordCodecBuilder var10002 = FlatLayerInfo.CODEC.listOf().fieldOf("layers").forGetter(FlatLevelGeneratorSettings::getLayersInfo);
++      MapCodec var10003 = Registry.BIOME.fieldOf("biome");
++      Logger var10005 = LOGGER;
++      var10005.getClass();
++      return var0.group(var10001, var10002, Codecs.withDefault(var10003, Util.prefix("Unknown biome, defaulting to plains", var10005::error), () -> {
 +         return Biomes.PLAINS;
 +      }).forGetter((var0x) -> {
 +         return var0x.biome;
@@ -127,35 +134,30 @@
  
 -   public Biome getBiome() {
 -      return this.biome;
--   }
 +   public FlatLevelGeneratorSettings withStructureSettings(StructureSettings var1) {
-+      FlatLevelGeneratorSettings var2 = new FlatLevelGeneratorSettings(var1);
-+      Iterator var3 = this.getLayersInfo().iterator();
++      return this.withLayers(this.layersInfo, var1);
+    }
  
 -   public void setBiome(Biome var1) {
 -      this.biome = var1;
-+      while(var3.hasNext()) {
-+         FlatLayerInfo var4 = (FlatLayerInfo)var3.next();
-+         var2.getLayersInfo().add(new FlatLayerInfo(var4.getHeight(), var4.getBlockState().getBlock()));
-+         var2.updateLayers();
-+      }
-+
-+      var2.setBiome(this.biome);
-+      return var2;
-    }
+-   }
++   public FlatLevelGeneratorSettings withLayers(List<FlatLayerInfo> var1, StructureSettings var2) {
++      FlatLevelGeneratorSettings var3 = new FlatLevelGeneratorSettings(var2);
++      Iterator var4 = var1.iterator();
  
 -   public Map<String, Map<String, String>> getStructuresOptions() {
 -      return this.structuresOptions;
-+   public void setDecoration() {
-+      this.decoration = true;
-    }
+-   }
++      while(var4.hasNext()) {
++         FlatLayerInfo var5 = (FlatLayerInfo)var4.next();
++         var3.layersInfo.add(new FlatLayerInfo(var5.getHeight(), var5.getBlockState().getBlock()));
++         var3.updateLayers();
++      }
  
 -   public List<FlatLayerInfo> getLayersInfo() {
 -      return this.layersInfo;
-+   public void setAddLakes() {
-+      this.addLakes = true;
-    }
- 
+-   }
+-
 -   public void updateLayers() {
 -      int var1 = 0;
 -
@@ -164,21 +166,16 @@
 -      for(var2 = this.layersInfo.iterator(); var2.hasNext(); var1 += var3.getHeight()) {
 -         var3 = (FlatLayerInfo)var2.next();
 -         var3.setStart(var1);
-+   public Biome getBiomeFromSettings() {
-+      Biome var1 = this.getBiome();
-+      Biome var2 = new Biome((new Biome.BiomeBuilder()).surfaceBuilder(var1.getSurfaceBuilder()).precipitation(var1.getPrecipitation()).biomeCategory(var1.getBiomeCategory()).depth(var1.getDepth()).scale(var1.getScale()).temperature(var1.getTemperature()).downfall(var1.getDownfall()).specialEffects(var1.getSpecialEffects()).parent(var1.getParent())) {
-+      };
-+      if (this.addLakes) {
-+         var2.addFeature(GenerationStep.Decoration.LAKES, WATER_LAKE_COMPOSITE_FEATURE);
-+         var2.addFeature(GenerationStep.Decoration.LAKES, LAVA_LAKE_COMPOSITE_FEATURE);
++      var3.setBiome(this.biome);
++      if (this.decoration) {
++         var3.setDecoration();
        }
  
 -      this.seaLevel = 0;
 -      this.voidGen = true;
 -      var1 = 0;
 -      var2 = this.layersInfo.iterator();
-+      Iterator var3 = this.structureSettings.structureConfig().entrySet().iterator();
- 
+-
 -      while(var2.hasNext()) {
 -         var3 = (FlatLayerInfo)var2.next();
 -
@@ -196,12 +193,61 @@
 -            this.seaLevel += var3.getHeight() + var1;
 -            var1 = 0;
 -         }
++      if (this.addLakes) {
++         var3.setAddLakes();
+       }
+ 
++      return var3;
+    }
+ 
+-   public String toString() {
+-      StringBuilder var1 = new StringBuilder();
++   public void setDecoration() {
++      this.decoration = true;
++   }
+ 
+-      int var2;
+-      for(var2 = 0; var2 < this.layersInfo.size(); ++var2) {
+-         if (var2 > 0) {
+-            var1.append(",");
+-         }
++   public void setAddLakes() {
++      this.addLakes = true;
++   }
+ 
+-         var1.append(this.layersInfo.get(var2));
++   public Biome getBiomeFromSettings() {
++      Biome var1 = this.getBiome();
++      Biome var2 = new Biome((new Biome.BiomeBuilder()).surfaceBuilder(var1.getSurfaceBuilder()).precipitation(var1.getPrecipitation()).biomeCategory(var1.getBiomeCategory()).depth(var1.getDepth()).scale(var1.getScale()).temperature(var1.getTemperature()).downfall(var1.getDownfall()).specialEffects(var1.getSpecialEffects()).parent(var1.getParent())) {
++      };
++      if (this.addLakes) {
++         var2.addFeature(GenerationStep.Decoration.LAKES, WATER_LAKE_COMPOSITE_FEATURE);
++         var2.addFeature(GenerationStep.Decoration.LAKES, LAVA_LAKE_COMPOSITE_FEATURE);
+       }
+ 
+-      var1.append(";");
+-      var1.append(Registry.BIOME.getKey(this.biome));
+-      var1.append(";");
+-      if (!this.structuresOptions.isEmpty()) {
+-         var2 = 0;
+-         Iterator var3 = this.structuresOptions.entrySet().iterator();
++      Iterator var3 = this.structureSettings.structureConfig().entrySet().iterator();
+ 
+-         while(true) {
+-            Map var5;
+-            do {
+-               if (!var3.hasNext()) {
+-                  return var1.toString();
+-               }
 +      while(var3.hasNext()) {
 +         Entry var4 = (Entry)var3.next();
 +         var2.addStructureStart(var1.withBiomeConfig((ConfiguredStructureFeature)STRUCTURE_FEATURES.get(var4.getKey())));
-       }
++      }
  
--   }
+-               Entry var4 = (Entry)var3.next();
+-               if (var2++ > 0) {
+-                  var1.append(",");
+-               }
 +      boolean var11 = (!this.voidGen || var1 == Biomes.THE_VOID) && this.decoration;
 +      if (var11) {
 +         ArrayList var12 = Lists.newArrayList();
@@ -210,48 +256,14 @@
 +         GenerationStep.Decoration[] var5 = GenerationStep.Decoration.values();
 +         int var6 = var5.length;
  
--   public String toString() {
--      StringBuilder var1 = new StringBuilder();
+-               var1.append(((String)var4.getKey()).toLowerCase(Locale.ROOT));
+-               var5 = (Map)var4.getValue();
+-            } while(var5.isEmpty());
 +         for(int var7 = 0; var7 < var6; ++var7) {
 +            GenerationStep.Decoration var8 = var5[var7];
 +            if (!var12.contains(var8)) {
 +               Iterator var9 = var1.getFeaturesForStep(var8).iterator();
  
--      int var2;
--      for(var2 = 0; var2 < this.layersInfo.size(); ++var2) {
--         if (var2 > 0) {
--            var1.append(",");
--         }
--
--         var1.append(this.layersInfo.get(var2));
--      }
--
--      var1.append(";");
--      var1.append(Registry.BIOME.getKey(this.biome));
--      var1.append(";");
--      if (!this.structuresOptions.isEmpty()) {
--         var2 = 0;
--         Iterator var3 = this.structuresOptions.entrySet().iterator();
--
--         while(true) {
--            Map var5;
--            do {
--               if (!var3.hasNext()) {
--                  return var1.toString();
-+               while(var9.hasNext()) {
-+                  ConfiguredFeature var10 = (ConfiguredFeature)var9.next();
-+                  var2.addFeature(var8, var10);
-                }
--
--               Entry var4 = (Entry)var3.next();
--               if (var2++ > 0) {
--                  var1.append(",");
--               }
--
--               var1.append(((String)var4.getKey()).toLowerCase(Locale.ROOT));
--               var5 = (Map)var4.getValue();
--            } while(var5.isEmpty());
--
 -            var1.append("(");
 -            int var6 = 0;
 -            Iterator var7 = var5.entrySet().iterator();
@@ -260,7 +272,10 @@
 -               Entry var8 = (Entry)var7.next();
 -               if (var6++ > 0) {
 -                  var1.append(" ");
--               }
++               while(var9.hasNext()) {
++                  ConfiguredFeature var10 = (ConfiguredFeature)var9.next();
++                  var2.addFeature(var8, var10);
+                }
 -
 -               var1.append((String)var8.getKey());
 -               var1.append("=");
@@ -462,6 +477,7 @@
 -         this.villagesSpacing = Mth.getInt(var3, this.villagesSpacing, 9);
 -      }
 +   public void updateLayers() {
++      Arrays.fill(this.layers, 0, this.layers.length, (Object)null);
 +      int var1 = 0;
  
 -      if ("biome_1".equals(var1) && "distance".equals(var2)) {

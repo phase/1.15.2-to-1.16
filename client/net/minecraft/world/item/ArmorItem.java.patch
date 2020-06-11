@@ -11,7 +11,7 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.BlockSource;
  import net.minecraft.core.Direction;
-@@ -12,28 +14,31 @@
+@@ -12,32 +14,35 @@
  import net.minecraft.world.InteractionResultHolder;
  import net.minecraft.world.entity.EntitySelector;
  import net.minecraft.world.entity.EquipmentSlot;
@@ -45,8 +45,13 @@
  
     public static boolean dispenseArmor(BlockSource var0, ItemStack var1) {
        BlockPos var2 = var0.getPos().relative((Direction)var0.getBlockState().getValue(DispenserBlock.FACING));
-       List var3 = var0.getLevel().getEntitiesOfClass(LivingEntity.class, new AABB(var2), EntitySelector.NO_SPECTATORS.and(new EntitySelector.MobCanWearArmourEntitySelector(var1)));
+-      List var3 = var0.getLevel().getEntitiesOfClass(LivingEntity.class, new AABB(var2), EntitySelector.NO_SPECTATORS.and(new EntitySelector.MobCanWearArmourEntitySelector(var1)));
++      List var3 = var0.getLevel().getEntitiesOfClass(LivingEntity.class, new AABB(var2), EntitySelector.NO_SPECTATORS.and(new EntitySelector.MobCanWearArmorEntitySelector(var1)));
        if (var3.isEmpty()) {
+          return false;
+       } else {
+          LivingEntity var4 = (LivingEntity)var3.get(0);
+          EquipmentSlot var5 = Mob.getEquipmentSlotForItem(var1);
 @@ -56,11 +61,21 @@
        super(var3.defaultDurability(var1.getDurabilityForSlot(var2)));
        this.material = var1;

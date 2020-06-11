@@ -86,3 +86,30 @@
     public static void renderEntityInInventory(int var0, int var1, int var2, float var3, float var4, LivingEntity var5) {
        float var6 = (float)Math.atan((double)(var3 / 40.0F));
        float var7 = (float)Math.atan((double)(var4 / 40.0F));
+@@ -120,11 +121,13 @@
+       EntityRenderDispatcher var16 = Minecraft.getInstance().getEntityRenderDispatcher();
+       var10.conj();
+       var16.overrideCameraOrientation(var10);
+       var16.setRenderShadow(false);
+       MultiBufferSource.BufferSource var17 = Minecraft.getInstance().renderBuffers().bufferSource();
+-      var16.render(var5, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, var8, var17, 15728880);
++      RenderSystem.runAsFancy(() -> {
++         var16.render(var5, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, var8, var17, 15728880);
++      });
+       var17.endBatch();
+       var16.setRenderShadow(true);
+       var5.yBodyRot = var11;
+       var5.yRot = var12;
+       var5.xRot = var13;
+@@ -137,10 +140,11 @@
+       return (!this.widthTooNarrow || !this.recipeBookComponent.isVisible()) && super.isHovering(var1, var2, var3, var4, var5, var7);
+    }
+ 
+    public boolean mouseClicked(double var1, double var3, int var5) {
+       if (this.recipeBookComponent.mouseClicked(var1, var3, var5)) {
++         this.setFocused(this.recipeBookComponent);
+          return true;
+       } else {
+          return this.widthTooNarrow && this.recipeBookComponent.isVisible() ? false : super.mouseClicked(var1, var3, var5);
+       }
+    }

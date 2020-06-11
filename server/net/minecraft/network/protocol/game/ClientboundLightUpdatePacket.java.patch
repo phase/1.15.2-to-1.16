@@ -1,0 +1,134 @@
+--- net/minecraft/network/protocol/game/ClientboundLightUpdatePacket.java
++++ net/minecraft/network/protocol/game/ClientboundLightUpdatePacket.java
+@@ -19,84 +19,88 @@
+    private int blockYMask;
+    private int emptySkyYMask;
+    private int emptyBlockYMask;
+    private List<byte[]> skyUpdates;
+    private List<byte[]> blockUpdates;
++   private boolean trustEdges;
+ 
+    public ClientboundLightUpdatePacket() {
+    }
+ 
+-   public ClientboundLightUpdatePacket(ChunkPos var1, LevelLightEngine var2) {
++   public ClientboundLightUpdatePacket(ChunkPos var1, LevelLightEngine var2, boolean var3) {
+       this.x = var1.x;
+       this.z = var1.z;
++      this.trustEdges = var3;
+       this.skyUpdates = Lists.newArrayList();
+       this.blockUpdates = Lists.newArrayList();
+ 
+-      for(int var3 = 0; var3 < 18; ++var3) {
+-         DataLayer var4 = var2.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(var1, -1 + var3));
+-         DataLayer var5 = var2.getLayerListener(LightLayer.BLOCK).getDataLayerData(SectionPos.of(var1, -1 + var3));
+-         if (var4 != null) {
+-            if (var4.isEmpty()) {
+-               this.emptySkyYMask |= 1 << var3;
++      for(int var4 = 0; var4 < 18; ++var4) {
++         DataLayer var5 = var2.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(var1, -1 + var4));
++         DataLayer var6 = var2.getLayerListener(LightLayer.BLOCK).getDataLayerData(SectionPos.of(var1, -1 + var4));
++         if (var5 != null) {
++            if (var5.isEmpty()) {
++               this.emptySkyYMask |= 1 << var4;
+             } else {
+-               this.skyYMask |= 1 << var3;
+-               this.skyUpdates.add(var4.getData().clone());
++               this.skyYMask |= 1 << var4;
++               this.skyUpdates.add(var5.getData().clone());
+             }
+          }
+ 
+-         if (var5 != null) {
+-            if (var5.isEmpty()) {
+-               this.emptyBlockYMask |= 1 << var3;
++         if (var6 != null) {
++            if (var6.isEmpty()) {
++               this.emptyBlockYMask |= 1 << var4;
+             } else {
+-               this.blockYMask |= 1 << var3;
+-               this.blockUpdates.add(var5.getData().clone());
++               this.blockYMask |= 1 << var4;
++               this.blockUpdates.add(var6.getData().clone());
+             }
+          }
+       }
+ 
+    }
+ 
+-   public ClientboundLightUpdatePacket(ChunkPos var1, LevelLightEngine var2, int var3, int var4) {
++   public ClientboundLightUpdatePacket(ChunkPos var1, LevelLightEngine var2, int var3, int var4, boolean var5) {
+       this.x = var1.x;
+       this.z = var1.z;
++      this.trustEdges = var5;
+       this.skyYMask = var3;
+       this.blockYMask = var4;
+       this.skyUpdates = Lists.newArrayList();
+       this.blockUpdates = Lists.newArrayList();
+ 
+-      for(int var5 = 0; var5 < 18; ++var5) {
+-         DataLayer var6;
+-         if ((this.skyYMask & 1 << var5) != 0) {
+-            var6 = var2.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(var1, -1 + var5));
+-            if (var6 != null && !var6.isEmpty()) {
+-               this.skyUpdates.add(var6.getData().clone());
++      for(int var6 = 0; var6 < 18; ++var6) {
++         DataLayer var7;
++         if ((this.skyYMask & 1 << var6) != 0) {
++            var7 = var2.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(var1, -1 + var6));
++            if (var7 != null && !var7.isEmpty()) {
++               this.skyUpdates.add(var7.getData().clone());
+             } else {
+-               this.skyYMask &= ~(1 << var5);
+-               if (var6 != null) {
+-                  this.emptySkyYMask |= 1 << var5;
++               this.skyYMask &= ~(1 << var6);
++               if (var7 != null) {
++                  this.emptySkyYMask |= 1 << var6;
+                }
+             }
+          }
+ 
+-         if ((this.blockYMask & 1 << var5) != 0) {
+-            var6 = var2.getLayerListener(LightLayer.BLOCK).getDataLayerData(SectionPos.of(var1, -1 + var5));
+-            if (var6 != null && !var6.isEmpty()) {
+-               this.blockUpdates.add(var6.getData().clone());
++         if ((this.blockYMask & 1 << var6) != 0) {
++            var7 = var2.getLayerListener(LightLayer.BLOCK).getDataLayerData(SectionPos.of(var1, -1 + var6));
++            if (var7 != null && !var7.isEmpty()) {
++               this.blockUpdates.add(var7.getData().clone());
+             } else {
+-               this.blockYMask &= ~(1 << var5);
+-               if (var6 != null) {
+-                  this.emptyBlockYMask |= 1 << var5;
++               this.blockYMask &= ~(1 << var6);
++               if (var7 != null) {
++                  this.emptyBlockYMask |= 1 << var6;
+                }
+             }
+          }
+       }
+ 
+    }
+ 
+    public void read(FriendlyByteBuf var1) throws IOException {
+       this.x = var1.readVarInt();
+       this.z = var1.readVarInt();
++      this.trustEdges = var1.readBoolean();
+       this.skyYMask = var1.readVarInt();
+       this.blockYMask = var1.readVarInt();
+       this.emptySkyYMask = var1.readVarInt();
+       this.emptyBlockYMask = var1.readVarInt();
+       this.skyUpdates = Lists.newArrayList();
+@@ -119,10 +123,11 @@
+    }
+ 
+    public void write(FriendlyByteBuf var1) throws IOException {
+       var1.writeVarInt(this.x);
+       var1.writeVarInt(this.z);
++      var1.writeBoolean(this.trustEdges);
+       var1.writeVarInt(this.skyYMask);
+       var1.writeVarInt(this.blockYMask);
+       var1.writeVarInt(this.emptySkyYMask);
+       var1.writeVarInt(this.emptyBlockYMask);
+       Iterator var2 = this.skyUpdates.iterator();

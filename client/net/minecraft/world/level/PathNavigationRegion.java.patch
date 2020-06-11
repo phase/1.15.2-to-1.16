@@ -1,0 +1,45 @@
+--- net/minecraft/world/level/PathNavigationRegion.java
++++ net/minecraft/world/level/PathNavigationRegion.java
+@@ -1,18 +1,23 @@
+ package net.minecraft.world.level;
+ 
++import java.util.function.Predicate;
++import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.border.WorldBorder;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+ import net.minecraft.world.level.chunk.ChunkSource;
+ import net.minecraft.world.level.chunk.EmptyLevelChunk;
+ import net.minecraft.world.level.material.FluidState;
+ import net.minecraft.world.level.material.Fluids;
++import net.minecraft.world.phys.AABB;
++import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public class PathNavigationRegion implements BlockGetter, CollisionGetter {
+    protected final int centerX;
+    protected final int centerZ;
+    protected final ChunkAccess[][] chunks;
+@@ -85,10 +90,18 @@
+          ChunkAccess var2 = this.getChunk(var1);
+          return var2.getBlockState(var1);
+       }
+    }
+ 
++   public Stream<VoxelShape> getEntityCollisions(@Nullable Entity var1, AABB var2, Predicate<Entity> var3) {
++      return Stream.empty();
++   }
++
++   public Stream<VoxelShape> getCollisions(@Nullable Entity var1, AABB var2, Predicate<Entity> var3) {
++      return this.getBlockCollisions(var1, var2);
++   }
++
+    public FluidState getFluidState(BlockPos var1) {
+       if (Level.isOutsideBuildHeight(var1)) {
+          return Fluids.EMPTY.defaultFluidState();
+       } else {
+          ChunkAccess var2 = this.getChunk(var1);

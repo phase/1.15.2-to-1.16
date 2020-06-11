@@ -30,7 +30,7 @@
 -      return ComponentUtils.wrapInSquareBrackets(this.displayName.deepCopy().withStyle((var1) -> {
 -         var1.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent(this.getName())));
 +   private Component createFormattedDisplayName() {
-+      return ComponentUtils.wrapInSquareBrackets(this.displayName.mutableCopy().withStyle((var1) -> {
++      return ComponentUtils.wrapInSquareBrackets(this.displayName.copy().withStyle((var1) -> {
 +         return var1.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent(this.name)));
        }));
     }

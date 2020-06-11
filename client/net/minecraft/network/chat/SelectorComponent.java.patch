@@ -17,7 +17,7 @@
     }
  
 -   public SelectorComponent copy() {
-+   public SelectorComponent toMutable() {
++   public SelectorComponent plainCopy() {
        return new SelectorComponent(this.pattern);
     }
  

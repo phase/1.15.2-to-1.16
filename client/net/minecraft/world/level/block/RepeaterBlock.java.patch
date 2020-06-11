@@ -36,3 +36,20 @@
  
     protected int getDelay(BlockState var1) {
        return (Integer)var1.getValue(DELAY) * 2;
+@@ -58,13 +59,13 @@
+    }
+ 
+    public void animateTick(BlockState var1, Level var2, BlockPos var3, Random var4) {
+       if ((Boolean)var1.getValue(POWERED)) {
+          Direction var5 = (Direction)var1.getValue(FACING);
+-         double var6 = (double)((float)var3.getX() + 0.5F) + (double)(var4.nextFloat() - 0.5F) * 0.2D;
+-         double var8 = (double)((float)var3.getY() + 0.4F) + (double)(var4.nextFloat() - 0.5F) * 0.2D;
+-         double var10 = (double)((float)var3.getZ() + 0.5F) + (double)(var4.nextFloat() - 0.5F) * 0.2D;
++         double var6 = (double)var3.getX() + 0.5D + (var4.nextDouble() - 0.5D) * 0.2D;
++         double var8 = (double)var3.getY() + 0.4D + (var4.nextDouble() - 0.5D) * 0.2D;
++         double var10 = (double)var3.getZ() + 0.5D + (var4.nextDouble() - 0.5D) * 0.2D;
+          float var12 = -5.0F;
+          if (var4.nextBoolean()) {
+             var12 = (float)((Integer)var1.getValue(DELAY) * 2 - 1);
+          }
+ 

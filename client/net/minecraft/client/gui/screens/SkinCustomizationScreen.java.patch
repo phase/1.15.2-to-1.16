@@ -55,6 +55,6 @@
 -
 -      return var1.getName().getColoredString() + ": " + var2;
 +   private Component getMessage(PlayerModelPart var1) {
-+      return var1.getName().mutableCopy().append(": ").append(CommonComponents.optionStatus(this.options.getModelParts().contains(var1)));
++      return var1.getName().copy().append(": ").append(CommonComponents.optionStatus(this.options.getModelParts().contains(var1)));
     }
  }

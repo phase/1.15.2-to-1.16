@@ -1,8 +1,23 @@
 --- net/minecraft/world/level/block/BedBlock.java
 +++ net/minecraft/world/level/block/BedBlock.java
-@@ -21,20 +21,19 @@
+@@ -1,9 +1,10 @@
+ package net.minecraft.world.level.block;
+ 
+ import java.util.List;
+ import java.util.Optional;
++import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.stats.Stats;
+@@ -18,23 +19,23 @@
+ import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.item.DyeColor;
+ import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Explosion;
++import net.minecraft.world.level.ExplosionDamageCalculator;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
  import net.minecraft.world.level.LevelReader;
@@ -22,7 +37,7 @@
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.BlockHitResult;
  import net.minecraft.world.phys.Vec3;
-@@ -54,61 +53,59 @@
+@@ -54,61 +55,59 @@
     protected static final VoxelShape SOUTH_SHAPE;
     protected static final VoxelShape WEST_SHAPE;
     protected static final VoxelShape EAST_SHAPE;
@@ -69,7 +84,7 @@
 -               return InteractionResult.SUCCESS;
 -            }
 -         } else {
-+         if (!canSetSpawn(var2, var3)) {
++         if (!canSetSpawn(var2)) {
              var2.removeBlock(var3, false);
              BlockPos var7 = var3.relative(((Direction)var1.getValue(FACING)).getOpposite());
 -            if (var2.getBlockState(var7).getBlock() == this) {
@@ -78,7 +93,7 @@
              }
  
 -            var2.explode((Entity)null, DamageSource.netherBedExplosion(), (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);
-+            var2.explode((Entity)null, DamageSource.badRespawnPointExplosion(), (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);
++            var2.explode((Entity)null, DamageSource.badRespawnPointExplosion(), (ExplosionDamageCalculator)null, (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);
              return InteractionResult.SUCCESS;
 +         } else if ((Boolean)var1.getValue(OCCUPIED)) {
 +            if (!this.kickVillagerOutOfBed(var2, var3)) {
@@ -98,8 +113,8 @@
        }
     }
  
-+   public static boolean canSetSpawn(Level var0, BlockPos var1) {
-+      return var0.dimensionType().isOverworld();
++   public static boolean canSetSpawn(Level var0) {
++      return var0.dimensionType().bedWorks();
 +   }
 +
     private boolean kickVillagerOutOfBed(Level var1, BlockPos var2) {
@@ -107,7 +122,7 @@
        if (var3.isEmpty()) {
           return false;
        } else {
-@@ -139,11 +136,11 @@
+@@ -139,11 +138,11 @@
  
     }
  
@@ -120,7 +135,7 @@
        }
     }
  
-@@ -157,11 +154,11 @@
+@@ -157,11 +156,11 @@
  
     public void playerWillDestroy(Level var1, BlockPos var2, BlockState var3, Player var4) {
        BedPart var5 = (BedPart)var3.getValue(PART);
@@ -133,7 +148,7 @@
           if (!var1.isClientSide && !var4.isCreative()) {
              ItemStack var8 = var4.getMainHandItem();
              dropResources(var3, var1, var2, (BlockEntity)null, var4, var8);
-@@ -229,16 +226,16 @@
+@@ -229,16 +228,16 @@
        }
  
        return Optional.empty();
@@ -151,4 +166,29 @@
           while(var4.getY() >= 0 && var2.getY() - var4.getY() <= 2 && var1.getBlockState(var4).getCollisionShape(var1, var4).isEmpty()) {
              var4.move(Direction.DOWN);
           }
+ 
+@@ -248,13 +247,21 @@
+          } else {
+             double var6 = (double)var4.getY() + var5.max(Direction.Axis.Y) + 2.0E-7D;
+             if ((double)var2.getY() - var6 > 2.0D) {
+                return Optional.empty();
+             } else {
+-               float var8 = var0.getWidth() / 2.0F;
+-               Vec3 var9 = new Vec3((double)var4.getX() + 0.5D, var6, (double)var4.getZ() + 0.5D);
+-               return var1.noCollision(new AABB(var9.x - (double)var8, var9.y, var9.z - (double)var8, var9.x + (double)var8, var9.y + (double)var0.getHeight(), var9.z + (double)var8)) ? Optional.of(var9) : Optional.empty();
++               Vec3 var8 = new Vec3((double)var4.getX() + 0.5D, var6, (double)var4.getZ() + 0.5D);
++               AABB var9 = var0.getAABB(var8.x, var8.y, var8.z);
++               if (var1.noCollision(var9)) {
++                  Stream var10000 = var1.getBlockStates(var9.expandTowards(0.0D, -0.20000000298023224D, 0.0D));
++                  var0.getClass();
++                  if (var10000.noneMatch(var0::isBlockDangerous)) {
++                     return Optional.of(var8);
++                  }
++               }
++
++               return Optional.empty();
+             }
+          }
+       }
+    }
  

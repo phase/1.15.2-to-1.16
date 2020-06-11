@@ -1,6 +1,18 @@
 --- net/minecraft/world/level/Explosion.java
 +++ net/minecraft/world/level/Explosion.java
-@@ -23,13 +23,14 @@
+@@ -9,10 +9,11 @@
+ import java.util.Collections;
+ import java.util.HashSet;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Optional;
+ import java.util.Random;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.particles.ParticleTypes;
+ import net.minecraft.server.level.ServerLevel;
+@@ -23,13 +24,14 @@
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.LivingEntity;
  import net.minecraft.world.entity.item.ItemEntity;
@@ -16,7 +28,87 @@
  import net.minecraft.world.level.block.entity.BlockEntity;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.material.FluidState;
-@@ -174,11 +175,11 @@
+@@ -48,11 +50,12 @@
+    private final double y;
+    private final double z;
+    @Nullable
+    private final Entity source;
+    private final float radius;
+-   private DamageSource damageSource;
++   private final DamageSource damageSource;
++   private final ExplosionDamageCalculator damageCalculator;
+    private final List<BlockPos> toBlow;
+    private final Map<Player, Vec3> hitPlayers;
+ 
+    public Explosion(Level var1, @Nullable Entity var2, double var3, double var5, double var7, float var9, List<BlockPos> var10) {
+       this(var1, var2, var3, var5, var7, var9, false, Explosion.BlockInteraction.DESTROY, var10);
+@@ -62,24 +65,33 @@
+       this(var1, var2, var3, var5, var7, var9, var10, var11);
+       this.toBlow.addAll(var12);
+    }
+ 
+    public Explosion(Level var1, @Nullable Entity var2, double var3, double var5, double var7, float var9, boolean var10, Explosion.BlockInteraction var11) {
++      this(var1, var2, (DamageSource)null, (ExplosionDamageCalculator)null, var3, var5, var7, var9, var10, var11);
++   }
++
++   public Explosion(Level var1, @Nullable Entity var2, @Nullable DamageSource var3, @Nullable ExplosionDamageCalculator var4, double var5, double var7, double var9, float var11, boolean var12, Explosion.BlockInteraction var13) {
+       this.random = new Random();
+       this.toBlow = Lists.newArrayList();
+       this.hitPlayers = Maps.newHashMap();
+       this.level = var1;
+       this.source = var2;
+-      this.radius = var9;
+-      this.x = var3;
+-      this.y = var5;
+-      this.z = var7;
+-      this.fire = var10;
+-      this.blockInteraction = var11;
+-      this.damageSource = DamageSource.explosion(this);
++      this.radius = var11;
++      this.x = var5;
++      this.y = var7;
++      this.z = var9;
++      this.fire = var12;
++      this.blockInteraction = var13;
++      this.damageSource = var3 == null ? DamageSource.explosion(this) : var3;
++      this.damageCalculator = var4 == null ? this.makeDamageCalculator(var2) : var4;
+    }
+ 
++   private ExplosionDamageCalculator makeDamageCalculator(@Nullable Entity var1) {
++      return (ExplosionDamageCalculator)(var1 == null ? DefaultExplosionDamageCalculator.INSTANCE : new EntityBasedExplosionDamageCalculator(var1));
++   }
++
+    public static float getSeenPercent(Vec3 var0, Entity var1) {
+       AABB var2 = var1.getBoundingBox();
+       double var3 = 1.0D / ((var2.maxX - var2.minX) * 2.0D + 1.0D);
+       double var5 = 1.0D / ((var2.maxY - var2.minY) * 2.0D + 1.0D);
+       double var7 = 1.0D / ((var2.maxZ - var2.minZ) * 2.0D + 1.0D);
+@@ -135,20 +147,16 @@
+ 
+                   for(float var21 = 0.3F; var14 > 0.0F; var14 -= 0.22500001F) {
+                      BlockPos var22 = new BlockPos(var15, var17, var19);
+                      BlockState var23 = this.level.getBlockState(var22);
+                      FluidState var24 = this.level.getFluidState(var22);
+-                     if (!var23.isAir() || !var24.isEmpty()) {
+-                        float var25 = Math.max(var23.getBlock().getExplosionResistance(), var24.getExplosionResistance());
+-                        if (this.source != null) {
+-                           var25 = this.source.getBlockExplosionResistance(this, this.level, var22, var23, var24, var25);
+-                        }
+-
+-                        var14 -= (var25 + 0.3F) * 0.3F;
++                     Optional var25 = this.damageCalculator.getBlockExplosionResistance(this, this.level, var22, var23, var24);
++                     if (var25.isPresent()) {
++                        var14 -= ((Float)var25.get() + 0.3F) * 0.3F;
+                      }
+ 
+-                     if (var14 > 0.0F && (this.source == null || this.source.shouldBlockExplode(this, this.level, var22, var23, var14))) {
++                     if (var14 > 0.0F && this.damageCalculator.shouldBlockExplode(this, this.level, var22, var23, var14)) {
+                         var1.add(var22);
+                      }
+ 
+                      var15 += var6 * 0.30000001192092896D;
+                      var17 += var8 * 0.30000001192092896D;
+@@ -174,11 +182,11 @@
           Entity var13 = (Entity)var34.get(var35);
           if (!var13.ignoreExplosion()) {
              double var36 = (double)(Mth.sqrt(var13.distanceToSqr(var11)) / var31);
@@ -29,7 +121,7 @@
                 if (var37 != 0.0D) {
                    var16 /= var37;
                    var18 /= var37;
-@@ -261,11 +262,11 @@
+@@ -261,11 +269,11 @@
           Iterator var11 = this.toBlow.iterator();
  
           while(var11.hasNext()) {
@@ -42,7 +134,22 @@
        }
  
     }
-@@ -307,11 +308,18 @@
+@@ -290,14 +298,10 @@
+ 
+    public DamageSource getDamageSource() {
+       return this.damageSource;
+    }
+ 
+-   public void setDamageSource(DamageSource var1) {
+-      this.damageSource = var1;
+-   }
+-
+    public Map<Player, Vec3> getHitPlayers() {
+       return this.hitPlayers;
+    }
+ 
+    @Nullable
+@@ -307,11 +311,18 @@
        } else if (this.source instanceof PrimedTnt) {
           return ((PrimedTnt)this.source).getOwner();
        } else if (this.source instanceof LivingEntity) {

@@ -56,7 +56,7 @@
  import net.minecraft.util.datafix.fixes.ItemBannerColorFix;
  import net.minecraft.util.datafix.fixes.ItemCustomNameToComponentFix;
  import net.minecraft.util.datafix.fixes.ItemIdFix;
-@@ -78,42 +87,57 @@
+@@ -78,42 +87,58 @@
  import net.minecraft.util.datafix.fixes.ItemSpawnEggFix;
  import net.minecraft.util.datafix.fixes.ItemStackEnchantmentNamesFix;
  import net.minecraft.util.datafix.fixes.ItemStackMapIdFix;
@@ -73,6 +73,7 @@
 +import net.minecraft.util.datafix.fixes.LevelUUIDFix;
  import net.minecraft.util.datafix.fixes.MapIdFix;
 +import net.minecraft.util.datafix.fixes.MemoryExpiryDataFix;
++import net.minecraft.util.datafix.fixes.MissingDimensionFix;
  import net.minecraft.util.datafix.fixes.MobSpawnerEntityIdentifiersFix;
  import net.minecraft.util.datafix.fixes.NamedEntityFix;
  import net.minecraft.util.datafix.fixes.NewVillageFix;
@@ -114,7 +115,7 @@
  import net.minecraft.util.datafix.schemas.NamespacedSchema;
  import net.minecraft.util.datafix.schemas.V100;
  import net.minecraft.util.datafix.schemas.V102;
-@@ -146,10 +170,17 @@
+@@ -146,10 +171,17 @@
  import net.minecraft.util.datafix.schemas.V1920;
  import net.minecraft.util.datafix.schemas.V1928;
  import net.minecraft.util.datafix.schemas.V1929;
@@ -132,7 +133,7 @@
  import net.minecraft.util.datafix.schemas.V701;
  import net.minecraft.util.datafix.schemas.V702;
  import net.minecraft.util.datafix.schemas.V703;
-@@ -164,11 +195,11 @@
+@@ -164,11 +196,11 @@
     private static final DataFixer DATA_FIXER = createFixerUpper();
  
     private static DataFixer createFixerUpper() {
@@ -145,7 +146,7 @@
     public static DataFixer getDataFixer() {
        return DATA_FIXER;
     }
-@@ -375,111 +406,176 @@
+@@ -375,111 +407,178 @@
        var0.addFixer(new AdvancementsFix(var66, false));
        Schema var67 = var0.addSchema(1502, SAME_NAMESPACED);
        var0.addFixer(new RecipesFix(var67, false));
@@ -402,5 +403,7 @@
 +      var0.addFixer(new RenameBiomesFix(var121, false, "Nether biome rename", ImmutableMap.of("minecraft:nether", "minecraft:nether_wastes")));
 +      Schema var122 = var0.addSchema(2553, SAME_NAMESPACED);
 +      var0.addFixer(new BiomeFix(var122, false));
++      Schema var123 = var0.addSchema(2558, SAME_NAMESPACED);
++      var0.addFixer(new MissingDimensionFix(var123, false));
     }
  }

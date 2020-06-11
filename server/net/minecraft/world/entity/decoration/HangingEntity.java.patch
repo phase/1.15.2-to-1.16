@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/decoration/HangingEntity.java
 +++ net/minecraft/world/entity/decoration/HangingEntity.java
-@@ -2,11 +2,10 @@
+@@ -2,18 +2,17 @@
  
  import java.util.function.Predicate;
  import javax.annotation.Nullable;
@@ -12,6 +12,14 @@
  import net.minecraft.world.damagesource.DamageSource;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.entity.LightningBolt;
+ import net.minecraft.world.entity.MoverType;
+-import net.minecraft.world.entity.global.LightningBolt;
+ import net.minecraft.world.entity.item.ItemEntity;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.DiodeBlock;
 @@ -88,16 +87,22 @@
     private double offs(int var1) {
        return var1 % 32 == 0 ? 0.5D : 0.0D;

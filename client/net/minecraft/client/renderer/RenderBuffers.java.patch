@@ -1,6 +1,6 @@
 --- net/minecraft/client/renderer/RenderBuffers.java
 +++ net/minecraft/client/renderer/RenderBuffers.java
-@@ -10,17 +10,19 @@
+@@ -10,19 +10,23 @@
     private final ChunkBufferBuilderPack fixedBufferPack = new ChunkBufferBuilderPack();
     private final SortedMap<RenderType, BufferBuilder> fixedBuffers = (SortedMap)Util.make(new Object2ObjectLinkedOpenHashMap(), (var1) -> {
        var1.put(Sheets.solidBlockSheet(), this.fixedBufferPack.builder(RenderType.solid()));
@@ -17,7 +17,11 @@
 +      put(var1, RenderType.armorGlint());
 +      put(var1, RenderType.armorEntityGlint());
        put(var1, RenderType.glint());
++      put(var1, RenderType.glintDirect());
        put(var1, RenderType.entityGlint());
++      put(var1, RenderType.entityGlintDirect());
        put(var1, RenderType.waterMask());
        ModelBakery.DESTROY_TYPES.forEach((var1x) -> {
           put(var1, var1x);
+       });
+    });

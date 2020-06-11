@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/monster/hoglin/Hoglin.java
 +++ net/minecraft/world/entity/monster/hoglin/Hoglin.java
-@@ -1,0 +1,338 @@
+@@ -1,0 +1,339 @@
 +package net.minecraft.world.entity.monster.hoglin;
 +
 +import com.google.common.collect.ImmutableList;
@@ -19,6 +19,7 @@
 +import net.minecraft.sounds.SoundSource;
 +import net.minecraft.world.DifficultyInstance;
 +import net.minecraft.world.InteractionHand;
++import net.minecraft.world.InteractionResult;
 +import net.minecraft.world.damagesource.DamageSource;
 +import net.minecraft.world.effect.MobEffectInstance;
 +import net.minecraft.world.effect.MobEffects;
@@ -178,9 +179,9 @@
 +      return (double)this.getBbHeight() - (this.isBaby() ? 0.2D : 0.15D);
 +   }
 +
-+   public boolean mobInteract(Player var1, InteractionHand var2) {
-+      boolean var3 = super.mobInteract(var1, var2);
-+      if (var3) {
++   public InteractionResult mobInteract(Player var1, InteractionHand var2) {
++      InteractionResult var3 = super.mobInteract(var1, var2);
++      if (var3.consumesAction()) {
 +         this.setPersistenceRequired();
 +      }
 +
@@ -256,7 +257,7 @@
 +   }
 +
 +   public boolean isConverting() {
-+      return !this.level.dimensionType().isNether() && !this.isImmuneToZombification() && !this.isNoAi();
++      return !this.level.dimensionType().piglinSafe() && !this.isImmuneToZombification() && !this.isNoAi();
 +   }
 +
 +   private void setCannotBeHunted(boolean var1) {
@@ -335,7 +336,7 @@
 +
 +   static {
 +      DATA_IMMUNE_TO_ZOMBIFICATION = SynchedEntityData.defineId(Hoglin.class, EntityDataSerializers.BOOLEAN);
-+      SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS, SensorType.HOGLIN_SPECIFIC_SENSOR);
-+      MEMORY_TYPES = ImmutableList.of(MemoryModuleType.BREED_TARGET, MemoryModuleType.LIVING_ENTITIES, MemoryModuleType.VISIBLE_LIVING_ENTITIES, MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.NEAREST_VISIBLE_TARGETABLE_PLAYER, MemoryModuleType.LOOK_TARGET, MemoryModuleType.WALK_TARGET, MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.PATH, MemoryModuleType.ATTACK_TARGET, MemoryModuleType.ATTACK_COOLING_DOWN, MemoryModuleType.NEAREST_VISIBLE_ADULT_PIGLIN, new MemoryModuleType[]{MemoryModuleType.AVOID_TARGET, MemoryModuleType.VISIBLE_ADULT_PIGLIN_COUNT, MemoryModuleType.VISIBLE_ADULT_HOGLIN_COUNT, MemoryModuleType.NEAREST_VISIBLE_ADULT_HOGLINS, MemoryModuleType.NEAREST_REPELLENT, MemoryModuleType.PACIFIED});
++      SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS, SensorType.NEAREST_ADULT, SensorType.HOGLIN_SPECIFIC_SENSOR);
++      MEMORY_TYPES = ImmutableList.of(MemoryModuleType.BREED_TARGET, MemoryModuleType.LIVING_ENTITIES, MemoryModuleType.VISIBLE_LIVING_ENTITIES, MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.NEAREST_VISIBLE_TARGETABLE_PLAYER, MemoryModuleType.LOOK_TARGET, MemoryModuleType.WALK_TARGET, MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.PATH, MemoryModuleType.ATTACK_TARGET, MemoryModuleType.ATTACK_COOLING_DOWN, MemoryModuleType.NEAREST_VISIBLE_ADULT_PIGLIN, new MemoryModuleType[]{MemoryModuleType.AVOID_TARGET, MemoryModuleType.VISIBLE_ADULT_PIGLIN_COUNT, MemoryModuleType.VISIBLE_ADULT_HOGLIN_COUNT, MemoryModuleType.NEAREST_VISIBLE_ADULT_HOGLINS, MemoryModuleType.NEAREST_VISIBLE_ADULT, MemoryModuleType.NEAREST_REPELLENT, MemoryModuleType.PACIFIED});
 +   }
 +}

@@ -63,10 +63,10 @@
  
 -   public Stream<Component> stream() {
 -      return Streams.concat(new Stream[]{Stream.of(this), this.siblings.stream().flatMap(Component::stream)});
-+   public abstract BaseComponent toMutable();
++   public abstract BaseComponent plainCopy();
 +
-+   public final MutableComponent mutableCopy() {
-+      BaseComponent var1 = this.toMutable();
++   public final MutableComponent copy() {
++      BaseComponent var1 = this.plainCopy();
 +      var1.siblings.addAll(this.siblings);
 +      var1.setStyle(this.style);
 +      return var1;

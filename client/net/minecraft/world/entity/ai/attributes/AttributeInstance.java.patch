@@ -201,7 +201,7 @@
 +
 +   public CompoundTag save() {
 +      CompoundTag var1 = new CompoundTag();
-+      var1.putString("Name", Registry.ATTRIBUTES.getKey(this.attribute).toString());
++      var1.putString("Name", Registry.ATTRIBUTE.getKey(this.attribute).toString());
 +      var1.putDouble("Base", this.baseValue);
 +      if (!this.permanentModifiers.isEmpty()) {
 +         ListTag var2 = new ListTag();

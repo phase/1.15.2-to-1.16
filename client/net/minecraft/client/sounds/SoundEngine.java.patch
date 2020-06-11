@@ -13,7 +13,7 @@
  
     public void updateCategoryVolume(SoundSource var1, float var2) {
        if (this.loaded) {
-@@ -184,16 +184,20 @@
+@@ -184,23 +184,27 @@
        this.channelAccess.scheduleTick();
     }
  
@@ -35,6 +35,14 @@
              this.stop(var2);
           } else {
              float var3 = this.calculateVolume(var2);
+             float var4 = this.calculatePitch(var2);
+-            Vec3 var5 = new Vec3((double)var2.getX(), (double)var2.getY(), (double)var2.getZ());
++            Vec3 var5 = new Vec3(var2.getX(), var2.getY(), var2.getZ());
+             ChannelAccess.ChannelHandle var6 = (ChannelAccess.ChannelHandle)this.instanceToChannel.get(var2);
+             if (var6 != null) {
+                var6.execute((var3x) -> {
+                   var3x.setVolume(var3);
+                   var3x.setPitch(var4);
 @@ -210,147 +214,172 @@
           }
        }
@@ -200,7 +208,7 @@
 -                        var7x.setVolume(var8);
 -                        if (var10 == SoundInstance.Attenuation.LINEAR) {
 -                           var7x.linearAttenuation(var6);
-+                     Vec3 var12 = new Vec3((double)var1.getX(), (double)var1.getY(), (double)var1.getZ());
++                     Vec3 var12 = new Vec3(var1.getX(), var1.getY(), var1.getZ());
 +                     boolean var13;
 +                     if (!this.listeners.isEmpty()) {
 +                        var13 = var11 || var10 == SoundInstance.Attenuation.NONE || this.listener.getListenerPosition().distanceToSqr(var12) < (double)(var6 * var6);

@@ -444,7 +444,7 @@
 +      GOLD_ORE = register("gold_ore", new OreBlock(BlockBehaviour.Properties.of(Material.STONE).requiresCorrectToolForDrops().strength(3.0F, 3.0F)));
 +      IRON_ORE = register("iron_ore", new OreBlock(BlockBehaviour.Properties.of(Material.STONE).requiresCorrectToolForDrops().strength(3.0F, 3.0F)));
 +      COAL_ORE = register("coal_ore", new OreBlock(BlockBehaviour.Properties.of(Material.STONE).requiresCorrectToolForDrops().strength(3.0F, 3.0F)));
-+      NETHER_GOLD_ORE = register("nether_gold_ore", new OreBlock(BlockBehaviour.Properties.of(Material.STONE).requiresCorrectToolForDrops().strength(3.0F, 3.0F).sound(SoundType.NETHER_GOLD_ORE)));
++      NETHER_GOLD_ORE = register("nether_gold_ore", new OreBlock(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.NETHER).requiresCorrectToolForDrops().strength(3.0F, 3.0F).sound(SoundType.NETHER_GOLD_ORE)));
 +      OAK_LOG = register("oak_log", log(MaterialColor.WOOD, MaterialColor.PODZOL));
 +      SPRUCE_LOG = register("spruce_log", log(MaterialColor.PODZOL, MaterialColor.COLOR_BROWN));
 +      BIRCH_LOG = register("birch_log", log(MaterialColor.SAND, MaterialColor.QUARTZ));
@@ -1167,7 +1167,7 @@
 +      })));
 +      NETHER_PORTAL = register("nether_portal", new NetherPortalBlock(BlockBehaviour.Properties.of(Material.PORTAL).noCollission().randomTicks().strength(-1.0F).sound(SoundType.GLASS).lightLevel((var0x) -> {
 +         return 11;
-+      }).noDrops()));
++      })));
 +      CARVED_PUMPKIN = register("carved_pumpkin", new CarvedPumpkinBlock(BlockBehaviour.Properties.of(Material.VEGETABLE, MaterialColor.COLOR_ORANGE).strength(1.0F).sound(SoundType.WOOD).isValidSpawn(Blocks::always)));
 +      JACK_O_LANTERN = register("jack_o_lantern", new CarvedPumpkinBlock(BlockBehaviour.Properties.of(Material.VEGETABLE, MaterialColor.COLOR_ORANGE).strength(1.0F).sound(SoundType.WOOD).lightLevel((var0x) -> {
 +         return 15;
@@ -1747,7 +1747,7 @@
 +      })));
 +      RESPAWN_ANCHOR = register("respawn_anchor", new RespawnAnchorBlock(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.COLOR_BLACK).requiresCorrectToolForDrops().strength(50.0F, 1200.0F).lightLevel((var0x) -> {
 +         return RespawnAnchorBlock.getScaledChargeLevel(var0x, 15);
-+      }).noOcclusion()));
++      })));
 +      POTTED_CRIMSON_FUNGUS = register("potted_crimson_fungus", new FlowerPotBlock(CRIMSON_FUNGUS, BlockBehaviour.Properties.of(Material.DECORATION).instabreak().noOcclusion()));
 +      POTTED_WARPED_FUNGUS = register("potted_warped_fungus", new FlowerPotBlock(WARPED_FUNGUS, BlockBehaviour.Properties.of(Material.DECORATION).instabreak().noOcclusion()));
 +      POTTED_CRIMSON_ROOTS = register("potted_crimson_roots", new FlowerPotBlock(CRIMSON_ROOTS, BlockBehaviour.Properties.of(Material.DECORATION).instabreak().noOcclusion()));

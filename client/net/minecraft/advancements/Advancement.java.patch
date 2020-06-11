@@ -12,7 +12,7 @@
  import java.util.Arrays;
  import java.util.Iterator;
  import java.util.Map;
-@@ -14,13 +13,15 @@
+@@ -14,13 +13,17 @@
  import java.util.Map.Entry;
  import java.util.function.Consumer;
  import java.util.function.Function;
@@ -21,14 +21,16 @@
 +import net.minecraft.advancements.critereon.DeserializationContext;
  import net.minecraft.network.FriendlyByteBuf;
  import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.ComponentUtils;
  import net.minecraft.network.chat.HoverEvent;
 +import net.minecraft.network.chat.MutableComponent;
++import net.minecraft.network.chat.Style;
  import net.minecraft.network.chat.TextComponent;
  import net.minecraft.resources.ResourceLocation;
  import net.minecraft.util.GsonHelper;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.ItemLike;
-@@ -50,13 +51,13 @@
+@@ -50,13 +53,13 @@
        if (var3 == null) {
           this.chatComponent = new TextComponent(var1.toString());
        } else {
@@ -37,15 +39,15 @@
 -         Component var9 = var7.deepCopy().withStyle(var8).append("\n").append(var3.getDescription());
 -         Component var10 = var7.deepCopy().withStyle((var1x) -> {
 -            var1x.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, var9));
-+         MutableComponent var9 = var7.mutableCopy().withStyle(var8).append("\n").append(var3.getDescription());
-+         MutableComponent var10 = var7.mutableCopy().withStyle((var1x) -> {
++         MutableComponent var9 = ComponentUtils.mergeStyles(var7.copy(), Style.EMPTY.withColor(var8)).append("\n").append(var3.getDescription());
++         MutableComponent var10 = var7.copy().withStyle((var1x) -> {
 +            return var1x.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, var9));
           });
           this.chatComponent = (new TextComponent("[")).append(var10).append("]").withStyle(var8);
        }
  
     }
-@@ -322,14 +323,14 @@
+@@ -322,14 +325,14 @@
  
        public String toString() {
           return "Task Advancement{parentId=" + this.parentId + ", display=" + this.display + ", rewards=" + this.rewards + ", criteria=" + this.criteria + ", requirements=" + Arrays.deepToString(this.requirements) + '}';

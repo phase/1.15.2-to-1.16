@@ -37,7 +37,7 @@
 -      })))))));
 +      })).then(Commands.argument("center", Vec2Argument.vec2()).then(Commands.argument("spreadDistance", FloatArgumentType.floatArg(0.0F)).then(((RequiredArgumentBuilder)Commands.argument("maxRange", FloatArgumentType.floatArg(1.0F)).then(Commands.argument("respectTeams", BoolArgumentType.bool()).then(Commands.argument("targets", EntityArgument.entities()).executes((var0x) -> {
 +         return spreadPlayers((CommandSourceStack)var0x.getSource(), Vec2Argument.getVec2(var0x, "center"), FloatArgumentType.getFloat(var0x, "spreadDistance"), FloatArgumentType.getFloat(var0x, "maxRange"), 256, BoolArgumentType.getBool(var0x, "respectTeams"), EntityArgument.getEntities(var0x, "targets"));
-+      })))).then(Commands.literal("under").then(Commands.argument("maxHeight", IntegerArgumentType.integer()).then(Commands.argument("respectTeams", BoolArgumentType.bool()).then(Commands.argument("targets", EntityArgument.entities()).executes((var0x) -> {
++      })))).then(Commands.literal("under").then(Commands.argument("maxHeight", IntegerArgumentType.integer(0)).then(Commands.argument("respectTeams", BoolArgumentType.bool()).then(Commands.argument("targets", EntityArgument.entities()).executes((var0x) -> {
 +         return spreadPlayers((CommandSourceStack)var0x.getSource(), Vec2Argument.getVec2(var0x, "center"), FloatArgumentType.getFloat(var0x, "spreadDistance"), FloatArgumentType.getFloat(var0x, "maxRange"), IntegerArgumentType.getInteger(var0x, "maxHeight"), BoolArgumentType.getBool(var0x, "respectTeams"), EntityArgument.getEntities(var0x, "targets"));
 +      })))))))));
     }
@@ -235,7 +235,7 @@
 -         var19 = Double.MAX_VALUE;
 -         SpreadPlayersCommand.Position[] var13 = var2;
 -         int var14 = var2.length;
-+         var10.teleportToWithTicket((double)((float)Mth.floor(var11.x) + 0.5F), (double)var11.getSpawnY(var1, var3), (double)Mth.floor(var11.z) + 0.5D);
++         var10.teleportToWithTicket((double)Mth.floor(var11.x) + 0.5D, (double)var11.getSpawnY(var1, var3), (double)Mth.floor(var11.z) + 0.5D);
 +         var20 = Double.MAX_VALUE;
 +         SpreadPlayersCommand.Position[] var14 = var2;
 +         int var15 = var2.length;

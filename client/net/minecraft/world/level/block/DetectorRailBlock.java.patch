@@ -63,3 +63,18 @@
  
     public Property<RailShape> getShapeProperty() {
        return SHAPE;
+@@ -150,12 +145,12 @@
+    protected <T extends AbstractMinecart> List<T> getInteractingMinecartOfType(Level var1, BlockPos var2, Class<T> var3, @Nullable Predicate<Entity> var4) {
+       return var1.getEntitiesOfClass(var3, this.getSearchBB(var2), var4);
+    }
+ 
+    private AABB getSearchBB(BlockPos var1) {
+-      float var2 = 0.2F;
+-      return new AABB((double)((float)var1.getX() + 0.2F), (double)var1.getY(), (double)((float)var1.getZ() + 0.2F), (double)((float)(var1.getX() + 1) - 0.2F), (double)((float)(var1.getY() + 1) - 0.2F), (double)((float)(var1.getZ() + 1) - 0.2F));
++      double var2 = 0.2D;
++      return new AABB((double)var1.getX() + 0.2D, (double)var1.getY(), (double)var1.getZ() + 0.2D, (double)(var1.getX() + 1) - 0.2D, (double)(var1.getY() + 1) - 0.2D, (double)(var1.getZ() + 1) - 0.2D);
+    }
+ 
+    public BlockState rotate(BlockState var1, Rotation var2) {
+       switch(var2) {
+       case CLOCKWISE_180:

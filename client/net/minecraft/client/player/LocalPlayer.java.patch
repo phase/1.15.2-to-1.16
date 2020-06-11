@@ -80,6 +80,21 @@
     }
  
     public void heal(float var1) {
+@@ -153,12 +152,12 @@
+ 
+          return true;
+       }
+    }
+ 
+-   public void stopRiding() {
+-      super.stopRiding();
++   public void removeVehicle() {
++      super.removeVehicle();
+       this.handsBusy = false;
+    }
+ 
+    public float getViewXRot(float var1) {
+       return this.xRot;
 @@ -190,10 +189,25 @@
           }
  
@@ -199,7 +214,7 @@
           if (this.sprintTriggerTime <= 0 && !this.minecraft.options.keySprint.isDown()) {
              this.sprintTriggerTime = 7;
           } else {
-@@ -666,11 +693,11 @@
+@@ -666,28 +693,28 @@
                 this.jumpTriggerTime = 0;
              }
           }
@@ -212,6 +227,26 @@
              this.connection.send((Packet)(new ServerboundPlayerCommandPacket(this, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)));
           }
        }
+ 
+       this.wasFallFlying = this.isFallFlying();
+-      if (this.isInWater() && this.input.shiftKeyDown) {
++      if (this.isInWater() && this.input.shiftKeyDown && this.isAffectedByFluids()) {
+          this.goDownInWater();
+       }
+ 
+       int var9;
+-      if (this.isUnderLiquid(FluidTags.WATER)) {
++      if (this.isEyeInFluid(FluidTags.WATER)) {
+          var9 = this.isSpectator() ? 10 : 1;
+          this.waterVisionTime = Mth.clamp(this.waterVisionTime + var9, 0, 600);
+       } else if (this.waterVisionTime > 0) {
+-         this.isUnderLiquid(FluidTags.WATER);
++         this.isEyeInFluid(FluidTags.WATER);
+          this.waterVisionTime = Mth.clamp(this.waterVisionTime - 10, 0, 600);
+       }
+ 
+       if (this.abilities.flying && this.isControlledCamera()) {
+          var9 = 0;
 @@ -750,11 +777,11 @@
  
              this.minecraft.setScreen((Screen)null);
@@ -240,3 +275,16 @@
                    float var32 = Float.MIN_VALUE;
  
                    label73:
+@@ -934,11 +963,11 @@
+       double var1 = 0.8D;
+       return this.isUnderWater() ? this.input.hasForwardImpulse() : (double)this.input.forwardImpulse >= 0.8D;
+    }
+ 
+    public float getWaterVision() {
+-      if (!this.isUnderLiquid(FluidTags.WATER)) {
++      if (!this.isEyeInFluid(FluidTags.WATER)) {
+          return 0.0F;
+       } else {
+          float var1 = 600.0F;
+          float var2 = 100.0F;
+          if ((float)this.waterVisionTime >= 600.0F) {

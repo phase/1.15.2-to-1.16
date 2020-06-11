@@ -1,0 +1,36 @@
+--- net/minecraft/world/level/BlockGetter.java
++++ net/minecraft/world/level/BlockGetter.java
+@@ -1,16 +1,18 @@
+ package net.minecraft.world.level;
+ 
+ import java.util.function.BiFunction;
+ import java.util.function.Function;
++import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.material.FluidState;
++import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.BlockHitResult;
+ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+ public interface BlockGetter {
+@@ -31,10 +33,14 @@
+ 
+    default int getMaxBuildHeight() {
+       return 256;
+    }
+ 
++   default Stream<BlockState> getBlockStates(AABB var1) {
++      return BlockPos.betweenClosedStream(var1).map(this::getBlockState);
++   }
++
+    default BlockHitResult clip(ClipContext var1) {
+       return (BlockHitResult)traverseBlocks(var1, (var1x, var2) -> {
+          BlockState var3 = this.getBlockState(var2);
+          FluidState var4 = this.getFluidState(var2);
+          Vec3 var5 = var1x.getFrom();

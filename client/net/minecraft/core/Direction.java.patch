@@ -1,6 +1,6 @@
 --- net/minecraft/core/Direction.java
 +++ net/minecraft/core/Direction.java
-@@ -3,10 +3,11 @@
+@@ -3,21 +3,24 @@
  import com.google.common.collect.Iterators;
  import com.mojang.math.Matrix4f;
  import com.mojang.math.Quaternion;
@@ -12,11 +12,12 @@
  import java.util.Arrays;
  import java.util.Comparator;
  import java.util.Iterator;
-@@ -14,10 +15,11 @@
+ import java.util.Locale;
  import java.util.Map;
  import java.util.Random;
  import java.util.function.Predicate;
  import java.util.stream.Collectors;
++import java.util.stream.Stream;
  import javax.annotation.Nullable;
 +import net.minecraft.Util;
  import net.minecraft.util.Mth;
@@ -24,7 +25,7 @@
  import net.minecraft.world.entity.Entity;
  
  public enum Direction implements StringRepresentable {
-@@ -239,12 +241,12 @@
+@@ -239,12 +242,12 @@
  
     public float toYRot() {
        return (float)((this.data2d & 3) * 90);
@@ -39,7 +40,7 @@
     public static Direction getNearest(double var0, double var2, double var4) {
        return getNearest((float)var0, (float)var2, (float)var4);
     }
-@@ -274,11 +276,11 @@
+@@ -274,11 +277,11 @@
     public String getSerializedName() {
        return this.name;
     }
@@ -52,7 +53,7 @@
        for(int var4 = 0; var4 < var3; ++var4) {
           Direction var5 = var2[var4];
           if (var5.getAxisDirection() == var0 && var5.getAxis() == var1) {
-@@ -304,11 +306,11 @@
+@@ -304,20 +307,24 @@
           this.faces = var3;
           this.axis = var4;
        }
@@ -65,7 +66,20 @@
        public boolean test(@Nullable Direction var1) {
           return var1 != null && var1.getAxis().getPlane() == this;
        }
-@@ -335,10 +337,14 @@
+ 
+       public Iterator<Direction> iterator() {
+          return Iterators.forArray(this.faces);
+       }
++
++      public Stream<Direction> stream() {
++         return Arrays.stream(this.faces);
++      }
+    }
+ 
+    public static enum AxisDirection {
+       POSITIVE(1, "Towards positive"),
+       NEGATIVE(-1, "Towards negative");
+@@ -335,10 +342,14 @@
        }
  
        public String toString() {
@@ -80,7 +94,7 @@
     public static enum Axis implements StringRepresentable, Predicate<Direction> {
        X("x") {
           public int choose(int var1, int var2, int var3) {
-@@ -366,11 +372,13 @@
+@@ -366,11 +377,13 @@
           public double choose(double var1, double var3, double var5) {
              return var5;
           }
@@ -95,7 +109,7 @@
        private final String name;
  
        private Axis(String var3) {
-@@ -396,12 +404,12 @@
+@@ -396,12 +409,12 @@
  
        public String toString() {
           return this.name;

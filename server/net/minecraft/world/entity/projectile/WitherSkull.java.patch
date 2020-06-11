@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/projectile/WitherSkull.java
 +++ net/minecraft/world/entity/projectile/WitherSkull.java
-@@ -42,43 +42,49 @@
+@@ -42,43 +42,51 @@
  
     public float getBlockExplosionResistance(Explosion var1, BlockGetter var2, BlockPos var3, BlockState var4, FluidState var5, float var6) {
        return this.isDangerous() && WitherBoss.canDestroy(var4) ? Math.min(0.8F, var6) : var6;
@@ -22,19 +22,21 @@
 -                  }
 +         Entity var2 = var1.getEntity();
 +         Entity var3 = this.getOwner();
++         boolean var4;
 +         if (var3 instanceof LivingEntity) {
-+            LivingEntity var4 = (LivingEntity)var3;
-+            if (var2.hurt(DamageSource.witherSkull(this, var4), 8.0F)) {
++            LivingEntity var5 = (LivingEntity)var3;
++            var4 = var2.hurt(DamageSource.witherSkull(this, var5), 8.0F);
++            if (var4) {
 +               if (var2.isAlive()) {
-+                  this.doEnchantDamageEffects(var4, var2);
++                  this.doEnchantDamageEffects(var5, var2);
 +               } else {
-+                  var4.heal(5.0F);
++                  var5.heal(5.0F);
                 }
 -            } else {
 -               var2.hurt(DamageSource.MAGIC, 5.0F);
              }
 +         } else {
-+            var2.hurt(DamageSource.MAGIC, 5.0F);
++            var4 = var2.hurt(DamageSource.MAGIC, 5.0F);
 +         }
  
 -            if (var2 instanceof LivingEntity) {
@@ -44,19 +46,19 @@
 -               } else if (this.level.getDifficulty() == Difficulty.HARD) {
 -                  var3 = 40;
 -               }
-+         if (var2 instanceof LivingEntity) {
-+            byte var5 = 0;
++         if (var4 && var2 instanceof LivingEntity) {
++            byte var6 = 0;
 +            if (this.level.getDifficulty() == Difficulty.NORMAL) {
-+               var5 = 10;
++               var6 = 10;
 +            } else if (this.level.getDifficulty() == Difficulty.HARD) {
-+               var5 = 40;
++               var6 = 40;
 +            }
  
 -               if (var3 > 0) {
 -                  ((LivingEntity)var2).addEffect(new MobEffectInstance(MobEffects.WITHER, 20 * var3, 1));
 -               }
-+            if (var5 > 0) {
-+               ((LivingEntity)var2).addEffect(new MobEffectInstance(MobEffects.WITHER, 20 * var5, 1));
++            if (var6 > 0) {
++               ((LivingEntity)var2).addEffect(new MobEffectInstance(MobEffects.WITHER, 20 * var6, 1));
              }
           }
  

@@ -40,7 +40,7 @@
           if (var7 instanceof BarrelBlockEntity) {
              var4.openMenu((BarrelBlockEntity)var7);
              var4.awardStat(Stats.OPEN_BARREL);
-+            PiglinAi.angerNearbyPiglinsThatSee(var4);
++            PiglinAi.angerNearbyPiglins(var4, true);
           }
  
 -         return InteractionResult.SUCCESS;

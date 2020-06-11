@@ -47,7 +47,30 @@
     }
  
     public Stream<PoiRecord> getInRange(Predicate<PoiType> var1, BlockPos var2, int var3, PoiManager.Occupancy var4) {
-@@ -81,14 +88,14 @@
+@@ -62,33 +69,29 @@
+          return var2x.getPos().distSqr(var2) <= (double)var5;
+       });
+    }
+ 
+    public Stream<PoiRecord> getInChunk(Predicate<PoiType> var1, ChunkPos var2, PoiManager.Occupancy var3) {
+-      return IntStream.range(0, 16).boxed().flatMap((var4) -> {
+-         return this.getInSection(var1, SectionPos.of(var2, var4).asLong(), var3);
++      return IntStream.range(0, 16).boxed().map((var2x) -> {
++         return this.getOrLoad(SectionPos.of(var2, var2x).asLong());
++      }).filter(Optional::isPresent).flatMap((var2x) -> {
++         return ((PoiSection)var2x.get()).getRecords(var1, var3);
+       });
+    }
+ 
+-   private Stream<PoiRecord> getInSection(Predicate<PoiType> var1, long var2, PoiManager.Occupancy var4) {
+-      return (Stream)this.getOrLoad(var2).map((var2x) -> {
+-         return var2x.getRecords(var1, var4);
+-      }).orElseGet(Stream::empty);
+-   }
+-
+    public Stream<BlockPos> findAll(Predicate<PoiType> var1, Predicate<BlockPos> var2, BlockPos var3, int var4, PoiManager.Occupancy var5) {
+       return this.getInRange(var1, var3, var4, var5).map(PoiRecord::getPos).filter(var2);
+    }
  
     public Optional<BlockPos> find(Predicate<PoiType> var1, Predicate<BlockPos> var2, BlockPos var3, int var4, PoiManager.Occupancy var5) {
        return this.findAll(var1, var2, var3, var4, var5).findFirst();
@@ -66,7 +89,7 @@
     public Optional<BlockPos> take(Predicate<PoiType> var1, Predicate<BlockPos> var2, BlockPos var3, int var4) {
        return this.getInRange(var1, var3, var4, PoiManager.Occupancy.HAS_SPACE).filter((var1x) -> {
           return var2.test(var1x.getPos());
-@@ -164,13 +171,13 @@
+@@ -164,13 +167,13 @@
  
        });
     }

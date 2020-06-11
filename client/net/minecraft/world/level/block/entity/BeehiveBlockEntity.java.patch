@@ -12,6 +12,19 @@
  import net.minecraft.world.entity.animal.Bee;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.level.block.BeehiveBlock;
+@@ -77,11 +78,11 @@
+             Entity var6 = (Entity)var5.next();
+             if (var6 instanceof Bee) {
+                Bee var7 = (Bee)var6;
+                if (var1.position().distanceToSqr(var6.position()) <= 16.0D) {
+                   if (!this.isSedated()) {
+-                     var7.makeAngry(var1);
++                     var7.setTarget(var1);
+                   } else {
+                      var7.setStayOutOfHiveCountdown(400);
+                   }
+                }
+             }
 @@ -91,11 +92,11 @@
     }
  
@@ -38,7 +51,7 @@
     protected void sendDebugPackets() {
        DebugPackets.sendHiveInfo(this);
     }
-@@ -139,67 +140,72 @@
+@@ -139,93 +140,103 @@
  
           var1.remove();
        }
@@ -94,7 +107,6 @@
 +                        var11.setSavedFlowerPos(this.savedFlowerPos);
                       }
  
-+                     int var12;
                       if (var4 == BeehiveBlockEntity.BeeReleaseStatus.HONEY_DELIVERED) {
 -                        var19.dropOffNectar();
 -                        if (var1.getBlock().is(BlockTags.BEEHIVES)) {
@@ -105,7 +117,7 @@
 -                                 --var21;
 +                        var11.dropOffNectar();
 +                        if (var1.getBlock().is((Tag)BlockTags.BEEHIVES)) {
-+                           var12 = getHoneyLevel(var1);
++                           int var12 = getHoneyLevel(var1);
 +                           if (var12 < 5) {
 +                              int var13 = this.level.random.nextInt(100) == 0 ? 2 : 1;
 +                              if (var12 + var13 > 5) {
@@ -119,21 +131,18 @@
                       }
  
 -                     var19.resetTicksWithoutNectarSinceExitingHive();
-+                     var12 = var2.ticksInHive;
-+                     var11.ageUp(var12);
-+                     var11.setInLoveTime(Math.max(0, var11.getInLoveTime() - var12));
-+                     var11.resetTicksWithoutNectarSinceExitingHive();
++                     this.setBeeReleaseData(var2.ticksInHive, var11);
                       if (var3 != null) {
 -                        var3.add(var19);
 +                        var3.add(var11);
                       }
 +
-+                     float var22 = var10.getBbWidth();
-+                     double var14 = var9 ? 0.0D : 0.55D + (double)(var22 / 2.0F);
-+                     double var16 = (double)var5.getX() + 0.5D + var14 * (double)var7.getStepX();
-+                     double var18 = (double)var5.getY() + 0.5D - (double)(var10.getBbHeight() / 2.0F);
-+                     double var20 = (double)var5.getZ() + 0.5D + var14 * (double)var7.getStepZ();
-+                     var10.moveTo(var16, var18, var20, var10.yRot, var10.xRot);
++                     float var21 = var10.getBbWidth();
++                     double var22 = var9 ? 0.0D : 0.55D + (double)(var21 / 2.0F);
++                     double var15 = (double)var5.getX() + 0.5D + var22 * (double)var7.getStepX();
++                     double var17 = (double)var5.getY() + 0.5D - (double)(var10.getBbHeight() / 2.0F);
++                     double var19 = (double)var5.getZ() + 0.5D + var22 * (double)var7.getStepZ();
++                     var10.moveTo(var15, var17, var19, var10.yRot, var10.xRot);
                    }
  
 -                  BlockPos var22 = this.getBlockPos();
@@ -146,11 +155,34 @@
                 return false;
              }
           }
-@@ -215,13 +221,12 @@
-       BlockState var2 = this.getBlockState();
+       }
+    }
  
-       while(var1.hasNext()) {
-          BeehiveBlockEntity.BeeData var3 = (BeehiveBlockEntity.BeeData)var1.next();
++   private void setBeeReleaseData(int var1, Bee var2) {
++      int var3 = var2.getAge();
++      if (var3 < 0) {
++         var2.setAge(Math.min(0, var3 + var1));
++      } else if (var3 > 0) {
++         var2.setAge(Math.max(0, var3 - var1));
++      }
++
++      var2.setInLoveTime(Math.max(0, var2.getInLoveTime() - var1));
++      var2.resetTicksWithoutNectarSinceExitingHive();
++   }
++
+    private boolean hasSavedFlowerPos() {
+       return this.savedFlowerPos != null;
+    }
+ 
+    private void tickOccupants() {
+       Iterator var1 = this.stored.iterator();
+-      BlockState var2 = this.getBlockState();
+ 
+-      while(var1.hasNext()) {
+-         BeehiveBlockEntity.BeeData var3 = (BeehiveBlockEntity.BeeData)var1.next();
++      BeehiveBlockEntity.BeeData var3;
++      for(BlockState var2 = this.getBlockState(); var1.hasNext(); var3.ticksInHive++) {
++         var3 = (BeehiveBlockEntity.BeeData)var1.next();
           if (var3.ticksInHive > var3.minOccupationTicks) {
 -            CompoundTag var4 = var3.entityData;
 -            BeehiveBlockEntity.BeeReleaseStatus var5 = var4.getBoolean("HasNectar") ? BeehiveBlockEntity.BeeReleaseStatus.HONEY_DELIVERED : BeehiveBlockEntity.BeeReleaseStatus.BEE_RELEASED;
@@ -159,10 +191,14 @@
 +            if (this.releaseOccupant(var2, var3, (List)null, var4)) {
                 var1.remove();
              }
-          } else {
-             var3.ticksInHive++;
+-         } else {
+-            var3.ticksInHive++;
           }
-@@ -242,24 +247,24 @@
+       }
+ 
+    }
+ 
+@@ -242,24 +253,24 @@
  
           this.sendDebugPackets();
        }
@@ -196,7 +232,7 @@
     }
  
     public CompoundTag save(CompoundTag var1) {
-@@ -276,11 +281,11 @@
+@@ -276,11 +287,11 @@
        ListTag var1 = new ListTag();
        Iterator var2 = this.stored.iterator();
  
@@ -209,7 +245,7 @@
           var4.putInt("TicksInHive", var3.ticksInHive);
           var4.putInt("MinOccupationTicks", var3.minOccupationTicks);
           var1.add(var4);
-@@ -293,11 +298,11 @@
+@@ -293,11 +304,11 @@
        private final CompoundTag entityData;
        private int ticksInHive;
        private final int minOccupationTicks;

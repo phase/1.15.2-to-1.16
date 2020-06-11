@@ -1,0 +1,17 @@
+--- net/minecraft/world/item/BlockPlaceContext.java
++++ net/minecraft/world/item/BlockPlaceContext.java
+@@ -11,10 +11,14 @@
+ 
+ public class BlockPlaceContext extends UseOnContext {
+    private final BlockPos relativePos;
+    protected boolean replaceClicked;
+ 
++   public BlockPlaceContext(Player var1, InteractionHand var2, ItemStack var3, BlockHitResult var4) {
++      this(var1.level, var1, var2, var3, var4);
++   }
++
+    public BlockPlaceContext(UseOnContext var1) {
+       this(var1.getLevel(), var1.getPlayer(), var1.getHand(), var1.getItemInHand(), var1.hitResult);
+    }
+ 
+    protected BlockPlaceContext(Level var1, @Nullable Player var2, InteractionHand var3, ItemStack var4, BlockHitResult var5) {

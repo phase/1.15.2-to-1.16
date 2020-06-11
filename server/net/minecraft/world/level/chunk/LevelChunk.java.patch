@@ -21,7 +21,18 @@
  import net.minecraft.world.level.material.Fluid;
  import net.minecraft.world.level.material.FluidState;
  import net.minecraft.world.level.material.Fluids;
-@@ -66,12 +66,12 @@
+@@ -56,22 +56,23 @@
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class LevelChunk implements ChunkAccess {
+    private static final Logger LOGGER = LogManager.getLogger();
++   @Nullable
+    public static final LevelChunkSection EMPTY_SECTION = null;
+    private final LevelChunkSection[] sections;
+    private ChunkBiomeContainer biomes;
+    private final Map<BlockPos, CompoundTag> pendingBlockEntities;
+    private boolean loaded;
     private final Level level;
     private final Map<Heightmap.Types, Heightmap> heightmaps;
     private final UpgradeData upgradeData;
@@ -36,7 +47,7 @@
     private TickList<Fluid> liquidTicks;
     private boolean lastSaveHadEntities;
     private long lastSaveTime;
-@@ -187,11 +187,11 @@
+@@ -187,11 +188,11 @@
  
     public BlockState getBlockState(BlockPos var1) {
        int var2 = var1.getX();
@@ -49,7 +60,7 @@
              var9 = Blocks.BARRIER.defaultBlockState();
           }
  
-@@ -280,11 +280,11 @@
+@@ -280,11 +281,11 @@
              var9.onRemove(this.level, var1, var2, var3);
           } else if (var11 != var10 && var11 instanceof EntityBlock) {
              this.level.removeBlockEntity(var1);
@@ -62,7 +73,66 @@
              BlockEntity var13;
              if (var11 instanceof EntityBlock) {
                 var13 = this.getBlockEntity(var1, LevelChunk.EntityCreationType.CHECK);
-@@ -635,44 +635,44 @@
+@@ -474,41 +475,32 @@
+       int var5 = Mth.floor((var2.minY - 2.0D) / 16.0D);
+       int var6 = Mth.floor((var2.maxY + 2.0D) / 16.0D);
+       var5 = Mth.clamp(var5, 0, this.entitySections.length - 1);
+       var6 = Mth.clamp(var6, 0, this.entitySections.length - 1);
+ 
+-      label68:
+       for(int var7 = var5; var7 <= var6; ++var7) {
+-         if (!this.entitySections[var7].isEmpty()) {
+-            Iterator var8 = this.entitySections[var7].iterator();
++         ClassInstanceMultiMap var8 = this.entitySections[var7];
++         List var9 = var8.getAllInstances();
++         int var10 = var9.size();
+ 
+-            while(true) {
+-               Entity var9;
+-               do {
+-                  do {
+-                     do {
+-                        if (!var8.hasNext()) {
+-                           continue label68;
+-                        }
++         for(int var11 = 0; var11 < var10; ++var11) {
++            Entity var12 = (Entity)var9.get(var11);
++            if (var12.getBoundingBox().intersects(var2) && var12 != var1) {
++               if (var4 == null || var4.test(var12)) {
++                  var3.add(var12);
++               }
+ 
+-                        var9 = (Entity)var8.next();
+-                     } while(!var9.getBoundingBox().intersects(var2));
+-                  } while(var9 == var1);
++               if (var12 instanceof EnderDragon) {
++                  EnderDragonPart[] var13 = ((EnderDragon)var12).getSubEntities();
++                  int var14 = var13.length;
+ 
+-                  if (var4 == null || var4.test(var9)) {
+-                     var3.add(var9);
++                  for(int var15 = 0; var15 < var14; ++var15) {
++                     EnderDragonPart var16 = var13[var15];
++                     if (var16 != var1 && var16.getBoundingBox().intersects(var2) && (var4 == null || var4.test(var16))) {
++                        var3.add(var16);
++                     }
+                   }
+-               } while(!(var9 instanceof EnderDragon));
+-
+-               EnderDragonPart[] var10 = ((EnderDragon)var9).getSubEntities();
+-               int var11 = var10.length;
+-
+-               for(int var12 = 0; var12 < var11; ++var12) {
+-                  EnderDragonPart var13 = var10[var12];
+-                  if (var13 != var1 && var13.getBoundingBox().intersects(var2) && (var4 == null || var4.test(var13))) {
+-                     var3.add(var13);
+-                  }
+                }
+             }
+          }
+       }
+ 
+@@ -635,44 +627,44 @@
     public void setLastSaveTime(long var1) {
        this.lastSaveTime = var1;
     }
@@ -115,7 +185,7 @@
     }
  
     public long getInhabitedTime() {
-@@ -714,28 +714,29 @@
+@@ -714,28 +706,29 @@
        this.upgradeData.upgrade(this);
     }
  
@@ -151,7 +221,7 @@
        return var3;
     }
  
-@@ -752,34 +753,34 @@
+@@ -752,34 +745,34 @@
           ((ProtoTickList)this.blockTicks).copyOut(this.level.getBlockTicks(), (var1) -> {
              return this.getBlockState(var1).getBlock();
           });

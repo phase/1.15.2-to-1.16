@@ -1,0 +1,221 @@
+--- net/minecraft/resources/RegistryReadOps.java
++++ net/minecraft/resources/RegistryReadOps.java
+@@ -1,0 +1,218 @@
++package net.minecraft.resources;
++
++import com.google.common.base.Suppliers;
++import com.google.common.collect.Maps;
++import com.google.gson.JsonElement;
++import com.google.gson.JsonIOException;
++import com.google.gson.JsonParser;
++import com.google.gson.JsonSyntaxException;
++import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.DynamicOps;
++import com.mojang.serialization.JsonOps;
++import com.mojang.serialization.Lifecycle;
++import com.mojang.serialization.MapCodec;
++import java.io.IOException;
++import java.io.InputStreamReader;
++import java.io.Reader;
++import java.nio.charset.StandardCharsets;
++import java.util.Collection;
++import java.util.Iterator;
++import java.util.Map;
++import java.util.Optional;
++import java.util.function.Supplier;
++import net.minecraft.core.MappedRegistry;
++import net.minecraft.core.Registry;
++import net.minecraft.core.RegistryAccess;
++import net.minecraft.core.WritableRegistry;
++import net.minecraft.server.packs.resources.Resource;
++import net.minecraft.server.packs.resources.ResourceManager;
++import net.minecraft.util.Codecs;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
++
++public class RegistryReadOps<T> extends DelegatingOps<T> {
++   private static final Logger LOGGER = LogManager.getLogger();
++   private final ResourceManager resourceManager;
++   private final RegistryAccess registryHolder;
++   private final Map<ResourceKey<? extends Registry<?>>, RegistryReadOps.ReadCache<?>> readCache = Maps.newIdentityHashMap();
++
++   public static <T> RegistryReadOps<T> create(DynamicOps<T> var0, ResourceManager var1, RegistryAccess var2) {
++      return new RegistryReadOps(var0, var1, var2);
++   }
++
++   private RegistryReadOps(DynamicOps<T> var1, ResourceManager var2, RegistryAccess var3) {
++      super(var1);
++      this.resourceManager = var2;
++      this.registryHolder = var3;
++   }
++
++   protected <E> DataResult<Pair<Supplier<E>, T>> decodeElement(T var1, ResourceKey<Registry<E>> var2, MapCodec<E> var3) {
++      Optional var4 = this.registryHolder.registry(var2);
++      if (!var4.isPresent()) {
++         return DataResult.error("Unknown registry: " + var2);
++      } else {
++         WritableRegistry var5 = (WritableRegistry)var4.get();
++         DataResult var6 = ResourceLocation.CODEC.decode(this.delegate, var1);
++         if (!var6.result().isPresent()) {
++            return Codecs.withName(var2, var3).codec().decode(this.delegate, var1).map((var1x) -> {
++               return var1x.mapFirst((var1) -> {
++                  var5.register((ResourceKey)var1.getFirst(), var1.getSecond());
++                  var5.setPersistent((ResourceKey)var1.getFirst());
++                  return var1::getSecond;
++               });
++            });
++         } else {
++            Pair var7 = (Pair)var6.result().get();
++            ResourceLocation var8 = (ResourceLocation)var7.getFirst();
++            return this.readAndRegisterElement(var2, var5, var3, var8).map((var1x) -> {
++               return Pair.of(var1x, var7.getSecond());
++            });
++         }
++      }
++   }
++
++   public <E> DataResult<MappedRegistry<E>> decodeElements(MappedRegistry<E> var1, ResourceKey<Registry<E>> var2, MapCodec<E> var3) {
++      ResourceLocation var4 = var2.location();
++      Collection var5 = this.resourceManager.listResources(var4, (var0) -> {
++         return var0.endsWith(".json");
++      });
++      DataResult var6 = DataResult.success(var1, Lifecycle.stable());
++      Iterator var7 = var5.iterator();
++
++      while(var7.hasNext()) {
++         ResourceLocation var8 = (ResourceLocation)var7.next();
++         String var9 = var8.getPath();
++         if (!var9.endsWith(".json")) {
++            LOGGER.warn((String)"Skipping resource {} since it is not a json file", (Object)var8);
++         } else if (!var9.startsWith(var4.getPath() + "/")) {
++            LOGGER.warn((String)"Skipping resource {} since it does not have a registry name prefix", (Object)var8);
++         } else {
++            String var10 = var9.substring(0, var9.length() - ".json".length()).substring(var4.getPath().length() + 1);
++            int var11 = var10.indexOf(47);
++            if (var11 < 0) {
++               LOGGER.warn((String)"Skipping resource {} since it does not have a namespace", (Object)var8);
++            } else {
++               String var12 = var10.substring(0, var11);
++               String var13 = var10.substring(var11 + 1);
++               ResourceLocation var14 = new ResourceLocation(var12, var13);
++               var6 = var6.flatMap((var4x) -> {
++                  return this.readAndRegisterElement(var2, var4x, var3, var14).map((var1) -> {
++                     return var4x;
++                  });
++               });
++            }
++         }
++      }
++
++      return var6.setPartial((Object)var1);
++   }
++
++   private <E> DataResult<Supplier<E>> readAndRegisterElement(ResourceKey<Registry<E>> var1, WritableRegistry<E> var2, MapCodec<E> var3, ResourceLocation var4) {
++      ResourceKey var5 = ResourceKey.create(var1, var4);
++      Object var6 = var2.get(var5);
++      if (var6 != null) {
++         return DataResult.success(() -> {
++            return var6;
++         }, Lifecycle.stable());
++      } else {
++         RegistryReadOps.ReadCache var7 = this.readCache(var1);
++         DataResult var8 = (DataResult)var7.values.get(var5);
++         if (var8 != null) {
++            return var8;
++         } else {
++            com.google.common.base.Supplier var9 = Suppliers.memoize(() -> {
++               Object var2x = var2.get(var5);
++               if (var2x == null) {
++                  throw new RuntimeException("Error during recursive registry parsing, element resolved too early: " + var5);
++               } else {
++                  return var2x;
++               }
++            });
++            var7.values.put(var5, DataResult.success(var9));
++            DataResult var10 = this.readElementFromFile(var1, var5, var3);
++            var10.result().ifPresent((var2x) -> {
++               var2.register(var5, var2x);
++            });
++            DataResult var11 = var10.map((var0) -> {
++               return () -> {
++                  return var0;
++               };
++            });
++            var7.values.put(var5, var11);
++            return var11;
++         }
++      }
++   }
++
++   private <E> DataResult<E> readElementFromFile(ResourceKey<Registry<E>> var1, ResourceKey<E> var2, MapCodec<E> var3) {
++      ResourceLocation var4 = new ResourceLocation(var1.location().getNamespace(), var1.location().getPath() + "/" + var2.location().getNamespace() + "/" + var2.location().getPath() + ".json");
++
++      try {
++         Resource var5 = this.resourceManager.getResource(var4);
++         Throwable var6 = null;
++
++         DataResult var11;
++         try {
++            InputStreamReader var7 = new InputStreamReader(var5.getInputStream(), StandardCharsets.UTF_8);
++            Throwable var8 = null;
++
++            try {
++               JsonParser var9 = new JsonParser();
++               JsonElement var10 = var9.parse((Reader)var7);
++               var11 = var3.codec().parse(new RegistryReadOps(JsonOps.INSTANCE, this.resourceManager, this.registryHolder), var10);
++            } catch (Throwable var36) {
++               var8 = var36;
++               throw var36;
++            } finally {
++               if (var7 != null) {
++                  if (var8 != null) {
++                     try {
++                        var7.close();
++                     } catch (Throwable var35) {
++                        var8.addSuppressed(var35);
++                     }
++                  } else {
++                     var7.close();
++                  }
++               }
++
++            }
++         } catch (Throwable var38) {
++            var6 = var38;
++            throw var38;
++         } finally {
++            if (var5 != null) {
++               if (var6 != null) {
++                  try {
++                     var5.close();
++                  } catch (Throwable var34) {
++                     var6.addSuppressed(var34);
++                  }
++               } else {
++                  var5.close();
++               }
++            }
++
++         }
++
++         return var11;
++      } catch (JsonIOException | JsonSyntaxException | IOException var40) {
++         return DataResult.error("Failed to parse file: " + var40.getMessage());
++      }
++   }
++
++   private <E> RegistryReadOps.ReadCache<E> readCache(ResourceKey<Registry<E>> var1) {
++      return (RegistryReadOps.ReadCache)this.readCache.computeIfAbsent(var1, (var0) -> {
++         return new RegistryReadOps.ReadCache();
++      });
++   }
++
++   static final class ReadCache<E> {
++      private final Map<ResourceKey<E>, DataResult<Supplier<E>>> values;
++
++      private ReadCache() {
++         this.values = Maps.newIdentityHashMap();
++      }
++   }
++}

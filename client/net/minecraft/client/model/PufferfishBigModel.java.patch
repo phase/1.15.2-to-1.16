@@ -1,0 +1,15 @@
+--- net/minecraft/client/model/PufferfishBigModel.java
++++ net/minecraft/client/model/PufferfishBigModel.java
+@@ -72,11 +72,11 @@
+       this.sideBackFin1.setPos(4.0F, 22.0F, 4.0F);
+       this.sideBackFin1.yRot = -0.7853982F;
+    }
+ 
+    public Iterable<ModelPart> parts() {
+-      return ImmutableList.of(this.cube, this.blueFin0, this.blueFin1, this.topFrontFin, this.topMidFin, this.topBackFin, this.sideFrontFin0, this.sideBackFin1, this.bottomFrontFin, this.bottomMidFin, this.bottomBackFin, this.sideBackFin0, new ModelPart[]{this.sideBackFin1});
++      return ImmutableList.of(this.cube, this.blueFin0, this.blueFin1, this.topFrontFin, this.topMidFin, this.topBackFin, this.sideFrontFin0, this.sideFrontFin1, this.bottomFrontFin, this.bottomMidFin, this.bottomBackFin, this.sideBackFin0, new ModelPart[]{this.sideBackFin1});
+    }
+ 
+    public void setupAnim(T var1, float var2, float var3, float var4, float var5, float var6) {
+       this.blueFin0.zRot = -0.2F + 0.4F * Mth.sin(var4 * 0.2F);
+       this.blueFin1.zRot = 0.2F - 0.4F * Mth.sin(var4 * 0.2F);

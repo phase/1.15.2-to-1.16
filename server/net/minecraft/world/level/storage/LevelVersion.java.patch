@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/storage/LevelVersion.java
 +++ net/minecraft/world/level/storage/LevelVersion.java
-@@ -1,0 +1,32 @@
+@@ -1,0 +1,36 @@
 +package net.minecraft.world.level.storage;
 +
 +import com.mojang.serialization.Dynamic;
@@ -31,5 +31,9 @@
 +
 +   public int levelDataVersion() {
 +      return this.levelDataVersion;
++   }
++
++   public long lastPlayed() {
++      return this.lastPlayed;
 +   }
 +}

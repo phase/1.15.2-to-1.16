@@ -1,16 +1,17 @@
 --- net/minecraft/world/entity/ai/behavior/AssignProfessionFromJobSite.java
 +++ net/minecraft/world/entity/ai/behavior/AssignProfessionFromJobSite.java
-@@ -1,8 +1,9 @@
+@@ -1,8 +1,10 @@
  package net.minecraft.world.entity.ai.behavior;
  
  import com.google.common.collect.ImmutableMap;
++import java.util.Optional;
 +import net.minecraft.core.BlockPos;
  import net.minecraft.core.GlobalPos;
  import net.minecraft.core.Registry;
  import net.minecraft.server.MinecraftServer;
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-@@ -10,25 +11,30 @@
+@@ -10,25 +12,32 @@
  import net.minecraft.world.entity.npc.Villager;
  import net.minecraft.world.entity.npc.VillagerProfession;
  
@@ -34,19 +35,20 @@
 -            return var1x.getJobPoiType() == var2x;
 -         }).findFirst().ifPresent((var2xx) -> {
 -            var2.setVillagerData(var2.getVillagerData().setProfession(var2xx));
--            var2.refreshBrain(var1);
 +      GlobalPos var5 = (GlobalPos)var2.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE).get();
 +      var2.getBrain().eraseMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
 +      var2.getBrain().setMemory(MemoryModuleType.JOB_SITE, (Object)var5);
 +      if (var2.getVillagerData().getProfession() == VillagerProfession.NONE) {
 +         MinecraftServer var6 = var1.getServer();
-+         var6.getLevel(var5.dimension()).getPoiManager().getType(var5.pos()).ifPresent((var2x) -> {
-+            Registry.VILLAGER_PROFESSION.stream().filter((var1x) -> {
-+               return var1x.getJobPoiType() == var2x;
-+            }).findFirst().ifPresent((var2xx) -> {
-+               var2.setVillagerData(var2.getVillagerData().setProfession(var2xx));
-+               var2.refreshBrain(var1);
-+            });
++         Optional.ofNullable(var6.getLevel(var5.dimension())).flatMap((var1x) -> {
++            return var1x.getPoiManager().getType(var5.pos());
++         }).flatMap((var0) -> {
++            return Registry.VILLAGER_PROFESSION.stream().filter((var1) -> {
++               return var1.getJobPoiType() == var0;
++            }).findFirst();
++         }).ifPresent((var2x) -> {
++            var2.setVillagerData(var2.getVillagerData().setProfession(var2x));
+             var2.refreshBrain(var1);
           });
 -      });
 +      }

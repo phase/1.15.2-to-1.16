@@ -23,10 +23,10 @@
 -      this.stable = true;
 -      this.worldVersion = 2230;
 -      this.protocolVersion = 578;
-+      this.name = "20w22a";
++      this.name = "1.16-pre4";
 +      this.stable = false;
-+      this.worldVersion = 2555;
-+      this.protocolVersion = 719;
++      this.worldVersion = 2560;
++      this.protocolVersion = 727;
        this.packVersion = 5;
        this.buildTime = new Date();
 -      this.releaseTarget = "1.15.2";

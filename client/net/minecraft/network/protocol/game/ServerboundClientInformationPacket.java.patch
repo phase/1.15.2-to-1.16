@@ -1,0 +1,17 @@
+--- net/minecraft/network/protocol/game/ServerboundClientInformationPacket.java
++++ net/minecraft/network/protocol/game/ServerboundClientInformationPacket.java
+@@ -46,14 +46,10 @@
+ 
+    public void handle(ServerGamePacketListener var1) {
+       var1.handleClientInformation(this);
+    }
+ 
+-   public String getLanguage() {
+-      return this.language;
+-   }
+-
+    public ChatVisiblity getChatVisibility() {
+       return this.chatVisibility;
+    }
+ 
+    public boolean getChatColors() {

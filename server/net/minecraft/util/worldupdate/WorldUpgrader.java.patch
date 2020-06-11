@@ -22,7 +22,7 @@
  import java.util.concurrent.ThreadFactory;
  import java.util.regex.Matcher;
  import java.util.regex.Pattern;
-@@ -21,52 +22,53 @@
+@@ -21,52 +22,49 @@
  import net.minecraft.SharedConstants;
  import net.minecraft.Util;
  import net.minecraft.nbt.CompoundTag;
@@ -39,15 +39,14 @@
 -import net.minecraft.world.level.storage.LevelData;
 -import net.minecraft.world.level.storage.LevelStorage;
  import net.minecraft.world.level.storage.LevelStorageSource;
-+import net.minecraft.world.level.storage.WorldData;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
  
  public class WorldUpgrader {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ThreadFactory THREAD_FACTORY = (new ThreadFactoryBuilder()).setDaemon(true).build();
-    private final String levelName;
-+   private final ImmutableSet<ResourceKey<Level>> dimensionTypes;
+-   private final String levelName;
++   private final ImmutableSet<ResourceKey<Level>> levels;
     private final boolean eraseCache;
 -   private final LevelStorage levelStorage;
 +   private final LevelStorageSource.LevelStorageAccess levelStorage;
@@ -68,9 +67,9 @@
     private final DimensionDataStorage overworldDataStorage;
  
 -   public WorldUpgrader(String var1, LevelStorageSource var2, LevelData var3, boolean var4) {
-+   public WorldUpgrader(LevelStorageSource.LevelStorageAccess var1, DataFixer var2, WorldData var3, boolean var4) {
-       this.levelName = var3.getLevelName();
-+      this.dimensionTypes = (ImmutableSet)var3.worldGenSettings().dimensions().keySet().stream().collect(ImmutableSet.toImmutableSet());
+-      this.levelName = var3.getLevelName();
++   public WorldUpgrader(LevelStorageSource.LevelStorageAccess var1, DataFixer var2, ImmutableSet<ResourceKey<Level>> var3, boolean var4) {
++      this.levels = var3;
        this.eraseCache = var4;
 -      this.levelStorage = var2.selectLevel(var1, (MinecraftServer)null);
 -      this.levelStorage.saveLevelData(var3);
@@ -78,7 +77,6 @@
 -      this.pathToWorld = this.levelStorage.getFolder();
 +      this.dataFixer = var2;
 +      this.levelStorage = var1;
-+      var1.saveDataTag(var3);
 +      this.overworldDataStorage = new DimensionDataStorage(new File(this.levelStorage.getDimensionPath(Level.OVERWORLD), "data"), var2);
        this.thread = THREAD_FACTORY.newThread(this::work);
        this.thread.setUncaughtExceptionHandler((var1x, var2x) -> {
@@ -90,7 +88,7 @@
        this.thread.start();
     }
  
-@@ -79,130 +81,129 @@
+@@ -79,130 +77,129 @@
        }
  
     }
@@ -107,7 +105,7 @@
 -         var5 = this.getAllChunkPos(var4);
 -         var2.put(var4, var5.listIterator());
 +      List var4;
-+      for(UnmodifiableIterator var2 = this.dimensionTypes.iterator(); var2.hasNext(); this.totalChunks += var4.size()) {
++      for(UnmodifiableIterator var2 = this.levels.iterator(); var2.hasNext(); this.totalChunks += var4.size()) {
 +         ResourceKey var3 = (ResourceKey)var2.next();
 +         var4 = this.getAllChunkPos(var3);
 +         var1.put(var3, var4.listIterator());
@@ -123,7 +121,7 @@
 +         float var25 = (float)this.totalChunks;
 +         ImmutableMap var26 = var1.build();
 +         ImmutableMap.Builder var27 = ImmutableMap.builder();
-+         UnmodifiableIterator var5 = this.dimensionTypes.iterator();
++         UnmodifiableIterator var5 = this.levels.iterator();
  
 -         while(var6.hasNext()) {
 -            DimensionType var7 = (DimensionType)var6.next();
@@ -157,7 +155,7 @@
 -                  ChunkPos var15 = (ChunkPos)var13.next();
 -                  boolean var16 = false;
 +            float var32;
-+            for(UnmodifiableIterator var10 = this.dimensionTypes.iterator(); var10.hasNext(); var9 += var32) {
++            for(UnmodifiableIterator var10 = this.levels.iterator(); var10.hasNext(); var9 += var32) {
 +               ResourceKey var11 = (ResourceKey)var10.next();
 +               ListIterator var12 = (ListIterator)var26.get(var11);
 +               ChunkStorage var13 = (ChunkStorage)var28.get(var11);
@@ -289,7 +287,7 @@
           return var1x.endsWith(".mca");
        });
        if (var4 == null) {
-@@ -218,11 +219,11 @@
+@@ -218,11 +215,11 @@
              if (var10.matches()) {
                 int var11 = Integer.parseInt(var10.group(1)) << 5;
                 int var12 = Integer.parseInt(var10.group(2)) << 5;

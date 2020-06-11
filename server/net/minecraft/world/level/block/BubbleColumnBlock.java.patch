@@ -25,6 +25,21 @@
     }
  
     public void entityInside(BlockState var1, Level var2, BlockPos var3, Entity var4) {
+@@ -35,12 +36,12 @@
+          var4.onAboveBubbleCol((Boolean)var1.getValue(DRAG_DOWN));
+          if (!var2.isClientSide) {
+             ServerLevel var6 = (ServerLevel)var2;
+ 
+             for(int var7 = 0; var7 < 2; ++var7) {
+-               var6.sendParticles(ParticleTypes.SPLASH, (double)((float)var3.getX() + var2.random.nextFloat()), (double)(var3.getY() + 1), (double)((float)var3.getZ() + var2.random.nextFloat()), 1, 0.0D, 0.0D, 0.0D, 1.0D);
+-               var6.sendParticles(ParticleTypes.BUBBLE, (double)((float)var3.getX() + var2.random.nextFloat()), (double)(var3.getY() + 1), (double)((float)var3.getZ() + var2.random.nextFloat()), 1, 0.0D, 0.01D, 0.0D, 0.2D);
++               var6.sendParticles(ParticleTypes.SPLASH, (double)var3.getX() + var2.random.nextDouble(), (double)(var3.getY() + 1), (double)var3.getZ() + var2.random.nextDouble(), 1, 0.0D, 0.0D, 0.0D, 1.0D);
++               var6.sendParticles(ParticleTypes.BUBBLE, (double)var3.getX() + var2.random.nextDouble(), (double)(var3.getY() + 1), (double)var3.getZ() + var2.random.nextDouble(), 1, 0.0D, 0.01D, 0.0D, 0.2D);
+             }
+          }
+       } else {
+          var4.onInsideBubbleColumn((Boolean)var1.getValue(DRAG_DOWN));
+       }
 @@ -66,45 +67,40 @@
  
     }

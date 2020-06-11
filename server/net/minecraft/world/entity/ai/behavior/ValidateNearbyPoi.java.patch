@@ -17,7 +17,7 @@
  import net.minecraft.world.entity.ai.memory.MemoryModuleType;
  import net.minecraft.world.entity.ai.memory.MemoryStatus;
  import net.minecraft.world.entity.ai.village.poi.PoiType;
-@@ -26,11 +26,11 @@
+@@ -26,31 +26,33 @@
        this.memoryType = var2;
     }
  
@@ -30,7 +30,22 @@
     protected void start(ServerLevel var1, LivingEntity var2, long var3) {
        Brain var5 = var2.getBrain();
        GlobalPos var6 = (GlobalPos)var5.getMemory(this.memoryType).get();
-@@ -46,11 +46,11 @@
+       BlockPos var7 = var6.pos();
+       ServerLevel var8 = var1.getServer().getLevel(var6.dimension());
+-      if (this.poiDoesntExist(var8, var7)) {
++      if (var8 != null && !this.poiDoesntExist(var8, var7)) {
++         if (this.bedIsOccupied(var8, var7, var2)) {
++            var5.eraseMemory(this.memoryType);
++            var1.getPoiManager().release(var7);
++            DebugPackets.sendPoiTicketCountPacket(var1, var7);
++         }
++      } else {
+          var5.eraseMemory(this.memoryType);
+-      } else if (this.bedIsOccupied(var8, var7, var2)) {
+-         var5.eraseMemory(this.memoryType);
+-         var1.getPoiManager().release(var7);
+-         DebugPackets.sendPoiTicketCountPacket(var1, var7);
+       }
  
     }
  

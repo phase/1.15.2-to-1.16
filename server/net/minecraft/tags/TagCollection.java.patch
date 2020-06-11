@@ -1,19 +1,18 @@
 --- net/minecraft/tags/TagCollection.java
 +++ net/minecraft/tags/TagCollection.java
-@@ -1,8 +1,11 @@
+@@ -1,8 +1,10 @@
  package net.minecraft.tags;
  
 -import com.google.common.collect.ImmutableMap;
 +import com.google.common.collect.BiMap;
 +import com.google.common.collect.HashBiMap;
 +import com.google.common.collect.ImmutableBiMap;
-+import com.google.common.collect.ImmutableSet;
  import com.google.common.collect.Maps;
  import com.google.gson.Gson;
  import com.google.gson.JsonObject;
  import java.io.BufferedReader;
  import java.io.Closeable;
-@@ -13,17 +16,18 @@
+@@ -13,17 +15,18 @@
  import java.nio.charset.StandardCharsets;
  import java.util.Collection;
  import java.util.HashMap;
@@ -33,14 +32,14 @@
  import net.minecraft.server.packs.resources.ResourceManager;
  import net.minecraft.util.GsonHelper;
  import org.apache.commons.io.IOUtils;
-@@ -32,38 +36,50 @@
+@@ -32,38 +35,50 @@
  
  public class TagCollection<T> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new Gson();
     private static final int PATH_SUFFIX_LENGTH = ".json".length();
 -   private Map<ResourceLocation, Tag<T>> tags = ImmutableMap.of();
-+   private final Tag<T> empty = Tag.fromSet(ImmutableSet.of());
++   private final Tag<T> empty = SetTag.empty();
 +   private volatile BiMap<ResourceLocation, Tag<T>> tags = HashBiMap.create();
     private final Function<ResourceLocation, Optional<T>> idToValue;
     private final String directory;
@@ -92,7 +91,7 @@
           Iterator var3 = var1.listResources(this.directory, (var0) -> {
              return var0.endsWith(".json");
           }).iterator();
-@@ -88,17 +104,15 @@
+@@ -88,17 +103,15 @@
                          Throwable var12 = null;
  
                          try {
@@ -114,7 +113,7 @@
                             var12 = var53;
                             throw var53;
                          } finally {
-@@ -145,45 +159,44 @@
+@@ -145,45 +158,44 @@
  
           return var2;
        }, var2);

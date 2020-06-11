@@ -267,7 +267,7 @@
        this.dropWhenSilkTouch(Blocks.ORANGE_STAINED_GLASS);
        this.dropWhenSilkTouch(Blocks.MAGENTA_STAINED_GLASS);
        this.dropWhenSilkTouch(Blocks.LIGHT_BLUE_STAINED_GLASS);
-@@ -976,13 +1047,17 @@
+@@ -976,13 +1047,18 @@
        this.otherWhenSilkTouch(Blocks.INFESTED_COBBLESTONE, Blocks.COBBLESTONE);
        this.otherWhenSilkTouch(Blocks.INFESTED_STONE_BRICKS, Blocks.STONE_BRICKS);
        this.otherWhenSilkTouch(Blocks.INFESTED_MOSSY_STONE_BRICKS, Blocks.MOSSY_STONE_BRICKS);
@@ -280,12 +280,13 @@
        this.add(Blocks.SPAWNER, noDrop());
 +      this.add(Blocks.FIRE, noDrop());
 +      this.add(Blocks.SOUL_FIRE, noDrop());
++      this.add(Blocks.NETHER_PORTAL, noDrop());
        HashSet var6 = Sets.newHashSet();
        Iterator var7 = Registry.BLOCK.iterator();
  
        while(var7.hasNext()) {
           Block var8 = (Block)var7.next();
-@@ -1000,10 +1075,20 @@
+@@ -1000,10 +1076,20 @@
        if (!this.map.isEmpty()) {
           throw new IllegalStateException("Created block loot tables for non-blocks: " + this.map.keySet());
        }

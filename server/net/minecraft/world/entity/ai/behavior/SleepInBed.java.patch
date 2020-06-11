@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/ai/behavior/SleepInBed.java
 +++ net/minecraft/world/entity/ai/behavior/SleepInBed.java
-@@ -1,16 +1,16 @@
+@@ -1,16 +1,15 @@
  package net.minecraft.world.entity.ai.behavior;
  
  import com.google.common.collect.ImmutableList;
@@ -9,7 +9,7 @@
  import java.util.Optional;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.GlobalPos;
- import net.minecraft.core.SerializableLong;
+-import net.minecraft.core.SerializableLong;
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.tags.BlockTags;
 +import net.minecraft.tags.Tag;
@@ -18,7 +18,7 @@
  import net.minecraft.world.entity.ai.memory.MemoryModuleType;
  import net.minecraft.world.entity.ai.memory.MemoryStatus;
  import net.minecraft.world.entity.schedule.Activity;
-@@ -28,20 +28,23 @@
+@@ -28,20 +27,23 @@
        if (var2.isPassenger()) {
           return false;
        } else {
@@ -35,7 +35,7 @@
 -               BlockState var6 = var1.getBlockState(var4.pos());
 -               return var4.pos().closerThan(var2.position(), 2.0D) && var6.getBlock().is(BlockTags.BEDS) && !(Boolean)var6.getValue(BedBlock.OCCUPIED);
 +            if (var5.isPresent()) {
-+               long var6 = var1.getGameTime() - ((SerializableLong)var5.get()).value();
++               long var6 = var1.getGameTime() - (Long)var5.get();
 +               if (var6 > 0L && var6 < 100L) {
 +                  return false;
 +               }

@@ -1132,7 +1132,7 @@
 -         if (var1.isUnderLiquid(FluidTags.WATER) || var31 < var25) {
 +         var31 = var2.getAirSupply();
 +         var25 = var2.getMaxAirSupply();
-+         if (var2.isUnderLiquid(FluidTags.WATER) || var31 < var25) {
++         if (var2.isEyeInFluid(FluidTags.WATER) || var31 < var25) {
              var26 = this.getVisibleVehicleHeartRows(var23) - 1;
              var18 -= var26 * 10;
              var27 = Mth.ceil((double)(var31 - 2) * 10.0D / (double)var25);

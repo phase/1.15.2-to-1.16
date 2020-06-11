@@ -6,13 +6,13 @@
  import net.minecraft.advancements.CriteriaTriggers;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.particles.ParticleTypes;
-+import net.minecraft.resources.ResourceKey;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.world.damagesource.DamageSource;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.entity.LivingEntity;
-@@ -15,11 +16,10 @@
+@@ -15,79 +16,74 @@
  import net.minecraft.world.item.Items;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
@@ -24,7 +24,20 @@
  import net.minecraft.world.phys.HitResult;
  
  public class ThrownEnderpearl extends ThrowableItemProjectile {
-@@ -40,54 +40,56 @@
+-   private LivingEntity originalOwner;
+-
+    public ThrownEnderpearl(EntityType<? extends ThrownEnderpearl> var1, Level var2) {
+       super(var1, var2);
+    }
+ 
+    public ThrownEnderpearl(Level var1, LivingEntity var2) {
+       super(EntityType.ENDER_PEARL, var2, var1);
+-      this.originalOwner = var2;
+    }
+ 
+    public ThrownEnderpearl(Level var1, double var2, double var4, double var6) {
+       super(EntityType.ENDER_PEARL, var2, var4, var6, var1);
+    }
  
     protected Item getDefaultItem() {
        return Items.ENDER_PEARL;
@@ -37,16 +50,14 @@
 -         if (var3 == this.originalOwner) {
 -            return;
 -         }
--
--         var3.hurt(DamageSource.thrown(this, var2), 0.0F);
 +   protected void onHitEntity(EntityHitResult var1) {
 +      super.onHitEntity(var1);
-+      Entity var2 = var1.getEntity();
-+      if (var2 != this.originalOwner) {
-+         var2.hurt(DamageSource.thrown(this, this.getOwner()), 0.0F);
-       }
++      var1.getEntity().hurt(DamageSource.thrown(this, this.getOwner()), 0.0F);
 +   }
  
+-         var3.hurt(DamageSource.thrown(this, var2), 0.0F);
+-      }
+-
 -      if (var1.getType() == HitResult.Type.BLOCK) {
 -         BlockPos var6 = ((BlockHitResult)var1).getBlockPos();
 -         BlockEntity var4 = this.level.getBlockEntity(var6);
@@ -112,15 +123,16 @@
                 if (var2.isPassenger()) {
                    var2.stopRiding();
                 }
-@@ -105,23 +107,24 @@
+@@ -105,23 +101,24 @@
        }
  
     }
  
     public void tick() {
 -      LivingEntity var1 = this.getOwner();
+-      if (var1 != null && var1 instanceof Player && !var1.isAlive()) {
 +      Entity var1 = this.getOwner();
-       if (var1 != null && var1 instanceof Player && !var1.isAlive()) {
++      if (var1 instanceof Player && !var1.isAlive()) {
           this.remove();
        } else {
           super.tick();
@@ -132,9 +144,9 @@
 -   public Entity changeDimension(DimensionType var1) {
 -      if (this.owner.dimension != var1) {
 -         this.owner = null;
-+   public Entity changeDimension(ResourceKey<Level> var1) {
++   public Entity changeDimension(ServerLevel var1) {
 +      Entity var2 = this.getOwner();
-+      if (var2 != null && var2.level.dimension() != var1) {
++      if (var2 != null && var2.level.dimension() != var1.dimension()) {
 +         this.setOwner((Entity)null);
        }
  

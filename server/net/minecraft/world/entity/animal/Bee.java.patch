@@ -12,10 +12,27 @@
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtUtils;
  import net.minecraft.network.protocol.game.DebugPackets;
-@@ -39,10 +38,12 @@
+@@ -25,11 +24,13 @@
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.tags.BlockTags;
+ import net.minecraft.tags.ItemTags;
+ import net.minecraft.tags.Tag;
++import net.minecraft.util.IntRange;
+ import net.minecraft.util.Mth;
++import net.minecraft.util.TimeUtil;
+ import net.minecraft.world.Difficulty;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.effect.MobEffectInstance;
+ import net.minecraft.world.effect.MobEffects;
+ import net.minecraft.world.entity.AgableMob;
+@@ -37,29 +38,32 @@
+ import net.minecraft.world.entity.EntityDimensions;
+ import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.entity.LivingEntity;
  import net.minecraft.world.entity.Mob;
  import net.minecraft.world.entity.MobType;
++import net.minecraft.world.entity.NeutralMob;
  import net.minecraft.world.entity.PathfinderMob;
  import net.minecraft.world.entity.Pose;
 +import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -25,7 +42,13 @@
  import net.minecraft.world.entity.ai.goal.BreedGoal;
  import net.minecraft.world.entity.ai.goal.FloatGoal;
  import net.minecraft.world.entity.ai.goal.FollowParentGoal;
-@@ -55,11 +56,10 @@
+ import net.minecraft.world.entity.ai.goal.Goal;
+ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+ import net.minecraft.world.entity.ai.goal.TemptGoal;
+ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
++import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
+ import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
  import net.minecraft.world.entity.ai.navigation.PathNavigation;
  import net.minecraft.world.entity.ai.util.RandomPos;
  import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -37,7 +60,26 @@
  import net.minecraft.world.item.crafting.Ingredient;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelReader;
-@@ -103,10 +103,11 @@
+@@ -78,14 +82,15 @@
+ import net.minecraft.world.level.material.Fluid;
+ import net.minecraft.world.level.pathfinder.BlockPathTypes;
+ import net.minecraft.world.level.pathfinder.Path;
+ import net.minecraft.world.phys.Vec3;
+ 
+-public class Bee extends Animal implements FlyingAnimal {
++public class Bee extends Animal implements NeutralMob, FlyingAnimal {
+    private static final EntityDataAccessor<Byte> DATA_FLAGS_ID;
+-   private static final EntityDataAccessor<Integer> ANGER_TIME;
+-   private UUID lastHurtByUUID;
++   private static final EntityDataAccessor<Integer> DATA_REMAINING_ANGER_TIME;
++   private static final IntRange PERSISTENT_ANGER_TIME;
++   private UUID persistentAngerTarget;
+    private float rollAmount;
+    private float rollAmountO;
+    private int timeSinceSting;
+    private int ticksWithoutNectarSinceExitingHive;
+    private int stayOutOfHiveCountdown;
+@@ -103,30 +108,32 @@
  
     public Bee(EntityType<? extends Bee> var1, Level var2) {
        super(var1, var2);
@@ -45,11 +87,21 @@
        this.lookControl = new Bee.BeeLookControl(this);
 +      this.setPathfindingMalus(BlockPathTypes.DANGER_FIRE, -1.0F);
        this.setPathfindingMalus(BlockPathTypes.WATER, -1.0F);
++      this.setPathfindingMalus(BlockPathTypes.WATER_BORDER, 16.0F);
        this.setPathfindingMalus(BlockPathTypes.COCOA, -1.0F);
        this.setPathfindingMalus(BlockPathTypes.FENCE, -1.0F);
     }
  
-@@ -122,11 +123,11 @@
+    protected void defineSynchedData() {
+       super.defineSynchedData();
+       this.entityData.define(DATA_FLAGS_ID, (byte)0);
+-      this.entityData.define(ANGER_TIME, 0);
++      this.entityData.define(DATA_REMAINING_ANGER_TIME, 0);
+    }
+ 
+    public float getWalkTargetValue(BlockPos var1, LevelReader var2) {
+       return var2.getBlockState(var1).isAir() ? 10.0F : 0.0F;
+    }
  
     protected void registerGoals() {
        this.goalSelector.addGoal(0, new Bee.BeeAttackGoal(this, 1.399999976158142D, true));
@@ -62,24 +114,44 @@
        this.goalSelector.addGoal(5, new FollowParentGoal(this, 1.25D));
        this.goalSelector.addGoal(5, new Bee.BeeLocateHiveGoal());
        this.goToHiveGoal = new Bee.BeeGoToHiveGoal();
-@@ -155,13 +156,11 @@
+@@ -136,10 +143,11 @@
+       this.goalSelector.addGoal(7, new Bee.BeeGrowCropGoal());
+       this.goalSelector.addGoal(8, new Bee.BeeWanderGoal());
+       this.goalSelector.addGoal(9, new FloatGoal(this));
+       this.targetSelector.addGoal(1, (new Bee.BeeHurtByOtherGoal(this)).setAlertOthers(new Class[0]));
+       this.targetSelector.addGoal(2, new Bee.BeeBecomeAngryTargetGoal(this));
++      this.targetSelector.addGoal(3, new ResetUniversalAngerTargetGoal(this, true));
+    }
+ 
+    public void addAdditionalSaveData(CompoundTag var1) {
+       super.addAdditionalSaveData(var1);
+       if (this.hasHive()) {
+@@ -153,17 +161,11 @@
+       var1.putBoolean("HasNectar", this.hasNectar());
+       var1.putBoolean("HasStung", this.hasStung());
        var1.putInt("TicksSincePollination", this.ticksWithoutNectarSinceExitingHive);
        var1.putInt("CannotEnterHiveTicks", this.stayOutOfHiveCountdown);
        var1.putInt("CropsGrownSincePollination", this.numCropsGrownSincePollination);
-       var1.putInt("Anger", this.getAngerTime());
-       if (this.lastHurtByUUID != null) {
+-      var1.putInt("Anger", this.getAngerTime());
+-      if (this.lastHurtByUUID != null) {
 -         var1.putString("HurtBy", this.lastHurtByUUID.toString());
 -      } else {
 -         var1.putString("HurtBy", "");
-+         var1.putUUID("HurtBy", this.lastHurtByUUID);
-       }
- 
+-      }
+-
++      this.addPersistentAngerSaveData(var1);
     }
  
     public void readAdditionalSaveData(CompoundTag var1) {
-@@ -180,25 +179,24 @@
+       this.hivePos = null;
+       if (var1.contains("HivePos")) {
+@@ -176,29 +178,18 @@
+       }
+ 
+       super.readAdditionalSaveData(var1);
+       this.setHasNectar(var1.getBoolean("HasNectar"));
        this.setHasStung(var1.getBoolean("HasStung"));
-       this.setAngerTime(var1.getInt("Anger"));
+-      this.setAngerTime(var1.getInt("Anger"));
        this.ticksWithoutNectarSinceExitingHive = var1.getInt("TicksSincePollination");
        this.stayOutOfHiveCountdown = var1.getInt("CannotEnterHiveTicks");
        this.numCropsGrownSincePollination = var1.getInt("CropsGrownSincePollination");
@@ -90,16 +162,11 @@
 -         this.setLastHurtByMob(var3);
 -         if (var3 != null) {
 -            this.lastHurtByPlayer = var3;
-+      if (var1.hasUUID("HurtBy")) {
-+         this.lastHurtByUUID = var1.getUUID("HurtBy");
-+         Player var2 = this.level.getPlayerByUUID(this.lastHurtByUUID);
-+         this.setLastHurtByMob(var2);
-+         if (var2 != null) {
-+            this.lastHurtByPlayer = var2;
-             this.lastHurtByPlayerTime = this.getLastHurtByMobTimestamp();
-          }
-       }
- 
+-            this.lastHurtByPlayerTime = this.getLastHurtByMobTimestamp();
+-         }
+-      }
+-
++      this.readPersistentAngerSaveData((ServerLevel)this.level, var1);
     }
  
     public boolean doHurtTarget(Entity var1) {
@@ -110,7 +177,20 @@
           if (var1 instanceof LivingEntity) {
              ((LivingEntity)var1).setStingerCount(((LivingEntity)var1).getStingerCount() + 1);
              byte var3 = 0;
-@@ -235,13 +233,13 @@
+@@ -212,11 +203,11 @@
+                ((LivingEntity)var1).addEffect(new MobEffectInstance(MobEffects.POISON, var3 * 20, 0));
+             }
+          }
+ 
+          this.setHasStung(true);
+-         this.setTarget((LivingEntity)null);
++         this.stopBeingAngry();
+          this.playSound(SoundEvents.BEE_STING, 1.0F, 1.0F);
+       }
+ 
+       return var2;
+    }
+@@ -235,13 +226,13 @@
     private void spawnFluidParticle(Level var1, double var2, double var4, double var6, double var8, double var10, ParticleOptions var12) {
        var1.addParticle(var12, Mth.lerp(var1.random.nextDouble(), var2, var4), var10, Mth.lerp(var1.random.nextDouble(), var6, var8), 0.0D, 0.0D, 0.0D);
     }
@@ -126,7 +206,104 @@
           var3 = 4;
        } else if (var5 < -2) {
           var3 = -4;
-@@ -464,11 +462,11 @@
+@@ -278,11 +269,11 @@
+    private boolean isTiredOfLookingForNectar() {
+       return this.ticksWithoutNectarSinceExitingHive > 3600;
+    }
+ 
+    private boolean wantsToEnterHive() {
+-      if (this.stayOutOfHiveCountdown <= 0 && !this.beePollinateGoal.isPollinating() && !this.hasStung()) {
++      if (this.stayOutOfHiveCountdown <= 0 && !this.beePollinateGoal.isPollinating() && !this.hasStung() && this.getTarget() == null) {
+          boolean var1 = this.isTiredOfLookingForNectar() || this.level.isRaining() || this.level.isNight() || this.hasNectar();
+          return var1 && !this.isHiveNearFire();
+       } else {
+          return false;
+       }
+@@ -300,18 +291,10 @@
+          this.rollAmount = Math.max(0.0F, this.rollAmount - 0.24F);
+       }
+ 
+    }
+ 
+-   public void setLastHurtByMob(@Nullable LivingEntity var1) {
+-      super.setLastHurtByMob(var1);
+-      if (var1 != null) {
+-         this.lastHurtByUUID = var1.getUUID();
+-      }
+-
+-   }
+-
+    protected void customServerAiStep() {
+       boolean var1 = this.hasStung();
+       if (this.isInWaterOrBubble()) {
+          ++this.underWaterTicks;
+       } else {
+@@ -327,23 +310,18 @@
+          if (this.timeSinceSting % 5 == 0 && this.random.nextInt(Mth.clamp(1200 - this.timeSinceSting, 1, 1200)) == 0) {
+             this.hurt(DamageSource.GENERIC, this.getHealth());
+          }
+       }
+ 
+-      if (this.isAngry()) {
+-         int var2 = this.getAngerTime();
+-         this.setAngerTime(var2 - 1);
+-         LivingEntity var3 = this.getTarget();
+-         if (var2 == 0 && var3 != null) {
+-            this.makeAngry(var3);
+-         }
+-      }
+-
+       if (!this.hasNectar()) {
+          ++this.ticksWithoutNectarSinceExitingHive;
+       }
+ 
++      if (!this.level.isClientSide) {
++         this.updatePersistentAnger((ServerLevel)this.level, false);
++      }
++
+    }
+ 
+    public void resetTicksWithoutNectarSinceExitingHive() {
+       this.ticksWithoutNectarSinceExitingHive = 0;
+    }
+@@ -355,22 +333,30 @@
+          BlockEntity var1 = this.level.getBlockEntity(this.hivePos);
+          return var1 instanceof BeehiveBlockEntity && ((BeehiveBlockEntity)var1).isFireNearby();
+       }
+    }
+ 
+-   public boolean isAngry() {
+-      return this.getAngerTime() > 0;
++   public int getRemainingPersistentAngerTime() {
++      return (Integer)this.entityData.get(DATA_REMAINING_ANGER_TIME);
+    }
+ 
+-   private int getAngerTime() {
+-      return (Integer)this.entityData.get(ANGER_TIME);
++   public void setRemainingPersistentAngerTime(int var1) {
++      this.entityData.set(DATA_REMAINING_ANGER_TIME, var1);
+    }
+ 
+-   private void setAngerTime(int var1) {
+-      this.entityData.set(ANGER_TIME, var1);
++   public UUID getPersistentAngerTarget() {
++      return this.persistentAngerTarget;
+    }
+ 
++   public void setPersistentAngerTarget(@Nullable UUID var1) {
++      this.persistentAngerTarget = var1;
++   }
++
++   public void startPersistentAngerTimer() {
++      this.setRemainingPersistentAngerTime(PERSISTENT_ANGER_TIME.randomValue(this.random));
++   }
++
+    private boolean doesHiveHaveSpace(BlockPos var1) {
+       BlockEntity var2 = this.level.getBlockEntity(var1);
+       if (var2 instanceof BeehiveBlockEntity) {
+          return !((BeehiveBlockEntity)var2).isFull();
+       } else {
+@@ -464,11 +450,11 @@
     private void setRolling(boolean var1) {
        this.setFlag(2, var1);
     }
@@ -139,7 +316,7 @@
     private void setFlag(int var1, boolean var2) {
        if (var2) {
           this.entityData.set(DATA_FLAGS_ID, (byte)((Byte)this.entityData.get(DATA_FLAGS_ID) | var1));
-@@ -480,18 +478,12 @@
+@@ -480,18 +466,12 @@
  
     private boolean getFlag(int var1) {
        return ((Byte)this.entityData.get(DATA_FLAGS_ID) & var1) != 0;
@@ -160,7 +337,7 @@
     protected PathNavigation createNavigation(Level var1) {
        FlyingPathNavigation var2 = new FlyingPathNavigation(this, var1) {
           public boolean isStableDestination(BlockPos var1) {
-@@ -513,11 +505,11 @@
+@@ -513,11 +493,11 @@
     public boolean isFood(ItemStack var1) {
        return var1.getItem().is(ItemTags.FLOWERS);
     }
@@ -173,7 +350,36 @@
     protected void playStepSound(BlockPos var1, BlockState var2) {
     }
  
-@@ -591,11 +583,11 @@
+@@ -559,27 +539,17 @@
+    public void dropOffNectar() {
+       this.setHasNectar(false);
+       this.resetNumCropsGrownSincePollination();
+    }
+ 
+-   public boolean makeAngry(Entity var1) {
+-      this.setAngerTime(400 + this.random.nextInt(400));
+-      if (var1 instanceof LivingEntity) {
+-         this.setLastHurtByMob((LivingEntity)var1);
+-      }
+-
+-      return true;
+-   }
+-
+    public boolean hurt(DamageSource var1, float var2) {
+       if (this.isInvulnerableTo(var1)) {
+          return false;
+       } else {
+          Entity var3 = var1.getEntity();
+-         if (!this.level.isClientSide && var3 instanceof Player && !((Player)var3).isCreative() && this.canSee(var3) && !this.isNoAi()) {
++         if (!this.level.isClientSide) {
+             this.beePollinateGoal.stopPollinating();
+-            this.makeAngry(var3);
+          }
+ 
+          return super.hurt(var1, var2);
+       }
+    }
+@@ -591,16 +561,17 @@
     protected void jumpInLiquid(Tag<Fluid> var1) {
        this.setDeltaMovement(this.getDeltaMovement().add(0.0D, 0.01D, 0.0D));
     }
@@ -185,8 +391,15 @@
  
     static {
        DATA_FLAGS_ID = SynchedEntityData.defineId(Bee.class, EntityDataSerializers.BYTE);
-       ANGER_TIME = SynchedEntityData.defineId(Bee.class, EntityDataSerializers.INT);
-@@ -670,16 +662,16 @@
+-      ANGER_TIME = SynchedEntityData.defineId(Bee.class, EntityDataSerializers.INT);
++      DATA_REMAINING_ANGER_TIME = SynchedEntityData.defineId(Bee.class, EntityDataSerializers.INT);
++      PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
+    }
+ 
+    class BeeEnterHiveGoal extends Bee.BaseBeeGoal {
+       private BeeEnterHiveGoal() {
+          super(null);
+@@ -670,16 +641,16 @@
        }
  
        public void tick() {
@@ -205,7 +418,7 @@
                       if (!var7.isMaxAge(var3)) {
                          var5 = true;
                          var6 = var7.getAgeProperty();
-@@ -746,11 +738,11 @@
+@@ -746,11 +717,11 @@
              Bee.this.hivePos = var3;
           }
        }
@@ -218,7 +431,7 @@
              return var0 == PoiType.BEEHIVE || var0 == PoiType.BEE_NEST;
           }, var1, 20, PoiManager.Occupancy.ANY);
           return (List)var3.map(PoiRecord::getPos).filter((var1x) -> {
-@@ -762,11 +754,11 @@
+@@ -762,11 +733,11 @@
     }
  
     class BeePollinateGoal extends Bee.BaseBeeGoal {
@@ -231,7 +444,7 @@
                 return true;
              }
           } else {
-@@ -855,11 +847,11 @@
+@@ -855,11 +826,11 @@
        public void tick() {
           ++this.pollinatingTicks;
           if (this.pollinatingTicks > 600) {
@@ -244,7 +457,7 @@
                 this.setWantedPos();
              } else {
                 if (this.hoverPos == null) {
-@@ -870,11 +862,11 @@
+@@ -870,11 +841,11 @@
                 boolean var3 = true;
                 if (!var2 && this.pollinatingTicks > 600) {
                    Bee.this.savedFlowerPos = null;
@@ -257,7 +470,7 @@
                          Bee.this.navigation.stop();
                       } else {
                          var3 = false;
-@@ -909,18 +901,18 @@
+@@ -909,18 +880,18 @@
        private Optional<BlockPos> findNearbyFlower() {
           return this.findNearestBlock(this.VALID_POLLINATION_BLOCKS, 5.0D);
        }
@@ -278,7 +491,7 @@
                       }
                    }
                 }
-@@ -998,10 +990,11 @@
+@@ -998,10 +969,11 @@
     public class BeeGoToHiveGoal extends Bee.BaseBeeGoal {
        private int travellingTicks;
        private List<BlockPos> blacklistedTargets;
@@ -290,7 +503,7 @@
           super(null);
           this.travellingTicks = Bee.this.level.random.nextInt(10);
           this.blacklistedTargets = Lists.newArrayList();
-@@ -1017,15 +1010,17 @@
+@@ -1017,15 +989,17 @@
           return this.canBeeUse();
        }
  
@@ -308,7 +521,7 @@
        }
  
        public void tick() {
-@@ -1043,11 +1038,15 @@
+@@ -1043,11 +1017,15 @@
                 } else {
                    boolean var1 = this.pathfindDirectlyTowards(Bee.this.hivePos);
                    if (!var1) {
@@ -325,7 +538,7 @@
                    }
  
                 }
-@@ -1123,12 +1122,12 @@
+@@ -1123,12 +1101,12 @@
        }
  
        @Nullable
@@ -340,3 +553,34 @@
              var1 = Bee.this.getViewVector(0.0F);
           }
  
+@@ -1155,11 +1133,11 @@
+       }
+    }
+ 
+    static class BeeBecomeAngryTargetGoal extends NearestAttackableTargetGoal<Player> {
+       BeeBecomeAngryTargetGoal(Bee var1) {
+-         super(var1, Player.class, true);
++         super(var1, Player.class, 10, true, false, var1::isAngryAt);
+       }
+ 
+       public boolean canUse() {
+          return this.beeCanTarget() && super.canUse();
+       }
+@@ -1183,12 +1161,16 @@
+    class BeeHurtByOtherGoal extends HurtByTargetGoal {
+       BeeHurtByOtherGoal(Bee var2) {
+          super(var2);
+       }
+ 
++      public boolean canContinueToUse() {
++         return Bee.this.isAngry() && super.canContinueToUse();
++      }
++
+       protected void alertOther(Mob var1, LivingEntity var2) {
+-         if (var1 instanceof Bee && this.mob.canSee(var2) && ((Bee)var1).makeAngry(var2)) {
++         if (var1 instanceof Bee && this.mob.canSee(var2)) {
+             var1.setTarget(var2);
+          }
+ 
+       }
+    }

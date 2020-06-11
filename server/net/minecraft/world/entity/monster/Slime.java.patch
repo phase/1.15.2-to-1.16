@@ -60,13 +60,15 @@
        }
  
        this.xpReward = var1;
-@@ -180,28 +177,30 @@
+@@ -179,29 +176,31 @@
+       return super.getType();
     }
  
     public void remove() {
        int var1 = this.getSize();
-       if (!this.level.isClientSide && var1 > 1 && this.getHealth() <= 0.0F) {
+-      if (!this.level.isClientSide && var1 > 1 && this.getHealth() <= 0.0F) {
 -         int var2 = 2 + this.random.nextInt(3);
++      if (!this.level.isClientSide && var1 > 1 && this.isDeadOrDying()) {
 +         Component var2 = this.getCustomName();
 +         boolean var3 = this.isNoAi();
 +         float var4 = (float)var1 / 4.0F;

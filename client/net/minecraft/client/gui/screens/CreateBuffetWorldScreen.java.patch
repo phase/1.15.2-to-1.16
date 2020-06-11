@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/CreateBuffetWorldScreen.java
 +++ net/minecraft/client/gui/screens/CreateBuffetWorldScreen.java
-@@ -1,137 +1,69 @@
+@@ -1,137 +1,74 @@
  package net.minecraft.client.gui.screens;
  
 +import com.mojang.blaze3d.vertex.PoseStack;
@@ -12,6 +12,7 @@
  import javax.annotation.Nullable;
 -import net.minecraft.Util;
  import net.minecraft.client.gui.chat.NarratorChatListener;
++import net.minecraft.client.gui.components.AbstractSelectionList;
  import net.minecraft.client.gui.components.Button;
  import net.minecraft.client.gui.components.ObjectSelectionList;
 -import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
@@ -48,6 +49,10 @@
 +      this.biome = var3;
     }
  
++   public void onClose() {
++      this.minecraft.setScreen(this.parent);
++   }
++
     protected void init() {
        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 -      this.addButton(new Button((this.width - 200) / 2, 40, 200, 20, I18n.get("createWorld.customize.buffet.generatortype") + " " + I18n.get(Util.makeDescriptionId("generator", (ResourceLocation)GENERATORS.get(this.generatorIndex))), (var1) -> {
@@ -163,7 +168,7 @@
           });
        }
  
-@@ -140,29 +72,30 @@
+@@ -140,29 +77,30 @@
        }
  
        public void setSelected(@Nullable CreateBuffetWorldScreen.BiomeList.Entry var1) {
@@ -176,7 +181,8 @@
  
        }
  
-       protected void moveSelection(int var1) {
+-      protected void moveSelection(int var1) {
++      protected void moveSelection(AbstractSelectionList.SelectionDirection var1) {
           super.moveSelection(var1);
           CreateBuffetWorldScreen.this.updateButtonValidity();
        }

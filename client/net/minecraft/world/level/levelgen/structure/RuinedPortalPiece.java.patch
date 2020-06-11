@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/structure/RuinedPortalPiece.java
 +++ net/minecraft/world/level/levelgen/structure/RuinedPortalPiece.java
-@@ -1,0 +1,323 @@
+@@ -1,0 +1,324 @@
 +package net.minecraft.world.level.levelgen.structure;
 +
 +import com.google.common.collect.Lists;
@@ -39,6 +39,7 @@
 +import net.minecraft.world.level.levelgen.structure.templatesystem.BlockAgeProcessor;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.BlockMatchTest;
++import net.minecraft.world.level.levelgen.structure.templatesystem.LavaSubmergedBlockProcessor;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.ProcessorRule;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.RandomBlockMatchTest;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.RuleProcessor;
@@ -104,7 +105,7 @@
 +         var4.add(getBlockReplaceRule(Blocks.NETHERRACK, 0.07F, Blocks.MAGMA_BLOCK));
 +      }
 +
-+      StructurePlaceSettings var5 = (new StructurePlaceSettings()).setRotation(this.rotation).setMirror(this.mirror).setRotationPivot(var2).addProcessor(var3).addProcessor(new RuleProcessor(var4)).addProcessor(new BlockAgeProcessor(this.properties.mossiness));
++      StructurePlaceSettings var5 = (new StructurePlaceSettings()).setRotation(this.rotation).setMirror(this.mirror).setRotationPivot(var2).addProcessor(var3).addProcessor(new RuleProcessor(var4)).addProcessor(new BlockAgeProcessor(this.properties.mossiness)).addProcessor(new LavaSubmergedBlockProcessor());
 +      if (this.properties.replaceWithBlackstone) {
 +         var5.addProcessor(BlackstoneReplaceProcessor.INSTANCE);
 +      }

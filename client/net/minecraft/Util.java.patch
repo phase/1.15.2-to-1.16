@@ -1,6 +1,6 @@
 --- net/minecraft/Util.java
 +++ net/minecraft/Util.java
-@@ -2,11 +2,13 @@
+@@ -2,58 +2,70 @@
  
  import com.google.common.collect.Iterators;
  import com.google.common.collect.Lists;
@@ -15,8 +15,12 @@
  import java.io.IOException;
  import java.lang.management.ManagementFactory;
  import java.lang.management.RuntimeMXBean;
-@@ -16,44 +18,52 @@
+ import java.net.MalformedURLException;
+ import java.net.URI;
+ import java.net.URISyntaxException;
  import java.net.URL;
++import java.nio.file.Files;
++import java.nio.file.Path;
  import java.security.AccessController;
  import java.security.PrivilegedActionException;
  import java.time.Instant;
@@ -69,7 +73,7 @@
     public static <K, V> Collector<Entry<? extends K, ? extends V>, ?, Map<K, V>> toMap() {
        return Collectors.toMap(Entry::getKey, Entry::getValue);
     }
-@@ -76,78 +86,123 @@
+@@ -76,78 +88,123 @@
  
     public static long getEpochMillis() {
        return Instant.now().toEpochMilli();
@@ -224,7 +228,7 @@
        if (var0.contains("win")) {
           return Util.OS.WINDOWS;
        } else if (var0.contains("mac")) {
-@@ -262,22 +317,10 @@
+@@ -262,22 +319,10 @@
  
     public static Runnable name(Runnable var0, Supplier<String> var1) {
        return var0;
@@ -247,7 +251,7 @@
           LOGGER.error("Trying to throw a fatal exception, pausing in IDE", var0);
  
           while(true) {
-@@ -299,10 +342,90 @@
+@@ -299,10 +344,96 @@
        } else {
           return var0.getMessage() != null ? var0.getMessage() : var0.toString();
        }
@@ -331,6 +335,12 @@
 +      var0.setDaemon(true);
 +      var0.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
 +      var0.start();
++   }
++
++   public static void copyBetweenDirs(Path var0, Path var1, Path var2) throws IOException {
++      Path var3 = var0.relativize(var2);
++      Path var4 = var1.resolve(var3);
++      Files.copy(var2, var4);
 +   }
 +
     static enum IdentityStrategy implements Strategy<Object> {

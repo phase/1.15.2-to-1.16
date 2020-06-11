@@ -13,6 +13,23 @@
     }
  
     public void setEntityId(EntityType<?> var1) {
+@@ -70,13 +70,13 @@
+          this.oSpin = this.spin;
+       } else {
+          Level var1 = this.getLevel();
+          BlockPos var2 = this.getPos();
+          if (var1.isClientSide) {
+-            double var18 = (double)var2.getX() + (double)var1.random.nextFloat();
+-            double var19 = (double)var2.getY() + (double)var1.random.nextFloat();
+-            double var20 = (double)var2.getZ() + (double)var1.random.nextFloat();
++            double var18 = (double)var2.getX() + var1.random.nextDouble();
++            double var19 = (double)var2.getY() + var1.random.nextDouble();
++            double var20 = (double)var2.getZ() + var1.random.nextDouble();
+             var1.addParticle(ParticleTypes.SMOKE, var18, var19, var20, 0.0D, 0.0D, 0.0D);
+             var1.addParticle(ParticleTypes.FLAME, var18, var19, var20, 0.0D, 0.0D, 0.0D);
+             if (this.spawnDelay > 0) {
+                --this.spawnDelay;
+             }
 @@ -139,11 +139,11 @@
                          if (!var17.checkSpawnRules(var1, MobSpawnType.SPAWNER) || !var17.checkSpawnObstruction(var1)) {
                             break label97;

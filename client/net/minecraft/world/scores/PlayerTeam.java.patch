@@ -57,7 +57,7 @@
 -         var1x.setInsertion(this.name).setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent(this.name)));
 -      }));
 +   public MutableComponent getFormattedDisplayName() {
-+      MutableComponent var1 = ComponentUtils.wrapInSquareBrackets(this.displayName.mutableCopy().withStyle(this.displayNameStyle));
++      MutableComponent var1 = ComponentUtils.wrapInSquareBrackets(this.displayName.copy().withStyle(this.displayNameStyle));
        ChatFormatting var2 = this.getColor();
        if (var2 != ChatFormatting.RESET) {
           var1.withStyle(var2);
@@ -107,7 +107,7 @@
 -   public static Component formatNameForTeam(@Nullable Team var0, Component var1) {
 -      return var0 == null ? var1.deepCopy() : var0.getFormattedName(var1);
 +   public static MutableComponent formatNameForTeam(@Nullable Team var0, Component var1) {
-+      return var0 == null ? var1.mutableCopy() : var0.getFormattedName(var1);
++      return var0 == null ? var1.copy() : var0.getFormattedName(var1);
     }
  
     public boolean isAllowFriendlyFire() {

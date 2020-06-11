@@ -49,7 +49,7 @@
           fogGreen = var17 / 255.0F;
           fogBlue = var18 / 255.0F;
           if (targetBiomeFog != var8) {
-@@ -69,60 +74,62 @@
+@@ -69,70 +74,72 @@
           var19 = 1.0F - (float)Math.pow((double)var19, 0.25D);
           Vec3 var7 = var2.getSkyColor(var0.getBlockPosition(), var1);
           var21 = (float)var7.x;
@@ -144,16 +144,63 @@
           if (var8 < 20) {
              var20 *= (double)(1.0F - (float)var8 / 20.0F);
           } else {
-@@ -184,11 +191,11 @@
-          if (var4.is(FluidTags.WATER)) {
-             var7 = 0.05F;
-             if (var5 instanceof LocalPlayer) {
-                LocalPlayer var8 = (LocalPlayer)var5;
-                var7 -= var8.getWaterVision() * var8.getWaterVision() * 0.03F;
+             var20 = 0.0D;
+          }
+       }
+ 
+-      if (var20 < 1.0D) {
++      if (var20 < 1.0D && !var5.is(FluidTags.LAVA)) {
+          if (var20 < 0.0D) {
+             var20 = 0.0D;
+          }
+ 
+          var20 *= var20;
+@@ -177,31 +184,35 @@
+    public static void setupFog(Camera var0, FogRenderer.FogMode var1, float var2, boolean var3) {
+       FluidState var4 = var0.getFluidInCamera();
+       Entity var5 = var0.getEntity();
+       boolean var6 = var4.getType() != Fluids.EMPTY;
+       float var7;
+-      if (var6) {
++      if (var4.is(FluidTags.WATER)) {
+          var7 = 1.0F;
+-         if (var4.is(FluidTags.WATER)) {
+-            var7 = 0.05F;
+-            if (var5 instanceof LocalPlayer) {
+-               LocalPlayer var8 = (LocalPlayer)var5;
+-               var7 -= var8.getWaterVision() * var8.getWaterVision() * 0.03F;
 -               Biome var9 = var8.level.getBiome(new BlockPos(var8));
-+               Biome var9 = var8.level.getBiome(var8.blockPosition());
-                if (var9 == Biomes.SWAMP || var9 == Biomes.SWAMP_HILLS) {
-                   var7 += 0.005F;
-                }
+-               if (var9 == Biomes.SWAMP || var9 == Biomes.SWAMP_HILLS) {
+-                  var7 += 0.005F;
+-               }
++         var7 = 0.05F;
++         if (var5 instanceof LocalPlayer) {
++            LocalPlayer var8 = (LocalPlayer)var5;
++            var7 -= var8.getWaterVision() * var8.getWaterVision() * 0.03F;
++            Biome var9 = var8.level.getBiome(var8.blockPosition());
++            if (var9 == Biomes.SWAMP || var9 == Biomes.SWAMP_HILLS) {
++               var7 += 0.005F;
              }
-          } else if (var4.is(FluidTags.LAVA)) {
+-         } else if (var4.is(FluidTags.LAVA)) {
+-            var7 = 2.0F;
+          }
+ 
+          RenderSystem.fogDensity(var7);
+          RenderSystem.fogMode(GlStateManager.FogMode.EXP2);
+       } else {
+          float var11;
+-         if (var5 instanceof LivingEntity && ((LivingEntity)var5).hasEffect(MobEffects.BLINDNESS)) {
++         if (var4.is(FluidTags.LAVA)) {
++            if (var5 instanceof LivingEntity && ((LivingEntity)var5).hasEffect(MobEffects.FIRE_RESISTANCE)) {
++               var7 = 0.0F;
++               var11 = 3.0F;
++            } else {
++               var7 = 0.25F;
++               var11 = 1.0F;
++            }
++         } else if (var5 instanceof LivingEntity && ((LivingEntity)var5).hasEffect(MobEffects.BLINDNESS)) {
+             int var12 = ((LivingEntity)var5).getEffect(MobEffects.BLINDNESS).getDuration();
+             float var10 = Mth.lerp(Math.min(1.0F, (float)var12 / 20.0F), var2, 5.0F);
+             if (var1 == FogRenderer.FogMode.FOG_SKY) {
+                var7 = 0.0F;
+                var11 = var10 * 0.8F;

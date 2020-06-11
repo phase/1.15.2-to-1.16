@@ -9,11 +9,13 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.core.particles.ParticleTypes;
-@@ -16,16 +17,17 @@
+@@ -15,17 +16,19 @@
+ import net.minecraft.sounds.SoundEvent;
  import net.minecraft.sounds.SoundEvents;
  import net.minecraft.tags.FluidTags;
  import net.minecraft.util.Mth;
  import net.minecraft.world.InteractionHand;
++import net.minecraft.world.InteractionResult;
  import net.minecraft.world.damagesource.DamageSource;
 -import net.minecraft.world.damagesource.IndirectEntityDamageSource;
  import net.minecraft.world.entity.Entity;
@@ -28,7 +30,7 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.Item;
  import net.minecraft.world.item.Items;
-@@ -88,10 +90,14 @@
+@@ -88,10 +91,14 @@
        this.xo = var2;
        this.yo = var4;
        this.zo = var6;
@@ -43,7 +45,7 @@
     }
  
     protected void defineSynchedData() {
-@@ -116,36 +122,32 @@
+@@ -116,36 +123,32 @@
  
     public boolean isPushable() {
        return true;
@@ -92,7 +94,7 @@
        }
     }
  
-@@ -403,57 +405,36 @@
+@@ -403,57 +406,36 @@
        int var3 = Mth.ceil(var1.maxX);
        int var4 = Mth.floor(var1.maxY);
        int var5 = Mth.ceil(var1.maxY - this.lastYd);
@@ -167,7 +169,7 @@
     public float getGroundFriction() {
        AABB var1 = this.getBoundingBox();
        AABB var2 = new AABB(var1.minX, var1.minY - 0.001D, var1.minZ, var1.maxX, var1.minY, var1.maxZ);
-@@ -464,47 +445,28 @@
+@@ -464,47 +446,28 @@
        int var7 = Mth.floor(var2.minZ) - 1;
        int var8 = Mth.ceil(var2.maxZ) + 1;
        VoxelShape var9 = Shapes.create(var2);
@@ -227,7 +229,7 @@
        return var10 / (float)var11;
     }
  
-@@ -516,43 +478,24 @@
+@@ -516,43 +479,24 @@
        int var5 = Mth.ceil(var1.minY + 0.001D);
        int var6 = Mth.floor(var1.minZ);
        int var7 = Mth.ceil(var1.maxZ);
@@ -281,7 +283,7 @@
        return var8;
     }
  
-@@ -565,46 +508,26 @@
+@@ -565,46 +509,26 @@
        int var6 = Mth.floor(var1.maxY);
        int var7 = Mth.ceil(var2);
        int var8 = Mth.floor(var1.minZ);
@@ -339,7 +341,7 @@
        return var10 ? Boat.Status.UNDER_WATER : null;
     }
  
-@@ -679,11 +602,11 @@
+@@ -679,11 +603,11 @@
     }
  
     public void positionRider(Entity var1) {
@@ -352,7 +354,7 @@
              if (var4 == 0) {
                 var2 = 0.2F;
              } else {
-@@ -707,10 +630,45 @@
+@@ -707,10 +631,45 @@
           }
  
        }
@@ -398,7 +400,32 @@
        float var2 = Mth.wrapDegrees(var1.yRot - this.yRot);
        float var3 = Mth.clamp(var2, -105.0F, 105.0F);
        var1.yRotO += var3 - var2;
-@@ -766,11 +724,11 @@
+@@ -731,15 +690,21 @@
+          this.setType(Boat.Type.byName(var1.getString("Type")));
+       }
+ 
+    }
+ 
+-   public boolean interact(Player var1, InteractionHand var2) {
++   public InteractionResult interact(Player var1, InteractionHand var2) {
+       if (var1.isSecondaryUseActive()) {
+-         return false;
++         return InteractionResult.PASS;
++      } else if (this.outOfControlTicks < 60.0F) {
++         if (!this.level.isClientSide) {
++            return var1.startRiding(this) ? InteractionResult.CONSUME : InteractionResult.PASS;
++         } else {
++            return InteractionResult.SUCCESS;
++         }
+       } else {
+-         return !this.level.isClientSide && this.outOfControlTicks < 60.0F ? var1.startRiding(this) : false;
++         return InteractionResult.PASS;
+       }
+    }
+ 
+    protected void checkFallDamage(double var1, boolean var3, BlockState var4, BlockPos var5) {
+       this.lastYd = this.getDeltaMovement().y;
+@@ -766,11 +731,11 @@
                    }
                 }
              }
@@ -411,3 +438,16 @@
  
        }
     }
+@@ -822,11 +787,11 @@
+    public Boat.Type getBoatType() {
+       return Boat.Type.byId((Integer)this.entityData.get(DATA_ID_TYPE));
+    }
+ 
+    protected boolean canAddPassenger(Entity var1) {
+-      return this.getPassengers().size() < 2 && !this.isUnderLiquid(FluidTags.WATER);
++      return this.getPassengers().size() < 2 && !this.isEyeInFluid(FluidTags.WATER);
+    }
+ 
+    @Nullable
+    public Entity getControllingPassenger() {
+       List var1 = this.getPassengers();

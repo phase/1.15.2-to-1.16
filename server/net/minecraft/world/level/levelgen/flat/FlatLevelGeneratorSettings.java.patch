@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
 +++ net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
-@@ -1,311 +1,201 @@
+@@ -1,311 +1,209 @@
  package net.minecraft.world.level.levelgen.flat;
  
 +import com.google.common.collect.ImmutableMap;
@@ -10,8 +10,10 @@
 -import com.mojang.datafixers.util.Pair;
 +import com.mojang.datafixers.util.Function3;
 +import com.mojang.serialization.Codec;
++import com.mojang.serialization.MapCodec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
 +import java.util.ArrayList;
++import java.util.Arrays;
  import java.util.Iterator;
  import java.util.List;
 -import java.util.Locale;
@@ -23,6 +25,7 @@
  import net.minecraft.Util;
  import net.minecraft.core.Registry;
 -import net.minecraft.resources.ResourceLocation;
++import net.minecraft.util.Codecs;
  import net.minecraft.world.level.biome.Biome;
 +import net.minecraft.world.level.biome.BiomeDefaultFeatures;
  import net.minecraft.world.level.biome.Biomes;
@@ -66,8 +69,12 @@
 -   private static final ConfiguredFeature<?, ?> SHIPWRECK_COMPOSITE_FEATURE;
 -   private static final ConfiguredFeature<?, ?> OCEAN_MONUMENT_COMPOSITE_FEATURE;
 +   public static final Codec<FlatLevelGeneratorSettings> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(StructureSettings.CODEC.fieldOf("structures").forGetter(FlatLevelGeneratorSettings::structureSettings), FlatLayerInfo.CODEC.listOf().fieldOf("layers").forGetter(FlatLevelGeneratorSettings::getLayersInfo), Registry.BIOME.fieldOf("biome").withDefault(() -> {
-+         LOGGER.error("Unknown biome, defaulting to plains");
++      RecordCodecBuilder var10001 = StructureSettings.CODEC.fieldOf("structures").forGetter(FlatLevelGeneratorSettings::structureSettings);
++      RecordCodecBuilder var10002 = FlatLayerInfo.CODEC.listOf().fieldOf("layers").forGetter(FlatLevelGeneratorSettings::getLayersInfo);
++      MapCodec var10003 = Registry.BIOME.fieldOf("biome");
++      Logger var10005 = LOGGER;
++      var10005.getClass();
++      return var0.group(var10001, var10002, Codecs.withDefault(var10003, Util.prefix("Unknown biome, defaulting to plains", var10005::error), () -> {
 +         return Biomes.PLAINS;
 +      }).forGetter((var0x) -> {
 +         return var0x.biome;
@@ -195,6 +202,7 @@
 +   }
 +
     public void updateLayers() {
++      Arrays.fill(this.layers, 0, this.layers.length, (Object)null);
        int var1 = 0;
  
 -      Iterator var2;

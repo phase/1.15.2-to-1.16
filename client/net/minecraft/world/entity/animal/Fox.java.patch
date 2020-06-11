@@ -51,6 +51,19 @@
        this.goalSelector.addGoal(6, new Fox.SeekShelterGoal(1.25D));
        this.goalSelector.addGoal(7, new Fox.FoxMeleeAttackGoal(1.2000000476837158D, true));
        this.goalSelector.addGoal(7, new Fox.SleepGoal());
+@@ -194,11 +199,11 @@
+       }
+ 
+    }
+ 
+    protected boolean isImmobile() {
+-      return this.getHealth() <= 0.0F;
++      return this.isDeadOrDying();
+    }
+ 
+    private boolean canEat(ItemStack var1) {
+       return var1.getItem().isEdible() && this.getTarget() == null && this.onGround && !this.isSleeping();
+    }
 @@ -239,27 +244,23 @@
           super.handleEntityEvent(var1);
        }
@@ -192,7 +205,22 @@
  
     public boolean isPouncing() {
        return this.getFlag(16);
-@@ -792,11 +800,11 @@
+@@ -635,10 +643,14 @@
+       }
+ 
+       return true;
+    }
+ 
++   public Vec3 getLeashOffset() {
++      return new Vec3(0.0D, (double)(0.55F * this.getEyeHeight()), (double)(this.getBbWidth() * 0.4F));
++   }
++
+    static {
+       DATA_TYPE_ID = SynchedEntityData.defineId(Fox.class, EntityDataSerializers.INT);
+       DATA_FLAGS_ID = SynchedEntityData.defineId(Fox.class, EntityDataSerializers.BYTE);
+       DATA_TRUSTED_ID_0 = SynchedEntityData.defineId(Fox.class, EntityDataSerializers.OPTIONAL_UUID);
+       DATA_TRUSTED_ID_1 = SynchedEntityData.defineId(Fox.class, EntityDataSerializers.OPTIONAL_UUID);
+@@ -792,11 +804,11 @@
              }
           }
  
@@ -205,7 +233,7 @@
              Fox.this.setFaceplanted(true);
           }
  
-@@ -812,11 +820,11 @@
+@@ -812,11 +824,11 @@
           super.start();
           Fox.this.clearStates();
        }
@@ -218,7 +246,7 @@
  
     class FoxStrollThroughVillageGoal extends StrollThroughVillageGoal {
        public FoxStrollThroughVillageGoal(int var2, int var3) {
-@@ -903,11 +911,11 @@
+@@ -903,11 +915,11 @@
           return this.tryTicks % 100 == 0;
        }
  
@@ -231,7 +259,7 @@
        public void tick() {
           if (this.isReachedTarget()) {
              if (this.ticksWaited >= 40) {
-@@ -923,11 +931,11 @@
+@@ -923,11 +935,11 @@
        }
  
        protected void onReachedTarget() {
@@ -244,7 +272,7 @@
                 int var3 = 1 + Fox.this.level.random.nextInt(2) + (var2 == 3 ? 1 : 0);
                 ItemStack var4 = Fox.this.getItemBySlot(EquipmentSlot.MAINHAND);
                 if (var4.isEmpty()) {
-@@ -1056,11 +1064,11 @@
+@@ -1056,11 +1068,11 @@
        private FoxBehaviorGoal() {
           this.alertableTargeting = (new TargetingConditions()).range(12.0D).allowUnseeable().selector(Fox.this.new FoxAlertableEntitiesSelector());
        }
@@ -257,7 +285,7 @@
  
        protected boolean alertable() {
           return !Fox.this.level.getNearbyEntities(LivingEntity.class, this.alertableTargeting, Fox.this, Fox.this.getBoundingBox().inflate(12.0D, 6.0D, 12.0D)).isEmpty();
-@@ -1104,11 +1112,11 @@
+@@ -1104,11 +1116,11 @@
              } else if (this.interval > 0) {
                 --this.interval;
                 return false;
@@ -270,7 +298,7 @@
           } else {
              return false;
           }
-@@ -1153,11 +1161,11 @@
+@@ -1153,11 +1165,11 @@
              return false;
           }
        }
@@ -283,7 +311,7 @@
              this.timestamp = this.trustedLastHurt.getLastHurtByMobTimestamp();
           }
  
-@@ -1198,11 +1206,10 @@
+@@ -1198,11 +1210,10 @@
              if (var4 != null) {
                 var4.awardStat(Stats.ANIMALS_BRED);
                 CriteriaTriggers.BRED_ANIMALS.trigger(var4, this.animal, this.partner, var1);
@@ -295,7 +323,7 @@
              this.animal.resetLove();
              this.partner.resetLove();
              var1.setAge(-24000);
-@@ -1222,12 +1229,12 @@
+@@ -1222,12 +1233,12 @@
           super(Fox.this, var2, var4);
        }
  

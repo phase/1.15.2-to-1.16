@@ -1,6 +1,6 @@
 --- net/minecraft/server/rcon/RconConsoleSource.java
 +++ net/minecraft/server/rcon/RconConsoleSource.java
-@@ -1,19 +1,21 @@
+@@ -1,19 +1,20 @@
  package net.minecraft.server.rcon;
  
 +import java.util.UUID;
@@ -12,7 +12,6 @@
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.Entity;
 -import net.minecraft.world.level.dimension.DimensionType;
-+import net.minecraft.world.level.Level;
  import net.minecraft.world.phys.Vec2;
  import net.minecraft.world.phys.Vec3;
  
@@ -23,7 +22,7 @@
  
     public RconConsoleSource(MinecraftServer var1) {
        this.server = var1;
-@@ -26,15 +28,15 @@
+@@ -26,15 +27,15 @@
     public String getCommandResponse() {
        return this.buffer.toString();
     }
@@ -31,7 +30,7 @@
     public CommandSourceStack createCommandSourceStack() {
 -      ServerLevel var1 = this.server.getLevel(DimensionType.OVERWORLD);
 -      return new CommandSourceStack(this, new Vec3(var1.getSharedSpawnPos()), Vec2.ZERO, var1, 4, "Recon", new TextComponent("Rcon"), this.server, (Entity)null);
-+      ServerLevel var1 = this.server.getLevel(Level.OVERWORLD);
++      ServerLevel var1 = this.server.overworld();
 +      return new CommandSourceStack(this, Vec3.atLowerCornerOf(var1.getSharedSpawnPos()), Vec2.ZERO, var1, 4, "Rcon", RCON_COMPONENT, this.server, (Entity)null);
     }
  

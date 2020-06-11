@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/monster/Strider.java
 +++ net/minecraft/world/entity/monster/Strider.java
-@@ -1,0 +1,477 @@
+@@ -1,0 +1,487 @@
 +package net.minecraft.world.entity.monster;
 +
 +import com.google.common.collect.Sets;
@@ -23,6 +23,7 @@
 +import net.minecraft.util.Mth;
 +import net.minecraft.world.DifficultyInstance;
 +import net.minecraft.world.InteractionHand;
++import net.minecraft.world.InteractionResult;
 +import net.minecraft.world.damagesource.DamageSource;
 +import net.minecraft.world.entity.AgableMob;
 +import net.minecraft.world.entity.Entity;
@@ -87,7 +88,13 @@
 +   }
 +
 +   public static boolean checkStriderSpawnRules(EntityType<Strider> var0, LevelAccessor var1, MobSpawnType var2, BlockPos var3, Random var4) {
-+      return var1.getBlockState(var3.above()).isAir();
++      BlockPos.MutableBlockPos var5 = var3.mutable();
++
++      do {
++         var5.move(Direction.UP);
++      } while(var1.getFluidState(var5).is(FluidTags.LAVA));
++
++      return var1.getBlockState(var5).isAir();
 +   }
 +
 +   public void onSyncedDataUpdated(EntityDataAccessor<?> var1) {
@@ -288,7 +295,7 @@
 +
 +      BlockState var1 = this.level.getBlockState(this.blockPosition());
 +      BlockState var2 = this.getBlockStateOn();
-+      boolean var3 = var1.is(BlockTags.STRIDER_WARM_BLOCKS) || var2.is(BlockTags.STRIDER_WARM_BLOCKS);
++      boolean var3 = var1.is(BlockTags.STRIDER_WARM_BLOCKS) || var2.is(BlockTags.STRIDER_WARM_BLOCKS) || this.getFluidHeight(FluidTags.LAVA) > 0.0D;
 +      this.setSuffocating(!var3);
 +      super.tick();
 +      this.floatStrider();
@@ -328,15 +335,11 @@
 +   }
 +
 +   protected boolean canAddPassenger(Entity var1) {
-+      return this.getPassengers().isEmpty() && !this.isUnderLiquid(FluidTags.LAVA);
++      return this.getPassengers().isEmpty() && !this.isEyeInFluid(FluidTags.LAVA);
 +   }
 +
-+   protected void customServerAiStep() {
-+      if (this.isInWaterRainOrBubble()) {
-+         this.hurt(DamageSource.DROWN, 1.0F);
-+      }
-+
-+      super.customServerAiStep();
++   public boolean isSensitiveToWater() {
++      return true;
 +   }
 +
 +   public boolean isOnFire() {
@@ -367,36 +370,43 @@
 +
 +   }
 +
-+   public boolean mobInteract(Player var1, InteractionHand var2) {
++   public InteractionResult mobInteract(Player var1, InteractionHand var2) {
 +      boolean var3 = this.isFood(var1.getItemInHand(var2));
-+      if (!super.mobInteract(var1, var2)) {
-+         if (this.isSaddled() && !this.isVehicle() && !this.isBaby()) {
-+            if (!this.level.isClientSide) {
-+               var1.startRiding(this);
++      if (!var3 && this.isSaddled() && !this.isVehicle()) {
++         if (!this.level.isClientSide) {
++            var1.startRiding(this);
++         }
++
++         return InteractionResult.sidedSuccess(this.level.isClientSide);
++      } else {
++         InteractionResult var4 = super.mobInteract(var1, var2);
++         if (!var4.consumesAction()) {
++            ItemStack var5 = var1.getItemInHand(var2);
++            return var5.getItem() == Items.SADDLE ? var5.interactLivingEntity(var1, this, var2) : InteractionResult.PASS;
++         } else {
++            if (var3 && !this.isSilent()) {
++               this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.STRIDER_EAT, this.getSoundSource(), 1.0F, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.2F);
 +            }
 +
-+            return true;
-+         } else {
-+            ItemStack var4 = var1.getItemInHand(var2);
-+            return var4.getItem() == Items.SADDLE && var4.interactEnemy(var1, this, var2);
++            return var4;
 +         }
-+      } else {
-+         if (var3 && !this.isSilent()) {
-+            this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.STRIDER_EAT, this.getSoundSource(), 1.0F, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.2F);
-+         }
-+
-+         return false;
 +      }
++   }
++
++   public Vec3 getLeashOffset() {
++      return new Vec3(0.0D, (double)(0.6F * this.getEyeHeight()), (double)(this.getBbWidth() * 0.4F));
 +   }
 +
 +   @Nullable
 +   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++      Zombie.ZombieGroupData var7 = null;
 +      Strider.StriderGroupData.Rider var6;
 +      if (var4 instanceof Strider.StriderGroupData) {
 +         var6 = ((Strider.StriderGroupData)var4).rider;
 +      } else if (!this.isBaby()) {
 +         if (this.random.nextInt(30) == 0) {
 +            var6 = Strider.StriderGroupData.Rider.PIGLIN_RIDER;
++            var7 = new Zombie.ZombieGroupData(Zombie.getSpawnAsBabyOdds(this.random), false);
 +         } else if (this.random.nextInt(10) == 0) {
 +            var6 = Strider.StriderGroupData.Rider.BABY_RIDER;
 +         } else {
@@ -409,26 +419,26 @@
 +         var6 = Strider.StriderGroupData.Rider.NO_RIDER;
 +      }
 +
-+      Object var7 = null;
++      Object var8 = null;
 +      if (var6 == Strider.StriderGroupData.Rider.BABY_RIDER) {
-+         Strider var8 = (Strider)EntityType.STRIDER.create(var1.getLevel());
-+         if (var8 != null) {
-+            var7 = var8;
-+            var8.setAge(-24000);
++         Strider var9 = (Strider)EntityType.STRIDER.create(var1.getLevel());
++         if (var9 != null) {
++            var8 = var9;
++            var9.setAge(-24000);
 +         }
 +      } else if (var6 == Strider.StriderGroupData.Rider.PIGLIN_RIDER) {
-+         ZombifiedPiglin var9 = (ZombifiedPiglin)EntityType.ZOMBIFIED_PIGLIN.create(var1.getLevel());
-+         if (var9 != null) {
-+            var7 = var9;
++         ZombifiedPiglin var10 = (ZombifiedPiglin)EntityType.ZOMBIFIED_PIGLIN.create(var1.getLevel());
++         if (var10 != null) {
++            var8 = var10;
 +            this.equipSaddle((SoundSource)null);
 +         }
 +      }
 +
-+      if (var7 != null) {
-+         ((Mob)var7).moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, 0.0F);
-+         ((Mob)var7).finalizeSpawn(var1, var2, MobSpawnType.JOCKEY, (SpawnGroupData)null, (CompoundTag)null);
-+         ((Mob)var7).startRiding(this, true);
-+         var1.addFreshEntity((Entity)var7);
++      if (var8 != null) {
++         ((Mob)var8).moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, 0.0F);
++         ((Mob)var8).finalizeSpawn(var1, var2, MobSpawnType.JOCKEY, var7, (CompoundTag)null);
++         ((Mob)var8).startRiding(this, true);
++         var1.addFreshEntity((Entity)var8);
 +      }
 +
 +      return super.finalizeSpawn(var1, var2, var3, (SpawnGroupData)var4, var5);

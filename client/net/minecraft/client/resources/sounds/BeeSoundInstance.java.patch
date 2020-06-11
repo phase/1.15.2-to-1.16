@@ -1,6 +1,19 @@
 --- net/minecraft/client/resources/sounds/BeeSoundInstance.java
 +++ net/minecraft/client/resources/sounds/BeeSoundInstance.java
-@@ -22,11 +22,11 @@
+@@ -12,40 +12,40 @@
+    private boolean hasSwitched;
+ 
+    public BeeSoundInstance(Bee var1, SoundEvent var2, SoundSource var3) {
+       super(var2, var3);
+       this.bee = var1;
+-      this.x = (float)var1.getX();
+-      this.y = (float)var1.getY();
+-      this.z = (float)var1.getZ();
++      this.x = (double)((float)var1.getX());
++      this.y = (double)((float)var1.getY());
++      this.z = (double)((float)var1.getZ());
+       this.looping = true;
+       this.delay = 0;
        this.volume = 0.0F;
     }
  
@@ -13,7 +26,17 @@
        }
  
        if (!this.bee.removed && !this.hasSwitched) {
-@@ -41,11 +41,11 @@
+-         this.x = (float)this.bee.getX();
+-         this.y = (float)this.bee.getY();
+-         this.z = (float)this.bee.getZ();
++         this.x = (double)((float)this.bee.getX());
++         this.y = (double)((float)this.bee.getY());
++         this.z = (double)((float)this.bee.getZ());
+          float var2 = Mth.sqrt(Entity.getHorizontalDistanceSqr(this.bee.getDeltaMovement()));
+          if ((double)var2 >= 0.01D) {
+             this.pitch = Mth.lerp(Mth.clamp(var2, this.getMinPitch(), this.getMaxPitch()), this.getMinPitch(), this.getMaxPitch());
+             this.volume = Mth.lerp(Mth.clamp(var2, 0.0F, 0.5F), 0.0F, 1.2F);
+          } else {
              this.pitch = 0.0F;
              this.volume = 0.0F;
           }

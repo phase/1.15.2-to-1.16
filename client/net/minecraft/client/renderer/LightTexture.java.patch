@@ -19,7 +19,7 @@
                    float var18;
                    Vector3f var19;
 -                  if (var2.dimension.getType() == DimensionType.THE_END) {
-+                  if (var2.dimensionType().isEnd()) {
++                  if (var2.effects().forceBrightLightmap()) {
                       var9.lerp(new Vector3f(0.99F, 1.12F, 1.0F), 0.25F);
                    } else {
                       Vector3f var17 = var7.copy();

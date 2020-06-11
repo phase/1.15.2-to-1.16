@@ -16,7 +16,7 @@
 +         if (var2.isEmpty()) {
 +            return var0.setStyle(var1);
 +         } else {
-+            return var2.equals(var1) ? var0 : (new TextComponent("")).append(var0).setStyle(var1);
++            return var2.equals(var1) ? var0 : var0.setStyle(var2.applyTo(var1));
 +         }
        }
     }
@@ -25,11 +25,11 @@
 +   public static MutableComponent updateForEntity(@Nullable CommandSourceStack var0, Component var1, @Nullable Entity var2, int var3) throws CommandSyntaxException {
        if (var3 > 100) {
 -         return var1;
-+         return var1.mutableCopy();
++         return var1.copy();
        } else {
 -         ++var3;
 -         Component var4 = var1 instanceof ContextAwareComponent ? ((ContextAwareComponent)var1).resolve(var0, var2, var3) : var1.copy();
-+         MutableComponent var4 = var1 instanceof ContextAwareComponent ? ((ContextAwareComponent)var1).resolve(var0, var2, var3 + 1) : var1.toMutable();
++         MutableComponent var4 = var1 instanceof ContextAwareComponent ? ((ContextAwareComponent)var1).resolve(var0, var2, var3 + 1) : var1.plainCopy();
           Iterator var5 = var1.getSiblings().iterator();
  
           while(var5.hasNext()) {
@@ -39,7 +39,7 @@
           }
  
 -         return mergeStyles(var4, var1.getStyle());
-+         return mergeStyles(var4, resolveStyle(var0, var1.getStyle(), var2, var3));
++         return var4.withStyle(resolveStyle(var0, var1.getStyle(), var2, var3));
        }
     }
  
@@ -84,7 +84,7 @@
           return new TextComponent("");
        } else if (var0.size() == 1) {
 -         return (Component)var1.apply(var0.iterator().next());
-+         return ((Component)var1.apply(var0.iterator().next())).mutableCopy();
++         return ((Component)var1.apply(var0.iterator().next())).copy();
        } else {
           TextComponent var2 = new TextComponent("");
           boolean var3 = true;

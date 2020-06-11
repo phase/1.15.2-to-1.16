@@ -168,7 +168,19 @@
           String var5 = var3.getPrettyDisplay().getString();
           var4 = String.format(Locale.ROOT, "/summon %s %.2f %.2f %.2f %s", var1.toString(), var2.x, var2.y, var2.z, var5);
        } else {
-@@ -331,20 +337,12 @@
+@@ -247,10 +253,11 @@
+          Screen var7 = this.minecraft.screen;
+          if (var5 == 1 && (!(this.minecraft.screen instanceof ControlsScreen) || ((ControlsScreen)var7).lastKeySelection <= Util.getMillis() - 20L)) {
+             if (this.minecraft.options.keyFullscreen.matches(var3, var4)) {
+                this.minecraft.getWindow().toggleFullScreen();
+                this.minecraft.options.fullscreen = this.minecraft.getWindow().isFullscreen();
++               this.minecraft.options.save();
+                return;
+             }
+ 
+             if (this.minecraft.options.keyScreenshot.matches(var3, var4)) {
+                if (Screen.hasControlDown()) {
+@@ -331,20 +338,12 @@
                 } else {
                    KeyMapping.set(var12, true);
                    KeyMapping.click(var12);

@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/multiplayer/ServerSelectionList.java
 +++ net/minecraft/client/gui/screens/multiplayer/ServerSelectionList.java
-@@ -3,11 +3,13 @@
+@@ -3,34 +3,40 @@
  import com.google.common.collect.Lists;
  import com.google.common.hash.Hashing;
  import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -11,10 +11,22 @@
 +import java.util.Collections;
  import java.util.Iterator;
  import java.util.List;
++import java.util.Objects;
  import java.util.concurrent.ScheduledThreadPoolExecutor;
  import java.util.concurrent.ThreadPoolExecutor;
++import javax.annotation.Nullable;
  import net.minecraft.ChatFormatting;
-@@ -24,10 +26,12 @@
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.Font;
+ import net.minecraft.client.gui.GuiComponent;
+ import net.minecraft.client.gui.chat.NarratorChatListener;
++import net.minecraft.client.gui.components.AbstractSelectionList;
+ import net.minecraft.client.gui.components.ObjectSelectionList;
+ import net.minecraft.client.gui.screens.Screen;
+ import net.minecraft.client.multiplayer.ServerData;
  import net.minecraft.client.multiplayer.ServerList;
  import net.minecraft.client.renderer.texture.AbstractTexture;
  import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -24,10 +36,55 @@
 +import net.minecraft.network.chat.TextComponent;
  import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.resources.ResourceLocation;
- import net.minecraft.util.Mth;
+-import net.minecraft.util.Mth;
  import org.apache.commons.lang3.Validate;
  import org.apache.logging.log4j.LogManager;
-@@ -137,147 +141,149 @@
+ import org.apache.logging.log4j.Logger;
+ 
+ public class ServerSelectionList extends ObjectSelectionList<ServerSelectionList.Entry> {
+@@ -53,35 +59,28 @@
+       this.onlineServers.forEach(this::addEntry);
+       this.addEntry(this.lanHeader);
+       this.networkServers.forEach(this::addEntry);
+    }
+ 
+-   public void setSelected(ServerSelectionList.Entry var1) {
++   public void setSelected(@Nullable ServerSelectionList.Entry var1) {
+       super.setSelected(var1);
+       if (this.getSelected() instanceof ServerSelectionList.OnlineServerEntry) {
+          NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.select", new Object[]{((ServerSelectionList.OnlineServerEntry)this.getSelected()).serverData.name})).getString());
+       }
+ 
++      this.screen.onSelectedChange();
+    }
+ 
+    public boolean keyPressed(int var1, int var2, int var3) {
+       ServerSelectionList.Entry var4 = (ServerSelectionList.Entry)this.getSelected();
+       return var4 != null && var4.keyPressed(var1, var2, var3) || super.keyPressed(var1, var2, var3);
+    }
+ 
+-   protected void moveSelection(int var1) {
+-      int var2 = this.children().indexOf(this.getSelected());
+-      int var3 = Mth.clamp(var2 + var1, 0, this.getItemCount() - 1);
+-      ServerSelectionList.Entry var4 = (ServerSelectionList.Entry)this.children().get(var3);
+-      if (var4 instanceof ServerSelectionList.LANHeader) {
+-         var3 = Mth.clamp(var3 + (var1 > 0 ? 1 : -1), 0, this.getItemCount() - 1);
+-         var4 = (ServerSelectionList.Entry)this.children().get(var3);
+-      }
+-
+-      super.setSelected(var4);
+-      this.ensureVisible(var4);
+-      this.screen.onSelectedChange();
++   protected void moveSelection(AbstractSelectionList.SelectionDirection var1) {
++      this.moveSelection(var1, (var0) -> {
++         return !(var0 instanceof ServerSelectionList.LANHeader);
++      });
+    }
+ 
+    public void updateOnlineServers(ServerList var1) {
+       this.onlineServers.clear();
+ 
+@@ -137,156 +136,167 @@
           this.minecraft = Minecraft.getInstance();
           this.iconLocation = new ResourceLocation("servers/" + Hashing.sha1().hashUnencodedChars(var3.ip) + "/icon");
           this.icon = (DynamicTexture)this.minecraft.getTextureManager().getTexture(this.iconLocation);
@@ -44,7 +101,10 @@
 +            this.serverData.status = TextComponent.EMPTY;
              ServerSelectionList.THREAD_POOL.submit(() -> {
                 try {
-                   this.screen.getPinger().pingServer(this.serverData);
+-                  this.screen.getPinger().pingServer(this.serverData);
++                  this.screen.getPinger().pingServer(this.serverData, () -> {
++                     this.minecraft.execute(this::updateServerList);
++                  });
                 } catch (UnknownHostException var2) {
                    this.serverData.ping = -1L;
 -                  this.serverData.motd = ChatFormatting.DARK_RED + I18n.get("multiplayer.status.cannot_resolve");
@@ -94,9 +154,9 @@
 -            var17 = 5;
 -            var19 = I18n.get(var10 ? "multiplayer.status.client_out_of_date" : "multiplayer.status.server_out_of_date");
 -            var18 = this.serverData.playerList;
-+         Object var25 = var13 ? this.serverData.version.mutableCopy().withStyle(ChatFormatting.DARK_RED) : this.serverData.status;
-+         int var16 = this.minecraft.font.width((FormattedText)var25);
-+         this.minecraft.font.draw(var1, (FormattedText)var25, (float)(var4 + var5 - var16 - 15 - 2), (float)(var3 + 1), 8421504);
++         Object var26 = var13 ? this.serverData.version.copy().withStyle(ChatFormatting.DARK_RED) : this.serverData.status;
++         int var16 = this.minecraft.font.width((FormattedText)var26);
++         this.minecraft.font.draw(var1, (FormattedText)var26, (float)(var4 + var5 - var16 - 15 - 2), (float)(var3 + 1), 8421504);
 +         byte var17 = 0;
 +         int var18;
 +         List var19;
@@ -155,11 +215,19 @@
           RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
           this.minecraft.getTextureManager().bind(GuiComponent.GUI_ICONS_LOCATION);
 -         GuiComponent.blit(var3 + var4 - 15, var2, (float)(var16 * 10), (float)(176 + var17 * 8), 10, 8, 256, 256);
+-         if (this.serverData.getIconB64() != null && !this.serverData.getIconB64().equals(this.lastIconB64)) {
+-            this.lastIconB64 = this.serverData.getIconB64();
+-            this.loadServerIcon();
+-            this.screen.getServers().save();
 +         GuiComponent.blit(var1, var4 + var5 - 15, var3, (float)(var17 * 10), (float)(176 + var18 * 8), 10, 8, 256, 256);
-          if (this.serverData.getIconB64() != null && !this.serverData.getIconB64().equals(this.lastIconB64)) {
-             this.lastIconB64 = this.serverData.getIconB64();
-             this.loadServerIcon();
-             this.screen.getServers().save();
++         String var21 = this.serverData.getIconB64();
++         if (!Objects.equals(var21, this.lastIconB64)) {
++            if (this.uploadServerIcon(var21)) {
++               this.lastIconB64 = var21;
++            } else {
++               this.serverData.setIconB64((String)null);
++               this.updateServerList();
++            }
           }
  
           if (this.icon != null) {
@@ -173,11 +241,11 @@
 -         int var20 = var6 - var3;
 -         int var21 = var7 - var2;
 -         if (var20 >= var4 - 15 && var20 <= var4 - 5 && var21 >= 0 && var21 <= 8) {
-+         int var21 = var7 - var4;
-+         int var22 = var8 - var3;
-+         if (var21 >= var5 - 15 && var21 <= var5 - 5 && var22 >= 0 && var22 <= 8) {
++         int var22 = var7 - var4;
++         int var23 = var8 - var3;
++         if (var22 >= var5 - 15 && var22 <= var5 - 5 && var23 >= 0 && var23 <= 8) {
 +            this.screen.setToolTip(Collections.singletonList(var20));
-+         } else if (var21 >= var5 - var16 - 15 - 2 && var21 <= var5 - 15 - 2 && var22 >= 0 && var22 <= 8) {
++         } else if (var22 >= var5 - var16 - 15 - 2 && var22 <= var5 - 15 - 2 && var23 >= 0 && var23 <= 8) {
              this.screen.setToolTip(var19);
 -         } else if (var20 >= var4 - var15 - 15 - 2 && var20 <= var4 - 15 - 2 && var21 >= 0 && var21 <= 8) {
 -            this.screen.setToolTip(var18);
@@ -191,12 +259,12 @@
              RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 -            int var22 = var6 - var3;
 -            int var23 = var7 - var2;
-+            int var23 = var7 - var4;
-+            int var24 = var8 - var3;
++            int var24 = var7 - var4;
++            int var25 = var8 - var3;
              if (this.canJoin()) {
 -               if (var22 < 32 && var22 > 16) {
 -                  GuiComponent.blit(var3, var2, 0.0F, 32.0F, 32, 32, 256, 256);
-+               if (var23 < 32 && var23 > 16) {
++               if (var24 < 32 && var24 > 16) {
 +                  GuiComponent.blit(var1, var4, var3, 0.0F, 32.0F, 32, 32, 256, 256);
                 } else {
 -                  GuiComponent.blit(var3, var2, 0.0F, 0.0F, 32, 32, 256, 256);
@@ -208,7 +276,7 @@
 -               if (var22 < 16 && var23 < 16) {
 -                  GuiComponent.blit(var3, var2, 96.0F, 32.0F, 32, 32, 256, 256);
 +            if (var2 > 0) {
-+               if (var23 < 16 && var24 < 16) {
++               if (var24 < 16 && var25 < 16) {
 +                  GuiComponent.blit(var1, var4, var3, 96.0F, 32.0F, 32, 32, 256, 256);
                 } else {
 -                  GuiComponent.blit(var3, var2, 96.0F, 0.0F, 32, 32, 256, 256);
@@ -220,7 +288,7 @@
 -               if (var22 < 16 && var23 > 16) {
 -                  GuiComponent.blit(var3, var2, 64.0F, 32.0F, 32, 32, 256, 256);
 +            if (var2 < this.screen.getServers().size() - 1) {
-+               if (var23 < 16 && var24 > 16) {
++               if (var24 < 16 && var25 > 16) {
 +                  GuiComponent.blit(var1, var4, var3, 64.0F, 32.0F, 32, 32, 256, 256);
                 } else {
 -                  GuiComponent.blit(var3, var2, 64.0F, 0.0F, 32, 32, 256, 256);
@@ -233,6 +301,10 @@
  
 -      protected void drawIcon(int var1, int var2, ResourceLocation var3) {
 -         this.minecraft.getTextureManager().bind(var3);
++      public void updateServerList() {
++         this.screen.getServers().save();
++      }
++
 +      protected void drawIcon(PoseStack var1, int var2, int var3, ResourceLocation var4) {
 +         this.minecraft.getTextureManager().bind(var4);
           RenderSystem.enableBlend();
@@ -243,7 +315,34 @@
  
        private boolean canJoin() {
           return true;
-@@ -380,17 +386,17 @@
+       }
+ 
+-      private void loadServerIcon() {
+-         String var1 = this.serverData.getIconB64();
++      private boolean uploadServerIcon(@Nullable String var1) {
+          if (var1 == null) {
+             this.minecraft.getTextureManager().release(this.iconLocation);
+             if (this.icon != null && this.icon.getPixels() != null) {
+                this.icon.getPixels().close();
+             }
+@@ -305,14 +315,15 @@
+                }
+ 
+                this.minecraft.getTextureManager().register((ResourceLocation)this.iconLocation, (AbstractTexture)this.icon);
+             } catch (Throwable var3) {
+                ServerSelectionList.LOGGER.error("Invalid icon for server {} ({})", this.serverData.name, this.serverData.ip, var3);
+-               this.serverData.setIconB64((String)null);
++               return false;
+             }
+          }
+ 
++         return true;
+       }
+ 
+       public boolean keyPressed(int var1, int var2, int var3) {
+          if (Screen.hasShiftDown()) {
+             ServerSelectionList var4 = this.screen.serverSelectionList;
+@@ -380,17 +391,17 @@
           this.screen = var1;
           this.serverData = var2;
           this.minecraft = Minecraft.getInstance();
@@ -266,7 +365,7 @@
        }
  
        public boolean mouseClicked(double var1, double var3, int var5) {
-@@ -412,33 +418,33 @@
+@@ -412,33 +423,33 @@
        private final Minecraft minecraft = Minecraft.getInstance();
  
        public LANHeader() {

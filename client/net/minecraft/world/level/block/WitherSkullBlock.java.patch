@@ -35,7 +35,7 @@
  
     public void setPlacedBy(Level var1, BlockPos var2, BlockState var3, @Nullable LivingEntity var4, ItemStack var5) {
        super.setPlacedBy(var1, var2, var3, var4, var5);
-@@ -42,12 +44,12 @@
+@@ -42,13 +44,13 @@
  
     }
  
@@ -43,13 +43,15 @@
        if (!var0.isClientSide) {
 -         Block var3 = var2.getBlockState().getBlock();
 -         boolean var4 = var3 == Blocks.WITHER_SKELETON_SKULL || var3 == Blocks.WITHER_SKELETON_WALL_SKULL;
+-         if (var4 && var1.getY() >= 2 && var0.getDifficulty() != Difficulty.PEACEFUL) {
 +         BlockState var3 = var2.getBlockState();
 +         boolean var4 = var3.is(Blocks.WITHER_SKELETON_SKULL) || var3.is(Blocks.WITHER_SKELETON_WALL_SKULL);
-          if (var4 && var1.getY() >= 2 && var0.getDifficulty() != Difficulty.PEACEFUL) {
++         if (var4 && var1.getY() >= 0 && var0.getDifficulty() != Difficulty.PEACEFUL) {
              BlockPattern var5 = getOrCreateWitherFull();
              BlockPattern.BlockPatternMatch var6 = var5.find(var0, var1);
              if (var6 != null) {
                 for(int var7 = 0; var7 < var5.getWidth(); ++var7) {
+                   for(int var8 = 0; var8 < var5.getHeight(); ++var8) {
 @@ -91,19 +93,23 @@
        }
     }

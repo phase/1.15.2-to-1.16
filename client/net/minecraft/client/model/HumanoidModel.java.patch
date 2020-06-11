@@ -36,7 +36,22 @@
  
     public void setupAnim(T var1, float var2, float var3, float var4, float var5, float var6) {
        boolean var7 = var1.getFallFlyingTicks() > 4;
-@@ -170,44 +167,11 @@
+@@ -146,10 +143,14 @@
+          this.leftArm.yRot = 0.5235988F;
+          break;
+       case ITEM:
+          this.leftArm.xRot = this.leftArm.xRot * 0.5F - 0.31415927F;
+          this.leftArm.yRot = 0.0F;
++         break;
++      case THROW_SPEAR:
++         this.leftArm.xRot = this.leftArm.xRot * 0.5F - 3.1415927F;
++         this.leftArm.yRot = 0.0F;
+       }
+ 
+       switch(this.rightArmPose) {
+       case EMPTY:
+          this.rightArm.yRot = 0.0F;
+@@ -170,44 +171,16 @@
        if (this.leftArmPose == HumanoidModel.ArmPose.THROW_SPEAR && this.rightArmPose != HumanoidModel.ArmPose.BLOCK && this.rightArmPose != HumanoidModel.ArmPose.THROW_SPEAR && this.rightArmPose != HumanoidModel.ArmPose.BOW_AND_ARROW) {
           this.leftArm.xRot = this.leftArm.xRot * 0.5F - 3.1415927F;
           this.leftArm.yRot = 0.0F;
@@ -74,15 +89,18 @@
 -         var11.xRot = (float)((double)var11.xRot - ((double)var13 * 1.2D + (double)var14));
 -         var11.yRot += this.body.yRot * 2.0F;
 -         var11.zRot += Mth.sin(this.attackTime * 3.1415927F) * -0.4F;
--      }
--
++      if (this.rightArmPose == HumanoidModel.ArmPose.THROW_SPEAR && this.leftArmPose != HumanoidModel.ArmPose.BLOCK && this.leftArmPose != HumanoidModel.ArmPose.THROW_SPEAR && this.leftArmPose != HumanoidModel.ArmPose.BOW_AND_ARROW) {
++         this.rightArm.xRot = this.rightArm.xRot * 0.5F - 3.1415927F;
++         this.rightArm.yRot = 0.0F;
+       }
+ 
 +      this.setupAttackAnimation(var1, var4);
        if (this.crouching) {
           this.body.xRot = 0.5F;
           var10000 = this.rightArm;
           var10000.xRot += 0.4F;
           var10000 = this.leftArm;
-@@ -230,18 +194,11 @@
+@@ -230,18 +203,11 @@
           this.body.y = 0.0F;
           this.leftArm.y = 2.0F;
           this.rightArm.y = 2.0F;
@@ -102,7 +120,7 @@
           this.leftArm.yRot = 0.1F + this.head.yRot + 0.4F;
           this.rightArm.xRot = -1.5707964F + this.head.xRot;
           this.leftArm.xRot = -1.5707964F + this.head.xRot;
-@@ -250,77 +207,94 @@
+@@ -250,77 +216,96 @@
           this.leftArm.yRot = 0.1F + this.head.yRot;
           this.rightArm.xRot = -1.5707964F + this.head.xRot;
           this.leftArm.xRot = -1.5707964F + this.head.xRot;
@@ -146,55 +164,57 @@
 -         var16 = var2 % 26.0F;
 -         var12 = this.attackTime > 0.0F ? 0.0F : this.swimAmount;
 -         if (var16 < 14.0F) {
+-            this.leftArm.xRot = this.rotlerpRad(this.leftArm.xRot, 0.0F, this.swimAmount);
 +         float var10 = var2 % 26.0F;
-+         float var11 = this.attackTime > 0.0F ? 0.0F : this.swimAmount;
-+         float var12;
++         HumanoidArm var11 = this.getAttackArm(var1);
++         float var12 = var11 == HumanoidArm.RIGHT && this.attackTime > 0.0F ? 0.0F : this.swimAmount;
++         float var13 = var11 == HumanoidArm.LEFT && this.attackTime > 0.0F ? 0.0F : this.swimAmount;
++         float var14;
 +         if (var10 < 14.0F) {
-             this.leftArm.xRot = this.rotlerpRad(this.leftArm.xRot, 0.0F, this.swimAmount);
--            this.rightArm.xRot = Mth.lerp(var12, this.rightArm.xRot, 0.0F);
-+            this.rightArm.xRot = Mth.lerp(var11, this.rightArm.xRot, 0.0F);
-             this.leftArm.yRot = this.rotlerpRad(this.leftArm.yRot, 3.1415927F, this.swimAmount);
--            this.rightArm.yRot = Mth.lerp(var12, this.rightArm.yRot, 3.1415927F);
++            this.leftArm.xRot = Mth.lerp(var13, this.leftArm.xRot, 0.0F);
+             this.rightArm.xRot = Mth.lerp(var12, this.rightArm.xRot, 0.0F);
+-            this.leftArm.yRot = this.rotlerpRad(this.leftArm.yRot, 3.1415927F, this.swimAmount);
++            this.leftArm.yRot = Mth.lerp(var13, this.leftArm.yRot, 3.1415927F);
+             this.rightArm.yRot = Mth.lerp(var12, this.rightArm.yRot, 3.1415927F);
 -            this.leftArm.zRot = this.rotlerpRad(this.leftArm.zRot, 3.1415927F + 1.8707964F * this.quadraticArmUpdate(var16) / this.quadraticArmUpdate(14.0F), this.swimAmount);
 -            this.rightArm.zRot = Mth.lerp(var12, this.rightArm.zRot, 3.1415927F - 1.8707964F * this.quadraticArmUpdate(var16) / this.quadraticArmUpdate(14.0F));
 -         } else if (var16 >= 14.0F && var16 < 22.0F) {
 -            var13 = (var16 - 14.0F) / 8.0F;
 -            this.leftArm.xRot = this.rotlerpRad(this.leftArm.xRot, 1.5707964F * var13, this.swimAmount);
 -            this.rightArm.xRot = Mth.lerp(var12, this.rightArm.xRot, 1.5707964F * var13);
-+            this.rightArm.yRot = Mth.lerp(var11, this.rightArm.yRot, 3.1415927F);
-+            this.leftArm.zRot = this.rotlerpRad(this.leftArm.zRot, 3.1415927F + 1.8707964F * this.quadraticArmUpdate(var10) / this.quadraticArmUpdate(14.0F), this.swimAmount);
-+            this.rightArm.zRot = Mth.lerp(var11, this.rightArm.zRot, 3.1415927F - 1.8707964F * this.quadraticArmUpdate(var10) / this.quadraticArmUpdate(14.0F));
+-            this.leftArm.yRot = this.rotlerpRad(this.leftArm.yRot, 3.1415927F, this.swimAmount);
++            this.leftArm.zRot = Mth.lerp(var13, this.leftArm.zRot, 3.1415927F + 1.8707964F * this.quadraticArmUpdate(var10) / this.quadraticArmUpdate(14.0F));
++            this.rightArm.zRot = Mth.lerp(var12, this.rightArm.zRot, 3.1415927F - 1.8707964F * this.quadraticArmUpdate(var10) / this.quadraticArmUpdate(14.0F));
 +         } else if (var10 >= 14.0F && var10 < 22.0F) {
-+            var12 = (var10 - 14.0F) / 8.0F;
-+            this.leftArm.xRot = this.rotlerpRad(this.leftArm.xRot, 1.5707964F * var12, this.swimAmount);
-+            this.rightArm.xRot = Mth.lerp(var11, this.rightArm.xRot, 1.5707964F * var12);
-             this.leftArm.yRot = this.rotlerpRad(this.leftArm.yRot, 3.1415927F, this.swimAmount);
--            this.rightArm.yRot = Mth.lerp(var12, this.rightArm.yRot, 3.1415927F);
++            var14 = (var10 - 14.0F) / 8.0F;
++            this.leftArm.xRot = Mth.lerp(var13, this.leftArm.xRot, 1.5707964F * var14);
++            this.rightArm.xRot = Mth.lerp(var12, this.rightArm.xRot, 1.5707964F * var14);
++            this.leftArm.yRot = Mth.lerp(var13, this.leftArm.yRot, 3.1415927F);
+             this.rightArm.yRot = Mth.lerp(var12, this.rightArm.yRot, 3.1415927F);
 -            this.leftArm.zRot = this.rotlerpRad(this.leftArm.zRot, 5.012389F - 1.8707964F * var13, this.swimAmount);
 -            this.rightArm.zRot = Mth.lerp(var12, this.rightArm.zRot, 1.2707963F + 1.8707964F * var13);
 -         } else if (var16 >= 22.0F && var16 < 26.0F) {
 -            var13 = (var16 - 22.0F) / 4.0F;
 -            this.leftArm.xRot = this.rotlerpRad(this.leftArm.xRot, 1.5707964F - 1.5707964F * var13, this.swimAmount);
 -            this.rightArm.xRot = Mth.lerp(var12, this.rightArm.xRot, 1.5707964F - 1.5707964F * var13);
-+            this.rightArm.yRot = Mth.lerp(var11, this.rightArm.yRot, 3.1415927F);
-+            this.leftArm.zRot = this.rotlerpRad(this.leftArm.zRot, 5.012389F - 1.8707964F * var12, this.swimAmount);
-+            this.rightArm.zRot = Mth.lerp(var11, this.rightArm.zRot, 1.2707963F + 1.8707964F * var12);
+-            this.leftArm.yRot = this.rotlerpRad(this.leftArm.yRot, 3.1415927F, this.swimAmount);
++            this.leftArm.zRot = Mth.lerp(var13, this.leftArm.zRot, 5.012389F - 1.8707964F * var14);
++            this.rightArm.zRot = Mth.lerp(var12, this.rightArm.zRot, 1.2707963F + 1.8707964F * var14);
 +         } else if (var10 >= 22.0F && var10 < 26.0F) {
-+            var12 = (var10 - 22.0F) / 4.0F;
-+            this.leftArm.xRot = this.rotlerpRad(this.leftArm.xRot, 1.5707964F - 1.5707964F * var12, this.swimAmount);
-+            this.rightArm.xRot = Mth.lerp(var11, this.rightArm.xRot, 1.5707964F - 1.5707964F * var12);
-             this.leftArm.yRot = this.rotlerpRad(this.leftArm.yRot, 3.1415927F, this.swimAmount);
--            this.rightArm.yRot = Mth.lerp(var12, this.rightArm.yRot, 3.1415927F);
-+            this.rightArm.yRot = Mth.lerp(var11, this.rightArm.yRot, 3.1415927F);
-             this.leftArm.zRot = this.rotlerpRad(this.leftArm.zRot, 3.1415927F, this.swimAmount);
--            this.rightArm.zRot = Mth.lerp(var12, this.rightArm.zRot, 3.1415927F);
-+            this.rightArm.zRot = Mth.lerp(var11, this.rightArm.zRot, 3.1415927F);
++            var14 = (var10 - 22.0F) / 4.0F;
++            this.leftArm.xRot = Mth.lerp(var13, this.leftArm.xRot, 1.5707964F - 1.5707964F * var14);
++            this.rightArm.xRot = Mth.lerp(var12, this.rightArm.xRot, 1.5707964F - 1.5707964F * var14);
++            this.leftArm.yRot = Mth.lerp(var13, this.leftArm.yRot, 3.1415927F);
+             this.rightArm.yRot = Mth.lerp(var12, this.rightArm.yRot, 3.1415927F);
+-            this.leftArm.zRot = this.rotlerpRad(this.leftArm.zRot, 3.1415927F, this.swimAmount);
++            this.leftArm.zRot = Mth.lerp(var13, this.leftArm.zRot, 3.1415927F);
+             this.rightArm.zRot = Mth.lerp(var12, this.rightArm.zRot, 3.1415927F);
           }
  
 -         var13 = 0.3F;
 -         var14 = 0.33333334F;
-+         var12 = 0.3F;
-+         float var13 = 0.33333334F;
++         var14 = 0.3F;
++         float var15 = 0.33333334F;
           this.leftLeg.xRot = Mth.lerp(this.swimAmount, this.leftLeg.xRot, 0.3F * Mth.cos(var2 * 0.33333334F + 3.1415927F));
           this.rightLeg.xRot = Mth.lerp(this.swimAmount, this.rightLeg.xRot, 0.3F * Mth.cos(var2 * 0.33333334F));
        }
@@ -241,3 +261,21 @@
        if (var4 < -3.1415927F) {
           var4 += 6.2831855F;
        }
+@@ -339,10 +324,17 @@
+    public void copyPropertiesTo(HumanoidModel<T> var1) {
+       super.copyPropertiesTo(var1);
+       var1.leftArmPose = this.leftArmPose;
+       var1.rightArmPose = this.rightArmPose;
+       var1.crouching = this.crouching;
++      var1.head.copyFrom(this.head);
++      var1.hat.copyFrom(this.hat);
++      var1.body.copyFrom(this.body);
++      var1.rightArm.copyFrom(this.rightArm);
++      var1.leftArm.copyFrom(this.leftArm);
++      var1.rightLeg.copyFrom(this.rightLeg);
++      var1.leftLeg.copyFrom(this.leftLeg);
+    }
+ 
+    public void setAllVisible(boolean var1) {
+       this.head.visible = var1;
+       this.hat.visible = var1;

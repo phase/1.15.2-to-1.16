@@ -1,0 +1,14 @@
+--- net/minecraft/world/item/crafting/RecipeSerializer.java
++++ net/minecraft/world/item/crafting/RecipeSerializer.java
+@@ -24,10 +24,11 @@
+    SimpleCookingSerializer<SmeltingRecipe> SMELTING_RECIPE = (SimpleCookingSerializer)register("smelting", new SimpleCookingSerializer(SmeltingRecipe::new, 200));
+    SimpleCookingSerializer<BlastingRecipe> BLASTING_RECIPE = (SimpleCookingSerializer)register("blasting", new SimpleCookingSerializer(BlastingRecipe::new, 100));
+    SimpleCookingSerializer<SmokingRecipe> SMOKING_RECIPE = (SimpleCookingSerializer)register("smoking", new SimpleCookingSerializer(SmokingRecipe::new, 100));
+    SimpleCookingSerializer<CampfireCookingRecipe> CAMPFIRE_COOKING_RECIPE = (SimpleCookingSerializer)register("campfire_cooking", new SimpleCookingSerializer(CampfireCookingRecipe::new, 100));
+    RecipeSerializer<StonecutterRecipe> STONECUTTER = register("stonecutting", new SingleItemRecipe.Serializer(StonecutterRecipe::new));
++   RecipeSerializer<UpgradeRecipe> SMITHING = register("smithing", new UpgradeRecipe.Serializer());
+ 
+    T fromJson(ResourceLocation var1, JsonObject var2);
+ 
+    T fromNetwork(ResourceLocation var1, FriendlyByteBuf var2);
+ 

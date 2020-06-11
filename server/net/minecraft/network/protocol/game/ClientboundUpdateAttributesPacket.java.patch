@@ -38,7 +38,7 @@
 -         ArrayList var7 = Lists.newArrayList();
 -         int var8 = var1.readVarInt();
 +         ResourceLocation var4 = var1.readResourceLocation();
-+         Attribute var5 = (Attribute)Registry.ATTRIBUTES.get(var4);
++         Attribute var5 = (Attribute)Registry.ATTRIBUTE.get(var4);
 +         double var6 = var1.readDouble();
 +         ArrayList var8 = Lists.newArrayList();
 +         int var9 = var1.readVarInt();
@@ -65,7 +65,7 @@
        while(var2.hasNext()) {
           ClientboundUpdateAttributesPacket.AttributeSnapshot var3 = (ClientboundUpdateAttributesPacket.AttributeSnapshot)var2.next();
 -         var1.writeUtf(var3.getName());
-+         var1.writeResourceLocation(Registry.ATTRIBUTES.getKey(var3.getAttribute()));
++         var1.writeResourceLocation(Registry.ATTRIBUTE.getKey(var3.getAttribute()));
           var1.writeDouble(var3.getBase());
           var1.writeVarInt(var3.getModifiers().size());
           Iterator var4 = var3.getModifiers().iterator();

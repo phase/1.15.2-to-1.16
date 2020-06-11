@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/debug/GameModeSwitcherScreen.java
 +++ net/minecraft/client/gui/screens/debug/GameModeSwitcherScreen.java
-@@ -1,0 +1,239 @@
+@@ -1,0 +1,234 @@
 +package net.minecraft.client.gui.screens.debug;
 +
 +import com.google.common.collect.Lists;
@@ -10,13 +10,13 @@
 +import java.util.Iterator;
 +import java.util.List;
 +import java.util.Optional;
++import net.minecraft.ChatFormatting;
 +import net.minecraft.client.Minecraft;
 +import net.minecraft.client.gui.chat.NarratorChatListener;
 +import net.minecraft.client.gui.components.AbstractWidget;
 +import net.minecraft.client.gui.screens.Screen;
 +import net.minecraft.client.renderer.entity.ItemRenderer;
 +import net.minecraft.client.renderer.texture.TextureManager;
-+import net.minecraft.client.resources.language.I18n;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.TranslatableComponent;
 +import net.minecraft.resources.ResourceLocation;
@@ -28,6 +28,7 @@
 +public class GameModeSwitcherScreen extends Screen {
 +   private static final ResourceLocation GAMEMODE_SWITCHER_LOCATION = new ResourceLocation("textures/gui/container/gamemode_switcher.png");
 +   private static final int ALL_SLOTS_WIDTH = GameModeSwitcherScreen.GameModeIcon.values().length * 30 - 5;
++   private static final Component SELECT_KEY;
 +   private final Optional<GameModeSwitcherScreen.GameModeIcon> previousHovered;
 +   private Optional<GameModeSwitcherScreen.GameModeIcon> currentlyHovered = Optional.empty();
 +   private int firstMouseX;
@@ -64,38 +65,28 @@
 +         this.currentlyHovered.ifPresent((var2x) -> {
 +            this.drawCenteredString(var1, this.font, var2x.getName(), this.width / 2, this.height / 2 - 30 - 20, -1);
 +         });
-+         int var7 = this.font.width(I18n.get("debug.gamemodes.press_f4"));
-+         this.drawKeyOption(var1, I18n.get("debug.gamemodes.press_f4"), I18n.get("debug.gamemodes.select_next"), 5, var7);
++         this.drawCenteredString(var1, this.font, SELECT_KEY, this.width / 2, this.height / 2 + 5, 16777215);
 +         if (!this.setFirstMousePos) {
 +            this.firstMouseX = var2;
 +            this.firstMouseY = var3;
 +            this.setFirstMousePos = true;
 +         }
 +
-+         boolean var8 = this.firstMouseX == var2 && this.firstMouseY == var3;
-+         Iterator var9 = this.slots.iterator();
++         boolean var7 = this.firstMouseX == var2 && this.firstMouseY == var3;
++         Iterator var8 = this.slots.iterator();
 +
-+         while(var9.hasNext()) {
-+            GameModeSwitcherScreen.GameModeSlot var10 = (GameModeSwitcherScreen.GameModeSlot)var9.next();
-+            var10.render(var1, var2, var3, var4);
++         while(var8.hasNext()) {
++            GameModeSwitcherScreen.GameModeSlot var9 = (GameModeSwitcherScreen.GameModeSlot)var8.next();
++            var9.render(var1, var2, var3, var4);
 +            this.currentlyHovered.ifPresent((var1x) -> {
-+               var10.setSelected(var1x == var10.icon);
++               var9.setSelected(var1x == var9.icon);
 +            });
-+            if (!var8 && var10.isHovered()) {
-+               this.currentlyHovered = Optional.of(var10.icon);
++            if (!var7 && var9.isHovered()) {
++               this.currentlyHovered = Optional.of(var9.icon);
 +            }
 +         }
 +
 +      }
-+   }
-+
-+   private void drawKeyOption(PoseStack var1, String var2, String var3, int var4, int var5) {
-+      int var6 = 5636095;
-+      int var7 = 16777215;
-+      this.drawString(var1, this.font, "[", this.width / 2 - var5 - 18, this.height / 2 + var4, 5636095);
-+      this.drawCenteredString(var1, this.font, var2, this.width / 2 - var5 / 2 - 10, this.height / 2 + var4, 5636095);
-+      this.drawCenteredString(var1, this.font, "]", this.width / 2 - 5, this.height / 2 + var4, 5636095);
-+      this.drawString(var1, this.font, var3, this.width / 2 + 5, this.height / 2 + var4, 16777215);
 +   }
 +
 +   private void switchToHoveredGameMode() {
@@ -135,6 +126,10 @@
 +
 +   public boolean isPauseScreen() {
 +      return false;
++   }
++
++   static {
++      SELECT_KEY = new TranslatableComponent("debug.gamemodes.select_next", new Object[]{(new TranslatableComponent("debug.gamemodes.press_f4")).withStyle(ChatFormatting.AQUA)});
 +   }
 +
 +   public class GameModeSlot extends AbstractWidget {

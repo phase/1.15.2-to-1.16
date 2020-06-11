@@ -1,21 +1,23 @@
 --- net/minecraft/world/level/storage/WorldData.java
 +++ net/minecraft/world/level/storage/WorldData.java
-@@ -1,0 +1,85 @@
+@@ -1,0 +1,87 @@
 +package net.minecraft.world.level.storage;
 +
 +import java.util.Set;
 +import javax.annotation.Nullable;
 +import net.minecraft.CrashReportCategory;
++import net.minecraft.core.RegistryAccess;
 +import net.minecraft.nbt.CompoundTag;
 +import net.minecraft.world.Difficulty;
++import net.minecraft.world.level.DataPackConfig;
 +import net.minecraft.world.level.GameRules;
 +import net.minecraft.world.level.GameType;
 +import net.minecraft.world.level.levelgen.WorldGenSettings;
 +
 +public interface WorldData {
-+   Set<String> getDisabledDataPacks();
++   DataPackConfig getDataPackConfig();
 +
-+   Set<String> getEnabledDataPacks();
++   void setDataPackConfig(DataPackConfig var1);
 +
 +   boolean wasModded();
 +
@@ -54,7 +56,7 @@
 +
 +   ServerLevelData overworldData();
 +
-+   CompoundTag createTag(@Nullable CompoundTag var1);
++   CompoundTag createTag(RegistryAccess var1, @Nullable CompoundTag var2);
 +
 +   boolean isHardcore();
 +

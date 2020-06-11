@@ -13,9 +13,13 @@
  import it.unimi.dsi.fastutil.longs.LongIterator;
  import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
  import it.unimi.dsi.fastutil.longs.LongSet;
-@@ -68,11 +70,10 @@
+@@ -64,15 +66,13 @@
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.ai.village.poi.PoiManager;
  import net.minecraft.world.entity.boss.EnderDragonPart;
- import net.minecraft.world.entity.global.LightningBolt;
+-import net.minecraft.world.entity.global.LightningBolt;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.level.ChunkPos;
  import net.minecraft.world.level.GameRules;
@@ -25,7 +29,7 @@
  import net.minecraft.world.level.chunk.ChunkStatus;
  import net.minecraft.world.level.chunk.ImposterProtoChunk;
  import net.minecraft.world.level.chunk.LevelChunk;
-@@ -82,10 +83,11 @@
+@@ -82,10 +82,11 @@
  import net.minecraft.world.level.chunk.storage.ChunkSerializer;
  import net.minecraft.world.level.chunk.storage.ChunkStorage;
  import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -37,7 +41,7 @@
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
  
-@@ -97,11 +99,11 @@
+@@ -97,11 +98,11 @@
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> pendingUnloads;
     private final LongSet entitiesInLevel;
     private final ServerLevel level;
@@ -50,7 +54,7 @@
     private final LongSet toDrop;
     private boolean modified;
     private final ChunkTaskPriorityQueueSorter queueSorter;
-@@ -112,40 +114,42 @@
+@@ -112,40 +113,42 @@
     private final AtomicInteger tickingGenerated;
     private final StructureManager structureManager;
     private final File storageFolder;
@@ -104,7 +108,7 @@
  
     private static double euclideanDistanceSquared(ChunkPos var0, Entity var1) {
        double var2 = (double)(var0.x * 16 + 8);
-@@ -460,30 +464,41 @@
+@@ -460,30 +463,41 @@
              if (var2 != null) {
                 boolean var7 = var2.contains("Level", 10) && var2.getCompound("Level").contains("Status", 8);
                 if (var7) {
@@ -146,7 +150,7 @@
        CompletableFuture var4 = this.getChunkRangeFuture(var3, var2.getRange(), (var2x) -> {
           return this.getDependencyStatus(var2, var2x);
        });
-@@ -638,46 +653,61 @@
+@@ -638,46 +652,61 @@
     private boolean save(ChunkAccess var1) {
        this.poiManager.flush(var1.getPos());
        if (!var1.isUnsaved()) {
@@ -219,7 +223,7 @@
        if (var2 != this.viewDistance) {
           int var3 = this.viewDistance;
           this.viewDistance = var2;
-@@ -769,11 +799,11 @@
+@@ -769,11 +798,11 @@
     }
  
     @Nullable
@@ -232,20 +236,73 @@
     boolean noPlayersCloseForSpawning(ChunkPos var1) {
        long var2 = var1.toLong();
        return !this.distanceManager.hasPlayersNearby(var2) ? true : this.playerMap.getPlayers(var2).noneMatch((var1x) -> {
-@@ -920,11 +950,11 @@
+@@ -918,34 +947,32 @@
+       });
+    }
  
     protected void addEntity(Entity var1) {
        if (!(var1 instanceof EnderDragonPart)) {
-          if (!(var1 instanceof LightningBolt)) {
-             EntityType var2 = var1.getType();
+-         if (!(var1 instanceof LightningBolt)) {
+-            EntityType var2 = var1.getType();
 -            int var3 = var2.chunkRange() * 16;
-+            int var3 = var2.clientTrackingRange() * 16;
-             int var4 = var2.updateInterval();
-             if (this.entityMap.containsKey(var1.getId())) {
-                throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Entity is already tracked!"));
-             } else {
-                ChunkMap.TrackedEntity var5 = new ChunkMap.TrackedEntity(var1, var3, var4, var2.trackDeltas());
-@@ -1158,24 +1188,28 @@
+-            int var4 = var2.updateInterval();
+-            if (this.entityMap.containsKey(var1.getId())) {
+-               throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Entity is already tracked!"));
+-            } else {
+-               ChunkMap.TrackedEntity var5 = new ChunkMap.TrackedEntity(var1, var3, var4, var2.trackDeltas());
+-               this.entityMap.put(var1.getId(), var5);
+-               var5.updatePlayers(this.level.players());
+-               if (var1 instanceof ServerPlayer) {
+-                  ServerPlayer var6 = (ServerPlayer)var1;
+-                  this.updatePlayerStatus(var6, true);
+-                  ObjectIterator var7 = this.entityMap.values().iterator();
++         EntityType var2 = var1.getType();
++         int var3 = var2.clientTrackingRange() * 16;
++         int var4 = var2.updateInterval();
++         if (this.entityMap.containsKey(var1.getId())) {
++            throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Entity is already tracked!"));
++         } else {
++            ChunkMap.TrackedEntity var5 = new ChunkMap.TrackedEntity(var1, var3, var4, var2.trackDeltas());
++            this.entityMap.put(var1.getId(), var5);
++            var5.updatePlayers(this.level.players());
++            if (var1 instanceof ServerPlayer) {
++               ServerPlayer var6 = (ServerPlayer)var1;
++               this.updatePlayerStatus(var6, true);
++               ObjectIterator var7 = this.entityMap.values().iterator();
+ 
+-                  while(var7.hasNext()) {
+-                     ChunkMap.TrackedEntity var8 = (ChunkMap.TrackedEntity)var7.next();
+-                     if (var8.entity != var6) {
+-                        var8.updatePlayer(var6);
+-                     }
++               while(var7.hasNext()) {
++                  ChunkMap.TrackedEntity var8 = (ChunkMap.TrackedEntity)var7.next();
++                  if (var8.entity != var6) {
++                     var8.updatePlayer(var6);
+                   }
+                }
+-
+             }
++
+          }
+       }
+    }
+ 
+    protected void removeEntity(Entity var1) {
+@@ -1016,11 +1043,11 @@
+    }
+ 
+    private void playerLoadedChunk(ServerPlayer var1, Packet<?>[] var2, LevelChunk var3) {
+       if (var2[0] == null) {
+          var2[0] = new ClientboundLevelChunkPacket(var3, 65535);
+-         var2[1] = new ClientboundLightUpdatePacket(var3.getPos(), this.lightEngine);
++         var2[1] = new ClientboundLightUpdatePacket(var3.getPos(), this.lightEngine, true);
+       }
+ 
+       var1.trackChunk(var3.getPos(), var2[0], var2[1]);
+       DebugPackets.sendPoiPacketsForChunk(this.level, var3.getPos());
+       ArrayList var4 = Lists.newArrayList();
+@@ -1158,24 +1185,28 @@
              }
  
           }

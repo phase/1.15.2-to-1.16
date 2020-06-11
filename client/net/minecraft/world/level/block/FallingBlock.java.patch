@@ -35,7 +35,7 @@
  
     public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
        if (isFree(var2.getBlockState(var3.below())) && var3.getY() >= 0) {
-@@ -36,24 +38,23 @@
+@@ -36,38 +38,37 @@
     }
  
     protected void falling(FallingBlockEntity var1) {
@@ -65,7 +65,13 @@
     public void animateTick(BlockState var1, Level var2, BlockPos var3, Random var4) {
        if (var4.nextInt(16) == 0) {
           BlockPos var5 = var3.below();
-@@ -65,9 +66,9 @@
+          if (isFree(var2.getBlockState(var5))) {
+-            double var6 = (double)var3.getX() + (double)var4.nextFloat();
++            double var6 = (double)var3.getX() + var4.nextDouble();
+             double var8 = (double)var3.getY() - 0.05D;
+-            double var10 = (double)var3.getZ() + (double)var4.nextFloat();
++            double var10 = (double)var3.getZ() + var4.nextDouble();
+             var2.addParticle(new BlockParticleOption(ParticleTypes.FALLING_DUST, var1), var6, var8, var10, 0.0D, 0.0D, 0.0D);
           }
        }
  

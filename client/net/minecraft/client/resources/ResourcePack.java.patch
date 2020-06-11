@@ -1,0 +1,90 @@
+--- net/minecraft/client/resources/ResourcePack.java
++++ net/minecraft/client/resources/ResourcePack.java
+@@ -1,0 +1,87 @@
++package net.minecraft.client.resources;
++
++import com.mojang.blaze3d.platform.NativeImage;
++import java.io.IOException;
++import java.io.InputStream;
++import java.util.function.Supplier;
++import javax.annotation.Nullable;
++import net.minecraft.client.renderer.texture.DynamicTexture;
++import net.minecraft.client.renderer.texture.TextureManager;
++import net.minecraft.network.chat.Component;
++import net.minecraft.resources.ResourceLocation;
++import net.minecraft.server.packs.PackResources;
++import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
++import net.minecraft.server.packs.repository.Pack;
++import net.minecraft.server.packs.repository.PackCompatibility;
++import net.minecraft.server.packs.repository.PackSource;
++
++public class ResourcePack extends Pack {
++   @Nullable
++   private NativeImage icon;
++   @Nullable
++   private ResourceLocation iconLocation;
++
++   public ResourcePack(String var1, boolean var2, Supplier<PackResources> var3, PackResources var4, PackMetadataSection var5, Pack.Position var6, PackSource var7) {
++      super(var1, var2, var3, var4, var5, var6, var7);
++      this.icon = readIcon(var4);
++   }
++
++   public ResourcePack(String var1, boolean var2, Supplier<PackResources> var3, Component var4, Component var5, PackCompatibility var6, Pack.Position var7, boolean var8, PackSource var9, @Nullable NativeImage var10) {
++      super(var1, var2, var3, var4, var5, var6, var7, var8, var9);
++      this.icon = var10;
++   }
++
++   @Nullable
++   public static NativeImage readIcon(PackResources var0) {
++      try {
++         InputStream var1 = var0.getRootResource("pack.png");
++         Throwable var2 = null;
++
++         NativeImage var3;
++         try {
++            var3 = NativeImage.read(var1);
++         } catch (Throwable var13) {
++            var2 = var13;
++            throw var13;
++         } finally {
++            if (var1 != null) {
++               if (var2 != null) {
++                  try {
++                     var1.close();
++                  } catch (Throwable var12) {
++                     var2.addSuppressed(var12);
++                  }
++               } else {
++                  var1.close();
++               }
++            }
++
++         }
++
++         return var3;
++      } catch (IllegalArgumentException | IOException var15) {
++         return null;
++      }
++   }
++
++   public void bindIcon(TextureManager var1) {
++      if (this.iconLocation == null) {
++         if (this.icon == null) {
++            this.iconLocation = new ResourceLocation("textures/misc/unknown_pack.png");
++         } else {
++            this.iconLocation = var1.register("texturepackicon", new DynamicTexture(this.icon));
++         }
++      }
++
++      var1.bind(this.iconLocation);
++   }
++
++   public void close() {
++      super.close();
++      if (this.icon != null) {
++         this.icon.close();
++         this.icon = null;
++      }
++
++   }
++}

@@ -143,9 +143,9 @@
 -         } else if (var11) {
 -            this.changeButton.setMessage(ChatFormatting.RED + this.changeButton.getMessage());
 +         if (var11) {
-+            this.changeButton.setMessage((new TextComponent("> ")).append(this.changeButton.getMessage().mutableCopy().withStyle(ChatFormatting.YELLOW)).append(" <").withStyle(ChatFormatting.YELLOW));
++            this.changeButton.setMessage((new TextComponent("> ")).append(this.changeButton.getMessage().copy().withStyle(ChatFormatting.YELLOW)).append(" <").withStyle(ChatFormatting.YELLOW));
 +         } else if (var12) {
-+            this.changeButton.setMessage(this.changeButton.getMessage().mutableCopy().withStyle(ChatFormatting.RED));
++            this.changeButton.setMessage(this.changeButton.getMessage().copy().withStyle(ChatFormatting.RED));
           }
  
 -         this.changeButton.render(var6, var7, var9);

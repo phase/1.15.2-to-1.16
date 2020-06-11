@@ -13,7 +13,7 @@
  import net.minecraft.world.entity.ai.goal.FollowParentGoal;
  import net.minecraft.world.entity.ai.goal.LlamaFollowCaravanGoal;
  import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-@@ -34,11 +36,10 @@
+@@ -34,25 +36,26 @@
  import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
  import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
  import net.minecraft.world.entity.animal.Animal;
@@ -25,7 +25,23 @@
  import net.minecraft.world.item.DyeColor;
  import net.minecraft.world.item.Item;
  import net.minecraft.world.item.ItemStack;
-@@ -97,11 +98,11 @@
+ import net.minecraft.world.item.Items;
++import net.minecraft.world.item.crafting.Ingredient;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.WoolCarpetBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class Llama extends AbstractChestedHorse implements RangedAttackMob {
++   private static final Ingredient FOOD_ITEMS;
+    private static final EntityDataAccessor<Integer> DATA_STRENGTH_ID;
+    private static final EntityDataAccessor<Integer> DATA_SWAG_ID;
+    private static final EntityDataAccessor<Integer> DATA_VARIANT_ID;
+    private boolean didSpit;
+    @Nullable
+@@ -97,11 +100,11 @@
        this.setVariant(var1.getInt("Variant"));
        if (var1.contains("DecorItem", 10)) {
           this.inventory.setItem(1, ItemStack.of(var1.getCompound("DecorItem")));
@@ -38,7 +54,7 @@
     protected void registerGoals() {
        this.goalSelector.addGoal(0, new FloatGoal(this));
        this.goalSelector.addGoal(1, new RunAroundLikeCrazyGoal(this, 1.2D));
-@@ -115,13 +116,12 @@
+@@ -115,13 +118,12 @@
        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
        this.targetSelector.addGoal(1, new Llama.LlamaHurtByTargetGoal(this));
        this.targetSelector.addGoal(2, new Llama.LlamaAttackWolfGoal(this));
@@ -54,7 +70,7 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_STRENGTH_ID, 0);
-@@ -144,15 +144,15 @@
+@@ -144,22 +146,26 @@
     public void positionRider(Entity var1) {
        if (this.hasPassenger(var1)) {
           float var2 = Mth.cos(this.yBodyRot * 0.017453292F);
@@ -72,7 +88,18 @@
  
     public boolean canBeControlledByRider() {
        return false;
-@@ -198,11 +198,14 @@
+    }
+ 
++   public boolean isFood(ItemStack var1) {
++      return FOOD_ITEMS.test(var1);
++   }
++
+    protected boolean handleEating(Player var1, ItemStack var2) {
+       byte var3 = 0;
+       byte var4 = 0;
+       float var5 = 0.0F;
+       boolean var6 = false;
+@@ -198,18 +204,21 @@
              this.modifyTemper(var4);
           }
        }
@@ -88,7 +115,15 @@
        return var6;
     }
  
-@@ -239,10 +242,15 @@
+    protected boolean isImmobile() {
+-      return this.getHealth() <= 0.0F || this.isEating();
++      return this.isDeadOrDying() || this.isEating();
+    }
+ 
+    @Nullable
+    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+       this.setRandomStrength();
+@@ -239,10 +248,15 @@
  
     protected SoundEvent getDeathSound() {
        return SoundEvents.LLAMA_DEATH;
@@ -104,7 +139,7 @@
     }
  
     protected void playChestEquipsSound() {
-@@ -259,20 +267,24 @@
+@@ -259,20 +273,24 @@
  
     public int getInventoryColumns() {
        return this.getStrength();
@@ -131,7 +166,7 @@
  
     public void containerChanged(Container var1) {
        DyeColor var2 = this.getSwag();
-@@ -282,13 +294,13 @@
+@@ -282,13 +300,13 @@
           this.playSound(SoundEvents.LLAMA_SWAG, 0.5F, 1.0F);
        }
  
@@ -147,7 +182,7 @@
     }
  
     private void setSwag(@Nullable DyeColor var1) {
-@@ -338,11 +350,14 @@
+@@ -338,11 +356,14 @@
        double var3 = var1.getX() - this.getX();
        double var5 = var1.getY(0.3333333333333333D) - var2.getY();
        double var7 = var1.getZ() - this.getZ();
@@ -163,3 +198,15 @@
     }
  
     private void setDidSpit(boolean var1) {
+@@ -415,10 +436,11 @@
+    public void performRangedAttack(LivingEntity var1, float var2) {
+       this.spit(var1);
+    }
+ 
+    static {
++      FOOD_ITEMS = Ingredient.of(Items.WHEAT, Blocks.HAY_BLOCK.asItem());
+       DATA_STRENGTH_ID = SynchedEntityData.defineId(Llama.class, EntityDataSerializers.INT);
+       DATA_SWAG_ID = SynchedEntityData.defineId(Llama.class, EntityDataSerializers.INT);
+       DATA_VARIANT_ID = SynchedEntityData.defineId(Llama.class, EntityDataSerializers.INT);
+    }
+ 

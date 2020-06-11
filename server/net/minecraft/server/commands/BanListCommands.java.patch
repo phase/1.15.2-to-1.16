@@ -1,5 +1,18 @@
 --- net/minecraft/server/commands/BanListCommands.java
 +++ net/minecraft/server/commands/BanListCommands.java
+@@ -13,11 +13,11 @@
+ import net.minecraft.server.players.PlayerList;
+ 
+ public class BanListCommands {
+    public static void register(CommandDispatcher<CommandSourceStack> var0) {
+       var0.register((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)Commands.literal("banlist").requires((var0x) -> {
+-         return (var0x.getServer().getPlayerList().getBans().isEnabled() || var0x.getServer().getPlayerList().getIpBans().isEnabled()) && var0x.hasPermission(3);
++         return var0x.hasPermission(3);
+       })).executes((var0x) -> {
+          PlayerList var1 = ((CommandSourceStack)var0x.getSource()).getServer().getPlayerList();
+          return showList((CommandSourceStack)var0x.getSource(), Lists.newArrayList(Iterables.concat(var1.getBans().getEntries(), var1.getIpBans().getEntries())));
+       })).then(Commands.literal("ips").executes((var0x) -> {
+          return showList((CommandSourceStack)var0x.getSource(), ((CommandSourceStack)var0x.getSource()).getServer().getPlayerList().getIpBans().getEntries());
 @@ -26,11 +26,11 @@
        })));
     }

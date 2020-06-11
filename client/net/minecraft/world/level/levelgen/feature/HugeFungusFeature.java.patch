@@ -44,7 +44,7 @@
 +         }
 +
 +         if (!var6.planted) {
-+            int var10 = var1.getHeight();
++            int var10 = var3.getGenDepth();
 +            if (((BlockPos)var8).getY() + var11 + 1 >= var10) {
 +               return false;
 +            }

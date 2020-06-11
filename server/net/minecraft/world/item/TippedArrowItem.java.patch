@@ -1,0 +1,24 @@
+--- net/minecraft/world/item/TippedArrowItem.java
++++ net/minecraft/world/item/TippedArrowItem.java
+@@ -3,16 +3,21 @@
+ import java.util.Iterator;
+ import net.minecraft.core.NonNullList;
+ import net.minecraft.core.Registry;
+ import net.minecraft.world.item.alchemy.Potion;
+ import net.minecraft.world.item.alchemy.PotionUtils;
++import net.minecraft.world.item.alchemy.Potions;
+ 
+ public class TippedArrowItem extends ArrowItem {
+    public TippedArrowItem(Item.Properties var1) {
+       super(var1);
+    }
+ 
++   public ItemStack getDefaultInstance() {
++      return PotionUtils.setPotion(super.getDefaultInstance(), Potions.POISON);
++   }
++
+    public void fillItemCategory(CreativeModeTab var1, NonNullList<ItemStack> var2) {
+       if (this.allowdedIn(var1)) {
+          Iterator var3 = Registry.POTION.iterator();
+ 
+          while(var3.hasNext()) {

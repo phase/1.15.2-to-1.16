@@ -1,0 +1,31 @@
+--- net/minecraft/nbt/NbtIo.java
++++ net/minecraft/nbt/NbtIo.java
+@@ -72,28 +72,10 @@
+ 
+       }
+ 
+    }
+ 
+-   public static void safeWrite(CompoundTag var0, File var1) throws IOException {
+-      File var2 = new File(var1.getAbsolutePath() + "_tmp");
+-      if (var2.exists()) {
+-         var2.delete();
+-      }
+-
+-      write(var0, var2);
+-      if (var1.exists()) {
+-         var1.delete();
+-      }
+-
+-      if (var1.exists()) {
+-         throw new IOException("Failed to delete " + var1);
+-      } else {
+-         var2.renameTo(var1);
+-      }
+-   }
+-
+    public static void write(CompoundTag var0, File var1) throws IOException {
+       DataOutputStream var2 = new DataOutputStream(new FileOutputStream(var1));
+ 
+       try {
+          write(var0, (DataOutput)var2);

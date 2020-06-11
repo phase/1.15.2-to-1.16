@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/TitleScreen.java
 +++ net/minecraft/client/gui/screens/TitleScreen.java
-@@ -1,36 +1,43 @@
+@@ -1,36 +1,45 @@
  package net.minecraft.client.gui.screens;
  
  import com.google.common.util.concurrent.Runnables;
@@ -26,6 +26,7 @@
  import net.minecraft.client.renderer.PanoramaRenderer;
  import net.minecraft.client.renderer.texture.TextureManager;
  import net.minecraft.client.resources.language.I18n;
++import net.minecraft.core.RegistryAccess;
 +import net.minecraft.network.chat.CommonComponents;
  import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.realms.RealmsBridge;
@@ -33,8 +34,9 @@
  import net.minecraft.server.MinecraftServer;
  import net.minecraft.util.Mth;
 -import net.minecraft.world.level.storage.LevelData;
++import net.minecraft.world.level.levelgen.WorldGenSettings;
  import net.minecraft.world.level.storage.LevelStorageSource;
-+import net.minecraft.world.level.storage.WorldData;
++import net.minecraft.world.level.storage.LevelSummary;
 +import org.apache.logging.log4j.LogManager;
 +import org.apache.logging.log4j.Logger;
  
@@ -45,7 +47,7 @@
     private static final ResourceLocation ACCESSIBILITY_TEXTURE = new ResourceLocation("textures/gui/accessibility.png");
     private final boolean minceraftEasterEgg;
     @Nullable
-@@ -49,11 +56,11 @@
+@@ -49,11 +58,11 @@
     public TitleScreen() {
        this(false);
     }
@@ -58,7 +60,7 @@
        this.minceraftEasterEgg = (double)(new Random()).nextFloat() < 1.0E-4D;
     }
  
-@@ -95,20 +102,20 @@
+@@ -95,20 +104,20 @@
           this.createNormalMenuOptions(var2, 24);
        }
  
@@ -83,7 +85,7 @@
           RealmsBridge var3 = new RealmsBridge();
           this.realmsNotificationsScreen = var3.getNotificationScreen(this);
           this.realmsNotificationsInitialized = true;
-@@ -119,123 +126,183 @@
+@@ -119,123 +128,183 @@
        }
  
     }
@@ -121,7 +123,7 @@
 -      this.addButton(new Button(this.width / 2 - 100, var1, 200, 20, I18n.get("menu.playdemo"), (var1x) -> {
 -         this.minecraft.selectLevel("Demo_World", "Demo_World", MinecraftServer.DEMO_SETTINGS);
 +      this.addButton(new Button(this.width / 2 - 100, var1, 200, 20, new TranslatableComponent("menu.playdemo"), (var1x) -> {
-+         this.minecraft.selectLevel("Demo_World", MinecraftServer.DEMO_SETTINGS);
++         this.minecraft.createLevel("Demo_World", MinecraftServer.DEMO_SETTINGS, RegistryAccess.builtin(), WorldGenSettings.DEMO_SETTINGS);
        }));
 -      this.resetDemoButton = (Button)this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 1, 200, 20, I18n.get("menu.resetdemo"), (var1x) -> {
 +      this.resetDemoButton = (Button)this.addButton(new Button(this.width / 2 - 100, var1 + var2 * 1, 200, 20, new TranslatableComponent("menu.resetdemo"), (var1x) -> {
@@ -135,7 +137,7 @@
 +            Throwable var4 = null;
 +
 +            try {
-+               WorldData var5 = var3.getDataTag();
++               LevelSummary var5 = var3.getSummary();
 +               if (var5 != null) {
 +                  this.minecraft.setScreen(new ConfirmScreen(this::confirmDemo, new TranslatableComponent("selectWorld.deleteQuestion"), new TranslatableComponent("selectWorld.deleteWarning", new Object[]{var5.getLevelName()}), new TranslatableComponent("selectWorld.deleteButton"), CommonComponents.GUI_CANCEL));
 +               }
@@ -172,7 +174,7 @@
 +         Throwable var4 = null;
 +
 +         try {
-+            WorldData var5 = var3.getDataTag();
++            LevelSummary var5 = var3.getSummary();
 +            if (var5 == null) {
 +               this.resetDemoButton.active = false;
 +            }
@@ -326,7 +328,7 @@
        }
     }
  
-@@ -260,12 +327,37 @@
+@@ -260,12 +329,37 @@
  
     }
  

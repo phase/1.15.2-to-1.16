@@ -1,0 +1,35 @@
+--- net/minecraft/server/level/ThreadedLevelLightEngine.java
++++ net/minecraft/server/level/ThreadedLevelLightEngine.java
+@@ -66,12 +66,12 @@
+          super.retainData(var1, false);
+          super.enableLightSources(var1, false);
+ 
+          int var2;
+          for(var2 = -1; var2 < 17; ++var2) {
+-            super.queueSectionData(LightLayer.BLOCK, SectionPos.of(var1, var2), (DataLayer)null);
+-            super.queueSectionData(LightLayer.SKY, SectionPos.of(var1, var2), (DataLayer)null);
++            super.queueSectionData(LightLayer.BLOCK, SectionPos.of(var1, var2), (DataLayer)null, true);
++            super.queueSectionData(LightLayer.SKY, SectionPos.of(var1, var2), (DataLayer)null, true);
+          }
+ 
+          for(var2 = 0; var2 < 16; ++var2) {
+             super.updateSectionStatus(SectionPos.of(var1, var2), true);
+          }
+@@ -97,15 +97,15 @@
+       }, () -> {
+          return "enableLight " + var1 + " " + var2;
+       }));
+    }
+ 
+-   public void queueSectionData(LightLayer var1, SectionPos var2, @Nullable DataLayer var3) {
++   public void queueSectionData(LightLayer var1, SectionPos var2, @Nullable DataLayer var3, boolean var4) {
+       this.addTask(var2.x(), var2.z(), () -> {
+          return 0;
+       }, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
+-         super.queueSectionData(var1, var2, var3);
++         super.queueSectionData(var1, var2, var3, var4);
+       }, () -> {
+          return "queueData " + var2;
+       }));
+    }
+ 

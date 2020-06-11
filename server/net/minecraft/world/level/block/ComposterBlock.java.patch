@@ -39,7 +39,7 @@
        add(0.65F, Items.LILY_PAD);
        add(0.65F, Items.PUMPKIN);
        add(0.65F, Items.CARVED_PUMPKIN);
-@@ -86,10 +90,15 @@
+@@ -86,10 +90,16 @@
        add(0.65F, Items.POTATO);
        add(0.65F, Items.WHEAT);
        add(0.65F, Items.BROWN_MUSHROOM);
@@ -50,12 +50,13 @@
 +      add(0.65F, Items.NETHER_WART);
 +      add(0.65F, Items.CRIMSON_ROOTS);
 +      add(0.65F, Items.WARPED_ROOTS);
++      add(0.65F, Items.SHROOMLIGHT);
        add(0.65F, Items.DANDELION);
        add(0.65F, Items.POPPY);
        add(0.65F, Items.BLUE_ORCHID);
        add(0.65F, Items.ALLIUM);
        add(0.65F, Items.AZURE_BLUET);
-@@ -108,10 +117,12 @@
+@@ -108,10 +118,12 @@
        add(0.65F, Items.PEONY);
        add(0.65F, Items.LARGE_FERN);
        add(0.85F, Items.HAY_BLOCK);
@@ -68,7 +69,7 @@
        add(0.85F, Items.COOKIE);
        add(1.0F, Items.CAKE);
        add(1.0F, Items.PUMPKIN_PIE);
-@@ -119,11 +130,11 @@
+@@ -119,11 +131,11 @@
  
     private static void add(float var0, ItemLike var1) {
        COMPOSTABLES.put(var1.asItem(), var0);
@@ -81,7 +82,7 @@
     }
  
     public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
-@@ -148,64 +159,83 @@
+@@ -148,64 +160,83 @@
     public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
        int var7 = (Integer)var1.getValue(LEVEL);
        ItemStack var8 = var4.getItemInHand(var5);
@@ -188,7 +189,7 @@
     public boolean hasAnalogOutputSignal(BlockState var1) {
        return true;
     }
-@@ -275,11 +305,12 @@
+@@ -275,11 +306,12 @@
  
        public void setChanged() {
           ItemStack var1 = this.getItem(0);

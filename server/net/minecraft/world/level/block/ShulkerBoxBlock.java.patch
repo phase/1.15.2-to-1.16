@@ -84,7 +84,7 @@
 -               var4.openMenu(var10);
 +               var4.openMenu(var8);
                 var4.awardStat(Stats.OPEN_SHULKER_BOX);
-+               PiglinAi.angerNearbyPiglinsThatSee(var4);
++               PiglinAi.angerNearbyPiglins(var4, true);
              }
  
 -            return InteractionResult.SUCCESS;

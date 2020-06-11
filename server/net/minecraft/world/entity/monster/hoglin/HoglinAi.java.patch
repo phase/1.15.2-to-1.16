@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/monster/hoglin/HoglinAi.java
 +++ net/minecraft/world/entity/monster/hoglin/HoglinAi.java
-@@ -1,0 +1,213 @@
+@@ -1,0 +1,218 @@
 +package net.minecraft.world.entity.monster.hoglin;
 +
 +import com.google.common.collect.ImmutableList;
@@ -17,6 +17,7 @@
 +import net.minecraft.world.entity.LivingEntity;
 +import net.minecraft.world.entity.ai.Brain;
 +import net.minecraft.world.entity.ai.behavior.AnimalMakeLove;
++import net.minecraft.world.entity.ai.behavior.BabyFollowAdult;
 +import net.minecraft.world.entity.ai.behavior.BecomePassiveIfMemoryPresent;
 +import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 +import net.minecraft.world.entity.ai.behavior.DoNothing;
@@ -39,6 +40,7 @@
 +
 +public class HoglinAi {
 +   private static final IntRange RETREAT_DURATION = TimeUtil.rangeOfSeconds(5, 20);
++   private static final IntRange ADULT_FOLLOW_RANGE = IntRange.of(5, 16);
 +
 +   protected static Brain<?> makeBrain(Brain<Hoglin> var0) {
 +      initCoreActivity(var0);
@@ -56,7 +58,7 @@
 +   }
 +
 +   private static void initIdleActivity(Brain<Hoglin> var0) {
-+      var0.addActivity(Activity.IDLE, 10, ImmutableList.of(new BecomePassiveIfMemoryPresent(MemoryModuleType.NEAREST_REPELLENT, 200), new AnimalMakeLove(EntityType.HOGLIN, 0.6F), SetWalkTargetAwayFrom.pos(MemoryModuleType.NEAREST_REPELLENT, 1.0F, 8, true), new StartAttacking(HoglinAi::findNearestValidAttackTarget), new RunIf(Hoglin::isAdult, SetWalkTargetAwayFrom.entity(MemoryModuleType.NEAREST_VISIBLE_ADULT_PIGLIN, 0.4F, 8, false)), new RunSometimes(new SetEntityLookTarget(8.0F), IntRange.of(30, 60)), createIdleMovementBehaviors()));
++      var0.addActivity(Activity.IDLE, 10, ImmutableList.of(new BecomePassiveIfMemoryPresent(MemoryModuleType.NEAREST_REPELLENT, 200), new AnimalMakeLove(EntityType.HOGLIN, 0.6F), SetWalkTargetAwayFrom.pos(MemoryModuleType.NEAREST_REPELLENT, 1.0F, 8, true), new StartAttacking(HoglinAi::findNearestValidAttackTarget), new RunIf(Hoglin::isAdult, SetWalkTargetAwayFrom.entity(MemoryModuleType.NEAREST_VISIBLE_ADULT_PIGLIN, 0.4F, 8, false)), new RunSometimes(new SetEntityLookTarget(8.0F), IntRange.of(30, 60)), new BabyFollowAdult(ADULT_FOLLOW_RANGE, 0.6F), createIdleMovementBehaviors()));
 +   }
 +
 +   private static void initFightActivity(Brain<Hoglin> var0) {
@@ -64,7 +66,7 @@
 +   }
 +
 +   private static void initRetreatActivity(Brain<Hoglin> var0) {
-+      var0.addActivityAndRemoveMemoryWhenStopped(Activity.AVOID, 10, ImmutableList.of(SetWalkTargetAwayFrom.entity(MemoryModuleType.AVOID_TARGET, 1.0F, 15, false), createIdleMovementBehaviors(), new RunSometimes(new SetEntityLookTarget(8.0F), IntRange.of(30, 60)), new EraseMemoryIf(HoglinAi::wantsToStopFleeing, MemoryModuleType.AVOID_TARGET)), MemoryModuleType.AVOID_TARGET);
++      var0.addActivityAndRemoveMemoryWhenStopped(Activity.AVOID, 10, ImmutableList.of(SetWalkTargetAwayFrom.entity(MemoryModuleType.AVOID_TARGET, 1.3F, 15, false), createIdleMovementBehaviors(), new RunSometimes(new SetEntityLookTarget(8.0F), IntRange.of(30, 60)), new EraseMemoryIf(HoglinAi::wantsToStopFleeing, MemoryModuleType.AVOID_TARGET)), MemoryModuleType.AVOID_TARGET);
 +   }
 +
 +   private static RunOne<Hoglin> createIdleMovementBehaviors() {
@@ -109,6 +111,7 @@
 +
 +   private static void setAvoidTarget(Hoglin var0, LivingEntity var1) {
 +      var0.getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
++      var0.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
 +      var0.getBrain().setMemoryWithExpiry(MemoryModuleType.AVOID_TARGET, var1, (long)RETREAT_DURATION.randomValue(var0.level.random));
 +   }
 +
@@ -173,9 +176,11 @@
 +   }
 +
 +   private static void setAttackTargetIfCloserThanCurrent(Hoglin var0, LivingEntity var1) {
-+      Optional var2 = var0.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET);
-+      LivingEntity var3 = BehaviorUtils.getNearestTarget(var0, var2, var1);
-+      setAttackTarget(var0, var3);
++      if (!isPacified(var0)) {
++         Optional var2 = var0.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET);
++         LivingEntity var3 = BehaviorUtils.getNearestTarget(var0, var2, var1);
++         setAttackTarget(var0, var3);
++      }
 +   }
 +
 +   private static void playActivitySound(Hoglin var0) {

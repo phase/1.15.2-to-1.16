@@ -1,0 +1,27 @@
+--- net/minecraft/client/model/geom/ModelPart.java
++++ net/minecraft/client/model/geom/ModelPart.java
+@@ -52,10 +52,24 @@
+       this.children = new ObjectArrayList();
+       this.setTexSize(var1, var2);
+       this.texOffs(var3, var4);
+    }
+ 
++   private ModelPart() {
++      this.xTexSize = 64.0F;
++      this.yTexSize = 32.0F;
++      this.visible = true;
++      this.cubes = new ObjectArrayList();
++      this.children = new ObjectArrayList();
++   }
++
++   public ModelPart createShallowCopy() {
++      ModelPart var1 = new ModelPart();
++      var1.copyFrom(this);
++      return var1;
++   }
++
+    public void copyFrom(ModelPart var1) {
+       this.xRot = var1.xRot;
+       this.yRot = var1.yRot;
+       this.zRot = var1.zRot;
+       this.x = var1.x;

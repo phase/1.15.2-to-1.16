@@ -8,8 +8,8 @@
     private PackCompatibility(String var3) {
 -      this.description = new TranslatableComponent("resourcePack.incompatible." + var3, new Object[0]);
 -      this.confirmation = new TranslatableComponent("resourcePack.incompatible.confirm." + var3, new Object[0]);
-+      this.description = new TranslatableComponent("resourcePack.incompatible." + var3);
-+      this.confirmation = new TranslatableComponent("resourcePack.incompatible.confirm." + var3);
++      this.description = new TranslatableComponent("pack.incompatible." + var3);
++      this.confirmation = new TranslatableComponent("pack.incompatible.confirm." + var3);
     }
  
     public boolean isCompatible() {

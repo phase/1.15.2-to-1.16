@@ -1,7 +1,13 @@
 --- net/minecraft/world/level/block/RedStoneOreBlock.java
 +++ net/minecraft/world/level/block/RedStoneOreBlock.java
-@@ -11,27 +11,24 @@
+@@ -7,31 +7,30 @@
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.BlockItem;
++import net.minecraft.world.item.BlockPlaceContext;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.enchantment.EnchantmentHelper;
  import net.minecraft.world.item.enchantment.Enchantments;
@@ -30,7 +36,25 @@
        super.attack(var1, var2, var3, var4);
     }
  
-@@ -56,11 +53,15 @@
+@@ -41,26 +40,31 @@
+    }
+ 
+    public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
+       if (var2.isClientSide) {
+          spawnParticles(var2, var3);
+-         return InteractionResult.SUCCESS;
+       } else {
+          interact(var1, var2, var3);
+-         return InteractionResult.PASS;
+       }
++
++      ItemStack var7 = var4.getItemInHand(var5);
++      return var7.getItem() instanceof BlockItem && (new BlockPlaceContext(var4, var5, var7, var6)).canPlace() ? InteractionResult.PASS : InteractionResult.SUCCESS;
+    }
+ 
+    private static void interact(BlockState var0, Level var1, BlockPos var2) {
+       spawnParticles(var1, var2);
+       if (!(Boolean)var0.getValue(LIT)) {
           var1.setBlock(var2, (BlockState)var0.setValue(LIT, true), 3);
        }
  

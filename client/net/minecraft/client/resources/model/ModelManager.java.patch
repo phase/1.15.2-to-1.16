@@ -1,0 +1,41 @@
+--- net/minecraft/client/resources/model/ModelManager.java
++++ net/minecraft/client/resources/model/ModelManager.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.client.resources.model;
+ 
+ import it.unimi.dsi.fastutil.objects.Object2IntMap;
+ import java.util.Map;
++import javax.annotation.Nullable;
+ import net.minecraft.client.color.block.BlockColors;
+ import net.minecraft.client.renderer.block.BlockModelShaper;
+ import net.minecraft.client.renderer.texture.AtlasSet;
+ import net.minecraft.client.renderer.texture.TextureAtlas;
+ import net.minecraft.client.renderer.texture.TextureManager;
+@@ -14,10 +15,11 @@
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.material.FluidState;
+ 
+ public class ModelManager extends SimplePreparableReloadListener<ModelBakery> implements AutoCloseable {
+    private Map<ResourceLocation, BakedModel> bakedRegistry;
++   @Nullable
+    private AtlasSet atlases;
+    private final BlockModelShaper blockModelShaper;
+    private final TextureManager textureManager;
+    private final BlockColors blockColors;
+    private int maxMipmapLevels;
+@@ -88,11 +90,14 @@
+    public TextureAtlas getAtlas(ResourceLocation var1) {
+       return this.atlases.getAtlas(var1);
+    }
+ 
+    public void close() {
+-      this.atlases.close();
++      if (this.atlases != null) {
++         this.atlases.close();
++      }
++
+    }
+ 
+    public void updateMaxMipLevel(int var1) {
+       this.maxMipmapLevels = var1;
+    }

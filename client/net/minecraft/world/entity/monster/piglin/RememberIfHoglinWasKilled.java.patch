@@ -25,6 +25,6 @@
 +
 +   private boolean isAttackTargetDeadHoglin(E var1) {
 +      LivingEntity var2 = (LivingEntity)var1.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).get();
-+      return var2.getType() == EntityType.HOGLIN && var2.getHealth() <= 0.0F;
++      return var2.getType() == EntityType.HOGLIN && var2.isDeadOrDying();
 +   }
 +}

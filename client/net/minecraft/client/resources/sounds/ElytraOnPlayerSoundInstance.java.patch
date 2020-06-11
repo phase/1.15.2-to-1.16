@@ -1,5 +1,22 @@
 --- net/minecraft/client/resources/sounds/ElytraOnPlayerSoundInstance.java
 +++ net/minecraft/client/resources/sounds/ElytraOnPlayerSoundInstance.java
+@@ -18,13 +18,13 @@
+    }
+ 
+    public void tick() {
+       ++this.time;
+       if (!this.player.removed && (this.time <= 20 || this.player.isFallFlying())) {
+-         this.x = (float)this.player.getX();
+-         this.y = (float)this.player.getY();
+-         this.z = (float)this.player.getZ();
++         this.x = (double)((float)this.player.getX());
++         this.y = (double)((float)this.player.getY());
++         this.z = (double)((float)this.player.getZ());
+          float var1 = (float)this.player.getDeltaMovement().lengthSqr();
+          if ((double)var1 >= 1.0E-7D) {
+             this.volume = Mth.clamp(var1 / 4.0F, 0.0F, 1.0F);
+          } else {
+             this.volume = 0.0F;
 @@ -42,9 +42,9 @@
           } else {
              this.pitch = 1.0F;

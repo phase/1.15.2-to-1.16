@@ -21,12 +21,13 @@
  import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
  import net.minecraft.network.syncher.EntityDataAccessor;
  import net.minecraft.network.syncher.EntityDataSerializers;
-@@ -60,19 +62,20 @@
+@@ -59,20 +61,20 @@
+ import net.minecraft.world.entity.Mob;
  import net.minecraft.world.entity.MobType;
  import net.minecraft.world.entity.MoverType;
  import net.minecraft.world.entity.Pose;
  import net.minecraft.world.entity.TamableAnimal;
- import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 +import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 +import net.minecraft.world.entity.ai.attributes.Attributes;
  import net.minecraft.world.entity.animal.Parrot;
@@ -45,7 +46,7 @@
  import net.minecraft.world.food.FoodData;
  import net.minecraft.world.inventory.AbstractContainerMenu;
  import net.minecraft.world.inventory.InventoryMenu;
-@@ -90,14 +93,13 @@
+@@ -90,14 +92,13 @@
  import net.minecraft.world.item.trading.MerchantOffers;
  import net.minecraft.world.level.BaseCommandBlock;
  import net.minecraft.world.level.GameRules;
@@ -61,7 +62,7 @@
  import net.minecraft.world.level.block.entity.SignBlockEntity;
  import net.minecraft.world.level.block.entity.StructureBlockEntity;
  import net.minecraft.world.level.block.state.BlockState;
-@@ -133,12 +135,10 @@
+@@ -133,12 +134,10 @@
     public double xCloak;
     public double yCloak;
     public double zCloak;
@@ -74,7 +75,7 @@
     public int totalExperience;
     public float experienceProgress;
     protected int enchantmentSeed;
-@@ -149,20 +149,19 @@
+@@ -149,20 +148,19 @@
     private ItemStack lastItemInMainHand;
     private final ItemCooldowns cooldowns;
     @Nullable
@@ -99,7 +100,7 @@
  
     public boolean blockActionRestricted(Level var1, BlockPos var2, GameType var3) {
        if (!var3.isBlockPlacingRestricted()) {
-@@ -175,16 +174,12 @@
+@@ -175,16 +173,12 @@
           ItemStack var4 = this.getMainHandItem();
           return var4.isEmpty() || !var4.hasAdventureModeBreakTagForBlock(var1.getTagManager(), new BlockInWorld(var1, var2, false));
        }
@@ -118,20 +119,27 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_PLAYER_ABSORPTION_ID, 0.0F);
-@@ -282,11 +277,11 @@
+@@ -282,17 +276,17 @@
     protected boolean isStayingOnGroundSurface() {
        return this.isShiftKeyDown();
     }
  
     protected boolean updateIsUnderwater() {
 -      this.wasUnderwater = this.isUnderLiquid(FluidTags.WATER, true);
-+      this.wasUnderwater = this.isUnderLiquid(FluidTags.WATER);
++      this.wasUnderwater = this.isEyeInFluid(FluidTags.WATER);
        return this.wasUnderwater;
     }
  
     private void turtleHelmetTick() {
        ItemStack var1 = this.getItemBySlot(EquipmentSlot.HEAD);
-@@ -438,29 +433,21 @@
+-      if (var1.getItem() == Items.TURTLE_HELMET && !this.isUnderLiquid(FluidTags.WATER)) {
++      if (var1.getItem() == Items.TURTLE_HELMET && !this.isEyeInFluid(FluidTags.WATER)) {
+          this.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 200, 0, false, false, true));
+       }
+ 
+    }
+ 
+@@ -438,29 +432,21 @@
     protected void closeContainer() {
        this.containerMenu = this.inventoryMenu;
     }
@@ -163,20 +171,65 @@
  
     public void resetPos() {
        this.setPose(Pose.STANDING);
-@@ -491,11 +478,11 @@
+@@ -491,43 +477,38 @@
        }
  
        this.inventory.tick();
        this.oBob = this.bob;
        super.aiStep();
 -      AttributeInstance var1 = this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
-+      AttributeInstance var1 = this.getAttribute(Attributes.MOVEMENT_SPEED);
-       if (!this.level.isClientSide) {
-          var1.setBaseValue((double)this.abilities.getWalkingSpeed());
+-      if (!this.level.isClientSide) {
+-         var1.setBaseValue((double)this.abilities.getWalkingSpeed());
+-      }
+-
+       this.flyingSpeed = 0.02F;
+       if (this.isSprinting()) {
+          this.flyingSpeed = (float)((double)this.flyingSpeed + 0.005999999865889549D);
        }
  
-       this.flyingSpeed = 0.02F;
-@@ -537,16 +524,19 @@
+-      this.setSpeed((float)var1.getValue());
+-      float var2;
+-      if (this.onGround && this.getHealth() > 0.0F && !this.isSwimming()) {
+-         var2 = Math.min(0.1F, Mth.sqrt(getHorizontalDistanceSqr(this.getDeltaMovement())));
++      this.setSpeed((float)this.getAttributeValue(Attributes.MOVEMENT_SPEED));
++      float var1;
++      if (this.onGround && !this.isDeadOrDying() && !this.isSwimming()) {
++         var1 = Math.min(0.1F, Mth.sqrt(getHorizontalDistanceSqr(this.getDeltaMovement())));
+       } else {
+-         var2 = 0.0F;
++         var1 = 0.0F;
+       }
+ 
+-      this.bob += (var2 - this.bob) * 0.4F;
++      this.bob += (var1 - this.bob) * 0.4F;
+       if (this.getHealth() > 0.0F && !this.isSpectator()) {
+-         AABB var3;
++         AABB var2;
+          if (this.isPassenger() && !this.getVehicle().removed) {
+-            var3 = this.getBoundingBox().minmax(this.getVehicle().getBoundingBox()).inflate(1.0D, 0.0D, 1.0D);
++            var2 = this.getBoundingBox().minmax(this.getVehicle().getBoundingBox()).inflate(1.0D, 0.0D, 1.0D);
+          } else {
+-            var3 = this.getBoundingBox().inflate(1.0D, 0.5D, 1.0D);
++            var2 = this.getBoundingBox().inflate(1.0D, 0.5D, 1.0D);
+          }
+ 
+-         List var4 = this.level.getEntities(this, var3);
++         List var3 = this.level.getEntities(this, var2);
+ 
+-         for(int var5 = 0; var5 < var4.size(); ++var5) {
+-            Entity var6 = (Entity)var4.get(var5);
+-            if (!var6.removed) {
+-               this.touch(var6);
++         for(int var4 = 0; var4 < var3.size(); ++var4) {
++            Entity var5 = (Entity)var3.get(var4);
++            if (!var5.removed) {
++               this.touch(var5);
+             }
+          }
+       }
+ 
+       this.playShoulderEntityAmbientSound(this.getShoulderEntityLeft());
+@@ -537,16 +518,19 @@
        }
  
     }
@@ -198,7 +251,7 @@
  
     }
  
-@@ -632,10 +622,14 @@
+@@ -632,10 +616,14 @@
     @Nullable
     public ItemEntity drop(ItemStack var1, boolean var2, boolean var3) {
        if (var1.isEmpty()) {
@@ -213,7 +266,19 @@
           var6.setPickUpDelay(40);
           if (var3) {
              var6.setThrower(this.getUUID());
-@@ -705,12 +699,12 @@
+@@ -694,23 +682,23 @@
+          }
+ 
+          var2 *= var5;
+       }
+ 
+-      if (this.isUnderLiquid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(this)) {
++      if (this.isEyeInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(this)) {
+          var2 /= 5.0F;
+       }
+ 
+       if (!this.onGround) {
+          var2 /= 5.0F;
        }
  
        return var2;
@@ -228,7 +293,7 @@
     public void readAdditionalSaveData(CompoundTag var1) {
        super.readAdditionalSaveData(var1);
        this.setUUID(createPlayerUUID(this.gameProfile));
-@@ -725,15 +719,10 @@
+@@ -725,17 +713,13 @@
        if (this.enchantmentSeed == 0) {
           this.enchantmentSeed = this.random.nextInt();
        }
@@ -241,10 +306,13 @@
 -
        this.foodData.readAdditionalSaveData(var1);
        this.abilities.loadSaveData(var1);
++      this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue((double)this.abilities.getWalkingSpeed());
        if (var1.contains("EnderItems", 9)) {
           this.enderChestInventory.fromTag(var1.getList("EnderItems", 10));
        }
-@@ -757,17 +746,10 @@
+ 
+       if (var1.contains("ShoulderEntityLeft", 10)) {
+@@ -757,17 +741,10 @@
        var1.putFloat("XpP", this.experienceProgress);
        var1.putInt("XpLevel", this.experienceLevel);
        var1.putInt("XpTotal", this.totalExperience);
@@ -262,7 +330,20 @@
        var1.put("EnderItems", this.enderChestInventory.createTag());
        if (!this.getShoulderEntityLeft().isEmpty()) {
           var1.put("ShoulderEntityLeft", this.getShoulderEntityLeft());
-@@ -839,33 +821,39 @@
+@@ -798,11 +775,11 @@
+          return false;
+       } else if (this.abilities.invulnerable && !var1.isBypassInvul()) {
+          return false;
+       } else {
+          this.noActionTime = 0;
+-         if (this.getHealth() <= 0.0F) {
++         if (this.isDeadOrDying()) {
+             return false;
+          } else {
+             this.removeEntitiesOnShoulder();
+             if (var1.scalesWithDifficulty()) {
+                if (this.level.getDifficulty() == Difficulty.PEACEFUL) {
+@@ -839,33 +816,39 @@
        } else {
           return !var2.isAlliedTo(var3) ? true : var2.isAllowFriendlyFire();
        }
@@ -319,7 +400,7 @@
     protected void actuallyHurt(DamageSource var1, float var2) {
        if (!this.isInvulnerableTo(var1)) {
           var2 = this.getDamageAfterArmorAbsorb(var1, var2);
-@@ -889,10 +877,14 @@
+@@ -889,10 +872,14 @@
  
           }
        }
@@ -334,7 +415,39 @@
  
     public void openMinecartCommandBlock(BaseCommandBlock var1) {
     }
-@@ -953,11 +945,11 @@
+@@ -927,49 +914,55 @@
+ 
+          return InteractionResult.PASS;
+       } else {
+          ItemStack var3 = this.getItemInHand(var2);
+          ItemStack var4 = var3.copy();
+-         if (var1.interact(this, var2)) {
++         InteractionResult var5 = var1.interact(this, var2);
++         if (var5.consumesAction()) {
+             if (this.abilities.instabuild && var3 == this.getItemInHand(var2) && var3.getCount() < var4.getCount()) {
+                var3.setCount(var4.getCount());
+             }
+ 
+-            return InteractionResult.SUCCESS;
++            return var5;
+          } else {
+             if (!var3.isEmpty() && var1 instanceof LivingEntity) {
+                if (this.abilities.instabuild) {
+                   var3 = var4;
+                }
+ 
+-               if (var3.interactEnemy(this, (LivingEntity)var1, var2)) {
++               InteractionResult var6 = var3.interactLivingEntity(this, (LivingEntity)var1, var2);
++               if (var6.consumesAction()) {
+                   if (var3.isEmpty() && !this.abilities.instabuild) {
+                      this.setItemInHand(var2, ItemStack.EMPTY);
+                   }
+ 
+-                  return InteractionResult.SUCCESS;
++                  return var6;
+                }
+             }
+ 
              return InteractionResult.PASS;
           }
        }
@@ -345,9 +458,27 @@
        return -0.35D;
     }
  
-    public void stopRiding() {
-       super.stopRiding();
-@@ -1026,11 +1018,11 @@
+-   public void stopRiding() {
+-      super.stopRiding();
++   public void removeVehicle() {
++      super.removeVehicle();
+       this.boardingCooldown = 0;
+    }
+ 
+    protected boolean isImmobile() {
+       return super.isImmobile() || this.isSleeping();
+    }
+ 
++   public boolean isAffectedByFluids() {
++      return !this.abilities.flying;
++   }
++
+    protected Vec3 maybeBackOffFromEdge(Vec3 var1, MoverType var2) {
+       if ((var2 == MoverType.SELF || var2 == MoverType.PLAYER) && this.onGround && this.isStayingOnGroundSurface()) {
+          double var3 = var1.x;
+          double var5 = var1.z;
+          double var7 = 0.05D;
+@@ -1026,11 +1019,11 @@
     }
  
     public void attack(Entity var1) {
@@ -360,7 +491,7 @@
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), ((LivingEntity)var1).getMobType());
              } else {
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), MobType.UNDEFINED);
-@@ -1049,11 +1041,11 @@
+@@ -1049,11 +1042,11 @@
                    this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
                    ++var21;
                    var6 = true;
@@ -373,7 +504,7 @@
                    var2 *= 1.5F;
                 }
  
-@@ -1081,11 +1073,11 @@
+@@ -1081,11 +1074,11 @@
                 Vec3 var15 = var1.getDeltaMovement();
                 boolean var16 = var1.hurt(DamageSource.playerAttack(this), var2);
                 if (var16) {
@@ -386,7 +517,7 @@
                       }
  
                       this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
-@@ -1115,11 +1107,11 @@
+@@ -1115,11 +1108,11 @@
                                } while(var20 == var1);
                             } while(this.isAlliedTo(var20));
                          } while(var20 instanceof ArmorStand && ((ArmorStand)var20).isMarker());
@@ -399,7 +530,7 @@
                       }
                    }
  
-@@ -1243,75 +1235,15 @@
+@@ -1243,75 +1236,15 @@
     public GameProfile getGameProfile() {
        return this.gameProfile;
     }
@@ -475,7 +606,7 @@
        if (this.level instanceof ServerLevel && var2) {
           ((ServerLevel)this.level).updateSleepingPlayerList();
        }
-@@ -1321,22 +1253,28 @@
+@@ -1321,22 +1254,28 @@
  
     public void stopSleeping() {
        this.stopSleepInBed(true, true);
@@ -501,7 +632,7 @@
 -      } else {
 +
 +         return var8;
-+      } else if (var5 instanceof BedBlock && BedBlock.canSetSpawn(var0, var1)) {
++      } else if (var5 instanceof BedBlock && BedBlock.canSetSpawn(var0)) {
           return BedBlock.findStandUpPosition(EntityType.PLAYER, var0, var1, 0);
 +      } else if (!var2) {
 +         return Optional.empty();
@@ -514,7 +645,7 @@
  
     public boolean isSleepingLongEnough() {
        return this.isSleeping() && this.sleepCounter >= 100;
-@@ -1347,33 +1285,10 @@
+@@ -1347,33 +1286,10 @@
     }
  
     public void displayClientMessage(Component var1, boolean var2) {
@@ -548,7 +679,7 @@
     }
  
     public void awardStat(ResourceLocation var1, int var2) {
-@@ -1455,11 +1370,11 @@
+@@ -1455,11 +1371,11 @@
     protected boolean freeAt(BlockPos var1) {
        return !this.level.getBlockState(var1).isSuffocating(this.level, var1);
     }
@@ -561,20 +692,20 @@
     public void checkMovementStatistics(double var1, double var3, double var5) {
        if (!this.isPassenger()) {
           int var7;
-@@ -1467,11 +1382,11 @@
+@@ -1467,11 +1383,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var3 * var3 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.SWIM_ONE_CM, var7);
                 this.causeFoodExhaustion(0.01F * (float)var7 * 0.01F);
              }
 -         } else if (this.isUnderLiquid(FluidTags.WATER, true)) {
-+         } else if (this.isUnderLiquid(FluidTags.WATER)) {
++         } else if (this.isEyeInFluid(FluidTags.WATER)) {
              var7 = Math.round(Mth.sqrt(var1 * var1 + var3 * var3 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.WALK_UNDER_WATER_ONE_CM, var7);
                 this.causeFoodExhaustion(0.01F * (float)var7 * 0.01F);
              }
-@@ -1479,11 +1394,11 @@
+@@ -1479,11 +1395,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.WALK_ON_WATER_ONE_CM, var7);
@@ -587,7 +718,7 @@
              }
           } else if (this.onGround) {
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
-@@ -1510,22 +1425,25 @@
+@@ -1510,22 +1426,25 @@
           }
  
        }
@@ -618,7 +749,7 @@
        }
  
     }
-@@ -1541,11 +1459,11 @@
+@@ -1541,11 +1460,11 @@
           return super.causeFallDamage(var1, var2);
        }
     }
@@ -631,7 +762,7 @@
              this.startFallFlying();
              return true;
           }
-@@ -1803,31 +1721,31 @@
+@@ -1803,31 +1722,31 @@
        return !this.abilities.flying && !this.isSpectator() && super.isSwimming();
     }
  
@@ -667,7 +798,7 @@
  
     public String getScoreboardName() {
        return this.getGameProfile().getName();
-@@ -1955,11 +1873,11 @@
+@@ -1955,11 +1874,11 @@
     protected void setShoulderEntityRight(CompoundTag var1) {
        this.entityData.set(DATA_SHOULDER_RIGHT, var1);
     }
@@ -680,7 +811,7 @@
     public float getAttackStrengthScale(float var1) {
        return Mth.clamp(((float)this.attackStrengthTicker + var1) / this.getCurrentItemAttackStrengthDelay(), 0.0F, 1.0F);
     }
-@@ -1975,11 +1893,11 @@
+@@ -1975,11 +1894,11 @@
     protected float getBlockSpeedFactor() {
        return !this.abilities.flying && !this.isFallFlying() ? super.getBlockSpeedFactor() : 1.0F;
     }
@@ -693,7 +824,7 @@
     public boolean canUseGameMasterBlocks() {
        return this.abilities.instabuild && this.getPermissionLevel() >= 2;
     }
-@@ -1991,10 +1909,14 @@
+@@ -1991,10 +1910,14 @@
  
     public EntityDimensions getDimensions(Pose var1) {
        return (EntityDimensions)POSES.getOrDefault(var1, STANDING_DIMENSIONS);
@@ -708,7 +839,22 @@
           return ItemStack.EMPTY;
        } else {
           Predicate var2 = ((ProjectileWeaponItem)var1.getItem()).getSupportedHeldProjectiles();
-@@ -2037,15 +1959,15 @@
+@@ -2025,10 +1948,14 @@
+       }
+ 
+       return super.eat(var1, var2);
+    }
+ 
++   protected boolean shouldRemoveSoulSpeed(BlockState var1) {
++      return this.abilities.flying || super.shouldRemoveSoulSpeed(var1);
++   }
++
+    static {
+       POSES = ImmutableMap.builder().put(Pose.STANDING, STANDING_DIMENSIONS).put(Pose.SLEEPING, SLEEPING_DIMENSIONS).put(Pose.FALL_FLYING, EntityDimensions.scalable(0.6F, 0.6F)).put(Pose.SWIMMING, EntityDimensions.scalable(0.6F, 0.6F)).put(Pose.SPIN_ATTACK, EntityDimensions.scalable(0.6F, 0.6F)).put(Pose.CROUCHING, EntityDimensions.scalable(0.6F, 1.5F)).put(Pose.DYING, EntityDimensions.fixed(0.2F, 0.2F)).build();
+       DATA_PLAYER_ABSORPTION_ID = SynchedEntityData.defineId(Player.class, EntityDataSerializers.FLOAT);
+       DATA_SCORE_ID = SynchedEntityData.defineId(Player.class, EntityDataSerializers.INT);
+       DATA_PLAYER_MODE_CUSTOMISATION = SynchedEntityData.defineId(Player.class, EntityDataSerializers.BYTE);
+@@ -2037,15 +1964,15 @@
        DATA_SHOULDER_RIGHT = SynchedEntityData.defineId(Player.class, EntityDataSerializers.COMPOUND_TAG);
     }
  

@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/advancements/AdvancementWidget.java
 +++ net/minecraft/client/gui/screens/advancements/AdvancementWidget.java
-@@ -1,34 +1,36 @@
+@@ -1,34 +1,37 @@
  package net.minecraft.client.gui.screens.advancements;
  
  import com.google.common.collect.Lists;
@@ -21,6 +21,7 @@
  import net.minecraft.client.gui.Font;
  import net.minecraft.client.gui.GuiComponent;
 +import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.ComponentUtils;
 +import net.minecraft.network.chat.FormattedText;
 +import net.minecraft.network.chat.Style;
  import net.minecraft.resources.ResourceLocation;
@@ -44,7 +45,7 @@
     private final List<AdvancementWidget> children = Lists.newArrayList();
     private AdvancementProgress progress;
     private final int x;
-@@ -37,54 +39,55 @@
+@@ -37,54 +40,55 @@
     public AdvancementWidget(AdvancementTab var1, Minecraft var2, Advancement var3, DisplayInfo var4) {
        this.tab = var1;
        this.advancement = var3;
@@ -60,7 +61,7 @@
        int var8 = 29 + var2.font.width(this.title) + var7;
 -      String var9 = var4.getDescription().getColoredString();
 -      this.description = this.findOptimalLines(var9, var8);
-+      this.description = this.findOptimalLines(var4.getDescription().mutableCopy().withStyle(var4.getFrame().getChatColor()), var8);
++      this.description = this.findOptimalLines(ComponentUtils.mergeStyles(var4.getDescription().copy(), Style.EMPTY.withColor(var4.getFrame().getChatColor())), var8);
  
 -      String var11;
 -      for(Iterator var10 = this.description.iterator(); var10.hasNext(); var8 = Math.max(var8, var2.font.width(var11))) {
@@ -129,7 +130,7 @@
     @Nullable
     private AdvancementWidget getFirstVisibleParent(Advancement var1) {
        do {
-@@ -96,63 +99,63 @@
+@@ -96,63 +100,63 @@
        } else {
           return null;
        }
@@ -228,7 +229,7 @@
     }
  
     public void setProgress(AdvancementProgress var1) {
-@@ -161,131 +164,131 @@
+@@ -161,131 +165,131 @@
  
     public void addChild(AdvancementWidget var1) {
        this.children.add(var1);

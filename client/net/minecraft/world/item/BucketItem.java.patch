@@ -25,8 +25,14 @@
        } else if (var5.getType() != HitResult.Type.BLOCK) {
           return InteractionResultHolder.pass(var4);
        } else {
-@@ -59,11 +60,11 @@
-                      ItemStack var12 = this.createResultItem(var4, var2, var13.getBucket());
+@@ -54,16 +55,16 @@
+                if (var10.getBlock() instanceof BucketPickup) {
+                   Fluid var13 = ((BucketPickup)var10.getBlock()).takeLiquid(var1, var7, var10);
+                   if (var13 != Fluids.EMPTY) {
+                      var2.awardStat(Stats.ITEM_USED.get(this));
+                      var2.playSound(var13.is(FluidTags.LAVA) ? SoundEvents.BUCKET_FILL_LAVA : SoundEvents.BUCKET_FILL, 1.0F, 1.0F);
+-                     ItemStack var12 = this.createResultItem(var4, var2, var13.getBucket());
++                     ItemStack var12 = ItemUtils.createBucketResult(var4, var2, new ItemStack(var13.getBucket()));
                       if (!var1.isClientSide) {
                          CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer)var2, new ItemStack(var13.getBucket()));
                       }
@@ -51,7 +57,29 @@
                 }
              }
           } else {
-@@ -114,38 +115,42 @@
+@@ -92,60 +93,47 @@
+    }
+ 
+    public void checkExtraContent(Level var1, ItemStack var2, BlockPos var3) {
+    }
+ 
+-   private ItemStack createResultItem(ItemStack var1, Player var2, Item var3) {
+-      if (var2.abilities.instabuild) {
+-         return var1;
+-      } else {
+-         var1.shrink(1);
+-         if (var1.isEmpty()) {
+-            return new ItemStack(var3);
+-         } else {
+-            if (!var2.inventory.add(new ItemStack(var3))) {
+-               var2.drop(new ItemStack(var3), false);
+-            }
+-
+-            return var1;
+-         }
+-      }
+-   }
+-
     public boolean emptyBucket(@Nullable Player var1, Level var2, BlockPos var3, @Nullable BlockHitResult var4) {
        if (!(this.content instanceof FlowingFluid)) {
           return false;

@@ -1,24 +1,119 @@
 --- net/minecraft/server/packs/resources/FallbackResourceManager.java
 +++ net/minecraft/server/packs/resources/FallbackResourceManager.java
-@@ -13,10 +13,11 @@
+@@ -11,44 +11,46 @@
+ import java.util.ArrayList;
+ import java.util.Collection;
  import java.util.Collections;
  import java.util.Iterator;
  import java.util.List;
++import java.util.Objects;
  import java.util.Set;
  import java.util.function.Predicate;
 +import java.util.stream.Stream;
  import net.minecraft.resources.ResourceLocation;
- import net.minecraft.server.packs.Pack;
+-import net.minecraft.server.packs.Pack;
++import net.minecraft.server.packs.PackResources;
  import net.minecraft.server.packs.PackType;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
-@@ -126,10 +127,14 @@
+ 
+ public class FallbackResourceManager implements ResourceManager {
+    private static final Logger LOGGER = LogManager.getLogger();
+-   protected final List<Pack> fallbacks = Lists.newArrayList();
++   protected final List<PackResources> fallbacks = Lists.newArrayList();
+    private final PackType type;
+    private final String namespace;
+ 
+    public FallbackResourceManager(PackType var1, String var2) {
+       this.type = var1;
+       this.namespace = var2;
+    }
+ 
+-   public void add(Pack var1) {
++   public void add(PackResources var1) {
+       this.fallbacks.add(var1);
+    }
+ 
+    public Set<String> getNamespaces() {
+       return ImmutableSet.of(this.namespace);
+    }
+ 
+    public Resource getResource(ResourceLocation var1) throws IOException {
+       this.validateLocation(var1);
+-      Pack var2 = null;
++      PackResources var2 = null;
+       ResourceLocation var3 = getMetadataLocation(var1);
+ 
+       for(int var4 = this.fallbacks.size() - 1; var4 >= 0; --var4) {
+-         Pack var5 = (Pack)this.fallbacks.get(var4);
++         PackResources var5 = (PackResources)this.fallbacks.get(var4);
+          if (var2 == null && var5.hasResource(this.type, var3)) {
+             var2 = var5;
+          }
+ 
+          if (var5.hasResource(this.type, var1)) {
+@@ -67,21 +69,21 @@
+    public boolean hasResource(ResourceLocation var1) {
+       if (!this.isValidLocation(var1)) {
+          return false;
+       } else {
+          for(int var2 = this.fallbacks.size() - 1; var2 >= 0; --var2) {
+-            Pack var3 = (Pack)this.fallbacks.get(var2);
++            PackResources var3 = (PackResources)this.fallbacks.get(var2);
+             if (var3.hasResource(this.type, var1)) {
+                return true;
+             }
+          }
+ 
+          return false;
+       }
+    }
+ 
+-   protected InputStream getWrappedResource(ResourceLocation var1, Pack var2) throws IOException {
++   protected InputStream getWrappedResource(ResourceLocation var1, PackResources var2) throws IOException {
+       InputStream var3 = var2.getResource(this.type, var1);
+       return (InputStream)(LOGGER.isDebugEnabled() ? new FallbackResourceManager.LeakedResourceWarningInputStream(var3, var1, var2.getName()) : var3);
+    }
+ 
+    private void validateLocation(ResourceLocation var1) throws IOException {
+@@ -99,11 +101,11 @@
+       ArrayList var2 = Lists.newArrayList();
+       ResourceLocation var3 = getMetadataLocation(var1);
+       Iterator var4 = this.fallbacks.iterator();
+ 
+       while(var4.hasNext()) {
+-         Pack var5 = (Pack)var4.next();
++         PackResources var5 = (PackResources)var4.next();
+          if (var5.hasResource(this.type, var1)) {
+             InputStream var6 = var5.hasResource(this.type, var3) ? this.getWrappedResource(var3, var5) : null;
+             var2.add(new SimpleResource(var5.getName(), var1, this.getWrappedResource(var1, var5), var6));
+          }
+       }
+@@ -113,23 +115,31 @@
+       } else {
+          return var2;
+       }
+    }
+ 
++   public Collection<ResourceLocation> listResources(ResourceLocation var1, Predicate<String> var2) {
++      return (Collection)(Objects.equals(var1.getNamespace(), this.namespace) ? this.listResources(var1.getPath(), var2) : ImmutableSet.of());
++   }
++
+    public Collection<ResourceLocation> listResources(String var1, Predicate<String> var2) {
+       ArrayList var3 = Lists.newArrayList();
+       Iterator var4 = this.fallbacks.iterator();
+ 
+       while(var4.hasNext()) {
+-         Pack var5 = (Pack)var4.next();
++         PackResources var5 = (PackResources)var4.next();
+          var3.addAll(var5.getResources(this.type, this.namespace, var1, Integer.MAX_VALUE, var2));
+       }
  
        Collections.sort(var3);
        return var3;
     }
  
-+   public Stream<Pack> listPacks() {
++   public Stream<PackResources> listPacks() {
 +      return this.fallbacks.stream();
 +   }
 +

@@ -166,3 +166,63 @@
           }
        } else {
           if (var1 != MapDecoration.Type.PLAYER) {
+@@ -291,38 +304,38 @@
+ 
+       return var2;
+    }
+ 
+    public void toggleBanner(LevelAccessor var1, BlockPos var2) {
+-      float var3 = (float)var2.getX() + 0.5F;
+-      float var4 = (float)var2.getZ() + 0.5F;
+-      int var5 = 1 << this.scale;
+-      float var6 = (var3 - (float)this.x) / (float)var5;
+-      float var7 = (var4 - (float)this.z) / (float)var5;
+-      boolean var8 = true;
+-      boolean var9 = false;
+-      if (var6 >= -63.0F && var7 >= -63.0F && var6 <= 63.0F && var7 <= 63.0F) {
+-         MapBanner var10 = MapBanner.fromWorld(var1, var2);
+-         if (var10 == null) {
++      double var3 = (double)var2.getX() + 0.5D;
++      double var5 = (double)var2.getZ() + 0.5D;
++      int var7 = 1 << this.scale;
++      double var8 = (var3 - (double)this.x) / (double)var7;
++      double var10 = (var5 - (double)this.z) / (double)var7;
++      boolean var12 = true;
++      boolean var13 = false;
++      if (var8 >= -63.0D && var10 >= -63.0D && var8 <= 63.0D && var10 <= 63.0D) {
++         MapBanner var14 = MapBanner.fromWorld(var1, var2);
++         if (var14 == null) {
+             return;
+          }
+ 
+-         boolean var11 = true;
+-         if (this.bannerMarkers.containsKey(var10.getId()) && ((MapBanner)this.bannerMarkers.get(var10.getId())).equals(var10)) {
+-            this.bannerMarkers.remove(var10.getId());
+-            this.decorations.remove(var10.getId());
+-            var11 = false;
+-            var9 = true;
++         boolean var15 = true;
++         if (this.bannerMarkers.containsKey(var14.getId()) && ((MapBanner)this.bannerMarkers.get(var14.getId())).equals(var14)) {
++            this.bannerMarkers.remove(var14.getId());
++            this.decorations.remove(var14.getId());
++            var15 = false;
++            var13 = true;
+          }
+ 
+-         if (var11) {
+-            this.bannerMarkers.put(var10.getId(), var10);
+-            this.addDecoration(var10.getDecoration(), var1, var10.getId(), (double)var3, (double)var4, 180.0D, var10.getName());
+-            var9 = true;
++         if (var15) {
++            this.bannerMarkers.put(var14.getId(), var14);
++            this.addDecoration(var14.getDecoration(), var1, var14.getId(), var3, var5, 180.0D, var14.getName());
++            var13 = true;
+          }
+ 
+-         if (var9) {
++         if (var13) {
+             this.setDirty();
+          }
+       }
+ 
+    }

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/trunkplacers/FancyTrunkPlacer.java
 +++ net/minecraft/world/level/levelgen/feature/trunkplacers/FancyTrunkPlacer.java
-@@ -1,0 +1,183 @@
+@@ -1,0 +1,186 @@
 +package net.minecraft.world.level.levelgen.feature.trunkplacers;
 +
 +import com.google.common.collect.Lists;
@@ -40,7 +40,10 @@
 +      boolean var8 = true;
 +      int var9 = var3 + 2;
 +      int var10 = Mth.floor((double)var9 * 0.618D);
-+      setDirtAt(var1, var4.below());
++      if (!var7.fromSapling) {
++         setDirtAt(var1, var4.below());
++      }
++
 +      double var11 = 1.0D;
 +      int var13 = Math.min(1, Mth.floor(1.382D + Math.pow(1.0D * (double)var9 / 13.0D, 2.0D)));
 +      int var14 = var4.getY() + var10;

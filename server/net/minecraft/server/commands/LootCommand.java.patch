@@ -1,0 +1,15 @@
+--- net/minecraft/server/commands/LootCommand.java
++++ net/minecraft/server/commands/LootCommand.java
+@@ -314,11 +314,11 @@
+       return drop(var0, var1, var4.create(LootContextParamSets.CHEST), var2);
+    }
+ 
+    private static int dropFishingLoot(CommandContext<CommandSourceStack> var0, ResourceLocation var1, BlockPos var2, ItemStack var3, LootCommand.DropConsumer var4) throws CommandSyntaxException {
+       CommandSourceStack var5 = (CommandSourceStack)var0.getSource();
+-      LootContext var6 = (new LootContext.Builder(var5.getLevel())).withParameter(LootContextParams.BLOCK_POS, var2).withParameter(LootContextParams.TOOL, var3).create(LootContextParamSets.FISHING);
++      LootContext var6 = (new LootContext.Builder(var5.getLevel())).withParameter(LootContextParams.BLOCK_POS, var2).withParameter(LootContextParams.TOOL, var3).withOptionalParameter(LootContextParams.THIS_ENTITY, var5.getEntity()).create(LootContextParamSets.FISHING);
+       return drop(var0, var1, var6, var4);
+    }
+ 
+    private static int drop(CommandContext<CommandSourceStack> var0, ResourceLocation var1, LootContext var2, LootCommand.DropConsumer var3) throws CommandSyntaxException {
+       CommandSourceStack var4 = (CommandSourceStack)var0.getSource();

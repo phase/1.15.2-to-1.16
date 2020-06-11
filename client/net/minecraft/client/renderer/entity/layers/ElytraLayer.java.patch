@@ -1,0 +1,15 @@
+--- net/minecraft/client/renderer/entity/layers/ElytraLayer.java
++++ net/minecraft/client/renderer/entity/layers/ElytraLayer.java
+@@ -43,11 +43,11 @@
+ 
+          var1.pushPose();
+          var1.translate(0.0D, 0.0D, 0.125D);
+          this.getParentModel().copyPropertiesTo(this.elytraModel);
+          this.elytraModel.setupAnim(var4, var5, var6, var8, var9, var10);
+-         VertexConsumer var14 = ItemRenderer.getFoilBuffer(var2, this.elytraModel.renderType(var12), false, var11.hasFoil());
++         VertexConsumer var14 = ItemRenderer.getFoilBufferDirect(var2, this.elytraModel.renderType(var12), false, var11.hasFoil());
+          this.elytraModel.renderToBuffer(var1, var14, var3, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+          var1.popPose();
+       }
+    }
+ }

@@ -17,7 +17,7 @@
     private static final ResourceLocation ID = new ResourceLocation("bred_animals");
  
     public BredAnimalsTrigger() {
-@@ -17,55 +16,58 @@
+@@ -17,55 +16,62 @@
  
     public ResourceLocation getId() {
        return ID;
@@ -74,17 +74,22 @@
  
        public static BredAnimalsTrigger.TriggerInstance bredAnimals(EntityPredicate.Builder var0) {
 -         return new BredAnimalsTrigger.TriggerInstance(var0.build(), EntityPredicate.ANY, EntityPredicate.ANY);
-+         return new BredAnimalsTrigger.TriggerInstance(EntityPredicate.Composite.ANY, EntityPredicate.Composite.wrap(var0.build()), EntityPredicate.Composite.ANY, EntityPredicate.Composite.ANY);
++         return new BredAnimalsTrigger.TriggerInstance(EntityPredicate.Composite.ANY, EntityPredicate.Composite.ANY, EntityPredicate.Composite.ANY, EntityPredicate.Composite.wrap(var0.build()));
        }
  
 -      public boolean matches(ServerPlayer var1, Animal var2, @Nullable Animal var3, @Nullable AgableMob var4) {
 -         if (!this.child.matches(var1, var4)) {
+-            return false;
++      public static BredAnimalsTrigger.TriggerInstance bredAnimals(EntityPredicate var0, EntityPredicate var1, EntityPredicate var2) {
++         return new BredAnimalsTrigger.TriggerInstance(EntityPredicate.Composite.ANY, EntityPredicate.Composite.wrap(var0), EntityPredicate.Composite.wrap(var1), EntityPredicate.Composite.wrap(var2));
++      }
++
 +      public boolean matches(LootContext var1, LootContext var2, @Nullable LootContext var3) {
-+         if (var3 != null && !this.child.matches(var3)) {
-             return false;
++         if (this.child == EntityPredicate.Composite.ANY || var3 != null && this.child.matches(var3)) {
++            return this.parent.matches(var1) && this.partner.matches(var2) || this.parent.matches(var2) && this.partner.matches(var1);
           } else {
 -            return this.parent.matches(var1, var2) && this.partner.matches(var1, var3) || this.parent.matches(var1, var3) && this.partner.matches(var1, var2);
-+            return this.parent.matches(var1) && this.partner.matches(var2) || this.parent.matches(var2) && this.partner.matches(var1);
++            return false;
           }
        }
  

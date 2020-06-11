@@ -1,6 +1,18 @@
 --- net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ net/minecraft/server/network/ServerGamePacketListenerImpl.java
-@@ -29,10 +29,11 @@
+@@ -10,10 +10,11 @@
+ import it.unimi.dsi.fastutil.ints.Int2ShortOpenHashMap;
+ import java.util.Collections;
+ import java.util.Iterator;
+ import java.util.Optional;
+ import java.util.Set;
++import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportedException;
+@@ -29,10 +30,11 @@
  import net.minecraft.nbt.StringTag;
  import net.minecraft.nbt.Tag;
  import net.minecraft.network.Connection;
@@ -12,7 +24,7 @@
  import net.minecraft.network.protocol.Packet;
  import net.minecraft.network.protocol.PacketUtils;
  import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
-@@ -60,10 +61,11 @@
+@@ -60,10 +62,11 @@
  import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
  import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
  import net.minecraft.network.protocol.game.ServerboundEditBookPacket;
@@ -24,7 +36,7 @@
  import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
  import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
  import net.minecraft.network.protocol.game.ServerboundPaddleBoatPacket;
-@@ -113,26 +115,29 @@
+@@ -113,28 +116,36 @@
  import net.minecraft.world.inventory.AnvilMenu;
  import net.minecraft.world.inventory.BeaconMenu;
  import net.minecraft.world.inventory.MerchantMenu;
@@ -48,14 +60,21 @@
  import net.minecraft.world.level.block.entity.JigsawBlockEntity;
  import net.minecraft.world.level.block.entity.SignBlockEntity;
  import net.minecraft.world.level.block.entity.StructureBlockEntity;
++import net.minecraft.world.level.block.state.BlockBehaviour;
  import net.minecraft.world.level.block.state.BlockState;
 -import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.BlockHitResult;
  import net.minecraft.world.phys.Vec3;
++import net.minecraft.world.phys.shapes.BooleanOp;
++import net.minecraft.world.phys.shapes.Shapes;
++import net.minecraft.world.phys.shapes.VoxelShape;
  import org.apache.commons.lang3.StringUtils;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
-@@ -187,14 +192,14 @@
+ 
+ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
+@@ -187,14 +198,14 @@
        this.player.zo = this.player.getZ();
        this.player.doTick();
        this.player.absMoveTo(this.firstGoodX, this.firstGoodY, this.firstGoodZ, this.player.yRot, this.player.xRot);
@@ -72,7 +91,7 @@
        } else {
           this.clientIsFloating = false;
           this.aboveGroundTickCount = 0;
-@@ -209,11 +214,11 @@
+@@ -209,11 +220,11 @@
           this.vehicleLastGoodY = this.lastVehicle.getY();
           this.vehicleLastGoodZ = this.lastVehicle.getZ();
           if (this.clientVehicleIsFloating && this.player.getRootVehicle().getControllingPassenger() == this.player) {
@@ -85,7 +104,7 @@
           } else {
              this.clientVehicleIsFloating = false;
              this.aboveGroundVehicleTickCount = 0;
-@@ -226,11 +231,11 @@
+@@ -226,11 +237,11 @@
  
        this.server.getProfiler().push("keepAlive");
        long var1 = Util.getMillis();
@@ -98,7 +117,7 @@
              this.keepAliveTime = var1;
              this.keepAliveChallenge = var1;
              this.send(new ClientboundKeepAlivePacket(this.keepAliveChallenge));
-@@ -245,11 +250,11 @@
+@@ -245,11 +256,11 @@
        if (this.dropSpamTickCount > 0) {
           --this.dropSpamTickCount;
        }
@@ -111,7 +130,7 @@
     }
  
     public void resetPosition() {
-@@ -296,11 +301,11 @@
+@@ -296,11 +307,11 @@
     }
  
     public void handleMoveVehicle(ServerboundMoveVehiclePacket var1) {
@@ -124,7 +143,7 @@
           if (var2 != this.player && var2.getControllingPassenger() == this.player && var2 == this.lastVehicle) {
              ServerLevel var3 = this.player.getLevel();
              double var4 = var2.getX();
-@@ -337,11 +342,11 @@
+@@ -337,11 +348,11 @@
              var22 = var14 - var2.getZ();
              var26 = var18 * var18 + var20 * var20 + var22 * var22;
              boolean var31 = false;
@@ -137,7 +156,32 @@
              var2.absMoveTo(var10, var12, var14, var16, var17);
              boolean var32 = var3.noCollision(var2, var2.getBoundingBox().deflate(0.0625D));
              if (var28 && (var31 || !var32)) {
-@@ -422,13 +427,13 @@
+@@ -350,19 +361,23 @@
+                return;
+             }
+ 
+             this.player.getLevel().getChunkSource().move(this.player);
+             this.player.checkMovementStatistics(this.player.getX() - var4, this.player.getY() - var6, this.player.getZ() - var8);
+-            this.clientVehicleIsFloating = var29 >= -0.03125D && !this.server.isFlightAllowed() && !var3.containsAnyBlocks(var2.getBoundingBox().inflate(0.0625D).expandTowards(0.0D, -0.55D, 0.0D));
++            this.clientVehicleIsFloating = var29 >= -0.03125D && !this.server.isFlightAllowed() && this.noBlocksAround(var2);
+             this.vehicleLastGoodX = var2.getX();
+             this.vehicleLastGoodY = var2.getY();
+             this.vehicleLastGoodZ = var2.getZ();
+          }
+ 
+       }
+    }
+ 
++   private boolean noBlocksAround(Entity var1) {
++      return var1.level.getBlockStates(var1.getBoundingBox().inflate(0.0625D).expandTowards(0.0D, -0.55D, 0.0D)).allMatch(BlockBehaviour.BlockStateBase::isAir);
++   }
++
+    public void handleAcceptTeleportPacket(ServerboundAcceptTeleportationPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (var1.getId() == this.awaitingTeleport) {
+          this.player.absMoveTo(this.awaitingPositionFromClient.x, this.awaitingPositionFromClient.y, this.awaitingPositionFromClient.z, this.player.yRot, this.player.xRot);
+          this.lastGoodX = this.awaitingPositionFromClient.x;
+@@ -422,13 +437,13 @@
     }
  
     public void handleSetCommandBlock(ServerboundSetCommandBlockPacket var1) {
@@ -153,7 +197,7 @@
           CommandBlockEntity var3 = null;
           BlockPos var4 = var1.getPos();
           BlockEntity var5 = this.player.level.getBlockEntity(var4);
-@@ -471,34 +476,34 @@
+@@ -471,34 +486,34 @@
                 var3.onModeSwitch();
              }
  
@@ -192,7 +236,7 @@
        }
     }
  
-@@ -568,11 +573,11 @@
+@@ -568,11 +583,11 @@
                    }
                 } else if (var1.getUpdateType() == StructureBlockEntity.UpdateType.SCAN_AREA) {
                    if (var5.detectSize()) {
@@ -205,7 +249,7 @@
              } else {
                 this.player.displayClientMessage(new TranslatableComponent("structure_block.invalid_structure_name", new Object[]{var1.getName()}), false);
              }
-@@ -590,20 +595,35 @@
+@@ -590,20 +605,35 @@
           BlockPos var2 = var1.getPos();
           BlockState var3 = this.player.level.getBlockState(var2);
           BlockEntity var4 = this.player.level.getBlockEntity(var2);
@@ -232,7 +276,7 @@
 +         BlockEntity var3 = this.player.level.getBlockEntity(var2);
 +         if (var3 instanceof JigsawBlockEntity) {
 +            JigsawBlockEntity var4 = (JigsawBlockEntity)var3;
-+            var4.generate(this.server.getLevel(this.player.level.dimension()), var1.levels(), var1.keepJigsaws());
++            var4.generate(this.player.getLevel(), var1.levels(), var1.keepJigsaws());
 +         }
 +
 +      }
@@ -243,7 +287,7 @@
        int var2 = var1.getItem();
        AbstractContainerMenu var3 = this.player.containerMenu;
        if (var3 instanceof MerchantMenu) {
-@@ -672,13 +692,13 @@
+@@ -672,13 +702,13 @@
     }
  
     public void handleMovePlayer(ServerboundMovePlayerPacket var1) {
@@ -259,52 +303,108 @@
                 this.resetPosition();
              }
  
-@@ -736,16 +756,15 @@
-                      var23 = var15 - this.lastGoodZ;
-                      if (var21 > 0.0D) {
-                         this.player.fallDistance = 0.0F;
+@@ -728,65 +758,67 @@
+                            this.teleport(this.player.getX(), this.player.getY(), this.player.getZ(), this.player.yRot, this.player.xRot);
+                            return;
+                         }
                       }
  
+-                     boolean var35 = this.isPlayerCollidingWithAnything(var2);
++                     AABB var35 = this.player.getBoundingBox();
+                      var19 = var11 - this.lastGoodX;
+                      var21 = var13 - this.lastGoodY;
+                      var23 = var15 - this.lastGoodZ;
+-                     if (var21 > 0.0D) {
+-                        this.player.fallDistance = 0.0F;
+-                     }
+-
 -                     if (this.player.onGround && !var1.isOnGround() && var21 > 0.0D) {
-+                     if (this.player.isOnGround() && !var1.isOnGround() && var21 > 0.0D) {
++                     boolean var31 = var21 > 0.0D;
++                     if (this.player.isOnGround() && !var1.isOnGround() && var31) {
                          this.player.jumpFromGround();
                       }
  
                       this.player.move(MoverType.PLAYER, new Vec3(var19, var21, var23));
 -                     this.player.onGround = var1.isOnGround();
-                      double var31 = var21;
+-                     double var31 = var21;
++                     double var32 = var21;
                       var19 = var11 - this.player.getX();
                       var21 = var13 - this.player.getY();
                       if (var21 > -0.5D || var21 < 0.5D) {
                          var21 = 0.0D;
-@@ -758,23 +777,23 @@
-                         var33 = true;
+                      }
+ 
+                      var23 = var15 - this.player.getZ();
+                      var27 = var19 * var19 + var21 * var21 + var23 * var23;
+-                     boolean var33 = false;
++                     boolean var34 = false;
+                      if (!this.player.isChangingDimension() && var27 > 0.0625D && !this.player.isSleeping() && !this.player.gameMode.isCreative() && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
+-                        var33 = true;
++                        var34 = true;
                          LOGGER.warn((String)"{} moved wrongly!", (Object)this.player.getName().getString());
                       }
  
                       this.player.absMoveTo(var11, var13, var15, var17, var18);
 -                     this.player.checkMovementStatistics(this.player.getX() - var3, this.player.getY() - var5, this.player.getZ() - var7);
-                      if (!this.player.noPhysics && !this.player.isSleeping()) {
-                         boolean var34 = this.isPlayerCollidingWithAnything(var2);
-                         if (var35 && (var33 || !var34)) {
-                            this.teleport(var3, var5, var7, var17, var18);
-                            return;
+-                     if (!this.player.noPhysics && !this.player.isSleeping()) {
+-                        boolean var34 = this.isPlayerCollidingWithAnything(var2);
+-                        if (var35 && (var33 || !var34)) {
+-                           this.teleport(var3, var5, var7, var17, var18);
+-                           return;
++                     if (this.player.noPhysics || this.player.isSleeping() || (!var34 || !var2.noCollision(this.player, var35)) && !this.isPlayerCollidingWithAnythingNew(var2, var35)) {
++                        this.clientIsFloating = var32 >= -0.03125D && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR && !this.server.isFlightAllowed() && !this.player.abilities.mayfly && !this.player.hasEffect(MobEffects.LEVITATION) && !this.player.isFallFlying() && this.noBlocksAround(this.player);
++                        this.player.getLevel().getChunkSource().move(this.player);
++                        this.player.doCheckFallDamage(this.player.getY() - var9, var1.isOnGround());
++                        this.player.setOnGround(var1.isOnGround());
++                        if (var31) {
++                           this.player.fallDistance = 0.0F;
                          }
-                      }
+-                     }
  
-                      this.clientIsFloating = var31 >= -0.03125D && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR && !this.server.isFlightAllowed() && !this.player.abilities.mayfly && !this.player.hasEffect(MobEffects.LEVITATION) && !this.player.isFallFlying() && !var2.containsAnyBlocks(this.player.getBoundingBox().inflate(0.0625D).expandTowards(0.0D, -0.55D, 0.0D));
+-                     this.clientIsFloating = var31 >= -0.03125D && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR && !this.server.isFlightAllowed() && !this.player.abilities.mayfly && !this.player.hasEffect(MobEffects.LEVITATION) && !this.player.isFallFlying() && !var2.containsAnyBlocks(this.player.getBoundingBox().inflate(0.0625D).expandTowards(0.0D, -0.55D, 0.0D));
 -                     this.player.onGround = var1.isOnGround();
-                      this.player.getLevel().getChunkSource().move(this.player);
-                      this.player.doCheckFallDamage(this.player.getY() - var9, var1.isOnGround());
-+                     this.player.setOnGround(var1.isOnGround());
-+                     this.player.checkMovementStatistics(this.player.getX() - var3, this.player.getY() - var5, this.player.getZ() - var7);
-                      this.lastGoodX = this.player.getX();
-                      this.lastGoodY = this.player.getY();
-                      this.lastGoodZ = this.player.getZ();
+-                     this.player.getLevel().getChunkSource().move(this.player);
+-                     this.player.doCheckFallDamage(this.player.getY() - var9, var1.isOnGround());
+-                     this.lastGoodX = this.player.getX();
+-                     this.lastGoodY = this.player.getY();
+-                     this.lastGoodZ = this.player.getZ();
++                        this.player.checkMovementStatistics(this.player.getX() - var3, this.player.getY() - var5, this.player.getZ() - var7);
++                        this.lastGoodX = this.player.getX();
++                        this.lastGoodY = this.player.getY();
++                        this.lastGoodZ = this.player.getZ();
++                     } else {
++                        this.teleport(var3, var5, var7, var17, var18);
++                     }
                    }
                 }
-@@ -816,10 +835,11 @@
-       case SWAP_HELD_ITEMS:
+             }
+          }
+       }
+    }
+ 
+-   private boolean isPlayerCollidingWithAnything(LevelReader var1) {
+-      return var1.noCollision(this.player, this.player.getBoundingBox().deflate(9.999999747378752E-6D));
++   private boolean isPlayerCollidingWithAnythingNew(LevelReader var1, AABB var2) {
++      Stream var3 = var1.getCollisions(this.player, this.player.getBoundingBox().deflate(9.999999747378752E-6D), (var0) -> {
++         return true;
++      });
++      VoxelShape var4 = Shapes.create(var2.deflate(9.999999747378752E-6D));
++      return var3.anyMatch((var1x) -> {
++         return !Shapes.joinIsNotEmpty(var1x, var4, BooleanOp.AND);
++      });
+    }
+ 
+    public void teleport(double var1, double var3, double var5, float var7, float var8) {
+       this.teleport(var1, var3, var5, var7, var8, Collections.emptySet());
+    }
+@@ -811,15 +843,16 @@
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       BlockPos var2 = var1.getPos();
+       this.player.resetLastActionTime();
+       ServerboundPlayerActionPacket.Action var3 = var1.getAction();
+       switch(var3) {
+-      case SWAP_HELD_ITEMS:
++      case SWAP_ITEM_WITH_OFFHAND:
           if (!this.player.isSpectator()) {
              ItemStack var4 = this.player.getItemInHand(InteractionHand.OFF_HAND);
              this.player.setItemInHand(InteractionHand.OFF_HAND, this.player.getItemInHand(InteractionHand.MAIN_HAND));
@@ -315,7 +415,7 @@
           return;
        case DROP_ITEM:
           if (!this.player.isSpectator()) {
-@@ -844,36 +864,50 @@
+@@ -844,41 +877,59 @@
        default:
           throw new IllegalArgumentException("Invalid player action");
        }
@@ -374,8 +474,18 @@
        ItemStack var4 = this.player.getItemInHand(var3);
        this.player.resetLastActionTime();
        if (!var4.isEmpty()) {
-          this.player.gameMode.useItem(this.player, var2, var4, var3);
-@@ -910,11 +944,11 @@
+-         this.player.gameMode.useItem(this.player, var2, var4, var3);
++         InteractionResult var5 = this.player.gameMode.useItem(this.player, var2, var4, var3);
++         if (var5.shouldSwing()) {
++            this.player.swing(var3, true);
++         }
++
+       }
+    }
+ 
+    public void handleTeleportToEntityPacket(ServerboundTeleportToEntityPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+@@ -910,11 +961,11 @@
     }
  
     public void onDisconnect(Component var1) {
@@ -388,7 +498,7 @@
        if (this.isSingleplayerOwner()) {
           LOGGER.info("Stopping singleplayer server as player logged out");
           this.server.halt(false);
-@@ -952,43 +986,46 @@
+@@ -952,43 +1003,46 @@
     }
  
     public void handleSetCarriedItem(ServerboundSetCarriedItemPacket var1) {
@@ -441,7 +551,7 @@
        }
     }
  
-@@ -1056,35 +1093,30 @@
+@@ -1056,40 +1110,36 @@
  
     }
  
@@ -451,6 +561,7 @@
 +      ServerLevel var2 = this.player.getLevel();
        Entity var3 = var1.getTarget(var2);
        this.player.resetLastActionTime();
++      this.player.setShiftKeyDown(var1.isUsingSecondaryAction());
        if (var3 != null) {
 -         boolean var4 = this.player.canSee(var3);
 -         double var5 = 36.0D;
@@ -462,22 +573,19 @@
 -            InteractionHand var7;
 +         double var4 = 36.0D;
 +         if (this.player.distanceToSqr(var3) < 36.0D) {
-+            InteractionHand var6;
++            InteractionHand var6 = var1.getHand();
++            Optional var7 = Optional.empty();
              if (var1.getAction() == ServerboundInteractPacket.Action.INTERACT) {
 -               var7 = var1.getHand();
 -               this.player.interactOn(var3, var7);
-+               var6 = var1.getHand();
-+               this.player.interactOn(var3, var6);
++               var7 = Optional.of(this.player.interactOn(var3, var6));
              } else if (var1.getAction() == ServerboundInteractPacket.Action.INTERACT_AT) {
 -               var7 = var1.getHand();
 -               InteractionResult var8 = var3.interactAt(this.player, var1.getLocation(), var7);
 -               if (var8.shouldSwing()) {
 -                  this.player.swing(var7, true);
-+               var6 = var1.getHand();
-+               InteractionResult var7 = var3.interactAt(this.player, var1.getLocation(), var6);
-+               if (var7.shouldSwing()) {
-+                  this.player.swing(var6, true);
-                }
+-               }
++               var7 = Optional.of(var3.interactAt(this.player, var1.getLocation(), var6));
              } else if (var1.getAction() == ServerboundInteractPacket.Action.ATTACK) {
                 if (var3 instanceof ItemEntity || var3 instanceof ExperienceOrb || var3 instanceof AbstractArrow || var3 == this.player) {
 -                  this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_entity_attacked", new Object[0]));
@@ -489,7 +597,16 @@
  
                 this.player.attack(var3);
              }
-@@ -1099,18 +1131,18 @@
++
++            if (var7.isPresent() && ((InteractionResult)var7.get()).shouldSwing()) {
++               this.player.swing(var6, true);
++            }
+          }
+       }
+ 
+    }
+ 
+@@ -1099,18 +1149,18 @@
        ServerboundClientCommandPacket.Action var2 = var1.getAction();
        switch(var2) {
        case PERFORM_RESPAWN:
@@ -511,7 +628,7 @@
                 ((GameRules.BooleanValue)this.player.getLevel().getGameRules().getRule(GameRules.RULE_SPECTATORSGENERATECHUNKS)).set(false, this.server);
              }
           }
-@@ -1231,22 +1263,22 @@
+@@ -1231,22 +1281,22 @@
     }
  
     public void handleSignUpdate(ServerboundSignUpdatePacket var1) {
@@ -536,7 +653,7 @@
  
           String[] var7 = var1.getLines();
  
-@@ -1264,11 +1296,11 @@
+@@ -1264,11 +1314,11 @@
        if (this.keepAlivePending && var1.getId() == this.keepAliveChallenge) {
           int var2 = (int)(Util.getMillis() - this.keepAliveTime);
           this.player.latency = (this.player.latency * 3 + var2) / 4;
