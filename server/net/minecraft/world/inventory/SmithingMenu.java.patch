@@ -1,6 +1,6 @@
 --- net/minecraft/world/inventory/SmithingMenu.java
 +++ net/minecraft/world/inventory/SmithingMenu.java
-@@ -1,0 +1,62 @@
+@@ -1,0 +1,70 @@
 +package net.minecraft.world.inventory;
 +
 +import java.util.List;
@@ -18,6 +18,7 @@
 +   private final Level level;
 +   @Nullable
 +   private UpgradeRecipe selectedRecipe;
++   private final List<UpgradeRecipe> recipes;
 +
 +   public SmithingMenu(int var1, Inventory var2) {
 +      this(var1, var2, ContainerLevelAccess.NULL);
@@ -26,6 +27,7 @@
 +   public SmithingMenu(int var1, Inventory var2, ContainerLevelAccess var3) {
 +      super(MenuType.SMITHING, var1, var2, var3);
 +      this.level = var2.player.level;
++      this.recipes = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING);
 +   }
 +
 +   protected boolean isValidBlock(BlockState var1) {
@@ -61,5 +63,11 @@
 +         this.resultSlots.setItem(0, var2);
 +      }
 +
++   }
++
++   protected boolean shouldQuickMoveToAdditionalSlot(ItemStack var1) {
++      return this.recipes.stream().anyMatch((var1x) -> {
++         return var1x.isAdditionIngredient(var1);
++      });
 +   }
 +}

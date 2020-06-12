@@ -1,6 +1,6 @@
 --- net/minecraft/network/protocol/game/ServerboundInteractPacket.java
 +++ net/minecraft/network/protocol/game/ServerboundInteractPacket.java
-@@ -12,10 +12,11 @@
+@@ -12,19 +12,15 @@
  public class ServerboundInteractPacket implements Packet<ServerGamePacketListener> {
     private int entityId;
     private ServerboundInteractPacket.Action action;
@@ -11,32 +11,41 @@
     public ServerboundInteractPacket() {
     }
  
-    public ServerboundInteractPacket(Entity var1) {
-@@ -30,10 +31,11 @@
+-   public ServerboundInteractPacket(Entity var1) {
+-      this.entityId = var1.getId();
+-      this.action = ServerboundInteractPacket.Action.ATTACK;
+-   }
+-
+    public void read(FriendlyByteBuf var1) throws IOException {
+       this.entityId = var1.readVarInt();
+       this.action = (ServerboundInteractPacket.Action)var1.readEnum(ServerboundInteractPacket.Action.class);
+       if (this.action == ServerboundInteractPacket.Action.INTERACT_AT) {
           this.location = new Vec3((double)var1.readFloat(), (double)var1.readFloat(), (double)var1.readFloat());
-       }
+@@ -32,10 +28,11 @@
  
        if (this.action == ServerboundInteractPacket.Action.INTERACT || this.action == ServerboundInteractPacket.Action.INTERACT_AT) {
           this.hand = (InteractionHand)var1.readEnum(InteractionHand.class);
-+         this.usingSecondaryAction = var1.readBoolean();
        }
  
++      this.usingSecondaryAction = var1.readBoolean();
     }
  
     public void write(FriendlyByteBuf var1) throws IOException {
-@@ -45,10 +47,11 @@
-          var1.writeFloat((float)this.location.z);
-       }
+       var1.writeVarInt(this.entityId);
+       var1.writeEnum(this.action);
+@@ -47,10 +44,11 @@
  
        if (this.action == ServerboundInteractPacket.Action.INTERACT || this.action == ServerboundInteractPacket.Action.INTERACT_AT) {
           var1.writeEnum(this.hand);
-+         var1.writeBoolean(this.usingSecondaryAction);
        }
  
++      var1.writeBoolean(this.usingSecondaryAction);
     }
  
     public void handle(ServerGamePacketListener var1) {
-@@ -70,10 +73,14 @@
+       var1.handleInteract(this);
+    }
+@@ -70,10 +68,14 @@
  
     public Vec3 getLocation() {
        return this.location;

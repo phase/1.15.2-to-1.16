@@ -51,9 +51,27 @@
           this.searchBox.setVisible(false);
           this.searchBox.setTextColor(16777215);
           this.children.add(this.searchBox);
-@@ -311,11 +312,11 @@
+@@ -301,34 +302,32 @@
+       }
+    }
+ 
+    public boolean keyPressed(int var1, int var2, int var3) {
+       this.ignoreTextInput = false;
+-      if (selectedTab != CreativeModeTab.TAB_SEARCH.getId()) {
+-         if (this.minecraft.options.keyChat.matches(var1, var2)) {
+-            this.ignoreTextInput = true;
+-            this.selectTab(CreativeModeTab.TAB_SEARCH);
++      if (selectedTab == CreativeModeTab.TAB_SEARCH.getId()) {
++         String var5 = this.searchBox.getValue();
++         if (this.searchBox.keyPressed(var1, var2, var3)) {
++            if (!Objects.equals(var5, this.searchBox.getValue())) {
++               this.refreshSearchResults();
++            }
++
+             return true;
           } else {
-             return super.keyPressed(var1, var2, var3);
+-            return super.keyPressed(var1, var2, var3);
++            return this.searchBox.isFocused() && this.searchBox.isVisible() && var1 != 256 ? true : super.keyPressed(var1, var2, var3);
           }
        } else {
           boolean var4 = !this.isCreativeSlot(this.hoveredSlot) || this.hoveredSlot != null && this.hoveredSlot.hasItem();
@@ -61,10 +79,28 @@
 +         if (var4 && this.checkHotbarKeyPressed(var1, var2)) {
              this.ignoreTextInput = true;
              return true;
++         } else if (this.minecraft.options.keyChat.matches(var1, var2)) {
++            this.ignoreTextInput = true;
++            this.selectTab(CreativeModeTab.TAB_SEARCH);
++            return true;
           } else {
-             String var5 = this.searchBox.getValue();
-             if (this.searchBox.keyPressed(var1, var2, var3)) {
-@@ -383,15 +384,15 @@
+-            String var5 = this.searchBox.getValue();
+-            if (this.searchBox.keyPressed(var1, var2, var3)) {
+-               if (!Objects.equals(var5, this.searchBox.getValue())) {
+-                  this.refreshSearchResults();
+-               }
+-
+-               return true;
+-            } else {
+-               return this.searchBox.isFocused() && this.searchBox.isVisible() && var1 != 256 ? true : super.keyPressed(var1, var2, var3);
+-            }
++            return super.keyPressed(var1, var2, var3);
+          }
+       }
+    }
+ 
+    public boolean keyReleased(int var1, int var2, int var3) {
+@@ -383,15 +382,15 @@
        var6.getAvailableTags().stream().filter(var3).forEach((var2x) -> {
           Tag var10000 = (Tag)this.visibleTags.put(var2x, var6.getTag(var2x));
        });
@@ -84,7 +120,7 @@
     }
  
     public boolean mouseClicked(double var1, double var3, int var5) {
-@@ -456,12 +457,12 @@
+@@ -456,12 +455,12 @@
              if (var5.isEmpty()) {
                 for(var6 = 0; var6 < 9; ++var6) {
                    if (var6 == var4) {
@@ -99,7 +135,7 @@
                    } else {
                       ((CreativeModeInventoryScreen.ItemPickerMenu)this.menu).items.add(ItemStack.EMPTY);
                    }
-@@ -584,116 +585,101 @@
+@@ -584,116 +583,101 @@
        } else {
           return super.mouseDragged(var1, var3, var5, var6, var8);
        }
@@ -268,7 +304,7 @@
     }
  
     protected boolean checkTabClicked(CreativeModeTab var1, double var2, double var4) {
-@@ -714,72 +700,70 @@
+@@ -714,72 +698,70 @@
        }
  
        return var2 >= (double)var7 && var2 <= (double)(var7 + 28) && var4 >= (double)var9 && var4 <= (double)(var9 + 32);
@@ -380,7 +416,7 @@
     public int getSelectedTab() {
        return selectedTab;
     }
-@@ -800,13 +784,13 @@
+@@ -800,13 +782,13 @@
        } else if (var3) {
           for(var7 = 0; var7 < Inventory.getSelectionSize(); ++var7) {
              var6.set(var7, var4.inventory.getItem(var7).copy());

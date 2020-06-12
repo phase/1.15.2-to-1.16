@@ -1,6 +1,19 @@
 --- net/minecraft/world/level/block/JukeboxBlock.java
 +++ net/minecraft/world/level/block/JukeboxBlock.java
-@@ -11,30 +11,31 @@
+@@ -1,40 +1,56 @@
+ package net.minecraft.world.level.block;
+ 
++import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
++import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.item.ItemEntity;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.RecordItem;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
@@ -22,6 +35,18 @@
        this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(HAS_RECORD, false));
     }
  
++   public void setPlacedBy(Level var1, BlockPos var2, BlockState var3, @Nullable LivingEntity var4, ItemStack var5) {
++      super.setPlacedBy(var1, var2, var3, var4, var5);
++      CompoundTag var6 = var5.getOrCreateTag();
++      if (var6.contains("BlockEntityTag")) {
++         CompoundTag var7 = var6.getCompound("BlockEntityTag");
++         if (var7.contains("RecordItem")) {
++            var1.setBlock(var2, (BlockState)var3.setValue(HAS_RECORD, true), 2);
++         }
++      }
++
++   }
++
     public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
        if ((Boolean)var1.getValue(HAS_RECORD)) {
           this.dropRecording(var2, var3);
@@ -34,7 +59,7 @@
        }
     }
  
-@@ -67,11 +68,11 @@
+@@ -67,11 +83,11 @@
           }
        }
     }

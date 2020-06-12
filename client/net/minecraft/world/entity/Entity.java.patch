@@ -1,13 +1,12 @@
 --- net/minecraft/world/entity/Entity.java
 +++ net/minecraft/world/entity/Entity.java
-@@ -1,11 +1,13 @@
+@@ -1,11 +1,12 @@
  package net.minecraft.world.entity;
  
 -import com.google.common.collect.ImmutableSet;
  import com.google.common.collect.Iterables;
  import com.google.common.collect.Lists;
  import com.google.common.collect.Sets;
-+import com.google.gson.JsonSyntaxException;
 +import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap;
 +import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
  import java.util.Arrays;
@@ -15,7 +14,7 @@
  import java.util.Collections;
  import java.util.HashSet;
  import java.util.Iterator;
-@@ -25,27 +27,27 @@
+@@ -25,27 +26,27 @@
  import net.minecraft.commands.CommandSource;
  import net.minecraft.commands.CommandSourceStack;
  import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -45,7 +44,7 @@
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.server.level.TicketType;
-@@ -59,11 +61,10 @@
+@@ -59,11 +60,10 @@
  import net.minecraft.util.RewindableStream;
  import net.minecraft.world.InteractionHand;
  import net.minecraft.world.InteractionResult;
@@ -57,7 +56,7 @@
  import net.minecraft.world.entity.vehicle.Boat;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.enchantment.EnchantmentHelper;
-@@ -121,23 +122,21 @@
+@@ -121,23 +121,21 @@
     public boolean forcedLoading;
     public Level level;
     public double xo;
@@ -84,7 +83,7 @@
     public boolean removed;
     public float walkDistO;
     public float walkDist;
-@@ -152,14 +151,16 @@
+@@ -152,14 +150,16 @@
     public boolean noPhysics;
     public float pushthrough;
     protected final Random random;
@@ -105,7 +104,7 @@
     protected final SynchedEntityData entityData;
     protected static final EntityDataAccessor<Byte> DATA_SHARED_FLAGS_ID;
     private static final EntityDataAccessor<Integer> DATA_AIR_SUPPLY_ID;
-@@ -170,28 +171,28 @@
+@@ -170,28 +170,28 @@
     protected static final EntityDataAccessor<Pose> DATA_POSE;
     public boolean inChunk;
     public int xChunk;
@@ -136,7 +135,7 @@
     private EntityDimensions dimensions;
     private float eyeHeight;
  
-@@ -203,23 +204,22 @@
+@@ -203,23 +203,22 @@
        this.stuckSpeedMultiplier = Vec3.ZERO;
        this.nextStep = 1.0F;
        this.nextFlap = 1.0F;
@@ -163,7 +162,7 @@
        this.entityData.define(DATA_AIR_SUPPLY_ID, this.getMaxAirSupply());
        this.entityData.define(DATA_CUSTOM_NAME_VISIBLE, false);
        this.entityData.define(DATA_CUSTOM_NAME, Optional.empty());
-@@ -318,18 +318,25 @@
+@@ -318,18 +317,25 @@
  
     public void remove() {
        this.removed = true;
@@ -190,7 +189,7 @@
        this.xRot = var2 % 360.0F;
     }
  
-@@ -339,11 +346,11 @@
+@@ -339,11 +345,11 @@
        float var8 = this.dimensions.height;
        this.setBoundingBox(new AABB(var1 - (double)var7, var3, var5 - (double)var7, var1 + (double)var7, var3 + (double)var8, var5 + (double)var7));
     }
@@ -203,7 +202,7 @@
     public void turn(double var1, double var3) {
        double var5 = var3 * 0.15D;
        double var7 = var1 * 0.15D;
-@@ -379,12 +386,17 @@
+@@ -379,12 +385,17 @@
  
        this.walkDistO = this.walkDist;
        this.xRotO = this.xRot;
@@ -223,7 +222,7 @@
        } else if (this.remainingFireTicks > 0) {
           if (this.fireImmune()) {
              this.remainingFireTicks -= 4;
-@@ -469,10 +481,18 @@
+@@ -469,10 +480,18 @@
  
     private boolean isFree(AABB var1) {
        return this.level.noCollision(this, var1) && !this.level.containsAnyLiquid(var1);
@@ -242,7 +241,7 @@
           this.setBoundingBox(this.getBoundingBox().move(var2));
           this.setLocationFromBoundingbox();
        } else {
-@@ -500,11 +520,10 @@
+@@ -500,11 +519,10 @@
           this.level.getProfiler().pop();
           this.level.getProfiler().push("rest");
           this.horizontalCollision = !Mth.equal(var2.x, var3.x) || !Mth.equal(var2.z, var3.z);
@@ -254,7 +253,7 @@
           this.checkFallDamage(var3.y, this.onGround, var5, var4);
           Vec3 var6 = this.getDeltaMovement();
           if (var2.x != var3.x) {
-@@ -526,11 +545,11 @@
+@@ -526,11 +544,11 @@
  
           if (this.isMovementNoisy() && !this.isPassenger()) {
              double var8 = var3.x;
@@ -267,7 +266,7 @@
  
              this.walkDist = (float)((double)this.walkDist + (double)Mth.sqrt(getHorizontalDistanceSqr(var3)) * 0.6D);
              this.moveDist = (float)((double)this.moveDist + (double)Mth.sqrt(var8 * var8 + var10 * var10 + var12 * var12) * 0.6D);
-@@ -553,78 +572,71 @@
+@@ -553,78 +571,71 @@
                 this.nextFlap = this.playFlySound(this.moveDist);
              }
           }
@@ -360,7 +359,7 @@
     protected Vec3 maybeBackOffFromEdge(Vec3 var1, MoverType var2) {
        return var1;
     }
-@@ -666,11 +678,13 @@
+@@ -666,11 +677,13 @@
     private Vec3 collide(Vec3 var1) {
        AABB var2 = this.getBoundingBox();
        CollisionContext var3 = CollisionContext.of(this);
@@ -375,7 +374,7 @@
        boolean var9 = var1.x != var8.x;
        boolean var10 = var1.y != var8.y;
        boolean var11 = var1.z != var8.z;
-@@ -796,103 +810,43 @@
+@@ -796,103 +809,43 @@
        return SoundEvents.GENERIC_SPLASH;
     }
  
@@ -496,7 +495,7 @@
     }
  
     protected void playSwimSound(float var1) {
-@@ -950,18 +904,11 @@
+@@ -950,18 +903,11 @@
     @Nullable
     public AABB getCollideBox() {
        return null;
@@ -516,7 +515,7 @@
  
     public boolean causeFallDamage(float var1, float var2) {
        if (this.isVehicle()) {
-@@ -975,43 +922,20 @@
+@@ -975,43 +921,20 @@
  
        return false;
     }
@@ -564,7 +563,7 @@
     public boolean isInWaterOrRain() {
        return this.isInWater() || this.isInRain();
     }
-@@ -1023,48 +947,72 @@
+@@ -1023,48 +946,81 @@
     public boolean isInWaterOrBubble() {
        return this.isInWater() || this.isInBubbleColumn();
     }
@@ -630,22 +629,31 @@
 +      this.wasEyeInWater = this.isEyeInFluid(FluidTags.WATER);
 +      this.fluidOnEyes = null;
 +      double var1 = this.getEyeY() - 0.1111111119389534D;
-+      BlockPos var3 = new BlockPos(this.getX(), var1, this.getZ());
-+      FluidState var4 = this.level.getFluidState(var3);
-+      Iterator var5 = FluidTags.getWrappers().iterator();
++      Vec3 var3 = new Vec3(this.getX(), var1, this.getZ());
++      Entity var4 = this.getVehicle();
++      if (var4 instanceof Boat) {
++         Boat var5 = (Boat)var4;
++         if (!var5.isUnderWater() && var5.getBoundingBox().contains(var3)) {
++            return;
++         }
++      }
 +
-+      Tag var6;
++      BlockPos var11 = new BlockPos(var3);
++      FluidState var6 = this.level.getFluidState(var11);
++      Iterator var7 = FluidTags.getWrappers().iterator();
++
++      Tag var8;
 +      do {
-+         if (!var5.hasNext()) {
++         if (!var7.hasNext()) {
 +            return;
 +         }
 +
-+         var6 = (Tag)var5.next();
-+      } while(!var4.is(var6));
++         var8 = (Tag)var7.next();
++      } while(!var6.is(var8));
 +
-+      double var7 = (double)((float)var3.getY() + var4.getHeight(this.level, var3));
-+      if (var7 > var1) {
-+         this.fluidOnEyes = var6;
++      double var9 = (double)((float)var11.getY() + var6.getHeight(this.level, var11));
++      if (var9 > var1) {
++         this.fluidOnEyes = var8;
 +      }
 +
     }
@@ -653,7 +661,7 @@
     protected void doWaterSplashEffect() {
        Entity var1 = this.isVehicle() && this.getControllingPassenger() != null ? this.getControllingPassenger() : this;
        float var2 = var1 == this ? 0.2F : 0.9F;
-@@ -1081,71 +1029,57 @@
+@@ -1081,71 +1037,57 @@
        }
  
        float var5 = (float)Mth.floor(this.getY());
@@ -744,7 +752,7 @@
     public void moveRelative(float var1, Vec3 var2) {
        Vec3 var3 = getInputVector(var2, var1, this.yRot);
        this.setDeltaMovement(this.getDeltaMovement().add(var3));
-@@ -1188,10 +1122,18 @@
+@@ -1188,10 +1130,18 @@
        this.xRot = Mth.clamp(var8, -90.0F, 90.0F) % 360.0F;
        this.yRotO = this.yRot;
        this.xRotO = this.xRot;
@@ -763,7 +771,7 @@
     }
  
     public void moveTo(double var1, double var3, double var5, float var7, float var8) {
-@@ -1387,19 +1329,23 @@
+@@ -1387,19 +1337,23 @@
        return this.isPassenger() ? false : this.saveAsPassenger(var1);
     }
  
@@ -789,7 +797,7 @@
           var1.putUUID("UUID", this.getUUID());
           Component var9 = this.getCustomName();
           if (var9 != null) {
-@@ -1464,31 +1410,27 @@
+@@ -1464,31 +1418,27 @@
     }
  
     public void load(CompoundTag var1) {
@@ -828,7 +836,7 @@
           if (var1.hasUUID("UUID")) {
              this.uuid = var1.getUUID("UUID");
              this.stringUUID = this.uuid.toString();
-@@ -1497,24 +1439,30 @@
+@@ -1497,24 +1447,30 @@
           if (Double.isFinite(this.getX()) && Double.isFinite(this.getY()) && Double.isFinite(this.getZ())) {
              if (Double.isFinite((double)this.yRot) && Double.isFinite((double)this.xRot)) {
                 this.reapplyPosition();
@@ -839,7 +847,7 @@
 +
 +                  try {
 +                     this.setCustomName(Component.Serializer.fromJson(var11));
-+                  } catch (JsonSyntaxException var14) {
++                  } catch (Exception var14) {
 +                     LOGGER.warn("Failed to parse entity custom name {}", var11, var14);
 +                  }
                 }
@@ -863,7 +871,7 @@
  
                 this.readAdditionalSaveData(var1);
                 if (this.repositionEntityAfterLoad()) {
-@@ -1525,12 +1473,12 @@
+@@ -1525,12 +1481,12 @@
                 throw new IllegalStateException("Entity has invalid rotation");
              }
           } else {
@@ -878,7 +886,7 @@
           throw new ReportedException(var3);
        }
     }
-@@ -1611,50 +1559,30 @@
+@@ -1611,50 +1567,21 @@
  
     public boolean isInWall() {
        if (this.noPhysics) {
@@ -886,8 +894,7 @@
        } else {
 -         BlockPos.PooledMutableBlockPos var1 = BlockPos.PooledMutableBlockPos.acquire();
 -         Throwable var2 = null;
-+         BlockPos.MutableBlockPos var1 = new BlockPos.MutableBlockPos();
- 
+-
 -         try {
 -            for(int var3 = 0; var3 < 8; ++var3) {
 -               int var4 = Mth.floor(this.getY() + (double)(((float)((var3 >> 0) % 2) - 0.5F) * 0.1F) + (double)this.eyeHeight);
@@ -899,16 +906,8 @@
 -                     boolean var7 = true;
 -                     return var7;
 -                  }
-+         for(int var2 = 0; var2 < 8; ++var2) {
-+            int var3 = Mth.floor(this.getY() + (double)(((float)((var2 >> 0) % 2) - 0.5F) * 0.1F) + (double)this.eyeHeight);
-+            int var4 = Mth.floor(this.getX() + (double)(((float)((var2 >> 1) % 2) - 0.5F) * this.dimensions.width * 0.8F));
-+            int var5 = Mth.floor(this.getZ() + (double)(((float)((var2 >> 2) % 2) - 0.5F) * this.dimensions.width * 0.8F));
-+            if (var1.getX() != var4 || var1.getY() != var3 || var1.getZ() != var5) {
-+               var1.set(var4, var3, var5);
-+               if (this.level.getBlockState(var1).isSuffocating(this.level, var1)) {
-+                  return true;
-                }
-             }
+-               }
+-            }
 -         } catch (Throwable var17) {
 -            var2 = var17;
 -            throw var17;
@@ -925,9 +924,15 @@
 -               }
 -            }
 -
-          }
- 
-          return false;
+-         }
+-
+-         return false;
++         float var1 = 0.1F;
++         float var2 = this.dimensions.width * 0.8F;
++         AABB var3 = AABB.ofSize((double)var2, 0.10000000149011612D, (double)var2).move(this.getX(), this.getEyeY(), this.getZ());
++         return this.level.getBlockCollisions(this, var3, (var1x, var2x) -> {
++            return var1x.isSuffocating(this.level, var2x);
++         }).findAny().isPresent();
        }
     }
  
@@ -940,7 +945,7 @@
     @Nullable
     public AABB getCollideAgainstBox(Entity var1) {
        return null;
-@@ -1670,24 +1598,25 @@
+@@ -1670,24 +1597,25 @@
  
     public void positionRider(Entity var1) {
        this.positionRider(var1, Entity::setPos);
@@ -970,7 +975,7 @@
  
     public boolean startRiding(Entity var1) {
        return this.startRiding(var1, false);
-@@ -1709,40 +1638,45 @@
+@@ -1709,40 +1637,45 @@
        } else {
           if (this.isPassenger()) {
              this.stopRiding();
@@ -1019,7 +1024,7 @@
           throw new IllegalStateException("Use x.startRiding(y), not y.addPassenger(x)");
        } else {
           if (!this.level.isClientSide && var1 instanceof Player && !(this.getControllingPassenger() instanceof Player)) {
-@@ -1799,12 +1733,12 @@
+@@ -1799,12 +1732,12 @@
           if (!this.level.isClientSide && !var1.equals(this.portalEntranceBlock)) {
              this.portalEntranceBlock = new BlockPos(var1);
              NetherPortalBlock var10000 = (NetherPortalBlock)Blocks.NETHER_PORTAL;
@@ -1034,7 +1039,7 @@
           }
  
           this.isInsidePortal = true;
-@@ -1812,16 +1746,20 @@
+@@ -1812,16 +1745,20 @@
     }
  
     protected void handleNetherPortal() {
@@ -1057,7 +1062,7 @@
  
              this.isInsidePortal = false;
           } else {
-@@ -2055,11 +1993,11 @@
+@@ -2055,11 +1992,11 @@
        Direction[] var13 = new Direction[]{Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.UP};
        int var14 = var13.length;
  
@@ -1070,7 +1075,7 @@
              double var19 = var16.getAxisDirection() == Direction.AxisDirection.POSITIVE ? 1.0D - var17 : var17;
              if (var19 < var11) {
                 var11 = var19;
-@@ -2084,25 +2022,25 @@
+@@ -2084,25 +2021,25 @@
     public void makeStuckInBlock(BlockState var1, Vec3 var2) {
        this.fallDistance = 0.0F;
        this.stuckSpeedMultiplier = var2;
@@ -1107,7 +1112,7 @@
     protected Component getTypeName() {
        return this.type.getDescription();
     }
-@@ -2128,11 +2066,11 @@
+@@ -2128,11 +2065,11 @@
     public boolean skipAttackInteraction(Entity var1) {
        return false;
     }
@@ -1120,7 +1125,7 @@
     public boolean isInvulnerableTo(DamageSource var1) {
        return this.invulnerable && var1 != DamageSource.OUT_OF_WORLD && !var1.isCreativePlayer();
     }
-@@ -2158,72 +2096,72 @@
+@@ -2158,72 +2095,72 @@
        this.portalEntranceOffset = var1.portalEntranceOffset;
        this.portalEntranceForwards = var1.portalEntranceForwards;
     }
@@ -1238,7 +1243,7 @@
        }
     }
  
-@@ -2294,11 +2232,11 @@
+@@ -2294,11 +2231,11 @@
  
     public String getScoreboardName() {
        return this.stringUUID;
@@ -1251,7 +1256,7 @@
  
     public static double getViewScale() {
        return viewScale;
-@@ -2308,11 +2246,11 @@
+@@ -2308,11 +2245,11 @@
        viewScale = var0;
     }
  
@@ -1264,7 +1269,7 @@
  
     public void setCustomName(@Nullable Component var1) {
        this.entityData.set(DATA_CUSTOM_NAME, Optional.ofNullable(var1));
-@@ -2348,12 +2286,18 @@
+@@ -2348,12 +2285,18 @@
        if (this.level instanceof ServerLevel) {
           ServerLevel var7 = (ServerLevel)this.level;
           this.moveTo(var1, var3, var5, this.yRot, this.xRot);
@@ -1285,7 +1290,7 @@
     }
  
     public boolean shouldShowName() {
-@@ -2394,19 +2338,11 @@
+@@ -2394,19 +2337,11 @@
     public Direction getMotionDirection() {
        return this.getDirection();
     }
@@ -1306,7 +1311,7 @@
     public boolean broadcastToPlayer(ServerPlayer var1) {
        return true;
     }
-@@ -2441,25 +2377,21 @@
+@@ -2441,25 +2376,21 @@
  
     public final float getEyeHeight() {
        return this.eyeHeight;
@@ -1337,7 +1342,7 @@
     }
  
     @Nullable
-@@ -2473,11 +2405,11 @@
+@@ -2473,11 +2404,11 @@
  
     public boolean ignoreExplosion() {
        return false;
@@ -1350,7 +1355,7 @@
        }
  
        EnchantmentHelper.doPostDamageEffects(var1, var2);
-@@ -2517,16 +2449,22 @@
+@@ -2517,16 +2448,22 @@
  
     public boolean onlyOpCanSetNbt() {
        return false;
@@ -1376,7 +1381,7 @@
        return null;
     }
  
-@@ -2626,29 +2564,31 @@
+@@ -2626,29 +2563,31 @@
        } while(!var3.hasIndirectPassenger(var1));
  
        return true;
@@ -1418,7 +1423,7 @@
        return this.vehicle;
     }
  
-@@ -2699,93 +2639,78 @@
+@@ -2699,93 +2638,78 @@
        this.setYHeadRot(this.yRot);
        this.xRotO = this.xRot;
        this.yRotO = this.yRot;
@@ -1557,7 +1562,7 @@
     }
  
     public final float getBbHeight() {
-@@ -2797,13 +2722,17 @@
+@@ -2797,13 +2721,17 @@
     public EntityDimensions getDimensions(Pose var1) {
        return this.type.getDimensions();
     }
@@ -1576,7 +1581,7 @@
     }
  
     public void setDeltaMovement(Vec3 var1) {
-@@ -2813,62 +2742,67 @@
+@@ -2813,62 +2741,67 @@
     public void setDeltaMovement(double var1, double var3, double var5) {
        this.setDeltaMovement(new Vec3(var1, var3, var5));
     }
@@ -1658,7 +1663,7 @@
        DATA_AIR_SUPPLY_ID = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.INT);
        DATA_CUSTOM_NAME = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.OPTIONAL_COMPONENT);
        DATA_CUSTOM_NAME_VISIBLE = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.BOOLEAN);
-@@ -2876,9 +2810,9 @@
+@@ -2876,9 +2809,9 @@
        DATA_NO_GRAVITY = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.BOOLEAN);
        DATA_POSE = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.POSE);
     }

@@ -1,5 +1,47 @@
 --- net/minecraft/client/resources/model/ModelBakery.java
 +++ net/minecraft/client/resources/model/ModelBakery.java
+@@ -328,13 +328,13 @@
+             Pair var12 = Pair.of(var10, () -> {
+                return var11;
+             });
+             boolean var25 = false;
+ 
+-            label97: {
++            label98: {
+                try {
+-                  label112: {
++                  label107: {
+                      List var13;
+                      try {
+                         var25 = true;
+                         var13 = (List)this.resourceManager.getResources(var9).stream().map((var1x) -> {
+                            try {
+@@ -368,11 +368,11 @@
+                            }
+                         }).collect(Collectors.toList());
+                      } catch (IOException var26) {
+                         LOGGER.warn("Exception loading blockstate definition: {}: {}", var9, var26);
+                         var25 = false;
+-                        break label112;
++                        break label107;
+                      }
+ 
+                      Iterator var14 = var13.iterator();
+ 
+                      while(var14.hasNext()) {
+@@ -411,11 +411,11 @@
+                         });
+                         var8.putAll(var17);
+                      }
+ 
+                      var25 = false;
+-                     break label97;
++                     break label98;
+                   }
+                } catch (ModelBakery.BlockStateDefinitionException var27) {
+                   throw var27;
+                } catch (Exception var28) {
+                   throw new ModelBakery.BlockStateDefinitionException(String.format("Exception loading blockstate definition: '%s': %s", var9, var28));
 @@ -582,46 +582,45 @@
  
     private BlockModel loadBlockModel(ResourceLocation var1) throws IOException {
@@ -11,18 +53,20 @@
        try {
           String var4 = var1.getPath();
 -         BlockModel var10;
-          if ("builtin/generated".equals(var4)) {
+-         if ("builtin/generated".equals(var4)) {
 -            var10 = GENERATION_MARKER;
 -            return var10;
-+            var5 = GENERATION_MARKER;
-+            return var5;
-          }
+-         }
++         if (!"builtin/generated".equals(var4)) {
++            if ("builtin/entity".equals(var4)) {
++               var5 = BLOCK_ENTITY_MARKER;
++               return var5;
++            }
  
 -         if ("builtin/entity".equals(var4)) {
 -            var10 = BLOCK_ENTITY_MARKER;
 -            return var10;
 -         }
-+         if (!"builtin/entity".equals(var4)) {
 +            if (var4.startsWith("builtin/")) {
 +               String var10 = var4.substring("builtin/".length());
 +               String var6 = (String)BUILTIN_MODELS.get(var10);
@@ -54,7 +98,7 @@
 -         var10 = BlockModel.fromStream((Reader)var2);
 -         var10.name = var1.toString();
 -         var11 = var10;
-+         var5 = BLOCK_ENTITY_MARKER;
++         var5 = GENERATION_MARKER;
        } finally {
           IOUtils.closeQuietly((Reader)var2);
           IOUtils.closeQuietly(var3);

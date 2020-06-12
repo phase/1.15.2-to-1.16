@@ -451,3 +451,18 @@
     @Nullable
     public Entity getControllingPassenger() {
        List var1 = this.getPassengers();
+@@ -808,10 +773,14 @@
+ 
+    public Packet<?> getAddEntityPacket() {
+       return new ClientboundAddEntityPacket(this);
+    }
+ 
++   public boolean isUnderWater() {
++      return this.status == Boat.Status.UNDER_WATER || this.status == Boat.Status.UNDER_FLOWING_WATER;
++   }
++
+    static {
+       DATA_ID_HURT = SynchedEntityData.defineId(Boat.class, EntityDataSerializers.INT);
+       DATA_ID_HURTDIR = SynchedEntityData.defineId(Boat.class, EntityDataSerializers.INT);
+       DATA_ID_DAMAGE = SynchedEntityData.defineId(Boat.class, EntityDataSerializers.FLOAT);
+       DATA_ID_TYPE = SynchedEntityData.defineId(Boat.class, EntityDataSerializers.INT);

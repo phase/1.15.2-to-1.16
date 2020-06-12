@@ -1,6 +1,6 @@
 --- net/minecraft/network/chat/FormattedText.java
 +++ net/minecraft/network/chat/FormattedText.java
-@@ -1,0 +1,96 @@
+@@ -1,0 +1,105 @@
 +package net.minecraft.network.chat;
 +
 +import com.google.common.collect.ImmutableList;
@@ -87,6 +87,15 @@
 +            return var5;
 +         }
 +      };
++   }
++
++   default String getString() {
++      StringBuilder var1 = new StringBuilder();
++      this.visit((var1x) -> {
++         var1.append(var1x);
++         return Optional.empty();
++      });
++      return var1.toString();
 +   }
 +
 +   public interface ContentConsumer<T> {

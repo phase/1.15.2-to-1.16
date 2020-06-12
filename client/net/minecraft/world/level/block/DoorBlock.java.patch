@@ -1,18 +1,19 @@
 --- net/minecraft/world/level/block/DoorBlock.java
 +++ net/minecraft/world/level/block/DoorBlock.java
-@@ -13,10 +13,11 @@
+@@ -12,11 +12,11 @@
+ import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
  import net.minecraft.world.level.LevelReader;
- import net.minecraft.world.level.block.entity.BlockEntity;
+-import net.minecraft.world.level.block.entity.BlockEntity;
 +import net.minecraft.world.level.block.state.BlockBehaviour;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.block.state.StateDefinition;
  import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  import net.minecraft.world.level.block.state.properties.BooleanProperty;
  import net.minecraft.world.level.block.state.properties.DirectionProperty;
-@@ -40,11 +41,11 @@
+@@ -40,11 +40,11 @@
     protected static final VoxelShape SOUTH_AABB;
     protected static final VoxelShape NORTH_AABB;
     protected static final VoxelShape WEST_AABB;
@@ -25,7 +26,7 @@
     }
  
     public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
-@@ -65,11 +66,11 @@
+@@ -65,32 +65,19 @@
     }
  
     public BlockState updateShape(BlockState var1, Direction var2, BlockState var3, LevelAccessor var4, BlockPos var5, BlockPos var6) {
@@ -38,25 +39,30 @@
        }
     }
  
-@@ -79,15 +80,15 @@
- 
+-   public void playerDestroy(Level var1, Player var2, BlockPos var3, BlockState var4, @Nullable BlockEntity var5, ItemStack var6) {
+-      super.playerDestroy(var1, var2, var3, Blocks.AIR.defaultBlockState(), var5, var6);
+-   }
+-
     public void playerWillDestroy(Level var1, BlockPos var2, BlockState var3, Player var4) {
-       DoubleBlockHalf var5 = (DoubleBlockHalf)var3.getValue(HALF);
-       BlockPos var6 = var5 == DoubleBlockHalf.LOWER ? var2.above() : var2.below();
-       BlockState var7 = var1.getBlockState(var6);
+-      DoubleBlockHalf var5 = (DoubleBlockHalf)var3.getValue(HALF);
+-      BlockPos var6 = var5 == DoubleBlockHalf.LOWER ? var2.above() : var2.below();
+-      BlockState var7 = var1.getBlockState(var6);
 -      if (var7.getBlock() == this && var7.getValue(HALF) != var5) {
-+      if (var7.is(this) && var7.getValue(HALF) != var5) {
-          var1.setBlock(var6, Blocks.AIR.defaultBlockState(), 35);
-          var1.levelEvent(var4, 2001, var6, Block.getId(var7));
-          ItemStack var8 = var4.getMainHandItem();
+-         var1.setBlock(var6, Blocks.AIR.defaultBlockState(), 35);
+-         var1.levelEvent(var4, 2001, var6, Block.getId(var7));
+-         ItemStack var8 = var4.getMainHandItem();
 -         if (!var1.isClientSide && !var4.isCreative() && var4.canDestroy(var7)) {
-+         if (!var1.isClientSide && !var4.isCreative() && var4.hasCorrectToolForDrops(var7)) {
-             Block.dropResources(var3, var1, var2, (BlockEntity)null, var4, var8);
-             Block.dropResources(var7, var1, var6, (BlockEntity)null, var4, var8);
-          }
+-            Block.dropResources(var3, var1, var2, (BlockEntity)null, var4, var8);
+-            Block.dropResources(var7, var1, var6, (BlockEntity)null, var4, var8);
+-         }
++      if (!var1.isClientSide && var4.isCreative()) {
++         DoublePlantBlock.preventCreativeDropFromBottomPart(var1, var2, var3, var4);
        }
  
-@@ -145,12 +146,12 @@
+       super.playerWillDestroy(var1, var2, var3, var4);
+    }
+ 
+@@ -145,12 +132,12 @@
        BlockPos var12 = var3.relative(var11);
        BlockState var13 = var2.getBlockState(var12);
        BlockPos var14 = var5.relative(var11);
@@ -71,7 +77,7 @@
              int var19 = var4.getStepX();
              int var20 = var4.getStepZ();
              Vec3 var21 = var1.getClickLocation();
-@@ -170,17 +171,17 @@
+@@ -170,17 +157,17 @@
           return InteractionResult.PASS;
        } else {
           var1 = (BlockState)var1.cycle(OPEN);
@@ -91,7 +97,7 @@
        }
     }
  
-@@ -197,15 +198,11 @@
+@@ -197,15 +184,11 @@
     }
  
     public boolean canSurvive(BlockState var1, LevelReader var2, BlockPos var3) {
@@ -108,7 +114,7 @@
     private void playSound(Level var1, BlockPos var2, boolean var3) {
        var1.levelEvent((Player)null, var3 ? this.getOpenSound() : this.getCloseSound(), var2, 0);
     }
-@@ -228,10 +225,18 @@
+@@ -228,10 +211,18 @@
  
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> var1) {
        var1.add(HALF, FACING, OPEN, HINGE, POWERED);

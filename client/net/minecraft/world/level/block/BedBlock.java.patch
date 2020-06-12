@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/BedBlock.java
 +++ net/minecraft/world/level/block/BedBlock.java
-@@ -1,9 +1,10 @@
+@@ -1,14 +1,14 @@
  package net.minecraft.world.level.block;
  
  import java.util.List;
@@ -10,8 +10,13 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.network.chat.TranslatableComponent;
- import net.minecraft.stats.Stats;
-@@ -19,23 +20,23 @@
+-import net.minecraft.stats.Stats;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
+@@ -19,23 +19,23 @@
  import net.minecraft.world.item.BlockPlaceContext;
  import net.minecraft.world.item.DyeColor;
  import net.minecraft.world.item.ItemStack;
@@ -37,7 +42,7 @@
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.BlockHitResult;
  import net.minecraft.world.phys.Vec3;
-@@ -55,20 +56,16 @@
+@@ -55,20 +55,16 @@
     protected static final VoxelShape SOUTH_SHAPE;
     protected static final VoxelShape WEST_SHAPE;
     protected static final VoxelShape EAST_SHAPE;
@@ -59,7 +64,7 @@
        BlockState var2 = var0.getBlockState(var1);
        return var2.getBlock() instanceof BedBlock ? (Direction)var2.getValue(FACING) : null;
     }
-@@ -78,44 +75,46 @@
+@@ -78,44 +74,46 @@
           return InteractionResult.CONSUME;
        } else {
           if (var1.getValue(PART) != BedPart.HEAD) {
@@ -126,7 +131,7 @@
        if (var3.isEmpty()) {
           return false;
        } else {
-@@ -146,11 +145,11 @@
+@@ -146,38 +144,31 @@
  
     }
  
@@ -139,20 +144,43 @@
        }
     }
  
-@@ -164,11 +163,11 @@
+    private static Direction getNeighbourDirection(BedPart var0, Direction var1) {
+       return var0 == BedPart.FOOT ? var1 : var1.getOpposite();
+    }
  
+-   public void playerDestroy(Level var1, Player var2, BlockPos var3, BlockState var4, @Nullable BlockEntity var5, ItemStack var6) {
+-      super.playerDestroy(var1, var2, var3, Blocks.AIR.defaultBlockState(), var5, var6);
+-   }
+-
     public void playerWillDestroy(Level var1, BlockPos var2, BlockState var3, Player var4) {
-       BedPart var5 = (BedPart)var3.getValue(PART);
-       BlockPos var6 = var2.relative(getNeighbourDirection(var5, (Direction)var3.getValue(FACING)));
-       BlockState var7 = var1.getBlockState(var6);
+-      BedPart var5 = (BedPart)var3.getValue(PART);
+-      BlockPos var6 = var2.relative(getNeighbourDirection(var5, (Direction)var3.getValue(FACING)));
+-      BlockState var7 = var1.getBlockState(var6);
 -      if (var7.getBlock() == this && var7.getValue(PART) != var5) {
-+      if (var7.is(this) && var7.getValue(PART) != var5) {
-          var1.setBlock(var6, Blocks.AIR.defaultBlockState(), 35);
-          var1.levelEvent(var4, 2001, var6, Block.getId(var7));
-          if (!var1.isClientSide && !var4.isCreative()) {
-             ItemStack var8 = var4.getMainHandItem();
-             dropResources(var3, var1, var2, (BlockEntity)null, var4, var8);
-@@ -241,16 +240,16 @@
+-         var1.setBlock(var6, Blocks.AIR.defaultBlockState(), 35);
+-         var1.levelEvent(var4, 2001, var6, Block.getId(var7));
+-         if (!var1.isClientSide && !var4.isCreative()) {
+-            ItemStack var8 = var4.getMainHandItem();
+-            dropResources(var3, var1, var2, (BlockEntity)null, var4, var8);
+-            dropResources(var7, var1, var6, (BlockEntity)null, var4, var8);
++      if (!var1.isClientSide && var4.isCreative()) {
++         BedPart var5 = (BedPart)var3.getValue(PART);
++         if (var5 == BedPart.FOOT) {
++            BlockPos var6 = var2.relative(getNeighbourDirection(var5, (Direction)var3.getValue(FACING)));
++            BlockState var7 = var1.getBlockState(var6);
++            if (var7.getBlock() == this && var7.getValue(PART) == BedPart.HEAD) {
++               var1.setBlock(var6, Blocks.AIR.defaultBlockState(), 35);
++               var1.levelEvent(var4, 2001, var6, Block.getId(var7));
++            }
+          }
+-
+-         var4.awardStat(Stats.BLOCK_MINED.get(this));
+       }
+ 
+       super.playerWillDestroy(var1, var2, var3, var4);
+    }
+ 
+@@ -241,16 +232,16 @@
        }
  
        return Optional.empty();
@@ -171,7 +199,7 @@
              var4.move(Direction.DOWN);
           }
  
-@@ -260,13 +259,21 @@
+@@ -260,13 +251,21 @@
           } else {
              double var6 = (double)var4.getY() + var5.max(Direction.Axis.Y) + 2.0E-7D;
              if ((double)var2.getY() - var6 > 2.0D) {

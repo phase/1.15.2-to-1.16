@@ -73,11 +73,13 @@
  import net.minecraft.world.entity.raid.Raid;
  import net.minecraft.world.entity.schedule.Activity;
  import net.minecraft.world.entity.schedule.Schedule;
-@@ -75,10 +79,11 @@
+@@ -74,11 +78,13 @@
+ import net.minecraft.world.item.Items;
  import net.minecraft.world.item.trading.MerchantOffer;
  import net.minecraft.world.item.trading.MerchantOffers;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.phys.AABB;
 +import org.apache.logging.log4j.Logger;
  
@@ -85,7 +87,7 @@
     private static final EntityDataAccessor<VillagerData> DATA_VILLAGER_DATA;
     public static final Map<Item, Integer> FOOD_POINTS;
     private static final Set<Item> WANTED_ITEMS;
-@@ -92,10 +97,11 @@
+@@ -92,10 +98,11 @@
     private long lastGossipDecayTime;
     private int villagerXp;
     private long lastRestockGameTime;
@@ -97,7 +99,7 @@
     public static final Map<MemoryModuleType<GlobalPos>, BiPredicate<Villager, PoiType>> POI_MEMORIES;
  
     public Villager(EntityType<? extends Villager> var1, Level var2) {
-@@ -107,73 +113,81 @@
+@@ -107,73 +114,81 @@
        this.gossips = new GossipContainer();
        ((GroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
        this.getNavigation().setCanFloat(true);
@@ -200,7 +202,7 @@
           if (this.updateMerchantTimer <= 0) {
              if (this.increaseProfessionLevelOnUpdate) {
                 this.increaseMerchantCareer();
-@@ -189,11 +203,11 @@
+@@ -189,11 +204,11 @@
           this.level.broadcastEntityEvent(this, (byte)14);
           this.lastTradedPlayer = null;
        }
@@ -213,7 +215,7 @@
           }
        }
  
-@@ -211,38 +225,34 @@
+@@ -211,38 +226,34 @@
        }
  
        this.maybeDecayGossip();
@@ -260,7 +262,7 @@
        } else {
           return super.mobInteract(var1, var2);
        }
-@@ -297,14 +307,10 @@
+@@ -297,14 +308,10 @@
        while(var1.hasNext()) {
           MerchantOffer var2 = (MerchantOffer)var1.next();
           var2.resetUses();
@@ -275,7 +277,7 @@
     }
  
     private boolean needsToRestock() {
-@@ -404,35 +410,47 @@
+@@ -404,35 +411,47 @@
        this.entityData.define(DATA_VILLAGER_DATA, new VillagerData(VillagerType.PLAINS, VillagerProfession.NONE, 1));
     }
  
@@ -327,7 +329,7 @@
        }
  
        this.lastRestockGameTime = var1.getLong("LastRestock");
-@@ -441,10 +459,14 @@
+@@ -441,10 +460,14 @@
        if (this.level instanceof ServerLevel) {
           this.refreshBrain((ServerLevel)this.level);
        }
@@ -342,7 +344,7 @@
     public boolean removeWhenFarAway(double var1) {
        return false;
     }
-@@ -544,18 +566,20 @@
+@@ -544,18 +567,20 @@
     public void releasePoi(MemoryModuleType<GlobalPos> var1) {
        if (this.level instanceof ServerLevel) {
           MinecraftServer var2 = ((ServerLevel)this.level).getServer();
@@ -370,7 +372,7 @@
     }
  
     public boolean canBreed() {
-@@ -617,100 +641,91 @@
+@@ -617,100 +642,91 @@
        this.setVillagerData(this.getVillagerData().setLevel(this.getVillagerData().getLevel() + 1));
        this.updateTrades();
     }
@@ -506,7 +508,7 @@
     public boolean hasExcessFood() {
        return this.countFoodPointsInInventory() >= 24;
     }
-@@ -724,28 +739,12 @@
+@@ -724,28 +740,12 @@
        return FOOD_POINTS.entrySet().stream().mapToInt((var1x) -> {
           return var1.countItem((Item)var1x.getKey()) * (Integer)var1x.getValue();
        }).sum();
@@ -536,7 +538,7 @@
     protected void updateTrades() {
        VillagerData var1 = this.getVillagerData();
        Int2ObjectMap var2 = (Int2ObjectMap)VillagerTrades.TRADES.get(var1.getProfession());
-@@ -808,25 +807,20 @@
+@@ -808,48 +808,54 @@
           return var1 - var4 <= 600L;
        }
     }
@@ -565,8 +567,56 @@
        for(int var2 = 0; var2 < 10; ++var2) {
           double var3 = (double)(this.level.random.nextInt(16) - 8);
           double var5 = (double)(this.level.random.nextInt(16) - 8);
-          double var7 = 6.0D;
-@@ -894,38 +888,41 @@
+-         double var7 = 6.0D;
++         BlockPos var7 = this.findSpawnPositionForGolemInColumn(var1, var3, var5);
++         if (var7 != null) {
++            IronGolem var8 = (IronGolem)EntityType.IRON_GOLEM.create(this.level, (CompoundTag)null, (Component)null, (Player)null, var7, MobSpawnType.MOB_SUMMONED, false, false);
++            if (var8 != null) {
++               if (var8.checkSpawnRules(this.level, MobSpawnType.MOB_SUMMONED) && var8.checkSpawnObstruction(this.level)) {
++                  this.level.addFreshEntity(var8);
++                  return var8;
++               }
+ 
+-         for(int var9 = 0; var9 >= -12; --var9) {
+-            BlockPos var10 = var1.offset(var3, var7 + (double)var9, var5);
+-            if ((this.level.getBlockState(var10).isAir() || this.level.getBlockState(var10).getMaterial().isLiquid()) && this.level.getBlockState(var10.below()).getMaterial().isSolidBlocking()) {
+-               var7 += (double)var9;
+-               break;
++               var8.remove();
+             }
+          }
++      }
+ 
+-         BlockPos var11 = var1.offset(var3, var7, var5);
+-         IronGolem var12 = (IronGolem)EntityType.IRON_GOLEM.create(this.level, (CompoundTag)null, (Component)null, (Player)null, var11, MobSpawnType.MOB_SUMMONED, false, false);
+-         if (var12 != null) {
+-            if (var12.checkSpawnRules(this.level, MobSpawnType.MOB_SUMMONED) && var12.checkSpawnObstruction(this.level)) {
+-               this.level.addFreshEntity(var12);
+-               return var12;
+-            }
++      return null;
++   }
+ 
+-            var12.remove();
++   @Nullable
++   private BlockPos findSpawnPositionForGolemInColumn(BlockPos var1, double var2, double var4) {
++      boolean var6 = true;
++      BlockPos var7 = var1.offset(var2, 6.0D, var4);
++      BlockState var8 = this.level.getBlockState(var7);
++
++      for(int var9 = 6; var9 >= -6; --var9) {
++         BlockPos var10 = var7;
++         BlockState var11 = var8;
++         var7 = var7.below();
++         var8 = this.level.getBlockState(var7);
++         if ((var11.isAir() || var11.getMaterial().isLiquid()) && var8.getMaterial().isSolidBlocking()) {
++            return var10;
+          }
+       }
+ 
+       return null;
+    }
+@@ -894,38 +900,41 @@
        DebugPackets.sendEntityBrain(this);
     }
  

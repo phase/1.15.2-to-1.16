@@ -1,6 +1,6 @@
 --- net/minecraft/network/chat/Component.java
 +++ net/minecraft/network/chat/Component.java
-@@ -17,167 +17,78 @@
+@@ -17,167 +17,73 @@
  import java.io.StringReader;
  import java.lang.reflect.Field;
  import java.lang.reflect.Type;
@@ -32,14 +32,12 @@
     String getContents();
  
     default String getString() {
-       StringBuilder var1 = new StringBuilder();
+-      StringBuilder var1 = new StringBuilder();
 -      this.stream().forEach((var1x) -> {
 -         var1.append(var1x.getContents());
-+      this.visit((var1x) -> {
-+         var1.append(var1x);
-+         return Optional.empty();
-       });
-       return var1.toString();
+-      });
+-      return var1.toString();
++      return FormattedText.super.getString();
     }
  
     default String getString(int var1) {
@@ -201,7 +199,7 @@
           var0.disableHtmlEscaping();
           var0.registerTypeHierarchyAdapter(Component.class, new Component.Serializer());
           var0.registerTypeHierarchyAdapter(Style.class, new Style.Serializer());
-@@ -206,26 +117,26 @@
+@@ -206,26 +112,26 @@
        });
  
        public Serializer() {
@@ -232,25 +230,7 @@
  
                 return var19;
              } else {
-@@ -239,58 +150,55 @@
-             } else {
-                String var6;
-                if (var4.has("translate")) {
-                   var6 = GsonHelper.getAsString(var4, "translate");
-                   if (var4.has("with")) {
--                     JsonArray var7 = GsonHelper.getAsJsonArray(var4, "with");
--                     Object[] var8 = new Object[var7.size()];
-+                     JsonArray var15 = GsonHelper.getAsJsonArray(var4, "with");
-+                     Object[] var8 = new Object[var15.size()];
- 
-                      for(int var9 = 0; var9 < var8.length; ++var9) {
--                        var8[var9] = this.deserialize(var7.get(var9), var2, var3);
-+                        var8[var9] = this.deserialize(var15.get(var9), var2, var3);
-                         if (var8[var9] instanceof TextComponent) {
-                            TextComponent var10 = (TextComponent)var8[var9];
-                            if (var10.getStyle().isEmpty() && var10.getSiblings().isEmpty()) {
-                               var8[var9] = var10.getText();
-                            }
+@@ -254,22 +160,19 @@
                          }
                       }
  
@@ -274,32 +254,7 @@
                 } else if (var4.has("keybind")) {
                    var5 = new KeybindComponent(GsonHelper.getAsString(var4, "keybind"));
                 } else {
-                   if (!var4.has("nbt")) {
-                      throw new JsonParseException("Don't know how to turn " + var1 + " into a Component");
-                   }
- 
-                   var6 = GsonHelper.getAsString(var4, "nbt");
--                  boolean var15 = GsonHelper.getAsBoolean(var4, "interpret", false);
-+                  boolean var7 = GsonHelper.getAsBoolean(var4, "interpret", false);
-                   if (var4.has("block")) {
--                     var5 = new NbtComponent.BlockNbtComponent(var6, var15, GsonHelper.getAsString(var4, "block"));
-+                     var5 = new NbtComponent.BlockNbtComponent(var6, var7, GsonHelper.getAsString(var4, "block"));
-                   } else if (var4.has("entity")) {
--                     var5 = new NbtComponent.EntityNbtComponent(var6, var15, GsonHelper.getAsString(var4, "entity"));
-+                     var5 = new NbtComponent.EntityNbtComponent(var6, var7, GsonHelper.getAsString(var4, "entity"));
-                   } else {
-                      if (!var4.has("storage")) {
-                         throw new JsonParseException("Don't know how to turn " + var1 + " into a Component");
-                      }
- 
--                     var5 = new NbtComponent.StorageNbtComponent(var6, var15, new ResourceLocation(GsonHelper.getAsString(var4, "storage")));
-+                     var5 = new NbtComponent.StorageNbtComponent(var6, var7, new ResourceLocation(GsonHelper.getAsString(var4, "storage")));
-                   }
-                }
-             }
- 
-             if (var4.has("extra")) {
-@@ -298,16 +206,16 @@
+@@ -298,16 +201,16 @@
                 if (var13.size() <= 0) {
                    throw new JsonParseException("Unexpected empty array of components");
                 }
@@ -319,7 +274,7 @@
  
        private void serializeStyle(Style var1, JsonObject var2, JsonSerializationContext var3) {
           JsonElement var4 = var3.serialize(var1);
-@@ -365,11 +273,10 @@
+@@ -365,11 +268,10 @@
           } else if (var1 instanceof ScoreComponent) {
              ScoreComponent var12 = (ScoreComponent)var1;
              JsonObject var16 = new JsonObject();
@@ -331,7 +286,7 @@
              SelectorComponent var13 = (SelectorComponent)var1;
              var4.addProperty("selector", var13.getPattern());
           } else if (var1 instanceof KeybindComponent) {
-@@ -409,29 +316,29 @@
+@@ -409,29 +311,29 @@
        public static JsonElement toJsonTree(Component var0) {
           return GSON.toJsonTree(var0);
        }

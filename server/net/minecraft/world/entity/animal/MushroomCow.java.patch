@@ -60,7 +60,7 @@
     public void thunderHit(LightningBolt var1) {
        UUID var2 = var1.getUUID();
        if (!var2.equals(this.lastLightningBoltUUID)) {
-@@ -62,101 +68,102 @@
+@@ -62,14 +68,13 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_TYPE, MushroomCow.MushroomType.RED.type);
@@ -71,23 +71,16 @@
        ItemStack var3 = var1.getItemInHand(var2);
 -      if (var3.getItem() == Items.BOWL && !this.isBaby() && !var1.abilities.instabuild) {
 -         var3.shrink(1);
--         boolean var10 = false;
--         ItemStack var9;
 +      if (var3.getItem() == Items.BOWL && !this.isBaby()) {
-+         boolean var9 = false;
-+         ItemStack var8;
+          boolean var10 = false;
+          ItemStack var9;
           if (this.effect != null) {
--            var10 = true;
--            var9 = new ItemStack(Items.SUSPICIOUS_STEW);
--            SuspiciousStewItem.saveMobEffect(var9, this.effect, this.effectDuration);
-+            var9 = true;
-+            var8 = new ItemStack(Items.SUSPICIOUS_STEW);
-+            SuspiciousStewItem.saveMobEffect(var8, this.effect, this.effectDuration);
-             this.effect = null;
+             var10 = true;
+             var9 = new ItemStack(Items.SUSPICIOUS_STEW);
+@@ -78,85 +83,88 @@
              this.effectDuration = 0;
           } else {
--            var9 = new ItemStack(Items.MUSHROOM_STEW);
-+            var8 = new ItemStack(Items.MUSHROOM_STEW);
+             var9 = new ItemStack(Items.MUSHROOM_STEW);
           }
  
 -         if (var3.isEmpty()) {
@@ -96,16 +89,19 @@
 -            var1.drop(var9, false);
 -         }
 -
-+         ItemUtils.createBucketResult(var3, var1, var8);
-          SoundEvent var6;
--         if (var10) {
-+         if (var9) {
-             var6 = SoundEvents.MOOSHROOM_MILK_SUSPICIOUSLY;
+-         SoundEvent var6;
++         ItemStack var6 = ItemUtils.createBucketResult(var3, var1, var9);
++         var1.setItemInHand(var2, var6);
++         SoundEvent var7;
+          if (var10) {
+-            var6 = SoundEvents.MOOSHROOM_MILK_SUSPICIOUSLY;
++            var7 = SoundEvents.MOOSHROOM_MILK_SUSPICIOUSLY;
           } else {
-             var6 = SoundEvents.MOOSHROOM_MILK;
+-            var6 = SoundEvents.MOOSHROOM_MILK;
++            var7 = SoundEvents.MOOSHROOM_MILK;
           }
  
-          this.playSound(var6, 1.0F, 1.0F);
+-         this.playSound(var6, 1.0F, 1.0F);
 -         return true;
 -      } else {
 -         int var5;
@@ -121,6 +117,7 @@
 -                  var8.setCustomName(this.getCustomName());
 -                  var8.setCustomNameVisible(this.isCustomNameVisible());
 -               }
++         this.playSound(var7, 1.0F, 1.0F);
 +         return InteractionResult.sidedSuccess(this.level.isClientSide);
 +      } else if (var3.getItem() == Items.SHEARS && this.readyForShearing()) {
 +         this.shear(SoundSource.PLAYERS);
@@ -140,7 +137,7 @@
 +               this.level.addParticle(ParticleTypes.SMOKE, this.getX() + this.random.nextDouble() / 2.0D, this.getY(0.5D), this.getZ() + this.random.nextDouble() / 2.0D, 0.0D, this.random.nextDouble() / 5.0D, 0.0D);
 +            }
 +         } else {
-+            Pair var7 = this.getEffectFromItemStack(var3);
++            Pair var8 = this.getEffectFromItemStack(var3);
 +            if (!var1.abilities.instabuild) {
 +               var3.shrink(1);
 +            }
@@ -154,8 +151,8 @@
 -               for(var5 = 0; var5 < 5; ++var5) {
 -                  this.level.addFreshEntity(new ItemEntity(this.level, this.getX(), this.getY(1.0D), this.getZ(), new ItemStack(this.getMushroomType().blockState.getBlock())));
 -               }
-+            this.effect = (MobEffect)var7.getLeft();
-+            this.effectDuration = (Integer)var7.getRight();
++            this.effect = (MobEffect)var8.getLeft();
++            this.effectDuration = (Integer)var8.getRight();
 +            this.playSound(SoundEvents.MOOSHROOM_EAT, 2.0F, 1.0F);
 +         }
  

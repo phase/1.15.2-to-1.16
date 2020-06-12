@@ -40,7 +40,7 @@
 +
 +      Property var4;
 +      for(Iterator var3 = var1.iterator(); var3.hasNext(); var2 = var2.flatMap((var1x) -> {
-+         Stream var10000 = PropertyValue.getAll(var4);
++         Stream var10000 = var4.getAllValues();
 +         var1x.getClass();
 +         return var10000.map(var1x::extend);
 +      })) {
@@ -102,7 +102,7 @@
 +      }
 +
 +      public PropertyDispatch.C5<T1, T2, T3, T4, T5> select(T1 var1, T2 var2, T3 var3, T4 var4, T5 var5, List<Variant> var6) {
-+         Selector var7 = Selector.of(new PropertyValue(this.property1, var1), new PropertyValue(this.property2, var2), new PropertyValue(this.property3, var3), new PropertyValue(this.property4, var4), new PropertyValue(this.property5, var5));
++         Selector var7 = Selector.of(this.property1.value(var1), this.property2.value(var2), this.property3.value(var3), this.property4.value(var4), this.property5.value(var5));
 +         this.putValue(var7, var6);
 +         return this;
 +      }
@@ -130,7 +130,7 @@
 +      }
 +
 +      public PropertyDispatch.C4<T1, T2, T3, T4> select(T1 var1, T2 var2, T3 var3, T4 var4, List<Variant> var5) {
-+         Selector var6 = Selector.of(new PropertyValue(this.property1, var1), new PropertyValue(this.property2, var2), new PropertyValue(this.property3, var3), new PropertyValue(this.property4, var4));
++         Selector var6 = Selector.of(this.property1.value(var1), this.property2.value(var2), this.property3.value(var3), this.property4.value(var4));
 +         this.putValue(var6, var5);
 +         return this;
 +      }
@@ -156,7 +156,7 @@
 +      }
 +
 +      public PropertyDispatch.C3<T1, T2, T3> select(T1 var1, T2 var2, T3 var3, List<Variant> var4) {
-+         Selector var5 = Selector.of(new PropertyValue(this.property1, var1), new PropertyValue(this.property2, var2), new PropertyValue(this.property3, var3));
++         Selector var5 = Selector.of(this.property1.value(var1), this.property2.value(var2), this.property3.value(var3));
 +         this.putValue(var5, var4);
 +         return this;
 +      }
@@ -191,7 +191,7 @@
 +      }
 +
 +      public PropertyDispatch.C2<T1, T2> select(T1 var1, T2 var2, List<Variant> var3) {
-+         Selector var4 = Selector.of(new PropertyValue(this.property1, var1), new PropertyValue(this.property2, var2));
++         Selector var4 = Selector.of(this.property1.value(var1), this.property2.value(var2));
 +         this.putValue(var4, var3);
 +         return this;
 +      }
@@ -231,7 +231,7 @@
 +      }
 +
 +      public PropertyDispatch.C1<T1> select(T1 var1, List<Variant> var2) {
-+         Selector var3 = Selector.of(new PropertyValue(this.property1, var1));
++         Selector var3 = Selector.of(this.property1.value(var1));
 +         this.putValue(var3, var2);
 +         return this;
 +      }

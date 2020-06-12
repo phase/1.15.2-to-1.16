@@ -56,7 +56,7 @@
  import net.minecraft.util.datafix.fixes.ItemBannerColorFix;
  import net.minecraft.util.datafix.fixes.ItemCustomNameToComponentFix;
  import net.minecraft.util.datafix.fixes.ItemIdFix;
-@@ -78,42 +87,58 @@
+@@ -78,42 +87,59 @@
  import net.minecraft.util.datafix.fixes.ItemSpawnEggFix;
  import net.minecraft.util.datafix.fixes.ItemStackEnchantmentNamesFix;
  import net.minecraft.util.datafix.fixes.ItemStackMapIdFix;
@@ -86,6 +86,7 @@
  import net.minecraft.util.datafix.fixes.OptionsKeyLwjgl3Fix;
  import net.minecraft.util.datafix.fixes.OptionsKeyTranslationFix;
  import net.minecraft.util.datafix.fixes.OptionsLowerCaseLanguageFix;
++import net.minecraft.util.datafix.fixes.OptionsRenameFieldFix;
 +import net.minecraft.util.datafix.fixes.PlayerUUIDFix;
  import net.minecraft.util.datafix.fixes.RecipesFix;
  import net.minecraft.util.datafix.fixes.RecipesRenameFix;
@@ -115,7 +116,7 @@
  import net.minecraft.util.datafix.schemas.NamespacedSchema;
  import net.minecraft.util.datafix.schemas.V100;
  import net.minecraft.util.datafix.schemas.V102;
-@@ -146,10 +171,17 @@
+@@ -146,10 +172,17 @@
  import net.minecraft.util.datafix.schemas.V1920;
  import net.minecraft.util.datafix.schemas.V1928;
  import net.minecraft.util.datafix.schemas.V1929;
@@ -133,7 +134,7 @@
  import net.minecraft.util.datafix.schemas.V701;
  import net.minecraft.util.datafix.schemas.V702;
  import net.minecraft.util.datafix.schemas.V703;
-@@ -164,11 +196,11 @@
+@@ -164,11 +197,11 @@
     private static final DataFixer DATA_FIXER = createFixerUpper();
  
     private static DataFixer createFixerUpper() {
@@ -146,7 +147,7 @@
     public static DataFixer getDataFixer() {
        return DATA_FIXER;
     }
-@@ -375,111 +407,178 @@
+@@ -375,111 +408,179 @@
        var0.addFixer(new AdvancementsFix(var66, false));
        Schema var67 = var0.addSchema(1502, SAME_NAMESPACED);
        var0.addFixer(new RecipesFix(var67, false));
@@ -405,5 +406,6 @@
 +      var0.addFixer(new BiomeFix(var122, false));
 +      Schema var123 = var0.addSchema(2558, SAME_NAMESPACED);
 +      var0.addFixer(new MissingDimensionFix(var123, false));
++      var0.addFixer(new OptionsRenameFieldFix(var123, false, "Rename swapHands setting", "key_key.swapHands", "key_key.swapOffhand"));
     }
  }

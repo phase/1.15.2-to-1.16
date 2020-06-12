@@ -509,7 +509,7 @@
     }
  
     public BlockPathTypes getBlockPathTypes(BlockGetter var1, int var2, int var3, int var4, int var5, int var6, int var7, boolean var8, boolean var9, EnumSet<BlockPathTypes> var10, BlockPathTypes var11, BlockPos var12) {
-@@ -335,146 +394,143 @@
+@@ -335,146 +394,147 @@
        if (var5 == BlockPathTypes.DOOR_OPEN && !var3) {
           var5 = BlockPathTypes.BLOCKED;
        }
@@ -632,6 +632,10 @@
 +                  if (var0.getFluidState(var1).is(FluidTags.WATER)) {
 +                     return BlockPathTypes.WATER_BORDER;
 +                  }
++
++                  if (var0.getFluidState(var1).is(FluidTags.LAVA)) {
++                     return BlockPathTypes.LAVA;
++                  }
                 }
              }
           }
@@ -728,6 +732,6 @@
     }
 +
 +   private static boolean isBurningBlock(BlockState var0) {
-+      return var0.is(BlockTags.FIRE) || var0.is(Blocks.LAVA) || var0.is(Blocks.MAGMA_BLOCK) || CampfireBlock.isLitCampfire(var0);
++      return var0.is(BlockTags.FIRE) || var0.is(Blocks.MAGMA_BLOCK) || CampfireBlock.isLitCampfire(var0);
 +   }
  }

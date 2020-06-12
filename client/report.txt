@@ -343,6 +343,7 @@
 * net/minecraft/client/renderer/entity/AbstractZombieRenderer.java
 * net/minecraft/client/renderer/entity/ArmorStandRenderer.java
 * net/minecraft/client/renderer/entity/BlazeRenderer.java
+* net/minecraft/client/renderer/entity/BoatRenderer.java
 * net/minecraft/client/renderer/entity/CatRenderer.java
 * net/minecraft/client/renderer/entity/DragonFireballRenderer.java
 * net/minecraft/client/renderer/entity/DrownedRenderer.java
@@ -378,7 +379,6 @@
 * net/minecraft/client/renderer/entity/layers/HumanoidArmorLayer.java
 * net/minecraft/client/renderer/entity/layers/ShulkerHeadLayer.java
 * net/minecraft/client/renderer/entity/player/PlayerRenderer.java
-* net/minecraft/client/renderer/texture/HttpTexture.java
 * net/minecraft/client/renderer/texture/TextureManager.java
 * net/minecraft/client/resources/ClientPackSource.java
 * net/minecraft/client/resources/language/I18n.java
@@ -650,7 +650,6 @@
 * net/minecraft/server/level/ThreadedLevelLightEngine.java
 * net/minecraft/server/level/WorldGenRegion.java
 * net/minecraft/server/level/WorldGenTickList.java
-* net/minecraft/server/network/LegacyQueryHandler.java
 * net/minecraft/server/network/ServerConnectionListener.java
 * net/minecraft/server/network/ServerGamePacketListenerImpl.java
 * net/minecraft/server/network/ServerHandshakePacketListenerImpl.java
@@ -935,6 +934,7 @@
 * net/minecraft/world/entity/ai/sensing/PlayerSensor.java
 * net/minecraft/world/entity/ai/sensing/SecondaryPoiSensor.java
 * net/minecraft/world/entity/ai/sensing/SensorType.java
+* net/minecraft/world/entity/ai/sensing/VillagerHostilesSensor.java
 * net/minecraft/world/entity/ai/util/RandomPos.java
 * net/minecraft/world/entity/ai/village/VillageSiege.java
 * net/minecraft/world/entity/ai/village/poi/PoiManager.java
@@ -1914,6 +1914,7 @@
 + net/minecraft/client/gui/components/TickableWidget.java
 + net/minecraft/client/gui/screens/DataPackSelectScreen.java
 + net/minecraft/client/gui/screens/DatapackLoadFailureScreen.java
++ net/minecraft/client/gui/screens/PopupScreen.java
 + net/minecraft/client/gui/screens/ResourcePackSelectScreen.java
 + net/minecraft/client/gui/screens/debug/GameModeSwitcherScreen.java
 + net/minecraft/client/gui/screens/inventory/ItemCombinerScreen.java
@@ -1935,6 +1936,7 @@
 + net/minecraft/client/particle/SoulParticle.java
 + net/minecraft/client/particle/WhiteAshParticle.java
 + net/minecraft/client/renderer/DimensionSpecialEffects.java
++ net/minecraft/client/renderer/GpuWarnlistManager.java
 + net/minecraft/client/renderer/debug/BrainDebugRenderer.java
 + net/minecraft/client/renderer/debug/VillageSectionsDebugRenderer.java
 + net/minecraft/client/renderer/entity/HoglinRenderer.java
@@ -1968,7 +1970,6 @@
 + net/minecraft/data/models/blockstates/MultiPartGenerator.java
 + net/minecraft/data/models/blockstates/MultiVariantGenerator.java
 + net/minecraft/data/models/blockstates/PropertyDispatch.java
-+ net/minecraft/data/models/blockstates/PropertyValue.java
 + net/minecraft/data/models/blockstates/Selector.java
 + net/minecraft/data/models/blockstates/Variant.java
 + net/minecraft/data/models/blockstates/VariantProperties.java
@@ -2039,6 +2040,7 @@
 + net/minecraft/util/datafix/fixes/MissingDimensionFix.java
 + net/minecraft/util/datafix/fixes/OminousBannerBlockEntityRenameFix.java
 + net/minecraft/util/datafix/fixes/OminousBannerRenameFix.java
++ net/minecraft/util/datafix/fixes/OptionsRenameFieldFix.java
 + net/minecraft/util/datafix/fixes/PlayerUUIDFix.java
 + net/minecraft/util/datafix/fixes/RedstoneWireConnectionsFix.java
 + net/minecraft/util/datafix/fixes/RenameBiomesFix.java

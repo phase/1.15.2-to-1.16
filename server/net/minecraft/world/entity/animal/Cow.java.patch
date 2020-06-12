@@ -49,7 +49,7 @@
     protected SoundEvent getAmbientSound() {
        return SoundEvents.COW_AMBIENT;
     }
-@@ -65,22 +67,16 @@
+@@ -65,22 +67,17 @@
  
     protected float getSoundVolume() {
        return 0.4F;
@@ -69,7 +69,8 @@
 -         }
 -
 -         return true;
-+         ItemUtils.createBucketResult(var3, var1, Items.MILK_BUCKET.getDefaultInstance());
++         ItemStack var4 = ItemUtils.createBucketResult(var3, var1, Items.MILK_BUCKET.getDefaultInstance());
++         var1.setItemInHand(var2, var4);
 +         return InteractionResult.sidedSuccess(this.level.isClientSide);
        } else {
           return super.mobInteract(var1, var2);

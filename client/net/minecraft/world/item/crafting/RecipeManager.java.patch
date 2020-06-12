@@ -36,3 +36,20 @@
              })).put(var7, var8);
           } catch (IllegalArgumentException | JsonParseException var9) {
              LOGGER.error("Parsing error loading recipe {}", var7, var9);
+@@ -73,10 +74,16 @@
+       return this.byType(var1).values().stream().flatMap((var3x) -> {
+          return Util.toStream(var1.tryMatch(var3x, var3, var2));
+       }).findFirst();
+    }
+ 
++   public <C extends Container, T extends Recipe<C>> List<T> getAllRecipesFor(RecipeType<T> var1) {
++      return (List)this.byType(var1).values().stream().map((var0) -> {
++         return var0;
++      }).collect(Collectors.toList());
++   }
++
+    public <C extends Container, T extends Recipe<C>> List<T> getRecipesFor(RecipeType<T> var1, C var2, Level var3) {
+       return (List)this.byType(var1).values().stream().flatMap((var3x) -> {
+          return Util.toStream(var1.tryMatch(var3x, var3, var2));
+       }).sorted(Comparator.comparing((var0) -> {
+          return var0.getResultItem().getDescriptionId();

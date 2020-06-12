@@ -71,7 +71,7 @@
        }
  
     }
-@@ -143,10 +147,26 @@
+@@ -143,10 +147,30 @@
        Slot var3 = (Slot)this.slots.get(var2);
        return var3 != null ? var3.getItem() : ItemStack.EMPTY;
     }
@@ -82,9 +82,13 @@
 +      } catch (Exception var8) {
 +         CrashReport var6 = CrashReport.forThrowable(var8, "Container click");
 +         CrashReportCategory var7 = var6.addCategory("Click info");
-+         var7.setDetail("Menu", () -> {
++         var7.setDetail("Menu Type", () -> {
 +            return this.menuType != null ? Registry.MENU.getKey(this.menuType).toString() : "<no type>";
 +         });
++         var7.setDetail("Menu Class", () -> {
++            return this.getClass().getCanonicalName();
++         });
++         var7.setDetail("Slot Count", (Object)this.slots.size());
 +         var7.setDetail("Slot", (Object)var1);
 +         var7.setDetail("Button", (Object)var2);
 +         var7.setDetail("Type", (Object)var3);
@@ -98,7 +102,7 @@
        ItemStack var8;
        ItemStack var9;
        int var15;
-@@ -176,22 +196,22 @@
+@@ -176,22 +200,22 @@
              if (!this.quickcraftSlots.isEmpty()) {
                 var8 = var6.getCarried().copy();
                 var18 = var6.getCarried().getCount();
@@ -123,7 +127,7 @@
                                var20 = (Slot)var23.next();
                                var21 = var6.getCarried();
                             } while(var20 == null);
-@@ -221,184 +241,184 @@
+@@ -221,184 +245,184 @@
        } else if (this.quickcraftStatus != 0) {
           this.resetQuickCraft();
        } else {

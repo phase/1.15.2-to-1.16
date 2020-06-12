@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
 +++ net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings.java
-@@ -1,489 +1,242 @@
+@@ -1,489 +1,256 @@
  package net.minecraft.world.level.levelgen.flat;
  
 -import com.google.common.base.Splitter;
@@ -75,10 +75,16 @@
 +   public static final Codec<FlatLevelGeneratorSettings> CODEC = RecordCodecBuilder.create((var0) -> {
 +      RecordCodecBuilder var10001 = StructureSettings.CODEC.fieldOf("structures").forGetter(FlatLevelGeneratorSettings::structureSettings);
 +      RecordCodecBuilder var10002 = FlatLayerInfo.CODEC.listOf().fieldOf("layers").forGetter(FlatLevelGeneratorSettings::getLayersInfo);
-+      MapCodec var10003 = Registry.BIOME.fieldOf("biome");
-+      Logger var10005 = LOGGER;
-+      var10005.getClass();
-+      return var0.group(var10001, var10002, Codecs.withDefault(var10003, Util.prefix("Unknown biome, defaulting to plains", var10005::error), () -> {
++      RecordCodecBuilder var10003 = Codec.BOOL.fieldOf("lakes").withDefault(false).forGetter((var0x) -> {
++         return var0x.addLakes;
++      });
++      RecordCodecBuilder var10004 = Codec.BOOL.fieldOf("features").withDefault(false).forGetter((var0x) -> {
++         return var0x.decoration;
++      });
++      MapCodec var10005 = Registry.BIOME.fieldOf("biome");
++      Logger var10007 = LOGGER;
++      var10007.getClass();
++      return var0.group(var10001, var10002, var10003, var10004, Codecs.withDefault(var10005, Util.prefix("Unknown biome, defaulting to plains", var10007::error), () -> {
 +         return Biomes.PLAINS;
 +      }).forGetter((var0x) -> {
 +         return var0x.biome;
@@ -108,12 +114,12 @@
 +   private boolean addLakes;
  
 -   public FlatLevelGeneratorSettings() {
-+   public FlatLevelGeneratorSettings(StructureSettings var1, List<FlatLayerInfo> var2, Biome var3) {
+-   }
++   public FlatLevelGeneratorSettings(StructureSettings var1, List<FlatLayerInfo> var2, boolean var3, boolean var4, Biome var5) {
 +      this(var1);
-+      this.layersInfo.addAll(var2);
-+      this.updateLayers();
-+      this.biome = var3;
-    }
++      if (var3) {
++         this.setAddLakes();
++      }
  
 -   @Nullable
 -   public static Block byString(String var0) {
@@ -123,7 +129,20 @@
 -      } catch (IllegalArgumentException var2) {
 -         LOGGER.warn("Invalid blockstate: {}", var0, var2);
 -         return null;
--      }
++      if (var4) {
++         this.setDecoration();
+       }
+-   }
+ 
+-   public Biome getBiome() {
+-      return this.biome;
++      this.layersInfo.addAll(var2);
++      this.updateLayers();
++      this.biome = var5;
+    }
+ 
+-   public void setBiome(Biome var1) {
+-      this.biome = var1;
 +   public FlatLevelGeneratorSettings(StructureSettings var1) {
 +      this.layersInfo = Lists.newArrayList();
 +      this.layers = new BlockState[256];
@@ -132,35 +151,27 @@
 +      this.structureSettings = var1;
     }
  
--   public Biome getBiome() {
--      return this.biome;
+-   public Map<String, Map<String, String>> getStructuresOptions() {
+-      return this.structuresOptions;
 +   public FlatLevelGeneratorSettings withStructureSettings(StructureSettings var1) {
 +      return this.withLayers(this.layersInfo, var1);
     }
  
--   public void setBiome(Biome var1) {
--      this.biome = var1;
+-   public List<FlatLayerInfo> getLayersInfo() {
+-      return this.layersInfo;
 -   }
 +   public FlatLevelGeneratorSettings withLayers(List<FlatLayerInfo> var1, StructureSettings var2) {
 +      FlatLevelGeneratorSettings var3 = new FlatLevelGeneratorSettings(var2);
 +      Iterator var4 = var1.iterator();
  
--   public Map<String, Map<String, String>> getStructuresOptions() {
--      return this.structuresOptions;
--   }
+-   public void updateLayers() {
+-      int var1 = 0;
 +      while(var4.hasNext()) {
 +         FlatLayerInfo var5 = (FlatLayerInfo)var4.next();
 +         var3.layersInfo.add(new FlatLayerInfo(var5.getHeight(), var5.getBlockState().getBlock()));
 +         var3.updateLayers();
 +      }
  
--   public List<FlatLayerInfo> getLayersInfo() {
--      return this.layersInfo;
--   }
--
--   public void updateLayers() {
--      int var1 = 0;
--
 -      Iterator var2;
 -      FlatLayerInfo var3;
 -      for(var2 = this.layersInfo.iterator(); var2.hasNext(); var1 += var3.getHeight()) {

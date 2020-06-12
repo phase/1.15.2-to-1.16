@@ -74,7 +74,7 @@
 +            }
 +         }
 +
-+         return canBeCharged(var1) ? InteractionResult.PASS : InteractionResult.CONSUME;
++         return InteractionResult.CONSUME;
 +      }
 +   }
 +

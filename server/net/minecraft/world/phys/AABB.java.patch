@@ -15,3 +15,14 @@
     }
  
     public double max(Direction.Axis var1) {
+@@ -309,6 +313,10 @@
+    }
+ 
+    public Vec3 getCenter() {
+       return new Vec3(Mth.lerp(0.5D, this.minX, this.maxX), Mth.lerp(0.5D, this.minY, this.maxY), Mth.lerp(0.5D, this.minZ, this.maxZ));
+    }
++
++   public static AABB ofSize(double var0, double var2, double var4) {
++      return new AABB(-var0 / 2.0D, -var2 / 2.0D, -var4 / 2.0D, var0 / 2.0D, var2 / 2.0D, var4 / 2.0D);
++   }
+ }

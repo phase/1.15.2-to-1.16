@@ -1,14 +1,14 @@
 --- net/minecraft/world/level/block/state/properties/Property.java
 +++ net/minecraft/world/level/block/state/properties/Property.java
-@@ -1,16 +1,74 @@
+@@ -1,16 +1,128 @@
  package net.minecraft.world.level.block.state.properties;
  
 +import com.google.common.base.MoreObjects;
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.DataResult;
-+import com.mojang.serialization.DynamicOps;
  import java.util.Collection;
  import java.util.Optional;
++import java.util.stream.Stream;
 +import net.minecraft.world.level.block.state.StateHolder;
  
 -public interface Property<T extends Comparable<T>> {
@@ -18,6 +18,7 @@
 +   private final String name;
 +   private Integer hashCode;
 +   private final Codec<T> codec;
++   private final Codec<Property.Value<T>> valueCodec;
  
 -   Collection<T> getPossibleValues();
 +   protected Property(String var1, Class<T> var2) {
@@ -26,21 +27,38 @@
 +            return DataResult.error("Unable to read property: " + this + " with value: " + var1x);
 +         });
 +      }, this::getName);
++      this.valueCodec = this.codec.xmap(this::value, Property.Value::value);
 +      this.clazz = var2;
 +      this.name = var1;
 +   }
  
 -   Class<T> getValueClass();
-+   public String getName() {
-+      return this.name;
++   public Property.Value<T> value(T var1) {
++      return new Property.Value(this, var1);
 +   }
  
 -   Optional<T> getValue(String var1);
-+   public Class<T> getValueClass() {
-+      return this.clazz;
++   public Property.Value<T> value(StateHolder<?, ?> var1) {
++      return new Property.Value(this, var1.getValue(this));
 +   }
  
 -   String getName(T var1);
++   public Stream<Property.Value<T>> getAllValues() {
++      return this.getPossibleValues().stream().map(this::value);
++   }
++
++   public Codec<Property.Value<T>> valueCodec() {
++      return this.valueCodec;
++   }
++
++   public String getName() {
++      return this.name;
++   }
++
++   public Class<T> getValueClass() {
++      return this.clazz;
++   }
++
 +   public abstract Collection<T> getPossibleValues();
 +
 +   public abstract String getName(T var1);
@@ -74,10 +92,46 @@
 +      return 31 * this.clazz.hashCode() + this.name.hashCode();
 +   }
 +
-+   public <U, S extends StateHolder<?, S>> DataResult<S> parseValue(DynamicOps<U> var1, S var2, U var3) {
-+      DataResult var4 = this.codec.parse(var1, var3);
-+      return var4.map((var2x) -> {
-+         return (StateHolder)var2.setValue(this, var2x);
-+      }).setPartial((Object)var2);
++   public static final class Value<T extends Comparable<T>> {
++      private final Property<T> property;
++      private final T value;
++
++      private Value(Property<T> var1, T var2) {
++         if (!var1.getPossibleValues().contains(var2)) {
++            throw new IllegalArgumentException("Value " + var2 + " does not belong to property " + var1);
++         } else {
++            this.property = var1;
++            this.value = var2;
++         }
++      }
++
++      public Property<T> getProperty() {
++         return this.property;
++      }
++
++      public T value() {
++         return this.value;
++      }
++
++      public String toString() {
++         return this.property.getName() + "=" + this.property.getName(this.value);
++      }
++
++      public boolean equals(Object var1) {
++         if (this == var1) {
++            return true;
++         } else if (!(var1 instanceof Property.Value)) {
++            return false;
++         } else {
++            Property.Value var2 = (Property.Value)var1;
++            return this.property == var2.property && this.value.equals(var2.value);
++         }
++      }
++
++      public int hashCode() {
++         int var1 = this.property.hashCode();
++         var1 = 31 * var1 + this.value.hashCode();
++         return var1;
++      }
 +   }
  }

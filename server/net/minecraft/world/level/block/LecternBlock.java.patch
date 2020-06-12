@@ -1,6 +1,18 @@
 --- net/minecraft/world/level/block/LecternBlock.java
 +++ net/minecraft/world/level/block/LecternBlock.java
-@@ -18,10 +18,11 @@
+@@ -2,10 +2,11 @@
+ 
+ import java.util.Random;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
++import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.stats.Stats;
+ import net.minecraft.tags.ItemTags;
+@@ -18,10 +19,11 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
@@ -12,7 +24,7 @@
  import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  import net.minecraft.world.level.block.state.properties.BooleanProperty;
  import net.minecraft.world.level.block.state.properties.DirectionProperty;
-@@ -43,11 +44,11 @@
+@@ -43,11 +45,11 @@
     public static final VoxelShape SHAPE_WEST;
     public static final VoxelShape SHAPE_NORTH;
     public static final VoxelShape SHAPE_EAST;
@@ -25,7 +37,32 @@
     }
  
     public RenderShape getRenderShape(BlockState var1) {
-@@ -148,11 +149,11 @@
+@@ -61,11 +63,23 @@
+    public boolean useShapeForLightOcclusion(BlockState var1) {
+       return true;
+    }
+ 
+    public BlockState getStateForPlacement(BlockPlaceContext var1) {
+-      return (BlockState)this.defaultBlockState().setValue(FACING, var1.getHorizontalDirection().getOpposite());
++      Level var2 = var1.getLevel();
++      ItemStack var3 = var1.getItemInHand();
++      CompoundTag var4 = var3.getOrCreateTag();
++      Player var5 = var1.getPlayer();
++      boolean var6 = false;
++      if (!var2.isClientSide && var5 != null && var5.canUseGameMasterBlocks() && var4.contains("BlockEntityTag")) {
++         CompoundTag var7 = var4.getCompound("BlockEntityTag");
++         if (var7.contains("Book")) {
++            var6 = true;
++         }
++      }
++
++      return (BlockState)((BlockState)this.defaultBlockState().setValue(FACING, var1.getHorizontalDirection().getOpposite())).setValue(HAS_BOOK, var6);
+    }
+ 
+    public VoxelShape getCollisionShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
+       return SHAPE_COLLISION;
+    }
+@@ -148,11 +162,11 @@
     public void tick(BlockState var1, ServerLevel var2, BlockPos var3, Random var4) {
        changePowered(var2, var3, var1, false);
     }
@@ -38,7 +75,7 @@
           }
  
           if ((Boolean)var1.getValue(POWERED)) {
-@@ -210,11 +211,11 @@
+@@ -210,11 +224,11 @@
        if ((Boolean)var1.getValue(HAS_BOOK)) {
           if (!var2.isClientSide) {
              this.openScreen(var2, var3, var4);

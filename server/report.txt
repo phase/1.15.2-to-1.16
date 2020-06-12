@@ -165,7 +165,6 @@
 * net/minecraft/network/Connection.java
 * net/minecraft/network/ConnectionProtocol.java
 * net/minecraft/network/FriendlyByteBuf.java
-* net/minecraft/network/Varint21FrameDecoder.java
 * net/minecraft/network/chat/BaseComponent.java
 * net/minecraft/network/chat/Component.java
 * net/minecraft/network/chat/ComponentUtils.java
@@ -283,7 +282,6 @@
 * net/minecraft/server/level/ThreadedLevelLightEngine.java
 * net/minecraft/server/level/WorldGenRegion.java
 * net/minecraft/server/level/WorldGenTickList.java
-* net/minecraft/server/network/LegacyQueryHandler.java
 * net/minecraft/server/network/ServerConnectionListener.java
 * net/minecraft/server/network/ServerGamePacketListenerImpl.java
 * net/minecraft/server/network/ServerHandshakePacketListenerImpl.java
@@ -567,6 +565,7 @@
 * net/minecraft/world/entity/ai/sensing/PlayerSensor.java
 * net/minecraft/world/entity/ai/sensing/SecondaryPoiSensor.java
 * net/minecraft/world/entity/ai/sensing/SensorType.java
+* net/minecraft/world/entity/ai/sensing/VillagerHostilesSensor.java
 * net/minecraft/world/entity/ai/util/RandomPos.java
 * net/minecraft/world/entity/ai/village/VillageSiege.java
 * net/minecraft/world/entity/ai/village/poi/PoiManager.java
@@ -1544,7 +1543,6 @@
 + net/minecraft/data/models/blockstates/MultiPartGenerator.java
 + net/minecraft/data/models/blockstates/MultiVariantGenerator.java
 + net/minecraft/data/models/blockstates/PropertyDispatch.java
-+ net/minecraft/data/models/blockstates/PropertyValue.java
 + net/minecraft/data/models/blockstates/Selector.java
 + net/minecraft/data/models/blockstates/Variant.java
 + net/minecraft/data/models/blockstates/VariantProperties.java
@@ -1612,6 +1610,7 @@
 + net/minecraft/util/datafix/fixes/MissingDimensionFix.java
 + net/minecraft/util/datafix/fixes/OminousBannerBlockEntityRenameFix.java
 + net/minecraft/util/datafix/fixes/OminousBannerRenameFix.java
++ net/minecraft/util/datafix/fixes/OptionsRenameFieldFix.java
 + net/minecraft/util/datafix/fixes/PlayerUUIDFix.java
 + net/minecraft/util/datafix/fixes/RedstoneWireConnectionsFix.java
 + net/minecraft/util/datafix/fixes/RenameBiomesFix.java

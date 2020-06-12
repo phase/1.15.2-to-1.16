@@ -237,3 +237,20 @@
     public FluidState getFluidState(BlockState var1) {
        return (Boolean)var1.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(var1);
     }
+@@ -232,10 +226,16 @@
+ 
+    public boolean isPathfindable(BlockState var1, BlockGetter var2, BlockPos var3, PathComputationType var4) {
+       return false;
+    }
+ 
++   public static boolean canLight(BlockState var0) {
++      return var0.is(BlockTags.CAMPFIRES, (var0x) -> {
++         return var0x.hasProperty(BlockStateProperties.WATERLOGGED) && var0x.hasProperty(BlockStateProperties.LIT);
++      }) && !(Boolean)var0.getValue(BlockStateProperties.WATERLOGGED) && !(Boolean)var0.getValue(BlockStateProperties.LIT);
++   }
++
+    static {
+       LIT = BlockStateProperties.LIT;
+       SIGNAL_FIRE = BlockStateProperties.SIGNAL_FIRE;
+       WATERLOGGED = BlockStateProperties.WATERLOGGED;
+       FACING = BlockStateProperties.HORIZONTAL_FACING;

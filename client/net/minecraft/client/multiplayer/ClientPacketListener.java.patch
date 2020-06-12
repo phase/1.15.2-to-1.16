@@ -257,7 +257,7 @@
        this.minecraft.gameMode.setLocalMode(var1.getGameType());
        this.minecraft.options.broadcastOptions();
        this.connection.send(new ServerboundCustomPayloadPacket(ServerboundCustomPayloadPacket.BRAND, (new FriendlyByteBuf(Unpooled.buffer())).writeUtf(ClientBrandRetriever.getClientModName())));
-@@ -458,10 +484,13 @@
+@@ -458,18 +484,21 @@
              var8 = new ItemEntity(this.level, var2, var4, var6);
           } else if (var9 == EntityType.FALLING_BLOCK) {
              var8 = new FallingBlockEntity(this.level, var2, var4, var6, Block.stateById(var1.getData()));
@@ -265,12 +265,20 @@
              var8 = new AreaEffectCloud(this.level, var2, var4, var6);
 +         } else if (var9 == EntityType.LIGHTNING_BOLT) {
 +            var8 = new LightningBolt(EntityType.LIGHTNING_BOLT, this.level);
-+            ((Entity)var8).moveTo(var2, var4, var6);
           } else {
              var8 = null;
           }
        }
  
+       if (var8 != null) {
+          int var11 = var1.getId();
+          ((Entity)var8).setPacketCoordinates(var2, var4, var6);
++         ((Entity)var8).moveTo(var2, var4, var6);
+          ((Entity)var8).xRot = (float)(var1.getxRot() * 360) / 256.0F;
+          ((Entity)var8).yRot = (float)(var1.getyRot() * 360) / 256.0F;
+          ((Entity)var8).setId(var11);
+          ((Entity)var8).setUUID(var1.getUUID());
+          this.level.putNonPlayerEntity(var11, (Entity)var8);
 @@ -491,26 +520,10 @@
        var8.xRot = 0.0F;
        var8.setId(var1.getId());

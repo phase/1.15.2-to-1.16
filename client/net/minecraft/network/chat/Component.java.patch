@@ -1,6 +1,6 @@
 --- net/minecraft/network/chat/Component.java
 +++ net/minecraft/network/chat/Component.java
-@@ -17,167 +17,104 @@
+@@ -17,167 +17,99 @@
  import java.io.StringReader;
  import java.lang.reflect.Field;
  import java.lang.reflect.Type;
@@ -32,14 +32,12 @@
     String getContents();
  
     default String getString() {
-       StringBuilder var1 = new StringBuilder();
+-      StringBuilder var1 = new StringBuilder();
 -      this.stream().forEach((var1x) -> {
 -         var1.append(var1x.getContents());
-+      this.visit((var1x) -> {
-+         var1.append(var1x);
-+         return Optional.empty();
-       });
-       return var1.toString();
+-      });
+-      return var1.toString();
++      return FormattedText.super.getString();
     }
  
     default String getString(int var1) {
@@ -220,7 +218,7 @@
           var0.disableHtmlEscaping();
           var0.registerTypeHierarchyAdapter(Component.class, new Component.Serializer());
           var0.registerTypeHierarchyAdapter(Style.class, new Style.Serializer());
-@@ -206,26 +143,26 @@
+@@ -206,26 +138,26 @@
        });
  
        public Serializer() {
@@ -251,7 +249,7 @@
  
                 return var19;
              } else {
-@@ -254,22 +191,19 @@
+@@ -254,22 +186,19 @@
                          }
                       }
  
@@ -275,7 +273,7 @@
                 } else if (var4.has("keybind")) {
                    var5 = new KeybindComponent(GsonHelper.getAsString(var4, "keybind"));
                 } else {
-@@ -298,16 +232,16 @@
+@@ -298,16 +227,16 @@
                 if (var13.size() <= 0) {
                    throw new JsonParseException("Unexpected empty array of components");
                 }
@@ -295,7 +293,7 @@
  
        private void serializeStyle(Style var1, JsonObject var2, JsonSerializationContext var3) {
           JsonElement var4 = var3.serialize(var1);
-@@ -365,11 +299,10 @@
+@@ -365,11 +294,10 @@
           } else if (var1 instanceof ScoreComponent) {
              ScoreComponent var12 = (ScoreComponent)var1;
              JsonObject var16 = new JsonObject();
@@ -307,7 +305,7 @@
              SelectorComponent var13 = (SelectorComponent)var1;
              var4.addProperty("selector", var13.getPattern());
           } else if (var1 instanceof KeybindComponent) {
-@@ -409,29 +342,29 @@
+@@ -409,29 +337,29 @@
        public static JsonElement toJsonTree(Component var0) {
           return GSON.toJsonTree(var0);
        }

@@ -1,6 +1,6 @@
 --- net/minecraft/util/Codecs.java
 +++ net/minecraft/util/Codecs.java
-@@ -1,0 +1,86 @@
+@@ -1,0 +1,102 @@
 +package net.minecraft.util;
 +
 +import com.mojang.datafixers.util.Pair;
@@ -77,6 +77,22 @@
 +
 +         public String toString() {
 +            return "WithDefault[" + var2.get() + "]";
++         }
++      });
++   }
++
++   public static <A> MapCodec<A> setPartial(MapCodec<A> var0, final Supplier<A> var1) {
++      return mapResult(var0, new Codecs.ResultFunction<A>() {
++         public <T> DataResult<A> apply(DynamicOps<T> var1x, MapLike<T> var2, DataResult<A> var3) {
++            return var3.setPartial(var1);
++         }
++
++         public <T> RecordBuilder<T> coApply(DynamicOps<T> var1x, A var2, RecordBuilder<T> var3) {
++            return var3;
++         }
++
++         public String toString() {
++            return "SetPartial[" + var1 + "]";
 +         }
 +      });
 +   }

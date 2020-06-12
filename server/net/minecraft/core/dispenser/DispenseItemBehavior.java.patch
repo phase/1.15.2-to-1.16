@@ -15,7 +15,15 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.entity.projectile.AbstractArrow;
  import net.minecraft.world.entity.projectile.Arrow;
-@@ -42,16 +44,18 @@
+@@ -34,24 +36,26 @@
+ import net.minecraft.world.entity.vehicle.Boat;
+ import net.minecraft.world.item.ArmorItem;
+ import net.minecraft.world.item.BoneMealItem;
+ import net.minecraft.world.item.BucketItem;
+ import net.minecraft.world.item.DyeColor;
+-import net.minecraft.world.item.FlintAndSteelItem;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.item.SpawnEggItem;
  import net.minecraft.world.item.alchemy.PotionUtils;
@@ -26,6 +34,7 @@
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.BucketPickup;
++import net.minecraft.world.level.block.CampfireBlock;
  import net.minecraft.world.level.block.CarvedPumpkinBlock;
  import net.minecraft.world.level.block.DispenserBlock;
 +import net.minecraft.world.level.block.RespawnAnchorBlock;
@@ -192,10 +201,12 @@
 +            this.setSuccess(true);
              BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
              BlockState var5 = var3.getBlockState(var4);
-             if (FlintAndSteelItem.canUse(var5, var3, var4)) {
+-            if (FlintAndSteelItem.canUse(var5, var3, var4)) {
 -               var3.setBlockAndUpdate(var4, Blocks.FIRE.defaultBlockState());
+-            } else if (FlintAndSteelItem.canLightCampFire(var5)) {
++            if (BaseFireBlock.canBePlacedAt(var3, var4)) {
 +               var3.setBlockAndUpdate(var4, BaseFireBlock.getState(var3, var4));
-             } else if (FlintAndSteelItem.canLightCampFire(var5)) {
++            } else if (CampfireBlock.canLight(var5)) {
                 var3.setBlockAndUpdate(var4, (BlockState)var5.setValue(BlockStateProperties.LIT, true));
              } else if (var5.getBlock() instanceof TntBlock) {
                 TntBlock.explode(var3, var4);

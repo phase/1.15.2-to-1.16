@@ -1,6 +1,6 @@
 --- net/minecraft/network/chat/FormattedText.java
 +++ net/minecraft/network/chat/FormattedText.java
-@@ -1,0 +1,27 @@
+@@ -1,0 +1,36 @@
 +package net.minecraft.network.chat;
 +
 +import java.util.Optional;
@@ -22,6 +22,15 @@
 +            return var1.accept(var0);
 +         }
 +      };
++   }
++
++   default String getString() {
++      StringBuilder var1 = new StringBuilder();
++      this.visit((var1x) -> {
++         var1.append(var1x);
++         return Optional.empty();
++      });
++      return var1.toString();
 +   }
 +
 +   public interface ContentConsumer<T> {

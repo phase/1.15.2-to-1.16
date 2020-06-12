@@ -1,12 +1,13 @@
 --- net/minecraft/client/Option.java
 +++ net/minecraft/client/Option.java
-@@ -1,13 +1,20 @@
+@@ -1,13 +1,22 @@
  package net.minecraft.client;
  
 +import com.mojang.blaze3d.pipeline.RenderTarget;
 +import com.mojang.blaze3d.platform.GlStateManager;
  import com.mojang.blaze3d.platform.Window;
 -import net.minecraft.Util;
++import java.util.List;
 +import java.util.Optional;
 +import net.minecraft.ChatFormatting;
  import net.minecraft.client.gui.chat.NarratorChatListener;
@@ -15,6 +16,7 @@
 -import net.minecraft.client.resources.language.I18n;
 +import net.minecraft.network.chat.CommonComponents;
 +import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.FormattedText;
 +import net.minecraft.network.chat.MutableComponent;
 +import net.minecraft.network.chat.TextComponent;
 +import net.minecraft.network.chat.TranslatableComponent;
@@ -23,7 +25,7 @@
  
  public abstract class Option {
     public static final ProgressOption BIOME_BLEND_RADIUS = new ProgressOption("options.biomeBlendRadius", 0.0D, 7.0D, 1.0F, (var0) -> {
-@@ -15,112 +22,127 @@
+@@ -15,112 +24,127 @@
     }, (var0, var1) -> {
        var0.biomeBlendRadius = Mth.clamp((int)var1, 0, 7);
        Minecraft.getInstance().levelRenderer.allChanged();
@@ -170,7 +172,7 @@
        return var0.rawMouseInput;
     }, (var0, var1) -> {
        var0.rawMouseInput = var1;
-@@ -135,90 +157,122 @@
+@@ -135,211 +159,287 @@
     }, (var0, var1) -> {
        var0.renderDistance = (int)var1;
        Minecraft.getInstance().levelRenderer.needsUpdate();
@@ -231,125 +233,192 @@
 -      return var1.getCaption() + I18n.get(var0.chatVisibility.getKey());
 +      return var1.createCaption().append((Component)(new TranslatableComponent(var0.chatVisibility.getKey())));
     });
-    public static final CycleOption GRAPHICS = new CycleOption("options.graphics", (var0, var1) -> {
+-   public static final CycleOption GRAPHICS = new CycleOption("options.graphics", (var0, var1) -> {
 -      var0.fancyGraphics = !var0.fancyGraphics;
-+      var0.graphicsMode = var0.graphicsMode.cycleNext();
-+      if (var0.graphicsMode == GraphicsStatus.FABULOUS && !GlStateManager.supportsFramebufferBlit()) {
-+         var0.graphicsMode = GraphicsStatus.FAST;
-+      }
-+
-       Minecraft.getInstance().levelRenderer.allChanged();
-    }, (var0, var1) -> {
+-      Minecraft.getInstance().levelRenderer.allChanged();
+-   }, (var0, var1) -> {
 -      return var0.fancyGraphics ? var1.getCaption() + I18n.get("options.graphics.fancy") : var1.getCaption() + I18n.get("options.graphics.fast");
-+      switch(var0.graphicsMode) {
-+      case FAST:
-+         var1.setTooltip("options.graphics.fast.tooltip");
-+         break;
-+      case FANCY:
-+         var1.setTooltip("options.graphics.fancy.tooltip");
-+         break;
-+      case FABULOUS:
-+         var1.setTooltip("options.graphics.fabulous.tooltip");
-+      }
-+
-+      TranslatableComponent var2 = new TranslatableComponent(var0.graphicsMode.getKey());
-+      return var0.graphicsMode == GraphicsStatus.FABULOUS ? var1.createCaption().append((Component)(new TextComponent("")).append(var2).withStyle(ChatFormatting.ITALIC)) : var1.createCaption().append((Component)var2);
-    });
-    public static final CycleOption GUI_SCALE = new CycleOption("options.guiScale", (var0, var1) -> {
-       var0.guiScale = Integer.remainderUnsigned(var0.guiScale + var1, Minecraft.getInstance().getWindow().calculateScale(0, Minecraft.getInstance().isEnforceUnicode()) + 1);
-    }, (var0, var1) -> {
+-   });
+-   public static final CycleOption GUI_SCALE = new CycleOption("options.guiScale", (var0, var1) -> {
+-      var0.guiScale = Integer.remainderUnsigned(var0.guiScale + var1, Minecraft.getInstance().getWindow().calculateScale(0, Minecraft.getInstance().isEnforceUnicode()) + 1);
+-   }, (var0, var1) -> {
 -      return var1.getCaption() + (var0.guiScale == 0 ? I18n.get("options.guiScale.auto") : var0.guiScale);
-+      MutableComponent var2 = var1.createCaption();
-+      return var0.guiScale == 0 ? var2.append((Component)(new TranslatableComponent("options.guiScale.auto"))) : var2.append(Integer.toString(var0.guiScale));
-    });
-    public static final CycleOption MAIN_HAND = new CycleOption("options.mainHand", (var0, var1) -> {
-       var0.mainHand = var0.mainHand.getOpposite();
-    }, (var0, var1) -> {
+-   });
+-   public static final CycleOption MAIN_HAND = new CycleOption("options.mainHand", (var0, var1) -> {
+-      var0.mainHand = var0.mainHand.getOpposite();
+-   }, (var0, var1) -> {
 -      return var1.getCaption() + var0.mainHand;
-+      return var1.createCaption().append(var0.mainHand.getName());
-    });
-    public static final CycleOption NARRATOR = new CycleOption("options.narrator", (var0, var1) -> {
-       if (NarratorChatListener.INSTANCE.isActive()) {
-          var0.narratorStatus = NarratorStatus.byId(var0.narratorStatus.getId() + var1);
-       } else {
-          var0.narratorStatus = NarratorStatus.OFF;
-       }
- 
-       NarratorChatListener.INSTANCE.updateNarratorStatus(var0.narratorStatus);
-    }, (var0, var1) -> {
+-   });
+-   public static final CycleOption NARRATOR = new CycleOption("options.narrator", (var0, var1) -> {
+-      if (NarratorChatListener.INSTANCE.isActive()) {
+-         var0.narratorStatus = NarratorStatus.byId(var0.narratorStatus.getId() + var1);
+-      } else {
+-         var0.narratorStatus = NarratorStatus.OFF;
+-      }
+-
+-      NarratorChatListener.INSTANCE.updateNarratorStatus(var0.narratorStatus);
+-   }, (var0, var1) -> {
 -      return NarratorChatListener.INSTANCE.isActive() ? var1.getCaption() + I18n.get(var0.narratorStatus.getKey()) : var1.getCaption() + I18n.get("options.narrator.notavailable");
-+      return NarratorChatListener.INSTANCE.isActive() ? var1.createCaption().append(var0.narratorStatus.getName()) : var1.createCaption().append((Component)(new TranslatableComponent("options.narrator.notavailable")));
-    });
-    public static final CycleOption PARTICLES = new CycleOption("options.particles", (var0, var1) -> {
-       var0.particles = ParticleStatus.byId(var0.particles.getId() + var1);
-    }, (var0, var1) -> {
+-   });
+-   public static final CycleOption PARTICLES = new CycleOption("options.particles", (var0, var1) -> {
+-      var0.particles = ParticleStatus.byId(var0.particles.getId() + var1);
+-   }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.particles.getKey());
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.particles.getKey())));
-    });
-    public static final CycleOption RENDER_CLOUDS = new CycleOption("options.renderClouds", (var0, var1) -> {
-       var0.renderClouds = CloudStatus.byId(var0.renderClouds.getId() + var1);
-+      if (Minecraft.useShaderTransparency()) {
-+         RenderTarget var2 = Minecraft.getInstance().levelRenderer.getCloudsTarget();
-+         if (var2 != null) {
-+            var2.clear(Minecraft.ON_OSX);
-+         }
-+      }
-+
-    }, (var0, var1) -> {
+-   });
+-   public static final CycleOption RENDER_CLOUDS = new CycleOption("options.renderClouds", (var0, var1) -> {
+-      var0.renderClouds = CloudStatus.byId(var0.renderClouds.getId() + var1);
+-   }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.renderClouds.getKey());
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.renderClouds.getKey())));
-    });
-    public static final CycleOption TEXT_BACKGROUND = new CycleOption("options.accessibility.text_background", (var0, var1) -> {
-       var0.backgroundForChatOnly = !var0.backgroundForChatOnly;
-    }, (var0, var1) -> {
+-   });
+-   public static final CycleOption TEXT_BACKGROUND = new CycleOption("options.accessibility.text_background", (var0, var1) -> {
+-      var0.backgroundForChatOnly = !var0.backgroundForChatOnly;
+-   }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.backgroundForChatOnly ? "options.accessibility.text_background.chat" : "options.accessibility.text_background.everywhere");
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.backgroundForChatOnly ? "options.accessibility.text_background.chat" : "options.accessibility.text_background.everywhere")));
-    });
-    public static final BooleanOption AUTO_JUMP = new BooleanOption("options.autoJump", (var0) -> {
-       return var0.autoJump;
-    }, (var0, var1) -> {
-       var0.autoJump = var1;
-@@ -265,12 +319,12 @@
-    public static final BooleanOption FORCE_UNICODE_FONT = new BooleanOption("options.forceUnicodeFont", (var0) -> {
-       return var0.forceUnicodeFont;
-    }, (var0, var1) -> {
-       var0.forceUnicodeFont = var1;
-       Minecraft var2 = Minecraft.getInstance();
+-   });
+-   public static final BooleanOption AUTO_JUMP = new BooleanOption("options.autoJump", (var0) -> {
+-      return var0.autoJump;
+-   }, (var0, var1) -> {
+-      var0.autoJump = var1;
+-   });
+-   public static final BooleanOption AUTO_SUGGESTIONS = new BooleanOption("options.autoSuggestCommands", (var0) -> {
+-      return var0.autoSuggestions;
+-   }, (var0, var1) -> {
+-      var0.autoSuggestions = var1;
+-   });
+-   public static final BooleanOption CHAT_COLOR = new BooleanOption("options.chat.color", (var0) -> {
+-      return var0.chatColors;
+-   }, (var0, var1) -> {
+-      var0.chatColors = var1;
+-   });
+-   public static final BooleanOption CHAT_LINKS = new BooleanOption("options.chat.links", (var0) -> {
+-      return var0.chatLinks;
+-   }, (var0, var1) -> {
+-      var0.chatLinks = var1;
+-   });
+-   public static final BooleanOption CHAT_LINKS_PROMPT = new BooleanOption("options.chat.links.prompt", (var0) -> {
+-      return var0.chatLinksPrompt;
+-   }, (var0, var1) -> {
+-      var0.chatLinksPrompt = var1;
+-   });
+-   public static final BooleanOption DISCRETE_MOUSE_SCROLL = new BooleanOption("options.discrete_mouse_scroll", (var0) -> {
+-      return var0.discreteMouseScroll;
+-   }, (var0, var1) -> {
+-      var0.discreteMouseScroll = var1;
+-   });
+-   public static final BooleanOption ENABLE_VSYNC = new BooleanOption("options.vsync", (var0) -> {
+-      return var0.enableVsync;
+-   }, (var0, var1) -> {
+-      var0.enableVsync = var1;
+-      if (Minecraft.getInstance().getWindow() != null) {
+-         Minecraft.getInstance().getWindow().updateVsync(var0.enableVsync);
+-      }
+-
+-   });
+-   public static final BooleanOption ENTITY_SHADOWS = new BooleanOption("options.entityShadows", (var0) -> {
+-      return var0.entityShadows;
+-   }, (var0, var1) -> {
+-      var0.entityShadows = var1;
+-   });
+-   public static final BooleanOption FORCE_UNICODE_FONT = new BooleanOption("options.forceUnicodeFont", (var0) -> {
+-      return var0.forceUnicodeFont;
+-   }, (var0, var1) -> {
+-      var0.forceUnicodeFont = var1;
+-      Minecraft var2 = Minecraft.getInstance();
 -      if (var2.getFontManager() != null) {
 -         var2.getFontManager().setForceUnicode(var0.forceUnicodeFont, Util.backgroundExecutor(), var2);
-+      if (var2.getWindow() != null) {
-+         var2.selectMainFont(var1);
-       }
- 
-    });
-    public static final BooleanOption INVERT_MOUSE = new BooleanOption("options.invertMouse", (var0) -> {
-       return var0.invertYMouse;
-@@ -301,16 +355,16 @@
-       var0.snooperEnabled = var1;
-    });
-    public static final CycleOption TOGGLE_CROUCH = new CycleOption("key.sneak", (var0, var1) -> {
-       var0.toggleCrouch = !var0.toggleCrouch;
-    }, (var0, var1) -> {
+-      }
+-
+-   });
+-   public static final BooleanOption INVERT_MOUSE = new BooleanOption("options.invertMouse", (var0) -> {
+-      return var0.invertYMouse;
+-   }, (var0, var1) -> {
+-      var0.invertYMouse = var1;
+-   });
+-   public static final BooleanOption REALMS_NOTIFICATIONS = new BooleanOption("options.realmsNotifications", (var0) -> {
+-      return var0.realmsNotifications;
+-   }, (var0, var1) -> {
+-      var0.realmsNotifications = var1;
+-   });
+-   public static final BooleanOption REDUCED_DEBUG_INFO = new BooleanOption("options.reducedDebugInfo", (var0) -> {
+-      return var0.reducedDebugInfo;
+-   }, (var0, var1) -> {
+-      var0.reducedDebugInfo = var1;
+-   });
+-   public static final BooleanOption SHOW_SUBTITLES = new BooleanOption("options.showSubtitles", (var0) -> {
+-      return var0.showSubtitles;
+-   }, (var0, var1) -> {
+-      var0.showSubtitles = var1;
+-   });
+-   public static final BooleanOption SNOOPER_ENABLED = new BooleanOption("options.snooper", (var0) -> {
+-      if (var0.snooperEnabled) {
+-      }
+-
+-      return false;
+-   }, (var0, var1) -> {
+-      var0.snooperEnabled = var1;
+-   });
+-   public static final CycleOption TOGGLE_CROUCH = new CycleOption("key.sneak", (var0, var1) -> {
+-      var0.toggleCrouch = !var0.toggleCrouch;
+-   }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.toggleCrouch ? "options.key.toggle" : "options.key.hold");
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.toggleCrouch ? "options.key.toggle" : "options.key.hold")));
-    });
-    public static final CycleOption TOGGLE_SPRINT = new CycleOption("key.sprint", (var0, var1) -> {
-       var0.toggleSprint = !var0.toggleSprint;
-    }, (var0, var1) -> {
+-   });
+-   public static final CycleOption TOGGLE_SPRINT = new CycleOption("key.sprint", (var0, var1) -> {
+-      var0.toggleSprint = !var0.toggleSprint;
+-   }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.toggleSprint ? "options.key.toggle" : "options.key.hold");
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.toggleSprint ? "options.key.toggle" : "options.key.hold")));
-    });
-    public static final BooleanOption TOUCHSCREEN = new BooleanOption("options.touchscreen", (var0) -> {
-       return var0.touchscreen;
-    }, (var0, var1) -> {
-       var0.touchscreen = var1;
-@@ -330,16 +384,26 @@
-       return var0.bobView;
-    }, (var0, var1) -> {
-       var0.bobView = var1;
-    });
+-   });
+-   public static final BooleanOption TOUCHSCREEN = new BooleanOption("options.touchscreen", (var0) -> {
+-      return var0.touchscreen;
+-   }, (var0, var1) -> {
+-      var0.touchscreen = var1;
+-   });
+-   public static final BooleanOption USE_FULLSCREEN = new BooleanOption("options.fullscreen", (var0) -> {
+-      return var0.fullscreen;
+-   }, (var0, var1) -> {
+-      var0.fullscreen = var1;
+-      Minecraft var2 = Minecraft.getInstance();
+-      if (var2.getWindow() != null && var2.getWindow().isFullscreen() != var0.fullscreen) {
+-         var2.getWindow().toggleFullScreen();
+-         var0.fullscreen = var2.getWindow().isFullscreen();
+-      }
+-
+-   });
+-   public static final BooleanOption VIEW_BOBBING = new BooleanOption("options.viewBobbing", (var0) -> {
+-      return var0.bobView;
+-   }, (var0, var1) -> {
+-      var0.bobView = var1;
+-   });
++   private static final Component GRAPHICS_TOOLTIP_FAST = new TranslatableComponent("options.graphics.fast.tooltip");
++   private static final Component GRAPHICS_TOOLTIP_FABULOUS;
++   private static final Component GRAPHICS_TOOLTIP_FANCY;
++   public static final CycleOption GRAPHICS;
++   public static final CycleOption GUI_SCALE;
++   public static final CycleOption MAIN_HAND;
++   public static final CycleOption NARRATOR;
++   public static final CycleOption PARTICLES;
++   public static final CycleOption RENDER_CLOUDS;
++   public static final CycleOption TEXT_BACKGROUND;
++   public static final BooleanOption AUTO_JUMP;
++   public static final BooleanOption AUTO_SUGGESTIONS;
++   public static final BooleanOption CHAT_COLOR;
++   public static final BooleanOption CHAT_LINKS;
++   public static final BooleanOption CHAT_LINKS_PROMPT;
++   public static final BooleanOption DISCRETE_MOUSE_SCROLL;
++   public static final BooleanOption ENABLE_VSYNC;
++   public static final BooleanOption ENTITY_SHADOWS;
++   public static final BooleanOption FORCE_UNICODE_FONT;
++   public static final BooleanOption INVERT_MOUSE;
++   public static final BooleanOption REALMS_NOTIFICATIONS;
++   public static final BooleanOption REDUCED_DEBUG_INFO;
++   public static final BooleanOption SHOW_SUBTITLES;
++   public static final BooleanOption SNOOPER_ENABLED;
++   public static final CycleOption TOGGLE_CROUCH;
++   public static final CycleOption TOGGLE_SPRINT;
++   public static final BooleanOption TOUCHSCREEN;
++   public static final BooleanOption USE_FULLSCREEN;
++   public static final BooleanOption VIEW_BOBBING;
     private final String captionId;
-+   private Optional<TranslatableComponent> toolTip;
++   private Optional<List<FormattedText>> toolTip;
  
     public Option(String var1) {
        this.captionId = var1;
@@ -364,11 +433,195 @@
 +      return (new TranslatableComponent(this.captionId)).append(": ");
     }
 +
-+   public void setTooltip(String var1) {
-+      this.toolTip = Optional.of(new TranslatableComponent(var1));
++   public void setTooltip(List<FormattedText> var1) {
++      this.toolTip = Optional.of(var1);
 +   }
 +
-+   public Optional<TranslatableComponent> getTooltip() {
++   public Optional<List<FormattedText>> getTooltip() {
 +      return this.toolTip;
++   }
++
++   static {
++      GRAPHICS_TOOLTIP_FABULOUS = new TranslatableComponent("options.graphics.fabulous.tooltip", new Object[]{(new TranslatableComponent("options.graphics.fabulous")).withStyle(ChatFormatting.ITALIC)});
++      GRAPHICS_TOOLTIP_FANCY = new TranslatableComponent("options.graphics.fancy.tooltip");
++      GRAPHICS = new CycleOption("options.graphics", (var0, var1) -> {
++         var0.graphicsMode = var0.graphicsMode.cycleNext();
++         if (var0.graphicsMode == GraphicsStatus.FABULOUS && !GlStateManager.supportsFramebufferBlit()) {
++            var0.graphicsMode = GraphicsStatus.FAST;
++         }
++
++         Minecraft.getInstance().levelRenderer.allChanged();
++      }, (var0, var1) -> {
++         switch(var0.graphicsMode) {
++         case FAST:
++            var1.setTooltip(Minecraft.getInstance().font.split(GRAPHICS_TOOLTIP_FAST, 200));
++            break;
++         case FANCY:
++            var1.setTooltip(Minecraft.getInstance().font.split(GRAPHICS_TOOLTIP_FANCY, 200));
++            break;
++         case FABULOUS:
++            var1.setTooltip(Minecraft.getInstance().font.split(GRAPHICS_TOOLTIP_FABULOUS, 200));
++         }
++
++         TranslatableComponent var2 = new TranslatableComponent(var0.graphicsMode.getKey());
++         return var0.graphicsMode == GraphicsStatus.FABULOUS ? var1.createCaption().append((Component)(new TextComponent("")).append(var2).withStyle(ChatFormatting.ITALIC)) : var1.createCaption().append((Component)var2);
++      });
++      GUI_SCALE = new CycleOption("options.guiScale", (var0, var1) -> {
++         var0.guiScale = Integer.remainderUnsigned(var0.guiScale + var1, Minecraft.getInstance().getWindow().calculateScale(0, Minecraft.getInstance().isEnforceUnicode()) + 1);
++      }, (var0, var1) -> {
++         MutableComponent var2 = var1.createCaption();
++         return var0.guiScale == 0 ? var2.append((Component)(new TranslatableComponent("options.guiScale.auto"))) : var2.append(Integer.toString(var0.guiScale));
++      });
++      MAIN_HAND = new CycleOption("options.mainHand", (var0, var1) -> {
++         var0.mainHand = var0.mainHand.getOpposite();
++      }, (var0, var1) -> {
++         return var1.createCaption().append(var0.mainHand.getName());
++      });
++      NARRATOR = new CycleOption("options.narrator", (var0, var1) -> {
++         if (NarratorChatListener.INSTANCE.isActive()) {
++            var0.narratorStatus = NarratorStatus.byId(var0.narratorStatus.getId() + var1);
++         } else {
++            var0.narratorStatus = NarratorStatus.OFF;
++         }
++
++         NarratorChatListener.INSTANCE.updateNarratorStatus(var0.narratorStatus);
++      }, (var0, var1) -> {
++         return NarratorChatListener.INSTANCE.isActive() ? var1.createCaption().append(var0.narratorStatus.getName()) : var1.createCaption().append((Component)(new TranslatableComponent("options.narrator.notavailable")));
++      });
++      PARTICLES = new CycleOption("options.particles", (var0, var1) -> {
++         var0.particles = ParticleStatus.byId(var0.particles.getId() + var1);
++      }, (var0, var1) -> {
++         return var1.createCaption().append((Component)(new TranslatableComponent(var0.particles.getKey())));
++      });
++      RENDER_CLOUDS = new CycleOption("options.renderClouds", (var0, var1) -> {
++         var0.renderClouds = CloudStatus.byId(var0.renderClouds.getId() + var1);
++         if (Minecraft.useShaderTransparency()) {
++            RenderTarget var2 = Minecraft.getInstance().levelRenderer.getCloudsTarget();
++            if (var2 != null) {
++               var2.clear(Minecraft.ON_OSX);
++            }
++         }
++
++      }, (var0, var1) -> {
++         return var1.createCaption().append((Component)(new TranslatableComponent(var0.renderClouds.getKey())));
++      });
++      TEXT_BACKGROUND = new CycleOption("options.accessibility.text_background", (var0, var1) -> {
++         var0.backgroundForChatOnly = !var0.backgroundForChatOnly;
++      }, (var0, var1) -> {
++         return var1.createCaption().append((Component)(new TranslatableComponent(var0.backgroundForChatOnly ? "options.accessibility.text_background.chat" : "options.accessibility.text_background.everywhere")));
++      });
++      AUTO_JUMP = new BooleanOption("options.autoJump", (var0) -> {
++         return var0.autoJump;
++      }, (var0, var1) -> {
++         var0.autoJump = var1;
++      });
++      AUTO_SUGGESTIONS = new BooleanOption("options.autoSuggestCommands", (var0) -> {
++         return var0.autoSuggestions;
++      }, (var0, var1) -> {
++         var0.autoSuggestions = var1;
++      });
++      CHAT_COLOR = new BooleanOption("options.chat.color", (var0) -> {
++         return var0.chatColors;
++      }, (var0, var1) -> {
++         var0.chatColors = var1;
++      });
++      CHAT_LINKS = new BooleanOption("options.chat.links", (var0) -> {
++         return var0.chatLinks;
++      }, (var0, var1) -> {
++         var0.chatLinks = var1;
++      });
++      CHAT_LINKS_PROMPT = new BooleanOption("options.chat.links.prompt", (var0) -> {
++         return var0.chatLinksPrompt;
++      }, (var0, var1) -> {
++         var0.chatLinksPrompt = var1;
++      });
++      DISCRETE_MOUSE_SCROLL = new BooleanOption("options.discrete_mouse_scroll", (var0) -> {
++         return var0.discreteMouseScroll;
++      }, (var0, var1) -> {
++         var0.discreteMouseScroll = var1;
++      });
++      ENABLE_VSYNC = new BooleanOption("options.vsync", (var0) -> {
++         return var0.enableVsync;
++      }, (var0, var1) -> {
++         var0.enableVsync = var1;
++         if (Minecraft.getInstance().getWindow() != null) {
++            Minecraft.getInstance().getWindow().updateVsync(var0.enableVsync);
++         }
++
++      });
++      ENTITY_SHADOWS = new BooleanOption("options.entityShadows", (var0) -> {
++         return var0.entityShadows;
++      }, (var0, var1) -> {
++         var0.entityShadows = var1;
++      });
++      FORCE_UNICODE_FONT = new BooleanOption("options.forceUnicodeFont", (var0) -> {
++         return var0.forceUnicodeFont;
++      }, (var0, var1) -> {
++         var0.forceUnicodeFont = var1;
++         Minecraft var2 = Minecraft.getInstance();
++         if (var2.getWindow() != null) {
++            var2.selectMainFont(var1);
++         }
++
++      });
++      INVERT_MOUSE = new BooleanOption("options.invertMouse", (var0) -> {
++         return var0.invertYMouse;
++      }, (var0, var1) -> {
++         var0.invertYMouse = var1;
++      });
++      REALMS_NOTIFICATIONS = new BooleanOption("options.realmsNotifications", (var0) -> {
++         return var0.realmsNotifications;
++      }, (var0, var1) -> {
++         var0.realmsNotifications = var1;
++      });
++      REDUCED_DEBUG_INFO = new BooleanOption("options.reducedDebugInfo", (var0) -> {
++         return var0.reducedDebugInfo;
++      }, (var0, var1) -> {
++         var0.reducedDebugInfo = var1;
++      });
++      SHOW_SUBTITLES = new BooleanOption("options.showSubtitles", (var0) -> {
++         return var0.showSubtitles;
++      }, (var0, var1) -> {
++         var0.showSubtitles = var1;
++      });
++      SNOOPER_ENABLED = new BooleanOption("options.snooper", (var0) -> {
++         if (var0.snooperEnabled) {
++         }
++
++         return false;
++      }, (var0, var1) -> {
++         var0.snooperEnabled = var1;
++      });
++      TOGGLE_CROUCH = new CycleOption("key.sneak", (var0, var1) -> {
++         var0.toggleCrouch = !var0.toggleCrouch;
++      }, (var0, var1) -> {
++         return var1.createCaption().append((Component)(new TranslatableComponent(var0.toggleCrouch ? "options.key.toggle" : "options.key.hold")));
++      });
++      TOGGLE_SPRINT = new CycleOption("key.sprint", (var0, var1) -> {
++         var0.toggleSprint = !var0.toggleSprint;
++      }, (var0, var1) -> {
++         return var1.createCaption().append((Component)(new TranslatableComponent(var0.toggleSprint ? "options.key.toggle" : "options.key.hold")));
++      });
++      TOUCHSCREEN = new BooleanOption("options.touchscreen", (var0) -> {
++         return var0.touchscreen;
++      }, (var0, var1) -> {
++         var0.touchscreen = var1;
++      });
++      USE_FULLSCREEN = new BooleanOption("options.fullscreen", (var0) -> {
++         return var0.fullscreen;
++      }, (var0, var1) -> {
++         var0.fullscreen = var1;
++         Minecraft var2 = Minecraft.getInstance();
++         if (var2.getWindow() != null && var2.getWindow().isFullscreen() != var0.fullscreen) {
++            var2.getWindow().toggleFullScreen();
++            var0.fullscreen = var2.getWindow().isFullscreen();
++         }
++
++      });
++      VIEW_BOBBING = new BooleanOption("options.viewBobbing", (var0) -> {
++         return var0.bobView;
++      }, (var0, var1) -> {
++         var0.bobView = var1;
++      });
 +   }
  }

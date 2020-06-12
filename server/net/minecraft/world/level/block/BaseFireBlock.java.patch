@@ -1,15 +1,18 @@
 --- net/minecraft/world/level/block/BaseFireBlock.java
 +++ net/minecraft/world/level/block/BaseFireBlock.java
-@@ -1,0 +1,75 @@
+@@ -1,0 +1,99 @@
 +package net.minecraft.world.level.block;
 +
++import java.util.Iterator;
 +import net.minecraft.core.BlockPos;
++import net.minecraft.core.Direction;
 +import net.minecraft.world.damagesource.DamageSource;
 +import net.minecraft.world.entity.Entity;
 +import net.minecraft.world.entity.player.Player;
 +import net.minecraft.world.item.BlockPlaceContext;
 +import net.minecraft.world.level.BlockGetter;
 +import net.minecraft.world.level.Level;
++import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.block.state.BlockBehaviour;
 +import net.minecraft.world.level.block.state.BlockState;
 +import net.minecraft.world.phys.shapes.CollisionContext;
@@ -74,5 +77,26 @@
 +         var1.levelEvent((Player)null, 1009, var2, 0);
 +      }
 +
++   }
++
++   public static boolean canBePlacedAt(LevelAccessor var0, BlockPos var1) {
++      BlockState var2 = var0.getBlockState(var1);
++      BlockState var3 = getState(var0, var1);
++      return var2.isAir() && (var3.canSurvive(var0, var1) || isPortal(var0, var1));
++   }
++
++   private static boolean isPortal(LevelAccessor var0, BlockPos var1) {
++      Iterator var2 = Direction.Plane.HORIZONTAL.iterator();
++
++      Direction var3;
++      do {
++         if (!var2.hasNext()) {
++            return false;
++         }
++
++         var3 = (Direction)var2.next();
++      } while(!var0.getBlockState(var1.relative(var3)).is(Blocks.OBSIDIAN) || NetherPortalBlock.isPortal(var0, var1) == null);
++
++      return true;
 +   }
 +}
