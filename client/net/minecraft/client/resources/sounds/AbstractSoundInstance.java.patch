@@ -52,7 +52,7 @@
     public Sound getSound() {
        return this.sound;
     }
-@@ -73,19 +70,19 @@
+@@ -73,25 +70,29 @@
  
     public float getPitch() {
        return this.pitch * this.sound.getPitch();
@@ -75,3 +75,13 @@
  
     public SoundInstance.Attenuation getAttenuation() {
        return this.attenuation;
+    }
+ 
+    public boolean isRelative() {
+       return this.relative;
+    }
++
++   public String toString() {
++      return "SoundInstance[" + this.location + "]";
++   }
+ }

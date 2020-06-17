@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/recipebook/RecipeBookComponent.java
 +++ net/minecraft/client/gui/screens/recipebook/RecipeBookComponent.java
-@@ -1,9 +1,10 @@
+@@ -1,29 +1,33 @@
  package net.minecraft.client.gui.screens.recipebook;
  
  import com.google.common.collect.Lists;
@@ -11,7 +11,13 @@
  import java.util.Iterator;
  import java.util.List;
  import java.util.Locale;
-@@ -16,14 +17,16 @@
+ import javax.annotation.Nullable;
++import net.minecraft.ChatFormatting;
+ import net.minecraft.client.ClientRecipeBook;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.RecipeBookCategories;
+ import net.minecraft.client.gui.Font;
+ import net.minecraft.client.gui.GuiComponent;
  import net.minecraft.client.gui.components.EditBox;
  import net.minecraft.client.gui.components.StateSwitchingButton;
  import net.minecraft.client.gui.components.Widget;
@@ -30,7 +36,19 @@
  import net.minecraft.recipebook.PlaceRecipe;
  import net.minecraft.resources.ResourceLocation;
  import net.minecraft.world.entity.player.StackedContents;
-@@ -80,11 +83,11 @@
+@@ -33,10 +37,11 @@
+ import net.minecraft.world.item.crafting.Ingredient;
+ import net.minecraft.world.item.crafting.Recipe;
+ 
+ public class RecipeBookComponent extends GuiComponent implements Widget, GuiEventListener, RecipeShownListener, PlaceRecipe<Ingredient> {
+    protected static final ResourceLocation RECIPE_BOOK_LOCATION = new ResourceLocation("textures/gui/recipe_book.png");
++   private static final Component SEARCH_HINT;
+    private int xOffset;
+    private int width;
+    private int height;
+    protected final GhostRecipe ghostRecipe = new GhostRecipe();
+    private final List<RecipeBookTabButton> tabButtons = Lists.newArrayList();
+@@ -80,11 +85,11 @@
        String var4 = this.searchBox != null ? this.searchBox.getValue() : "";
        Font var10003 = this.minecraft.font;
        int var10004 = var2 + 25;
@@ -43,7 +61,7 @@
        this.searchBox.setVisible(true);
        this.searchBox.setTextColor(16777215);
        this.searchBox.setValue(var4);
-@@ -237,71 +240,71 @@
+@@ -237,71 +242,76 @@
        this.minecraft.player.inventory.fillStackedContents(this.stackedContents);
        this.menu.fillCraftSlotsStackedContents(this.stackedContents);
        this.updateCollections(false);
@@ -64,12 +82,17 @@
 +         int var5 = (this.width - 147) / 2 - this.xOffset;
 +         int var6 = (this.height - 166) / 2;
 +         this.blit(var1, var5, var6, 1, 1, 147, 166);
-+         this.searchBox.render(var1, var2, var3, var4);
-+         Iterator var7 = this.tabButtons.iterator();
++         if (!this.searchBox.isFocused() && this.searchBox.getValue().isEmpty()) {
++            this.drawString(var1, this.minecraft.font, SEARCH_HINT, var5 + 25, var6 + 14, -1);
++         } else {
++            this.searchBox.render(var1, var2, var3, var4);
++         }
  
 -         while(var6.hasNext()) {
 -            RecipeBookTabButton var7 = (RecipeBookTabButton)var6.next();
 -            var7.render(var1, var2, var3);
++         Iterator var7 = this.tabButtons.iterator();
++
 +         while(var7.hasNext()) {
 +            RecipeBookTabButton var8 = (RecipeBookTabButton)var7.next();
 +            var8.render(var1, var2, var3, var4);
@@ -145,7 +168,7 @@
     public boolean mouseClicked(double var1, double var3, int var5) {
        if (this.isVisible() && !this.minecraft.player.isSpectator()) {
           if (this.recipeBookPage.mouseClicked(var1, var3, var5, (this.width - 147) / 2 - this.xOffset, (this.height - 166) / 2, 147, 166)) {
-@@ -428,19 +431,18 @@
+@@ -428,19 +438,18 @@
     }
  
     private void pirateSpeechForThePeople(String var1) {
@@ -166,3 +189,14 @@
  
     }
  
+@@ -486,6 +495,10 @@
+       if (this.minecraft.getConnection() != null) {
+          this.minecraft.getConnection().send((Packet)(new ServerboundRecipeBookUpdatePacket(this.book.isGuiOpen(), this.book.isFilteringCraftable(), this.book.isFurnaceGuiOpen(), this.book.isFurnaceFilteringCraftable(), this.book.isBlastingFurnaceGuiOpen(), this.book.isBlastingFurnaceFilteringCraftable())));
+       }
+ 
+    }
++
++   static {
++      SEARCH_HINT = (new TranslatableComponent("gui.recipebook.search_hint")).withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY);
++   }
+ }

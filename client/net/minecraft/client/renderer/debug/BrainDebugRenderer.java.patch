@@ -1,6 +1,6 @@
 --- net/minecraft/client/renderer/debug/BrainDebugRenderer.java
 +++ net/minecraft/client/renderer/debug/BrainDebugRenderer.java
-@@ -1,0 +1,382 @@
+@@ -1,0 +1,378 @@
 +package net.minecraft.client.renderer.debug;
 +
 +import com.google.common.collect.Iterables;
@@ -303,13 +303,9 @@
 +         while(var4.hasNext()) {
 +            BlockPos var5 = (BlockPos)var4.next();
 +            if (!this.pois.containsKey(var5)) {
-+               Object var6 = (List)var1.get(var5);
-+               if (var6 == null) {
-+                  var6 = Lists.newArrayList();
-+                  var1.put(var5, var6);
-+               }
-+
-+               ((List)var6).add(var3.name);
++               ((List)var1.computeIfAbsent(var5, (var0) -> {
++                  return Lists.newArrayList();
++               })).add(var3.name);
 +            }
 +         }
 +      }

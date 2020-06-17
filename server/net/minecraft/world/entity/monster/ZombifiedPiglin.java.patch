@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/monster/ZombifiedPiglin.java
 +++ net/minecraft/world/entity/monster/ZombifiedPiglin.java
-@@ -1,0 +1,221 @@
+@@ -1,0 +1,229 @@
 +package net.minecraft.world.entity.monster;
 +
 +import java.util.Random;
@@ -43,8 +43,8 @@
 +public class ZombifiedPiglin extends Zombie implements NeutralMob {
 +   private static final UUID SPEED_MODIFIER_ATTACKING_UUID = UUID.fromString("49455A49-7EC5-45BA-B886-3B90B23A1718");
 +   private static final AttributeModifier SPEED_MODIFIER_ATTACKING;
-+   private static final IntRange ANGER_SOUND_INTERVAL;
-+   private int playAngrySoundIn;
++   private static final IntRange FIRST_ANGER_SOUND_DELAY;
++   private int playFirstAngerSoundIn;
 +   private static final IntRange PERSISTENT_ANGER_TIME;
 +   private int remainingPersistentAngerTime;
 +   private UUID persistentAngerTarget;
@@ -87,12 +87,7 @@
 +            var1.addTransientModifier(SPEED_MODIFIER_ATTACKING);
 +         }
 +
-+         if (this.playAngrySoundIn == 0) {
-+            this.playAngerSound();
-+            this.playAngrySoundIn = ANGER_SOUND_INTERVAL.randomValue(this.random);
-+         } else {
-+            --this.playAngrySoundIn;
-+         }
++         this.maybePlayFirstAngerSound();
 +      } else if (var1.hasModifier(SPEED_MODIFIER_ATTACKING)) {
 +         var1.removeModifier(SPEED_MODIFIER_ATTACKING);
 +      }
@@ -102,7 +97,21 @@
 +         this.maybeAlertOthers();
 +      }
 +
++      if (this.isAngry()) {
++         this.lastHurtByPlayerTime = this.tickCount;
++      }
++
 +      super.customServerAiStep();
++   }
++
++   private void maybePlayFirstAngerSound() {
++      if (this.playFirstAngerSoundIn > 0) {
++         --this.playFirstAngerSoundIn;
++         if (this.playFirstAngerSoundIn == 0) {
++            this.playAngerSound();
++         }
++      }
++
 +   }
 +
 +   private void maybeAlertOthers() {
@@ -137,16 +146,15 @@
 +
 +   public void setTarget(@Nullable LivingEntity var1) {
 +      if (this.getTarget() == null && var1 != null) {
-+         this.playAngerSound();
-+         this.playAngrySoundIn = ANGER_SOUND_INTERVAL.randomValue(this.random);
++         this.playFirstAngerSoundIn = FIRST_ANGER_SOUND_DELAY.randomValue(this.random);
 +         this.ticksUntilNextAlert = ALERT_INTERVAL.randomValue(this.random);
 +      }
 +
-+      super.setTarget(var1);
-+   }
++      if (var1 instanceof Player) {
++         this.setLastHurtByPlayer((Player)var1);
++      }
 +
-+   protected boolean isAlwaysExperienceDropper() {
-+      return this.getTarget() != null;
++      super.setTarget(var1);
 +   }
 +
 +   public void startPersistentAngerTimer() {
@@ -184,7 +192,7 @@
 +   }
 +
 +   protected SoundEvent getAmbientSound() {
-+      return SoundEvents.ZOMBIFIED_PIGLIN_AMBIENT;
++      return this.isAngry() ? SoundEvents.ZOMBIFIED_PIGLIN_ANGRY : SoundEvents.ZOMBIFIED_PIGLIN_AMBIENT;
 +   }
 +
 +   protected SoundEvent getHurtSound(DamageSource var1) {
@@ -217,7 +225,7 @@
 +
 +   static {
 +      SPEED_MODIFIER_ATTACKING = new AttributeModifier(SPEED_MODIFIER_ATTACKING_UUID, "Attacking speed boost", 0.05D, AttributeModifier.Operation.ADDITION);
-+      ANGER_SOUND_INTERVAL = TimeUtil.rangeOfSeconds(0, 2);
++      FIRST_ANGER_SOUND_DELAY = TimeUtil.rangeOfSeconds(0, 1);
 +      PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
 +      ALERT_INTERVAL = TimeUtil.rangeOfSeconds(4, 6);
 +   }

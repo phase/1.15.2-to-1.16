@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/monster/hoglin/Hoglin.java
 +++ net/minecraft/world/entity/monster/hoglin/Hoglin.java
-@@ -1,0 +1,339 @@
+@@ -1,0 +1,323 @@
 +package net.minecraft.world.entity.monster.hoglin;
 +
 +import com.google.common.collect.ImmutableList;
@@ -66,7 +66,7 @@
 +   }
 +
 +   public static AttributeSupplier.Builder createAttributes() {
-+      return Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 40.0D).add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D).add(Attributes.KNOCKBACK_RESISTANCE, 0.5D).add(Attributes.ATTACK_KNOCKBACK, 1.0D).add(Attributes.ATTACK_DAMAGE, 6.0D);
++      return Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 40.0D).add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D).add(Attributes.KNOCKBACK_RESISTANCE, 0.6000000238418579D).add(Attributes.ATTACK_KNOCKBACK, 1.0D).add(Attributes.ATTACK_DAMAGE, 6.0D);
 +   }
 +
 +   public boolean doHurtTarget(Entity var1) {
@@ -118,11 +118,10 @@
 +      this.getBrain().tick((ServerLevel)this.level, this);
 +      this.level.getProfiler().pop();
 +      HoglinAi.updateActivity(this);
-+      HoglinAi.maybePlayActivitySound(this);
 +      if (this.isConverting()) {
 +         ++this.timeInOverworld;
 +         if (this.timeInOverworld > 300) {
-+            this.playConvertedSound();
++            this.playSound(SoundEvents.HOGLIN_CONVERTED_TO_ZOMBIFIED);
 +            this.finishConversion((ServerLevel)this.level);
 +         }
 +      } else {
@@ -287,7 +286,7 @@
 +   }
 +
 +   protected SoundEvent getAmbientSound() {
-+      return SoundEvents.HOGLIN_AMBIENT;
++      return this.level.isClientSide ? null : (SoundEvent)HoglinAi.getSoundForCurrentActivity(this).orElse((Object)null);
 +   }
 +
 +   protected SoundEvent getHurtSound(DamageSource var1) {
@@ -306,27 +305,12 @@
 +      return SoundEvents.HOSTILE_SPLASH;
 +   }
 +
-+   public void playAmbientSound() {
-+      if (HoglinAi.isIdle(this)) {
-+         super.playAmbientSound();
-+      }
-+
-+   }
-+
 +   protected void playStepSound(BlockPos var1, BlockState var2) {
 +      this.playSound(SoundEvents.HOGLIN_STEP, 0.15F, 1.0F);
 +   }
 +
-+   protected void playAngrySound() {
-+      this.playSound(SoundEvents.HOGLIN_ANGRY, 1.0F, this.getVoicePitch());
-+   }
-+
-+   protected void playRetreatSound() {
-+      this.playSound(SoundEvents.HOGLIN_RETREAT, 1.0F, this.getVoicePitch());
-+   }
-+
-+   private void playConvertedSound() {
-+      this.playSound(SoundEvents.HOGLIN_CONVERTED_TO_ZOMBIFIED, 1.0F, this.getVoicePitch());
++   protected void playSound(SoundEvent var1) {
++      this.playSound(var1, this.getSoundVolume(), this.getVoicePitch());
 +   }
 +
 +   protected void sendDebugPackets() {

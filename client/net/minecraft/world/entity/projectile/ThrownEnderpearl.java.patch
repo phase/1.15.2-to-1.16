@@ -1,10 +1,11 @@
 --- net/minecraft/world/entity/projectile/ThrownEnderpearl.java
 +++ net/minecraft/world/entity/projectile/ThrownEnderpearl.java
-@@ -2,10 +2,11 @@
+@@ -1,11 +1,10 @@
+ package net.minecraft.world.entity.projectile;
  
  import javax.annotation.Nullable;
- import net.minecraft.advancements.CriteriaTriggers;
- import net.minecraft.core.BlockPos;
+-import net.minecraft.advancements.CriteriaTriggers;
+-import net.minecraft.core.BlockPos;
  import net.minecraft.core.particles.ParticleTypes;
 +import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.ServerPlayer;
@@ -12,14 +13,16 @@
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.entity.LivingEntity;
-@@ -15,79 +16,74 @@
+@@ -13,81 +12,52 @@
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.item.Item;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
- import net.minecraft.world.level.block.entity.BlockEntity;
- import net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity;
+-import net.minecraft.world.level.block.entity.BlockEntity;
+-import net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity;
 -import net.minecraft.world.level.dimension.DimensionType;
- import net.minecraft.world.phys.BlockHitResult;
+-import net.minecraft.world.phys.BlockHitResult;
  import net.minecraft.world.phys.EntityHitResult;
  import net.minecraft.world.phys.HitResult;
  
@@ -43,17 +46,20 @@
        return Items.ENDER_PEARL;
     }
  
--   protected void onHit(HitResult var1) {
++   protected void onHitEntity(EntityHitResult var1) {
++      super.onHitEntity(var1);
++      var1.getEntity().hurt(DamageSource.thrown(this, this.getOwner()), 0.0F);
++   }
++
+    protected void onHit(HitResult var1) {
 -      LivingEntity var2 = this.getOwner();
 -      if (var1.getType() == HitResult.Type.ENTITY) {
 -         Entity var3 = ((EntityHitResult)var1).getEntity();
 -         if (var3 == this.originalOwner) {
 -            return;
 -         }
-+   protected void onHitEntity(EntityHitResult var1) {
-+      super.onHitEntity(var1);
-+      var1.getEntity().hurt(DamageSource.thrown(this, this.getOwner()), 0.0F);
-+   }
++      super.onHit(var1);
++      Entity var2 = this.getOwner();
  
 -         var3.hurt(DamageSource.thrown(this, var2), 0.0F);
 -      }
@@ -71,33 +77,14 @@
 -               var5.teleportEntity(var2);
 -               this.remove();
 -               return;
-+   protected void onHitBlock(BlockHitResult var1) {
-+      super.onHitBlock(var1);
-+      Entity var2 = this.getOwner();
-+      BlockPos var3 = var1.getBlockPos();
-+      BlockEntity var4 = this.level.getBlockEntity(var3);
-+      if (var4 instanceof TheEndGatewayBlockEntity) {
-+         TheEndGatewayBlockEntity var5 = (TheEndGatewayBlockEntity)var4;
-+         if (var2 != null) {
-+            if (var2 instanceof ServerPlayer) {
-+               CriteriaTriggers.ENTER_BLOCK.trigger((ServerPlayer)var2, this.level.getBlockState(var3));
-             }
- 
-+            var5.teleportEntity(var2);
-+            this.remove();
-+         } else {
-             var5.teleportEntity(this);
+-            }
+-
+-            var5.teleportEntity(this);
 -            return;
-          }
-       }
- 
+-         }
+-      }
+-
 -      for(int var7 = 0; var7 < 32; ++var7) {
-+   }
-+
-+   protected void onHit(HitResult var1) {
-+      super.onHit(var1);
-+      Entity var2 = this.getOwner();
-+
 +      for(int var3 = 0; var3 < 32; ++var3) {
           this.level.addParticle(ParticleTypes.PORTAL, this.getX(), this.getY() + this.random.nextDouble() * 2.0D, this.getZ(), this.random.nextGaussian(), 0.0D, this.random.nextGaussian());
        }
@@ -123,7 +110,7 @@
                 if (var2.isPassenger()) {
                    var2.stopRiding();
                 }
-@@ -105,23 +101,24 @@
+@@ -105,23 +75,24 @@
        }
  
     }

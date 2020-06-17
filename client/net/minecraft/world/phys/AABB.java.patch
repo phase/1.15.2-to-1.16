@@ -15,7 +15,18 @@
     }
  
     public double max(Direction.Axis var1) {
-@@ -317,6 +321,10 @@
+@@ -307,16 +311,20 @@
+          return var1;
+       }
+    }
+ 
+    public String toString() {
+-      return "box[" + this.minX + ", " + this.minY + ", " + this.minZ + "] -> [" + this.maxX + ", " + this.maxY + ", " + this.maxZ + "]";
++      return "AABB[" + this.minX + ", " + this.minY + ", " + this.minZ + "] -> [" + this.maxX + ", " + this.maxY + ", " + this.maxZ + "]";
+    }
+ 
+    public boolean hasNaN() {
+       return Double.isNaN(this.minX) || Double.isNaN(this.minY) || Double.isNaN(this.minZ) || Double.isNaN(this.maxX) || Double.isNaN(this.maxY) || Double.isNaN(this.maxZ);
     }
  
     public Vec3 getCenter() {

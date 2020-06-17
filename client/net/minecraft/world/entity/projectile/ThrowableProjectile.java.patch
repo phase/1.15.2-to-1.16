@@ -1,11 +1,12 @@
 --- net/minecraft/world/entity/projectile/ThrowableProjectile.java
 +++ net/minecraft/world/entity/projectile/ThrowableProjectile.java
-@@ -1,55 +1,32 @@
+@@ -1,55 +1,36 @@
  package net.minecraft.world.entity.projectile;
  
 -import java.util.Iterator;
 -import java.util.UUID;
 -import javax.annotation.Nullable;
++import net.minecraft.core.BlockPos;
  import net.minecraft.core.particles.ParticleTypes;
 -import net.minecraft.nbt.CompoundTag;
 -import net.minecraft.nbt.NbtUtils;
@@ -20,6 +21,9 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.Blocks;
 -import net.minecraft.world.phys.AABB;
++import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity;
++import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.phys.BlockHitResult;
  import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
@@ -58,7 +62,7 @@
     public boolean shouldRenderAtSqrDistance(double var1) {
        double var3 = this.getBoundingBox().getSize() * 4.0D;
        if (Double.isNaN(var3)) {
-@@ -58,175 +35,50 @@
+@@ -58,175 +39,63 @@
  
        var3 *= 64.0D;
        return var1 < var3 * var3;
@@ -100,7 +104,20 @@
 -      if (this.shakeTime > 0) {
 -         --this.shakeTime;
 -      }
--
++      HitResult var1 = ProjectileUtil.getHitResult(this, this::canHitEntity, ClipContext.Block.OUTLINE);
++      boolean var2 = false;
++      if (var1.getType() == HitResult.Type.BLOCK) {
++         BlockPos var3 = ((BlockHitResult)var1).getBlockPos();
++         BlockState var4 = this.level.getBlockState(var3);
++         if (var4.is(Blocks.NETHER_PORTAL)) {
++            this.handleInsidePortal(var3);
++            var2 = true;
++         } else if (var4.is(Blocks.END_GATEWAY)) {
++            BlockEntity var5 = this.level.getBlockEntity(var3);
++            if (var5 instanceof TheEndGatewayBlockEntity) {
++               ((TheEndGatewayBlockEntity)var5).teleportEntity(this);
++            }
+ 
 -      if (this.inGround) {
 -         this.inGround = false;
 -         this.setDeltaMovement(this.getDeltaMovement().multiply((double)(this.random.nextFloat() * 0.2F), (double)(this.random.nextFloat() * 0.2F), (double)(this.random.nextFloat() * 0.2F)));
@@ -116,35 +133,33 @@
 -         if (var3 == this.entityToIgnore) {
 -            ++this.timeToIgnore;
 -            break;
--         }
++            var2 = true;
+          }
 -
 -         if (this.owner != null && this.tickCount < 2 && this.entityToIgnore == null) {
 -            this.entityToIgnore = var3;
 -            this.timeToIgnore = 3;
 -            break;
 -         }
--      }
--
+       }
+ 
 -      HitResult var14 = ProjectileUtil.getHitResult(this, var1, (var1x) -> {
 -         return !var1x.isSpectator() && var1x.isPickable() && var1x != this.entityToIgnore;
 -      }, ClipContext.Block.OUTLINE, true);
 -      if (this.entityToIgnore != null && this.timeToIgnore-- <= 0) {
 -         this.entityToIgnore = null;
--      }
--
++      if (var1.getType() != HitResult.Type.MISS && !var2) {
++         this.onHit(var1);
+       }
+ 
 -      if (var14.getType() != HitResult.Type.MISS) {
 -         if (var14.getType() == HitResult.Type.BLOCK && this.level.getBlockState(((BlockHitResult)var14).getBlockPos()).getBlock() == Blocks.NETHER_PORTAL) {
 -            this.handleInsidePortal(((BlockHitResult)var14).getBlockPos());
-+      HitResult var1 = ProjectileUtil.getHitResult(this, this::canHitEntity, ClipContext.Block.OUTLINE);
-+      if (var1.getType() != HitResult.Type.MISS) {
-+         if (var1.getType() == HitResult.Type.BLOCK && this.level.getBlockState(((BlockHitResult)var1).getBlockPos()).is(Blocks.NETHER_PORTAL)) {
-+            this.handleInsidePortal(((BlockHitResult)var1).getBlockPos());
-          } else {
+-         } else {
 -            this.onHit(var14);
-+            this.onHit(var1);
-          }
-       }
- 
+-         }
+-      }
+-
 -      Vec3 var15 = this.getDeltaMovement();
 -      double var4 = this.getX() + var15.x;
 -      double var6 = this.getY() + var15.y;
@@ -170,39 +185,39 @@
 -      this.xRot = Mth.lerp(0.2F, this.xRotO, this.xRot);
 -      this.yRot = Mth.lerp(0.2F, this.yRotO, this.yRot);
 -      float var11;
-+      Vec3 var2 = this.getDeltaMovement();
-+      double var3 = this.getX() + var2.x;
-+      double var5 = this.getY() + var2.y;
-+      double var7 = this.getZ() + var2.z;
++      Vec3 var13 = this.getDeltaMovement();
++      double var14 = this.getX() + var13.x;
++      double var6 = this.getY() + var13.y;
++      double var8 = this.getZ() + var13.z;
 +      this.updateRotation();
-+      float var9;
++      float var10;
        if (this.isInWater()) {
 -         for(int var12 = 0; var12 < 4; ++var12) {
 -            float var13 = 0.25F;
 -            this.level.addParticle(ParticleTypes.BUBBLE, var4 - var15.x * 0.25D, var6 - var15.y * 0.25D, var8 - var15.z * 0.25D, var15.x, var15.y, var15.z);
-+         for(int var10 = 0; var10 < 4; ++var10) {
-+            float var11 = 0.25F;
-+            this.level.addParticle(ParticleTypes.BUBBLE, var3 - var2.x * 0.25D, var5 - var2.y * 0.25D, var7 - var2.z * 0.25D, var2.x, var2.y, var2.z);
++         for(int var11 = 0; var11 < 4; ++var11) {
++            float var12 = 0.25F;
++            this.level.addParticle(ParticleTypes.BUBBLE, var14 - var13.x * 0.25D, var6 - var13.y * 0.25D, var8 - var13.z * 0.25D, var13.x, var13.y, var13.z);
           }
  
 -         var11 = 0.8F;
-+         var9 = 0.8F;
++         var10 = 0.8F;
        } else {
 -         var11 = 0.99F;
-+         var9 = 0.99F;
++         var10 = 0.99F;
        }
  
 -      this.setDeltaMovement(var15.scale((double)var11));
-+      this.setDeltaMovement(var2.scale((double)var9));
++      this.setDeltaMovement(var13.scale((double)var10));
        if (!this.isNoGravity()) {
 -         Vec3 var16 = this.getDeltaMovement();
 -         this.setDeltaMovement(var16.x, var16.y - (double)this.getGravity(), var16.z);
-+         Vec3 var12 = this.getDeltaMovement();
-+         this.setDeltaMovement(var12.x, var12.y - (double)this.getGravity(), var12.z);
++         Vec3 var15 = this.getDeltaMovement();
++         this.setDeltaMovement(var15.x, var15.y - (double)this.getGravity(), var15.z);
        }
  
 -      this.setPos(var4, var6, var8);
-+      this.setPos(var3, var5, var7);
++      this.setPos(var14, var6, var8);
     }
  
     protected float getGravity() {

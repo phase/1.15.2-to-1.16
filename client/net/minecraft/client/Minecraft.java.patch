@@ -835,7 +835,22 @@
        this.window.setGuiScale((double)var1);
        if (this.screen != null) {
           this.screen.resize(this, this.window.getGuiScaledWidth(), this.window.getGuiScaledHeight());
-@@ -1006,149 +1074,147 @@
+@@ -989,10 +1057,14 @@
+       var2.resize(this.window.getWidth(), this.window.getHeight(), ON_OSX);
+       this.gameRenderer.resize(this.window.getWidth(), this.window.getHeight());
+       this.mouseHandler.setIgnoreFirstMove();
+    }
+ 
++   public void cursorEntered() {
++      this.mouseHandler.cursorEntered();
++   }
++
+    private int getFramerateLimit() {
+       return this.level != null || this.screen == null && this.overlay == null ? this.window.getFramerateLimit() : 60;
+    }
+ 
+    public void emergencySave() {
+@@ -1006,149 +1078,147 @@
           System.gc();
           if (this.isLocalServer && this.singleplayerServer != null) {
              this.singleplayerServer.halt(true);
@@ -1094,7 +1109,7 @@
     public void stop() {
        this.running = false;
     }
-@@ -1322,11 +1388,11 @@
+@@ -1322,11 +1392,11 @@
        if (this.level != null) {
           this.textureManager.tick();
        }
@@ -1107,7 +1122,7 @@
              this.setScreen(new InBedChatScreen());
           }
        } else if (this.screen != null && this.screen instanceof InBedChatScreen && !this.player.isSleeping()) {
-@@ -1383,11 +1449,10 @@
+@@ -1383,11 +1453,10 @@
        }
  
        this.soundManager.tick(this.pause);
@@ -1119,7 +1134,7 @@
              try {
                 this.level.tick(() -> {
                    return true;
-@@ -1467,13 +1532,13 @@
+@@ -1467,13 +1536,13 @@
  
        while(this.options.keyAdvancements.consumeClick()) {
           this.setScreen(new AdvancementsScreen(this.player.connection.getAdvancements()));
@@ -1135,7 +1150,7 @@
  
        while(this.options.keyDrop.consumeClick()) {
           if (!this.player.isSpectator() && this.player.drop(Screen.hasControlDown())) {
-@@ -1482,15 +1547,15 @@
+@@ -1482,15 +1551,15 @@
        }
  
        boolean var4 = this.options.chatVisibility != ChatVisiblity.HIDDEN;
@@ -1153,7 +1168,7 @@
  
        if (this.player.isUsingItem()) {
           if (!this.options.keyUse.isDown()) {
-@@ -1530,85 +1595,238 @@
+@@ -1530,85 +1599,238 @@
        }
  
        this.continueAttack(this.screen == null && this.options.keyAttack.isDown() && this.mouseHandler.isMouseGrabbed());
@@ -1445,7 +1460,7 @@
        this.updateLevelInEngines(var1);
        if (!this.isLocalServer) {
           YggdrasilAuthenticationService var3 = new YggdrasilAuthenticationService(this.proxy, UUID.randomUUID().toString());
-@@ -1639,13 +1857,17 @@
+@@ -1639,13 +1861,17 @@
        this.gameMode = null;
        NarratorChatListener.INSTANCE.clear();
        this.updateScreenAndTick(var1);
@@ -1463,7 +1478,7 @@
           this.clientPackSource.clearServerPack();
           this.gui.onDisconnected();
           this.currentServer = null;
-@@ -1657,25 +1879,49 @@
+@@ -1657,25 +1883,49 @@
        this.updateLevelInEngines((ClientLevel)null);
        this.player = null;
     }
@@ -1514,7 +1529,7 @@
     }
  
     @Nullable
-@@ -1686,13 +1932,17 @@
+@@ -1686,13 +1936,17 @@
     public static boolean renderNames() {
        return !instance.options.hideGui;
     }
@@ -1533,7 +1548,7 @@
     }
  
     private void pickBlock() {
-@@ -1807,12 +2057,12 @@
+@@ -1807,12 +2061,12 @@
     }
  
     private ItemStack addCustomNbtData(ItemStack var1, BlockEntity var2) {
@@ -1548,7 +1563,7 @@
        } else {
           var1.addTagElement("BlockEntityTag", var3);
           var4 = new CompoundTag();
-@@ -1904,14 +2154,14 @@
+@@ -1904,14 +2158,14 @@
        String var2 = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ? "little" : "big";
        var1.setDynamicData("endianness", var2);
        var1.setDynamicData("subtitles", this.options.showSubtitles);
@@ -1565,7 +1580,7 @@
           }
        }
  
-@@ -1981,11 +2231,11 @@
+@@ -1981,11 +2235,11 @@
  
     public ResourceManager getResourceManager() {
        return this.resourceManager;
@@ -1578,7 +1593,7 @@
  
     public ClientPackSource getClientPackSource() {
        return this.clientPackSource;
-@@ -2010,30 +2260,34 @@
+@@ -2010,30 +2264,34 @@
  
     public boolean isPaused() {
        return this.pause;
@@ -1616,7 +1631,7 @@
 +            if (this.musicManager.isPlayingMusic(Musics.UNDER_WATER) || this.player.isUnderWater() && (var1 == Biome.BiomeCategory.OCEAN || var1 == Biome.BiomeCategory.RIVER)) {
 +               return Musics.UNDER_WATER;
 +            } else {
-+               return this.player.abilities.instabuild && this.player.abilities.mayfly ? Musics.CREATIVE : (Music)this.level.getBiomeManager().getNoiseBiomeAtPosition(this.player.blockPosition()).getBackgroundMusic().orElse(Musics.GAME);
++               return this.player.level.dimension() != Level.NETHER && this.player.abilities.instabuild && this.player.abilities.mayfly ? Musics.CREATIVE : (Music)this.level.getBiomeManager().getNoiseBiomeAtPosition(this.player.blockPosition()).getBackgroundMusic().orElse(Musics.GAME);
 +            }
           }
 +      } else {
@@ -1626,7 +1641,7 @@
  
     public MinecraftSessionService getMinecraftSessionService() {
        return this.minecraftSessionService;
-@@ -2051,10 +2305,14 @@
+@@ -2051,10 +2309,14 @@
     public void setCameraEntity(Entity var1) {
        this.cameraEntity = var1;
        this.gameRenderer.checkEntityPostEffect(var1);
@@ -1641,7 +1656,7 @@
     }
  
     protected Runnable wrapRunnable(Runnable var1) {
-@@ -2135,14 +2393,10 @@
+@@ -2135,14 +2397,10 @@
  
     public ModelManager getModelManager() {
        return this.modelManager;
@@ -1656,7 +1671,7 @@
     }
  
     public MobEffectTextureManager getMobEffectTextures() {
-@@ -2180,43 +2434,82 @@
+@@ -2180,43 +2438,82 @@
  
     public RenderBuffers renderBuffers() {
        return this.renderBuffers;

@@ -1,6 +1,6 @@
 --- net/minecraft/client/renderer/blockentity/SkullBlockRenderer.java
 +++ net/minecraft/client/renderer/blockentity/SkullBlockRenderer.java
-@@ -64,30 +64,18 @@
+@@ -64,39 +64,27 @@
        SkullModel var8 = (SkullModel)MODEL_BY_TYPE.get(var2);
        var5.pushPose();
        if (var0 == null) {
@@ -35,3 +35,13 @@
  
     private static RenderType getRenderType(SkullBlock.Type var0, @Nullable GameProfile var1) {
        ResourceLocation var2 = (ResourceLocation)SKIN_BY_TYPE.get(var0);
+       if (var0 == SkullBlock.Types.PLAYER && var1 != null) {
+          Minecraft var3 = Minecraft.getInstance();
+          Map var4 = var3.getSkinManager().getInsecureSkinInformation(var1);
+          return var4.containsKey(Type.SKIN) ? RenderType.entityTranslucent(var3.getSkinManager().registerTexture((MinecraftProfileTexture)var4.get(Type.SKIN), Type.SKIN)) : RenderType.entityCutoutNoCull(DefaultPlayerSkin.getDefaultSkin(Player.createPlayerUUID(var1)));
+       } else {
+-         return RenderType.entityCutoutNoCull(var2);
++         return RenderType.entityCutoutNoCullZOffset(var2);
+       }
+    }
+ }

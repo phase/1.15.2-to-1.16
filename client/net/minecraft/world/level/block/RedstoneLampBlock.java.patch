@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/RedstoneLampBlock.java
 +++ net/minecraft/world/level/block/RedstoneLampBlock.java
-@@ -2,30 +2,25 @@
+@@ -2,34 +2,25 @@
  
  import java.util.Random;
  import javax.annotation.Nullable;
@@ -28,12 +28,16 @@
 -      return (Boolean)var1.getValue(LIT) ? super.getLightEmission(var1) : 0;
 -   }
 -
-    public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
-       super.onPlace(var1, var2, var3, var4, var5);
+-   public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
+-      super.onPlace(var1, var2, var3, var4, var5);
+-   }
+-
+    @Nullable
+    public BlockState getStateForPlacement(BlockPlaceContext var1) {
+       return (BlockState)this.defaultBlockState().setValue(LIT, var1.getLevel().hasNeighborSignal(var1.getClickedPos()));
     }
  
-    @Nullable
-@@ -56,13 +51,9 @@
+@@ -56,13 +47,9 @@
  
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> var1) {
        var1.add(LIT);

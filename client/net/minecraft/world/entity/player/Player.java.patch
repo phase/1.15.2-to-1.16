@@ -119,7 +119,22 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_PLAYER_ABSORPTION_ID, 0.0F);
-@@ -282,17 +276,17 @@
+@@ -226,14 +220,10 @@
+       if (!this.level.isClientSide && this.containerMenu != null && !this.containerMenu.stillValid(this)) {
+          this.closeContainer();
+          this.containerMenu = this.inventoryMenu;
+       }
+ 
+-      if (this.isOnFire() && this.abilities.invulnerable) {
+-         this.clearFire();
+-      }
+-
+       this.moveCloak();
+       if (!this.level.isClientSide) {
+          this.foodData.tick(this);
+          this.awardStat(Stats.PLAY_ONE_MINUTE);
+          if (this.isAlive()) {
+@@ -282,17 +272,17 @@
     protected boolean isStayingOnGroundSurface() {
        return this.isShiftKeyDown();
     }
@@ -139,7 +154,7 @@
  
     }
  
-@@ -438,29 +432,21 @@
+@@ -438,29 +428,21 @@
     protected void closeContainer() {
        this.containerMenu = this.inventoryMenu;
     }
@@ -171,7 +186,7 @@
  
     public void resetPos() {
        this.setPose(Pose.STANDING);
-@@ -491,43 +477,38 @@
+@@ -491,43 +473,38 @@
        }
  
        this.inventory.tick();
@@ -229,7 +244,7 @@
        }
  
        this.playShoulderEntityAmbientSound(this.getShoulderEntityLeft());
-@@ -537,16 +518,19 @@
+@@ -537,16 +514,19 @@
        }
  
     }
@@ -251,7 +266,7 @@
  
     }
  
-@@ -632,10 +616,14 @@
+@@ -632,10 +612,14 @@
     @Nullable
     public ItemEntity drop(ItemStack var1, boolean var2, boolean var3) {
        if (var1.isEmpty()) {
@@ -266,7 +281,7 @@
           var6.setPickUpDelay(40);
           if (var3) {
              var6.setThrower(this.getUUID());
-@@ -694,23 +682,23 @@
+@@ -694,23 +678,23 @@
           }
  
           var2 *= var5;
@@ -293,7 +308,7 @@
     public void readAdditionalSaveData(CompoundTag var1) {
        super.readAdditionalSaveData(var1);
        this.setUUID(createPlayerUUID(this.gameProfile));
-@@ -725,17 +713,13 @@
+@@ -725,17 +709,13 @@
        if (this.enchantmentSeed == 0) {
           this.enchantmentSeed = this.random.nextInt();
        }
@@ -312,7 +327,7 @@
        }
  
        if (var1.contains("ShoulderEntityLeft", 10)) {
-@@ -757,17 +741,10 @@
+@@ -757,17 +737,10 @@
        var1.putFloat("XpP", this.experienceProgress);
        var1.putInt("XpLevel", this.experienceLevel);
        var1.putInt("XpTotal", this.totalExperience);
@@ -330,7 +345,7 @@
        var1.put("EnderItems", this.enderChestInventory.createTag());
        if (!this.getShoulderEntityLeft().isEmpty()) {
           var1.put("ShoulderEntityLeft", this.getShoulderEntityLeft());
-@@ -798,11 +775,11 @@
+@@ -798,11 +771,11 @@
           return false;
        } else if (this.abilities.invulnerable && !var1.isBypassInvul()) {
           return false;
@@ -343,7 +358,7 @@
              this.removeEntitiesOnShoulder();
              if (var1.scalesWithDifficulty()) {
                 if (this.level.getDifficulty() == Difficulty.PEACEFUL) {
-@@ -839,33 +816,39 @@
+@@ -839,33 +812,39 @@
        } else {
           return !var2.isAlliedTo(var3) ? true : var2.isAllowFriendlyFire();
        }
@@ -400,7 +415,7 @@
     protected void actuallyHurt(DamageSource var1, float var2) {
        if (!this.isInvulnerableTo(var1)) {
           var2 = this.getDamageAfterArmorAbsorb(var1, var2);
-@@ -889,10 +872,14 @@
+@@ -889,10 +868,14 @@
  
           }
        }
@@ -415,7 +430,7 @@
  
     public void openMinecartCommandBlock(BaseCommandBlock var1) {
     }
-@@ -927,49 +914,55 @@
+@@ -927,49 +910,55 @@
  
           return InteractionResult.PASS;
        } else {
@@ -478,7 +493,7 @@
           double var3 = var1.x;
           double var5 = var1.z;
           double var7 = 0.05D;
-@@ -1026,11 +1019,11 @@
+@@ -1026,11 +1015,11 @@
     }
  
     public void attack(Entity var1) {
@@ -491,7 +506,7 @@
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), ((LivingEntity)var1).getMobType());
              } else {
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), MobType.UNDEFINED);
-@@ -1049,11 +1042,11 @@
+@@ -1049,11 +1038,11 @@
                    this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
                    ++var21;
                    var6 = true;
@@ -504,7 +519,7 @@
                    var2 *= 1.5F;
                 }
  
-@@ -1081,11 +1074,11 @@
+@@ -1081,11 +1070,11 @@
                 Vec3 var15 = var1.getDeltaMovement();
                 boolean var16 = var1.hurt(DamageSource.playerAttack(this), var2);
                 if (var16) {
@@ -517,7 +532,7 @@
                       }
  
                       this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
-@@ -1115,11 +1108,11 @@
+@@ -1115,11 +1104,11 @@
                                } while(var20 == var1);
                             } while(this.isAlliedTo(var20));
                          } while(var20 instanceof ArmorStand && ((ArmorStand)var20).isMarker());
@@ -530,7 +545,7 @@
                       }
                    }
  
-@@ -1243,75 +1236,15 @@
+@@ -1243,75 +1232,15 @@
     public GameProfile getGameProfile() {
        return this.gameProfile;
     }
@@ -606,7 +621,7 @@
        if (this.level instanceof ServerLevel && var2) {
           ((ServerLevel)this.level).updateSleepingPlayerList();
        }
-@@ -1321,22 +1254,28 @@
+@@ -1321,22 +1250,28 @@
  
     public void stopSleeping() {
        this.stopSleepInBed(true, true);
@@ -645,7 +660,7 @@
  
     public boolean isSleepingLongEnough() {
        return this.isSleeping() && this.sleepCounter >= 100;
-@@ -1347,33 +1286,10 @@
+@@ -1347,33 +1282,10 @@
     }
  
     public void displayClientMessage(Component var1, boolean var2) {
@@ -679,7 +694,7 @@
     }
  
     public void awardStat(ResourceLocation var1, int var2) {
-@@ -1455,11 +1371,11 @@
+@@ -1455,11 +1367,11 @@
     protected boolean freeAt(BlockPos var1) {
        return !this.level.getBlockState(var1).isSuffocating(this.level, var1);
     }
@@ -692,7 +707,7 @@
     public void checkMovementStatistics(double var1, double var3, double var5) {
        if (!this.isPassenger()) {
           int var7;
-@@ -1467,11 +1383,11 @@
+@@ -1467,11 +1379,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var3 * var3 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.SWIM_ONE_CM, var7);
@@ -705,7 +720,7 @@
                 this.awardStat(Stats.WALK_UNDER_WATER_ONE_CM, var7);
                 this.causeFoodExhaustion(0.01F * (float)var7 * 0.01F);
              }
-@@ -1479,11 +1395,11 @@
+@@ -1479,11 +1391,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.WALK_ON_WATER_ONE_CM, var7);
@@ -718,7 +733,7 @@
              }
           } else if (this.onGround) {
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
-@@ -1510,22 +1426,25 @@
+@@ -1510,22 +1422,25 @@
           }
  
        }
@@ -749,7 +764,7 @@
        }
  
     }
-@@ -1541,11 +1460,11 @@
+@@ -1541,11 +1456,11 @@
           return super.causeFallDamage(var1, var2);
        }
     }
@@ -762,7 +777,7 @@
              this.startFallFlying();
              return true;
           }
-@@ -1803,31 +1722,31 @@
+@@ -1803,31 +1718,31 @@
        return !this.abilities.flying && !this.isSpectator() && super.isSwimming();
     }
  
@@ -798,6 +813,21 @@
  
     public String getScoreboardName() {
        return this.getGameProfile().getName();
+@@ -1930,10 +1845,14 @@
+ 
+    public void setReducedDebugInfo(boolean var1) {
+       this.reducedDebugInfo = var1;
+    }
+ 
++   public void setRemainingFireTicks(int var1) {
++      super.setRemainingFireTicks(this.abilities.invulnerable ? Math.min(var1, 1) : var1);
++   }
++
+    public HumanoidArm getMainArm() {
+       return (Byte)this.entityData.get(DATA_PLAYER_MAIN_HAND) == 0 ? HumanoidArm.LEFT : HumanoidArm.RIGHT;
+    }
+ 
+    public void setMainArm(HumanoidArm var1) {
 @@ -1955,11 +1874,11 @@
     protected void setShoulderEntityRight(CompoundTag var1) {
        this.entityData.set(DATA_SHOULDER_RIGHT, var1);

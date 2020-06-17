@@ -379,6 +379,7 @@
 * net/minecraft/client/renderer/entity/layers/HumanoidArmorLayer.java
 * net/minecraft/client/renderer/entity/layers/ShulkerHeadLayer.java
 * net/minecraft/client/renderer/entity/player/PlayerRenderer.java
+* net/minecraft/client/renderer/texture/HttpTexture.java
 * net/minecraft/client/renderer/texture/TextureManager.java
 * net/minecraft/client/resources/ClientPackSource.java
 * net/minecraft/client/resources/language/I18n.java
@@ -399,6 +400,7 @@
 * net/minecraft/client/resources/sounds/MinecartSoundInstance.java
 * net/minecraft/client/resources/sounds/RidingMinecartSoundInstance.java
 * net/minecraft/client/resources/sounds/SimpleSoundInstance.java
+* net/minecraft/client/resources/sounds/Sound.java
 * net/minecraft/client/resources/sounds/SoundInstance.java
 * net/minecraft/client/resources/sounds/UnderwaterAmbientSoundHandler.java
 * net/minecraft/client/resources/sounds/UnderwaterAmbientSoundInstances.java
@@ -540,6 +542,7 @@
 * net/minecraft/network/protocol/game/ClientGamePacketListener.java
 * net/minecraft/network/protocol/game/ClientboundChatPacket.java
 * net/minecraft/network/protocol/game/ClientboundGameEventPacket.java
+* net/minecraft/network/protocol/game/ClientboundLevelChunkPacket.java
 * net/minecraft/network/protocol/game/ClientboundLightUpdatePacket.java
 * net/minecraft/network/protocol/game/ClientboundLoginPacket.java
 * net/minecraft/network/protocol/game/ClientboundPlayerAbilitiesPacket.java
@@ -650,6 +653,7 @@
 * net/minecraft/server/level/ThreadedLevelLightEngine.java
 * net/minecraft/server/level/WorldGenRegion.java
 * net/minecraft/server/level/WorldGenTickList.java
+* net/minecraft/server/network/LegacyQueryHandler.java
 * net/minecraft/server/network/ServerConnectionListener.java
 * net/minecraft/server/network/ServerGamePacketListenerImpl.java
 * net/minecraft/server/network/ServerHandshakePacketListenerImpl.java
@@ -908,6 +912,7 @@
 * net/minecraft/world/entity/ai/goal/PanicGoal.java
 * net/minecraft/world/entity/ai/goal/PathfindToRaidGoal.java
 * net/minecraft/world/entity/ai/goal/RandomStrollGoal.java
+* net/minecraft/world/entity/ai/goal/RangedCrossbowAttackGoal.java
 * net/minecraft/world/entity/ai/goal/RemoveBlockGoal.java
 * net/minecraft/world/entity/ai/goal/StrollThroughVillageGoal.java
 * net/minecraft/world/entity/ai/goal/TradeWithPlayerGoal.java
@@ -1065,6 +1070,7 @@
 * net/minecraft/world/entity/vehicle/MinecartFurnace.java
 * net/minecraft/world/entity/vehicle/MinecartHopper.java
 * net/minecraft/world/entity/vehicle/MinecartSpawner.java
+* net/minecraft/world/food/FoodProperties.java
 * net/minecraft/world/inventory/AbstractContainerMenu.java
 * net/minecraft/world/inventory/AnvilMenu.java
 * net/minecraft/world/inventory/BeaconMenu.java
@@ -1171,6 +1177,7 @@
 * net/minecraft/world/level/LevelAccessor.java
 * net/minecraft/world/level/LevelReader.java
 * net/minecraft/world/level/LevelSettings.java
+* net/minecraft/world/level/LevelWriter.java
 * net/minecraft/world/level/NaturalSpawner.java
 * net/minecraft/world/level/PathNavigationRegion.java
 * net/minecraft/world/level/PortalForcer.java
@@ -1808,6 +1815,7 @@
 * net/minecraft/world/level/material/FluidState.java
 * net/minecraft/world/level/material/LavaFluid.java
 * net/minecraft/world/level/material/Material.java
+* net/minecraft/world/level/material/MaterialColor.java
 * net/minecraft/world/level/material/WaterFluid.java
 * net/minecraft/world/level/newbiome/layer/BiomeInitLayer.java
 * net/minecraft/world/level/newbiome/layer/Layers.java
@@ -1904,6 +1912,7 @@
 + net/minecraft/advancements/critereon/FishingHookPredicate.java
 + net/minecraft/advancements/critereon/ItemPickedUpByEntityTrigger.java
 + net/minecraft/advancements/critereon/LootTableTrigger.java
++ net/minecraft/advancements/critereon/PlayerInteractTrigger.java
 + net/minecraft/advancements/critereon/SerializationContext.java
 + net/minecraft/advancements/critereon/TargetBlockTrigger.java
 + net/minecraft/client/ComponentCollector.java
@@ -1987,6 +1996,7 @@
 + net/minecraft/network/chat/MutableComponent.java
 + net/minecraft/network/chat/TextColor.java
 + net/minecraft/network/protocol/game/ClientboundSetDefaultSpawnPositionPacket.java
++ net/minecraft/network/protocol/game/ClientboundSetEquipmentPacket.java
 + net/minecraft/network/protocol/game/DebugEntityNameGenerator.java
 + net/minecraft/network/protocol/game/ServerboundJigsawGeneratePacket.java
 + net/minecraft/realms/NarrationHelper.java
@@ -2283,6 +2293,7 @@
 - net/minecraft/core/MapFiller.java
 - net/minecraft/core/SerializableLong.java
 - net/minecraft/network/protocol/game/ClientboundAddGlobalEntityPacket.java
+- net/minecraft/network/protocol/game/ClientboundSetEquippedItemPacket.java
 - net/minecraft/network/protocol/game/ClientboundSetSpawnPositionPacket.java
 - net/minecraft/network/protocol/game/DebugMobNameGenerator.java
 - net/minecraft/realms/AbstractRealmsButton.java

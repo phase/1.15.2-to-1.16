@@ -13,8 +13,34 @@
  
  public class BeeDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
     private final Minecraft minecraft;
-@@ -135,11 +135,11 @@
-          ((Set)var2).add(var1x.getUuid());
+@@ -115,31 +115,29 @@
+ 
+    private Map<BlockPos, Set<UUID>> createHiveBlacklistMap() {
+       HashMap var1 = Maps.newHashMap();
+       this.beeInfosPerEntity.values().forEach((var1x) -> {
+          var1x.blacklistedHives.forEach((var2) -> {
+-            addBeeToSetInMap(var1, var1x, var2);
++            ((Set)var1.computeIfAbsent(var2, (var0) -> {
++               return Sets.newHashSet();
++            })).add(var1x.getUuid());
+          });
+       });
+       return var1;
+    }
+ 
+    private void renderFlowerInfos() {
+       HashMap var1 = Maps.newHashMap();
+       this.beeInfosPerEntity.values().stream().filter(BeeDebugRenderer.BeeInfo::hasFlower).forEach((var1x) -> {
+-         Object var2 = (Set)var1.get(var1x.flowerPos);
+-         if (var2 == null) {
+-            var2 = Sets.newHashSet();
+-            var1.put(var1x.flowerPos, var2);
+-         }
+-
+-         ((Set)var2).add(var1x.getUuid());
++         ((Set)var1.computeIfAbsent(var1x.flowerPos, (var0) -> {
++            return Sets.newHashSet();
++         })).add(var1x.getUuid());
        });
        var1.entrySet().forEach((var0) -> {
           BlockPos var1 = (BlockPos)var0.getKey();
@@ -26,7 +52,7 @@
           int var6 = var4 + 1;
           renderTextOverPos(var10000, var1, var4, -256);
           renderTextOverPos("Flower", var1, var6++, -1);
-@@ -150,11 +150,11 @@
+@@ -150,24 +148,14 @@
  
     private static String getBeeUuidsAsString(Collection<UUID> var0) {
        if (var0.isEmpty()) {
@@ -37,9 +63,43 @@
        }
     }
  
-    private static void addBeeToSetInMap(Map<BlockPos, Set<UUID>> var0, BeeDebugRenderer.BeeInfo var1, BlockPos var2) {
-       Object var3 = (Set)var0.get(var2);
-@@ -354,11 +354,11 @@
+-   private static void addBeeToSetInMap(Map<BlockPos, Set<UUID>> var0, BeeDebugRenderer.BeeInfo var1, BlockPos var2) {
+-      Object var3 = (Set)var0.get(var2);
+-      if (var3 == null) {
+-         var3 = Sets.newHashSet();
+-         var0.put(var2, var3);
+-      }
+-
+-      ((Set)var3).add(var1.getUuid());
+-   }
+-
+    private static void highlightHive(BlockPos var0) {
+       float var1 = 0.05F;
+       renderTransparentFilledBox(var0, 0.05F, 0.2F, 0.2F, 1.0F, 0.3F);
+    }
+ 
+@@ -302,17 +290,13 @@
+       Iterator var2 = this.beeInfosPerEntity.values().iterator();
+ 
+       while(var2.hasNext()) {
+          BeeDebugRenderer.BeeInfo var3 = (BeeDebugRenderer.BeeInfo)var2.next();
+          if (var3.hivePos != null && !this.hives.containsKey(var3.hivePos)) {
+-            Object var4 = (List)var1.get(var3.hivePos);
+-            if (var4 == null) {
+-               var4 = Lists.newArrayList();
+-               var1.put(var3.hivePos, var4);
+-            }
+-
+-            ((List)var4).add(var3.getName());
++            ((List)var1.computeIfAbsent(var3.hivePos, (var0) -> {
++               return Lists.newArrayList();
++            })).add(var3.getName());
+          }
+       }
+ 
+       return var1;
+    }
+@@ -354,11 +338,11 @@
        public UUID getUuid() {
           return this.uuid;
        }

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/WorldGenSettings.java
 +++ net/minecraft/world/level/levelgen/WorldGenSettings.java
-@@ -1,0 +1,249 @@
+@@ -1,0 +1,263 @@
 +package net.minecraft.world.level.levelgen;
 +
 +import com.google.common.base.MoreObjects;
@@ -190,6 +190,11 @@
 +      MappedRegistry var15 = DimensionType.defaultDimensions(var7);
 +      byte var11 = -1;
 +      switch(var6.hashCode()) {
++      case -1100099890:
++         if (var6.equals("largebiomes")) {
++            var11 = 3;
++         }
++         break;
 +      case 3145593:
 +         if (var6.equals("flat")) {
 +            var11 = 0;
@@ -198,6 +203,11 @@
 +      case 1045526590:
 +         if (var6.equals("debug_all_block_states")) {
 +            var11 = 1;
++         }
++         break;
++      case 1271599715:
++         if (var6.equals("amplified")) {
++            var11 = 2;
 +         }
 +      }
 +
@@ -211,6 +221,10 @@
 +         return new WorldGenSettings(var7, var4, false, withOverworld(var15, new FlatLevelSource((FlatLevelGeneratorSettings)var10008.resultOrPartial(var10009::error).orElseGet(FlatLevelGeneratorSettings::getDefault))));
 +      case 1:
 +         return new WorldGenSettings(var7, var4, false, withOverworld(var15, DebugLevelSource.INSTANCE));
++      case 2:
++         return new WorldGenSettings(var7, var4, false, withOverworld(var15, new NoiseBasedChunkGenerator(new OverworldBiomeSource(var7, false, false), var7, NoiseGeneratorSettings.Preset.AMPLIFIED.settings())));
++      case 3:
++         return new WorldGenSettings(var7, var4, false, withOverworld(var15, new NoiseBasedChunkGenerator(new OverworldBiomeSource(var7, false, true), var7, NoiseGeneratorSettings.Preset.OVERWORLD.settings())));
 +      default:
 +         return new WorldGenSettings(var7, var4, false, withOverworld(var15, makeDefaultOverworld(var7)));
 +      }

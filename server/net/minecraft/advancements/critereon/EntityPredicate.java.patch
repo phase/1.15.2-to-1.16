@@ -1,6 +1,6 @@
 --- net/minecraft/advancements/critereon/EntityPredicate.java
 +++ net/minecraft/advancements/critereon/EntityPredicate.java
-@@ -2,49 +2,62 @@
+@@ -2,51 +2,80 @@
  
  import com.google.gson.JsonArray;
  import com.google.gson.JsonElement;
@@ -46,7 +46,7 @@
     private final ResourceLocation catType;
  
 -   private EntityPredicate(EntityTypePredicate var1, DistancePredicate var2, LocationPredicate var3, MobEffectsPredicate var4, NbtPredicate var5, EntityFlagsPredicate var6, EntityEquipmentPredicate var7, PlayerPredicate var8, @Nullable String var9, @Nullable ResourceLocation var10) {
-+   private EntityPredicate(EntityTypePredicate var1, DistancePredicate var2, LocationPredicate var3, MobEffectsPredicate var4, NbtPredicate var5, EntityFlagsPredicate var6, EntityEquipmentPredicate var7, PlayerPredicate var8, FishingHookPredicate var9, EntityPredicate var10, EntityPredicate var11, @Nullable String var12, @Nullable ResourceLocation var13) {
++   private EntityPredicate(EntityTypePredicate var1, DistancePredicate var2, LocationPredicate var3, MobEffectsPredicate var4, NbtPredicate var5, EntityFlagsPredicate var6, EntityEquipmentPredicate var7, PlayerPredicate var8, FishingHookPredicate var9, @Nullable String var10, @Nullable ResourceLocation var11) {
        this.entityType = var1;
        this.distanceToPlayer = var2;
        this.location = var3;
@@ -58,16 +58,34 @@
 -      this.team = var9;
 -      this.catType = var10;
 +      this.fishingHook = var9;
++      this.vehicle = this;
++      this.targetedEntity = this;
++      this.team = var10;
++      this.catType = var11;
+    }
+ 
++   private EntityPredicate(EntityTypePredicate var1, DistancePredicate var2, LocationPredicate var3, MobEffectsPredicate var4, NbtPredicate var5, EntityFlagsPredicate var6, EntityEquipmentPredicate var7, PlayerPredicate var8, FishingHookPredicate var9, EntityPredicate var10, EntityPredicate var11, @Nullable String var12, @Nullable ResourceLocation var13) {
++      this.entityType = var1;
++      this.distanceToPlayer = var2;
++      this.location = var3;
++      this.effects = var4;
++      this.nbt = var5;
++      this.flags = var6;
++      this.equipment = var7;
++      this.player = var8;
++      this.fishingHook = var9;
 +      this.vehicle = var10;
 +      this.targetedEntity = var11;
 +      this.team = var12;
 +      this.catType = var13;
-    }
- 
++   }
++
     public boolean matches(ServerPlayer var1, @Nullable Entity var2) {
        return this.matches(var1.getLevel(), var1.position(), var2);
     }
-@@ -75,10 +88,16 @@
+ 
+    public boolean matches(ServerLevel var1, @Nullable Vec3 var2, @Nullable Entity var3) {
+@@ -75,10 +104,16 @@
              return false;
           } else if (!this.equipment.matches(var3)) {
              return false;
@@ -84,7 +102,7 @@
                 Team var4 = var3.getTeam();
                 if (var4 == null || !this.team.equals(var4.getName())) {
                    return false;
-@@ -99,33 +118,21 @@
+@@ -99,33 +134,21 @@
           MobEffectsPredicate var5 = MobEffectsPredicate.fromJson(var1.get("effects"));
           NbtPredicate var6 = NbtPredicate.fromJson(var1.get("nbt"));
           EntityFlagsPredicate var7 = EntityFlagsPredicate.fromJson(var1.get("flags"));
@@ -124,7 +142,7 @@
           return JsonNull.INSTANCE;
        } else {
           JsonObject var1 = new JsonObject();
-@@ -135,42 +142,108 @@
+@@ -135,42 +158,108 @@
           var1.add("effects", this.effects.serializeToJson());
           var1.add("nbt", this.nbt.serializeToJson());
           var1.add("flags", this.flags.serializeToJson());
@@ -159,7 +177,7 @@
 -            if (!var6.isJsonNull()) {
 -               var1.add(var6);
 +   static {
-+      ANY = new EntityPredicate(EntityTypePredicate.ANY, DistancePredicate.ANY, LocationPredicate.ANY, MobEffectsPredicate.ANY, NbtPredicate.ANY, EntityFlagsPredicate.ANY, EntityEquipmentPredicate.ANY, PlayerPredicate.ANY, FishingHookPredicate.ANY, ANY, ANY, (String)null, (ResourceLocation)null);
++      ANY = new EntityPredicate(EntityTypePredicate.ANY, DistancePredicate.ANY, LocationPredicate.ANY, MobEffectsPredicate.ANY, NbtPredicate.ANY, EntityFlagsPredicate.ANY, EntityEquipmentPredicate.ANY, PlayerPredicate.ANY, FishingHookPredicate.ANY, (String)null, (ResourceLocation)null);
 +   }
 +
 +   public static class Composite {
@@ -250,7 +268,7 @@
     public static class Builder {
        private EntityTypePredicate entityType;
        private DistancePredicate distanceToPlayer;
-@@ -178,10 +251,13 @@
+@@ -178,10 +267,13 @@
        private MobEffectsPredicate effects;
        private NbtPredicate nbt;
        private EntityFlagsPredicate flags;
@@ -264,7 +282,7 @@
  
        public Builder() {
           this.entityType = EntityTypePredicate.ANY;
-@@ -190,10 +266,13 @@
+@@ -190,10 +282,13 @@
           this.effects = MobEffectsPredicate.ANY;
           this.nbt = NbtPredicate.ANY;
           this.flags = EntityFlagsPredicate.ANY;
@@ -278,7 +296,7 @@
        public static EntityPredicate.Builder entity() {
           return new EntityPredicate.Builder();
        }
-@@ -251,10 +330,25 @@
+@@ -251,10 +346,25 @@
        public EntityPredicate.Builder player(PlayerPredicate var1) {
           this.player = var1;
           return this;
@@ -304,7 +322,7 @@
           return this;
        }
  
-@@ -262,9 +356,9 @@
+@@ -262,9 +372,9 @@
           this.catType = var1;
           return this;
        }

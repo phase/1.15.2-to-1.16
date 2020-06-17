@@ -1,8 +1,9 @@
 --- net/minecraft/util/datafix/fixes/ItemBannerColorFix.java
 +++ net/minecraft/util/datafix/fixes/ItemBannerColorFix.java
-@@ -1,28 +1,29 @@
+@@ -1,28 +1,30 @@
  package net.minecraft.util.datafix.fixes;
  
++import com.google.common.collect.ImmutableMap;
  import com.mojang.datafixers.DSL;
  import com.mojang.datafixers.DataFix;
 -import com.mojang.datafixers.Dynamic;
@@ -32,7 +33,7 @@
        return this.fixTypeEverywhereTyped("ItemBannerColorFix", var1, (var3x) -> {
           Optional var4x = var3x.getOptional(var2);
           if (var4x.isPresent() && Objects.equals(((Pair)var4x.get()).getSecond(), "minecraft:banner")) {
-@@ -33,13 +34,13 @@
+@@ -33,16 +35,17 @@
                 Optional var8 = var7.getOptionalTyped(var4);
                 if (var8.isPresent()) {
                    Typed var9 = (Typed)var8.get();
@@ -45,6 +46,11 @@
 +                     Optional var12 = var10.get("display").result();
                       if (var12.isPresent()) {
                          Dynamic var13 = (Dynamic)var12.get();
-                         if (Objects.equals(var13, var13.emptyMap().merge(var13.createString("Lore"), var13.createList(Stream.of(var13.createString("(+NBT")))))) {
+-                        if (Objects.equals(var13, var13.emptyMap().merge(var13.createString("Lore"), var13.createList(Stream.of(var13.createString("(+NBT")))))) {
++                        Dynamic var14 = var13.createMap(ImmutableMap.of(var13.createString("Lore"), var13.createList(Stream.of(var13.createString("(+NBT")))));
++                        if (Objects.equals(var13, var14)) {
                             return var3x.set(DSL.remainderFinder(), var5);
                          }
+                      }
+ 
+                      var11.remove("Base");

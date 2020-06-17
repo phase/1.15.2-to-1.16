@@ -157,7 +157,22 @@
                 if (var1.noCollision(this)) {
                    break;
                 }
-@@ -227,17 +242,28 @@
+@@ -214,35 +229,47 @@
+ 
+    public void readAdditionalSaveData(CompoundTag var1) {
+       super.readAdditionalSaveData(var1);
+       if (var1.contains("playerGameType", 99)) {
+          if (this.getServer().getForceGameType()) {
+-            this.gameMode.setGameModeForPlayer(this.getServer().getDefaultGameType());
++            this.gameMode.setGameModeForPlayer(this.getServer().getDefaultGameType(), GameType.NOT_SET);
+          } else {
+-            this.gameMode.setGameModeForPlayer(GameType.byId(var1.getInt("playerGameType")));
++            this.gameMode.setGameModeForPlayer(GameType.byId(var1.getInt("playerGameType")), var1.contains("previousPlayerGameType", 3) ? GameType.byId(var1.getInt("previousPlayerGameType")) : GameType.NOT_SET);
+          }
+       }
+ 
+       if (var1.contains("enteredNetherPosition", 10)) {
+          CompoundTag var2 = var1.getCompound("enteredNetherPosition");
           this.enteredNetherPosition = new Vec3(var2.getDouble("x"), var2.getDouble("y"), var2.getDouble("z"));
        }
  
@@ -187,7 +202,13 @@
     public void addAdditionalSaveData(CompoundTag var1) {
        super.addAdditionalSaveData(var1);
        var1.putInt("playerGameType", this.gameMode.getGameModeForPlayer().getId());
-@@ -260,10 +286,24 @@
++      var1.putInt("previousPlayerGameType", this.gameMode.getPreviousGameModeForPlayer().getId());
+       var1.putBoolean("seenCredits", this.seenCredits);
+       if (this.enteredNetherPosition != null) {
+          CompoundTag var2 = new CompoundTag();
+          var2.putDouble("x", this.enteredNetherPosition.x);
+          var2.putDouble("y", this.enteredNetherPosition.y);
+@@ -260,10 +287,24 @@
           var4.put("Entity", var5);
           var1.put("RootVehicle", var4);
        }
@@ -212,7 +233,7 @@
     public void setExperiencePoints(int var1) {
        float var2 = (float)this.getXpNeededForNextLevel();
        float var3 = (var2 - 1.0F) / var2;
-@@ -356,11 +396,11 @@
+@@ -356,11 +397,11 @@
        this.advancements.flushDirty(this);
     }
  
@@ -225,7 +246,7 @@
  
           for(int var1 = 0; var1 < this.inventory.getContainerSize(); ++var1) {
              ItemStack var5 = this.inventory.getItem(var1);
-@@ -439,12 +479,12 @@
+@@ -439,12 +480,12 @@
           this.connection.send(new ClientboundPlayerCombatPacket(this.getCombatTracker(), ClientboundPlayerCombatPacket.Event.ENTITY_DIED, var3), (var2x) -> {
              if (!var2x.isSuccess()) {
                 boolean var3x = true;
@@ -240,7 +261,7 @@
              }
  
           });
-@@ -454,17 +494,21 @@
+@@ -454,17 +495,21 @@
                 this.server.getPlayerList().broadcastToTeam(this, var3);
              } else if (var4.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OWN_TEAM) {
                 this.server.getPlayerList().broadcastToAllExceptTeam(this, var3);
@@ -263,7 +284,7 @@
        }
  
        this.getScoreboard().forAllObjectives(ObjectiveCriteria.DEATH_COUNT, this.getScoreboardName(), Score::increment);
-@@ -482,10 +526,19 @@
+@@ -482,10 +527,19 @@
        this.clearFire();
        this.setSharedFlag(0, false);
        this.getCombatTracker().recheckStatus();
@@ -283,7 +304,7 @@
           super.awardKillScore(var1, var2, var3);
           this.increaseScore(var2);
           String var4 = this.getScoreboardName();
-@@ -550,108 +603,100 @@
+@@ -550,108 +604,100 @@
     private boolean isPvpAllowed() {
        return this.server.isPvpAllowed();
     }
@@ -318,7 +339,7 @@
 -         var6.sendPlayerPermissionLevel(this);
 -         var3.removePlayerImmediately(this);
 +         LevelData var4 = var1.getLevelData();
-+         this.connection.send(new ClientboundRespawnPacket(var1.dimensionTypeKey(), var1.dimension(), BiomeManager.obfuscateSeed(var1.getSeed()), this.gameMode.getGameModeForPlayer(), var1.isDebug(), var1.isFlat(), true));
++         this.connection.send(new ClientboundRespawnPacket(var1.dimensionTypeKey(), var1.dimension(), BiomeManager.obfuscateSeed(var1.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), var1.isDebug(), var1.isFlat(), true));
 +         this.connection.send(new ClientboundChangeDifficultyPacket(var4.getDifficulty(), var4.isDifficultyLocked()));
 +         PlayerList var5 = this.server.getPlayerList();
 +         var5.sendPlayerPermissionLevel(this);
@@ -463,7 +484,7 @@
           this.connection.send(new ClientboundLevelEventPacket(1032, BlockPos.ZERO, 0, false));
           this.lastSentExp = -1;
           this.lastSentHealth = -1.0F;
-@@ -659,18 +704,18 @@
+@@ -659,18 +705,18 @@
           return this;
        }
     }
@@ -486,7 +507,7 @@
  
     }
  
-@@ -696,16 +741,67 @@
+@@ -696,16 +742,67 @@
        super.take(var1, var2);
        this.containerMenu.broadcastChanges();
     }
@@ -558,7 +579,7 @@
           this.getLevel().getChunkSource().broadcastAndSend(this, new ClientboundAnimatePacket(this, 2));
        }
  
-@@ -755,12 +851,11 @@
+@@ -755,12 +852,11 @@
     }
  
     public void doCheckFallDamage(double var1, boolean var3) {
@@ -572,7 +593,7 @@
  
     public void openTextEdit(SignBlockEntity var1) {
        var1.setAllowedPlayerEditor(this);
-@@ -781,11 +876,11 @@
+@@ -781,11 +877,11 @@
  
           this.nextContainerCounter();
           AbstractContainerMenu var2 = var1.createMenu(this.containerCounter, this.inventory, this);
@@ -585,7 +606,7 @@
              return OptionalInt.empty();
           } else {
              this.connection.send(new ClientboundOpenScreenPacket(var2.containerId, var2.getType(), var1.getDisplayName()));
-@@ -829,11 +924,11 @@
+@@ -829,11 +925,11 @@
     }
  
     public void slotChanged(AbstractContainerMenu var1, int var2, ItemStack var3) {
@@ -598,7 +619,7 @@
           if (!this.ignoreSlotUpdateHack) {
              this.connection.send(new ClientboundContainerSetSlotPacket(var1.containerId, var2, var3));
           }
-@@ -939,11 +1034,11 @@
+@@ -939,11 +1035,11 @@
     public void resetSentInfo() {
        this.lastSentHealth = -1.0E8F;
     }
@@ -611,7 +632,7 @@
     protected void completeUsingItem() {
        if (!this.useItem.isEmpty() && this.isUsingItem()) {
           this.connection.send(new ClientboundEntityEventPacket(this, (byte)9));
-@@ -1026,11 +1121,11 @@
+@@ -1026,11 +1122,11 @@
  
     public void teleportTo(double var1, double var3, double var5) {
        this.connection.teleport(var1, var3, var5, this.yRot, this.xRot);
@@ -624,7 +645,7 @@
     }
  
     public void crit(Entity var1) {
-@@ -1052,11 +1147,11 @@
+@@ -1052,11 +1148,11 @@
        return (ServerLevel)this.level;
     }
  
@@ -637,7 +658,7 @@
           this.stopRiding();
        } else {
           this.setCamera(this);
-@@ -1072,21 +1167,21 @@
+@@ -1072,21 +1168,21 @@
  
     public boolean isCreative() {
        return this.gameMode.getGameModeForPlayer() == GameType.CREATIVE;
@@ -668,7 +689,7 @@
        });
     }
  
-@@ -1096,11 +1191,10 @@
+@@ -1096,11 +1192,10 @@
        var1 = var1.substring(0, var1.indexOf(":"));
        return var1;
     }
@@ -680,7 +701,7 @@
        this.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, (byte)var1.getModelCustomisation());
        this.getEntityData().set(DATA_PLAYER_MAIN_HAND, (byte)(var1.getMainHand() == HumanoidArm.LEFT ? 0 : 1));
     }
-@@ -1213,13 +1307,12 @@
+@@ -1213,13 +1308,12 @@
        this.stopRiding();
        if (var1 == this.level) {
           this.connection.teleport(var2, var4, var6, var8, var9);
@@ -689,13 +710,13 @@
 -         this.dimension = var1.dimension.getType();
           LevelData var11 = var1.getLevelData();
 -         this.connection.send(new ClientboundRespawnPacket(this.dimension, LevelData.obfuscateSeed(var11.getSeed()), var11.getGeneratorType(), this.gameMode.getGameModeForPlayer()));
-+         this.connection.send(new ClientboundRespawnPacket(var1.dimensionTypeKey(), var1.dimension(), BiomeManager.obfuscateSeed(var1.getSeed()), this.gameMode.getGameModeForPlayer(), var1.isDebug(), var1.isFlat(), true));
++         this.connection.send(new ClientboundRespawnPacket(var1.dimensionTypeKey(), var1.dimension(), BiomeManager.obfuscateSeed(var1.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), var1.isDebug(), var1.isFlat(), true));
           this.connection.send(new ClientboundChangeDifficultyPacket(var11.getDifficulty(), var11.isDifficultyLocked()));
           this.server.getPlayerList().sendPlayerPermissionLevel(this);
           var10.removePlayerImmediately(this);
           this.removed = false;
           this.moveTo(var2, var4, var6, var8, var9);
-@@ -1232,10 +1325,41 @@
+@@ -1232,10 +1326,41 @@
           this.server.getPlayerList().sendAllPlayerInfo(this);
        }
  

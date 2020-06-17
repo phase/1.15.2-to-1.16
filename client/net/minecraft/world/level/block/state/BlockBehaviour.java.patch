@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/state/BlockBehaviour.java
 +++ net/minecraft/world/level/block/state/BlockBehaviour.java
-@@ -1,0 +1,979 @@
+@@ -1,0 +1,987 @@
 +package net.minecraft.world.level.block.state;
 +
 +import com.google.common.collect.ImmutableMap;
@@ -93,7 +93,7 @@
 +   }
 +
 +   @Deprecated
-+   public void updateIndirectNeighbourShapes(BlockState var1, LevelAccessor var2, BlockPos var3, int var4) {
++   public void updateIndirectNeighbourShapes(BlockState var1, LevelAccessor var2, BlockPos var3, int var4, int var5) {
 +   }
 +
 +   @Deprecated
@@ -576,23 +576,31 @@
 +      }
 +
 +      public final void updateNeighbourShapes(LevelAccessor var1, BlockPos var2, int var3) {
-+         this.getBlock();
-+         BlockPos.MutableBlockPos var4 = new BlockPos.MutableBlockPos();
-+         Direction[] var5 = BlockBehaviour.UPDATE_SHAPE_ORDER;
-+         int var6 = var5.length;
++         this.updateNeighbourShapes(var1, var2, var3, 512);
++      }
 +
-+         for(int var7 = 0; var7 < var6; ++var7) {
-+            Direction var8 = var5[var7];
-+            var4.setWithOffset(var2, var8);
-+            BlockState var9 = var1.getBlockState(var4);
-+            BlockState var10 = var9.updateShape(var8.getOpposite(), this.asState(), var1, var4, var2);
-+            Block.updateOrDestroy(var9, var10, var1, var4, var3);
++      public final void updateNeighbourShapes(LevelAccessor var1, BlockPos var2, int var3, int var4) {
++         this.getBlock();
++         BlockPos.MutableBlockPos var5 = new BlockPos.MutableBlockPos();
++         Direction[] var6 = BlockBehaviour.UPDATE_SHAPE_ORDER;
++         int var7 = var6.length;
++
++         for(int var8 = 0; var8 < var7; ++var8) {
++            Direction var9 = var6[var8];
++            var5.setWithOffset(var2, var9);
++            BlockState var10 = var1.getBlockState(var5);
++            BlockState var11 = var10.updateShape(var9.getOpposite(), this.asState(), var1, var5, var2);
++            Block.updateOrDestroy(var10, var11, var1, var5, var3, var4);
 +         }
 +
 +      }
 +
-+      public void updateIndirectNeighbourShapes(LevelAccessor var1, BlockPos var2, int var3) {
-+         this.getBlock().updateIndirectNeighbourShapes(this.asState(), var1, var2, var3);
++      public final void updateIndirectNeighbourShapes(LevelAccessor var1, BlockPos var2, int var3) {
++         this.updateIndirectNeighbourShapes(var1, var2, var3, 512);
++      }
++
++      public void updateIndirectNeighbourShapes(LevelAccessor var1, BlockPos var2, int var3, int var4) {
++         this.getBlock().updateIndirectNeighbourShapes(this.asState(), var1, var2, var3, var4);
 +      }
 +
 +      public void onPlace(Level var1, BlockPos var2, BlockState var3, boolean var4) {

@@ -57,3 +57,14 @@
  
     private void onMove(long var1, double var3, double var5) {
        if (var1 == Minecraft.getInstance().getWindow().getWindow()) {
+@@ -279,6 +301,10 @@
+          this.xpos = (double)(this.minecraft.getWindow().getScreenWidth() / 2);
+          this.ypos = (double)(this.minecraft.getWindow().getScreenHeight() / 2);
+          InputConstants.grabOrReleaseMouse(this.minecraft.getWindow().getWindow(), 212993, this.xpos, this.ypos);
+       }
+    }
++
++   public void cursorEntered() {
++      this.ignoreFirstMove = true;
++   }
+ }

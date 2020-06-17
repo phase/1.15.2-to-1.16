@@ -9,6 +9,8 @@
 +import java.util.List;
 +import java.util.Optional;
 +import net.minecraft.core.BlockPos;
++import net.minecraft.sounds.SoundEvent;
++import net.minecraft.sounds.SoundEvents;
 +import net.minecraft.util.IntRange;
 +import net.minecraft.util.TimeUtil;
 +import net.minecraft.world.entity.AgableMob;
@@ -79,7 +81,7 @@
 +      var1.setActiveActivityToFirstValid(ImmutableList.of(Activity.FIGHT, Activity.AVOID, Activity.IDLE));
 +      Activity var3 = (Activity)var1.getActiveNonCoreActivity().orElse((Object)null);
 +      if (var2 != var3) {
-+         playActivitySound(var0);
++         getSoundForCurrentActivity(var0).ifPresent(var0::playSound);
 +      }
 +
 +      var0.setAggressive(var1.hasMemoryValue(MemoryModuleType.ATTACK_TARGET));
@@ -183,28 +185,30 @@
 +      }
 +   }
 +
-+   private static void playActivitySound(Hoglin var0) {
-+      var0.getBrain().getActiveNonCoreActivity().ifPresent((var1) -> {
-+         if (var1 != Activity.AVOID && !var0.isConverting()) {
-+            if (var1 == Activity.FIGHT) {
-+               var0.playAngrySound();
-+            }
-+         } else {
-+            var0.playRetreatSound();
-+         }
-+
++   public static Optional<SoundEvent> getSoundForCurrentActivity(Hoglin var0) {
++      return var0.getBrain().getActiveNonCoreActivity().map((var1) -> {
++         return getSoundForActivity(var0, var1);
 +      });
 +   }
 +
-+   protected static void maybePlayActivitySound(Hoglin var0) {
-+      if ((double)var0.level.random.nextFloat() < 0.0125D) {
-+         playActivitySound(var0);
++   private static SoundEvent getSoundForActivity(Hoglin var0, Activity var1) {
++      if (var1 != Activity.AVOID && !var0.isConverting()) {
++         if (var1 == Activity.FIGHT) {
++            return SoundEvents.HOGLIN_ANGRY;
++         } else {
++            return isNearRepellent(var0) ? SoundEvents.HOGLIN_RETREAT : SoundEvents.HOGLIN_AMBIENT;
++         }
++      } else {
++         return SoundEvents.HOGLIN_RETREAT;
 +      }
-+
 +   }
 +
 +   private static List<Hoglin> getVisibleAdultHoglins(Hoglin var0) {
 +      return (List)var0.getBrain().getMemory(MemoryModuleType.NEAREST_VISIBLE_ADULT_HOGLINS).orElse(ImmutableList.of());
++   }
++
++   private static boolean isNearRepellent(Hoglin var0) {
++      return var0.getBrain().hasMemoryValue(MemoryModuleType.NEAREST_REPELLENT);
 +   }
 +
 +   private static boolean isBreeding(Hoglin var0) {
@@ -213,9 +217,5 @@
 +
 +   protected static boolean isPacified(Hoglin var0) {
 +      return var0.getBrain().hasMemoryValue(MemoryModuleType.PACIFIED);
-+   }
-+
-+   protected static boolean isIdle(Hoglin var0) {
-+      return var0.getBrain().isActive(Activity.IDLE);
 +   }
 +}

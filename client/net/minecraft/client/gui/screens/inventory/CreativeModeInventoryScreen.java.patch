@@ -1,10 +1,12 @@
 --- net/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen.java
 +++ net/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen.java
-@@ -2,10 +2,11 @@
+@@ -1,11 +1,13 @@
+ package net.minecraft.client.gui.screens.inventory;
  
  import com.google.common.collect.ImmutableList;
  import com.google.common.collect.Lists;
  import com.google.common.collect.Maps;
++import com.mojang.blaze3d.platform.InputConstants;
  import com.mojang.blaze3d.systems.RenderSystem;
 +import com.mojang.blaze3d.vertex.PoseStack;
  import com.mojang.datafixers.util.Pair;
@@ -12,7 +14,7 @@
  import java.util.Iterator;
  import java.util.List;
  import java.util.Locale;
-@@ -65,11 +66,11 @@
+@@ -65,11 +67,11 @@
     private boolean ignoreTextInput;
     private boolean hasClickedOutside;
     private final Map<ResourceLocation, Tag<Item>> visibleTags = Maps.newTreeMap();
@@ -25,7 +27,7 @@
        this.imageHeight = 136;
        this.imageWidth = 195;
     }
-@@ -141,11 +142,11 @@
+@@ -141,11 +143,11 @@
                 if (var4 != ClickType.QUICK_CRAFT && var1.container == CONTAINER) {
                    var10 = this.minecraft.player.inventory;
                    var7 = var10.getCarried();
@@ -38,7 +40,7 @@
                          this.minecraft.player.inventory.setItem(var3, var9);
                          this.minecraft.player.inventoryMenu.broadcastChanges();
                       }
-@@ -243,11 +244,11 @@
+@@ -243,11 +245,11 @@
           this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
           Font var10003 = this.font;
           int var10004 = this.leftPos + 82;
@@ -51,56 +53,31 @@
           this.searchBox.setVisible(false);
           this.searchBox.setTextColor(16777215);
           this.children.add(this.searchBox);
-@@ -301,34 +302,32 @@
-       }
-    }
- 
-    public boolean keyPressed(int var1, int var2, int var3) {
-       this.ignoreTextInput = false;
--      if (selectedTab != CreativeModeTab.TAB_SEARCH.getId()) {
--         if (this.minecraft.options.keyChat.matches(var1, var2)) {
--            this.ignoreTextInput = true;
--            this.selectTab(CreativeModeTab.TAB_SEARCH);
-+      if (selectedTab == CreativeModeTab.TAB_SEARCH.getId()) {
-+         String var5 = this.searchBox.getValue();
-+         if (this.searchBox.keyPressed(var1, var2, var3)) {
-+            if (!Objects.equals(var5, this.searchBox.getValue())) {
-+               this.refreshSearchResults();
-+            }
-+
+@@ -310,18 +312,19 @@
              return true;
           } else {
--            return super.keyPressed(var1, var2, var3);
-+            return this.searchBox.isFocused() && this.searchBox.isVisible() && var1 != 256 ? true : super.keyPressed(var1, var2, var3);
+             return super.keyPressed(var1, var2, var3);
           }
        } else {
-          boolean var4 = !this.isCreativeSlot(this.hoveredSlot) || this.hoveredSlot != null && this.hoveredSlot.hasItem();
+-         boolean var4 = !this.isCreativeSlot(this.hoveredSlot) || this.hoveredSlot != null && this.hoveredSlot.hasItem();
 -         if (var4 && this.checkNumkeyPressed(var1, var2)) {
-+         if (var4 && this.checkHotbarKeyPressed(var1, var2)) {
++         boolean var4 = !this.isCreativeSlot(this.hoveredSlot) || this.hoveredSlot.hasItem();
++         boolean var5 = InputConstants.getKey(var1, var2).getNumericKeyValue().isPresent();
++         if (var4 && var5 && this.checkHotbarKeyPressed(var1, var2)) {
              this.ignoreTextInput = true;
              return true;
-+         } else if (this.minecraft.options.keyChat.matches(var1, var2)) {
-+            this.ignoreTextInput = true;
-+            this.selectTab(CreativeModeTab.TAB_SEARCH);
-+            return true;
           } else {
 -            String var5 = this.searchBox.getValue();
--            if (this.searchBox.keyPressed(var1, var2, var3)) {
++            String var6 = this.searchBox.getValue();
+             if (this.searchBox.keyPressed(var1, var2, var3)) {
 -               if (!Objects.equals(var5, this.searchBox.getValue())) {
--                  this.refreshSearchResults();
--               }
--
--               return true;
--            } else {
--               return this.searchBox.isFocused() && this.searchBox.isVisible() && var1 != 256 ? true : super.keyPressed(var1, var2, var3);
--            }
-+            return super.keyPressed(var1, var2, var3);
-          }
-       }
-    }
++               if (!Objects.equals(var6, this.searchBox.getValue())) {
+                   this.refreshSearchResults();
+                }
  
-    public boolean keyReleased(int var1, int var2, int var3) {
-@@ -383,15 +382,15 @@
+                return true;
+             } else {
+@@ -383,15 +386,15 @@
        var6.getAvailableTags().stream().filter(var3).forEach((var2x) -> {
           Tag var10000 = (Tag)this.visibleTags.put(var2x, var6.getTag(var2x));
        });
@@ -120,7 +97,7 @@
     }
  
     public boolean mouseClicked(double var1, double var3, int var5) {
-@@ -456,12 +455,12 @@
+@@ -456,12 +459,12 @@
              if (var5.isEmpty()) {
                 for(var6 = 0; var6 < 9; ++var6) {
                    if (var6 == var4) {
@@ -135,7 +112,7 @@
                    } else {
                       ((CreativeModeInventoryScreen.ItemPickerMenu)this.menu).items.add(ItemStack.EMPTY);
                    }
-@@ -584,116 +583,101 @@
+@@ -584,116 +587,101 @@
        } else {
           return super.mouseDragged(var1, var3, var5, var6, var8);
        }
@@ -304,7 +281,7 @@
     }
  
     protected boolean checkTabClicked(CreativeModeTab var1, double var2, double var4) {
-@@ -714,72 +698,70 @@
+@@ -714,72 +702,70 @@
        }
  
        return var2 >= (double)var7 && var2 <= (double)(var7 + 28) && var4 >= (double)var9 && var4 <= (double)(var9 + 32);
@@ -416,7 +393,7 @@
     public int getSelectedTab() {
        return selectedTab;
     }
-@@ -800,13 +782,13 @@
+@@ -800,13 +786,13 @@
        } else if (var3) {
           for(var7 = 0; var7 < Inventory.getSelectionSize(); ++var7) {
              var6.set(var7, var4.inventory.getItem(var7).copy());

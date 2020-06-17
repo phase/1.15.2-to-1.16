@@ -237,14 +237,14 @@
 +         this.placeBlock(var1, (BlockState)((BlockState)((BlockState)Blocks.TRIPWIRE.defaultBlockState().setValue(TripWireBlock.EAST, true)).setValue(TripWireBlock.WEST, true)).setValue(TripWireBlock.ATTACHED, true), 2, -3, 8, var5);
 +         this.placeBlock(var1, (BlockState)((BlockState)((BlockState)Blocks.TRIPWIRE.defaultBlockState().setValue(TripWireBlock.EAST, true)).setValue(TripWireBlock.WEST, true)).setValue(TripWireBlock.ATTACHED, true), 3, -3, 8, var5);
 +         BlockState var16 = (BlockState)((BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.SOUTH, RedstoneSide.SIDE);
-+         this.placeBlock(var1, (BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.SOUTH, RedstoneSide.SIDE), 5, -3, 7, var5);
++         this.placeBlock(var1, var16, 5, -3, 7, var5);
 +         this.placeBlock(var1, var16, 5, -3, 6, var5);
 +         this.placeBlock(var1, var16, 5, -3, 5, var5);
 +         this.placeBlock(var1, var16, 5, -3, 4, var5);
 +         this.placeBlock(var1, var16, 5, -3, 3, var5);
 +         this.placeBlock(var1, var16, 5, -3, 2, var5);
 +         this.placeBlock(var1, (BlockState)((BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.WEST, RedstoneSide.SIDE), 5, -3, 1, var5);
-+         this.placeBlock(var1, (BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.EAST, RedstoneSide.SIDE), 4, -3, 1, var5);
++         this.placeBlock(var1, (BlockState)((BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.EAST, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.WEST, RedstoneSide.SIDE), 4, -3, 1, var5);
 +         this.placeBlock(var1, Blocks.MOSSY_COBBLESTONE.defaultBlockState(), 3, -3, 1, var5);
           if (!this.placedTrap1) {
 -            this.placedTrap1 = this.createDispenser(var1, var4, var3, 3, -2, 1, Direction.NORTH, BuiltInLootTables.JUNGLE_TEMPLE_DISPENSER);
@@ -268,11 +268,11 @@
 +         this.placeBlock(var1, (BlockState)((BlockState)((BlockState)Blocks.TRIPWIRE.defaultBlockState().setValue(TripWireBlock.NORTH, true)).setValue(TripWireBlock.SOUTH, true)).setValue(TripWireBlock.ATTACHED, true), 7, -3, 2, var5);
 +         this.placeBlock(var1, (BlockState)((BlockState)((BlockState)Blocks.TRIPWIRE.defaultBlockState().setValue(TripWireBlock.NORTH, true)).setValue(TripWireBlock.SOUTH, true)).setValue(TripWireBlock.ATTACHED, true), 7, -3, 3, var5);
 +         this.placeBlock(var1, (BlockState)((BlockState)((BlockState)Blocks.TRIPWIRE.defaultBlockState().setValue(TripWireBlock.NORTH, true)).setValue(TripWireBlock.SOUTH, true)).setValue(TripWireBlock.ATTACHED, true), 7, -3, 4, var5);
-+         this.placeBlock(var1, (BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.EAST, RedstoneSide.SIDE), 8, -3, 6, var5);
++         this.placeBlock(var1, (BlockState)((BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.EAST, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.WEST, RedstoneSide.SIDE), 8, -3, 6, var5);
 +         this.placeBlock(var1, (BlockState)((BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.WEST, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.SOUTH, RedstoneSide.SIDE), 9, -3, 6, var5);
 +         this.placeBlock(var1, (BlockState)((BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.SOUTH, RedstoneSide.UP), 9, -3, 5, var5);
 +         this.placeBlock(var1, Blocks.MOSSY_COBBLESTONE.defaultBlockState(), 9, -3, 4, var5);
-+         this.placeBlock(var1, (BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE), 9, -2, 4, var5);
++         this.placeBlock(var1, var16, 9, -2, 4, var5);
           if (!this.placedTrap2) {
 -            this.placedTrap2 = this.createDispenser(var1, var4, var3, 9, -2, 3, Direction.WEST, BuiltInLootTables.JUNGLE_TEMPLE_DISPENSER);
 +            this.placedTrap2 = this.createDispenser(var1, var5, var4, 9, -2, 3, Direction.WEST, BuiltInLootTables.JUNGLE_TEMPLE_DISPENSER);
@@ -336,9 +336,9 @@
 +         this.generateBox(var1, var5, 8, -3, 8, 8, -3, 10, false, var4, STONE_SELECTOR);
 +         this.generateBox(var1, var5, 10, -3, 8, 10, -3, 10, false, var4, STONE_SELECTOR);
 +         this.placeBlock(var1, Blocks.MOSSY_COBBLESTONE.defaultBlockState(), 10, -2, 9, var5);
-+         this.placeBlock(var1, (BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE), 8, -2, 9, var5);
-+         this.placeBlock(var1, (BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.SOUTH, RedstoneSide.SIDE), 8, -2, 10, var5);
-+         this.placeBlock(var1, Blocks.REDSTONE_WIRE.defaultBlockState(), 10, -1, 9, var5);
++         this.placeBlock(var1, var16, 8, -2, 9, var5);
++         this.placeBlock(var1, var16, 8, -2, 10, var5);
++         this.placeBlock(var1, (BlockState)((BlockState)((BlockState)((BlockState)Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.NORTH, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.SOUTH, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.EAST, RedstoneSide.SIDE)).setValue(RedStoneWireBlock.WEST, RedstoneSide.SIDE), 10, -1, 9, var5);
 +         this.placeBlock(var1, (BlockState)Blocks.STICKY_PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, Direction.UP), 9, -2, 8, var5);
 +         this.placeBlock(var1, (BlockState)Blocks.STICKY_PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, Direction.WEST), 10, -2, 8, var5);
 +         this.placeBlock(var1, (BlockState)Blocks.STICKY_PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, Direction.WEST), 10, -1, 8, var5);

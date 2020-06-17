@@ -46,7 +46,7 @@
 +      this.head.addChild(this.leftEar);
 +      ModelPart var1 = new ModelPart(this);
 +      var1.setPos(-7.0F, 2.0F, -12.0F);
-+      var1.texOffs(1, 13).addBox(-1.0F, -11.0F, -1.0F, 2.0F, 11.0F, 2.0F);
++      var1.texOffs(10, 13).addBox(-1.0F, -11.0F, -1.0F, 2.0F, 11.0F, 2.0F);
 +      this.head.addChild(var1);
 +      ModelPart var2 = new ModelPart(this);
 +      var2.setPos(7.0F, 2.0F, -12.0F);

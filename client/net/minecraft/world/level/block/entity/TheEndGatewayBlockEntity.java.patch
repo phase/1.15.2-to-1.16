@@ -1,6 +1,24 @@
 --- net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java
 +++ net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java
-@@ -17,11 +17,10 @@
+@@ -2,26 +2,28 @@
+ 
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Random;
+ import javax.annotation.Nullable;
++import net.minecraft.advancements.CriteriaTriggers;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtUtils;
+ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+ import net.minecraft.server.level.ServerLevel;
++import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
++import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.ChunkPos;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
@@ -12,7 +30,7 @@
  import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
-@@ -52,22 +51,22 @@
+@@ -52,22 +54,22 @@
        }
  
        return var1;
@@ -42,7 +60,20 @@
     public void tick() {
        boolean var1 = this.isSpawning();
        boolean var2 = this.isCoolingDown();
-@@ -135,17 +134,17 @@
+@@ -75,11 +77,11 @@
+       if (var2) {
+          --this.teleportCooldown;
+       } else if (!this.level.isClientSide) {
+          List var3 = this.level.getEntitiesOfClass(Entity.class, new AABB(this.getBlockPos()));
+          if (!var3.isEmpty()) {
+-            this.teleportEntity(((Entity)var3.get(0)).getRootVehicle());
++            this.teleportEntity((Entity)var3.get(this.level.random.nextInt(var3.size())));
+          }
+ 
+          if (this.age % 2400L == 0L) {
+             this.triggerCooldown();
+          }
+@@ -135,17 +137,34 @@
     }
  
     public void teleportEntity(Entity var1) {
@@ -56,13 +87,30 @@
           if (this.exitPortal != null) {
              BlockPos var2 = this.exactTeleport ? this.exitPortal : this.findExitPosition();
 -            var1.teleportToWithTicket((double)var2.getX() + 0.5D, (double)var2.getY() + 0.5D, (double)var2.getZ() + 0.5D);
-+            var1.teleportToWithTicket((double)var2.getX() + 0.5D, (double)var2.getY(), (double)var2.getZ() + 0.5D);
++            Entity var3;
++            if (var1 instanceof ThrownEnderpearl) {
++               Entity var4 = ((ThrownEnderpearl)var1).getOwner();
++               if (var4 instanceof ServerPlayer) {
++                  CriteriaTriggers.ENTER_BLOCK.trigger((ServerPlayer)var4, this.level.getBlockState(this.getBlockPos()));
++               }
++
++               if (var4 != null) {
++                  var3 = var4;
++                  var1.remove();
++               } else {
++                  var3 = var1;
++               }
++            } else {
++               var3 = var1.getRootVehicle();
++            }
++
++            var3.teleportToWithTicket((double)var2.getX() + 0.5D, (double)var2.getY(), (double)var2.getZ() + 0.5D);
           }
  
           this.triggerCooldown();
        }
     }
-@@ -173,11 +172,11 @@
+@@ -173,11 +192,11 @@
        LevelChunk var5 = getChunk(var1, var3);
        this.exitPortal = findValidSpawnInChunk(var5);
        if (this.exitPortal == null) {
@@ -75,7 +123,7 @@
        }
  
        this.exitPortal = findTallestBlock(var1, this.exitPortal, 16, true);
-@@ -194,11 +193,11 @@
+@@ -194,11 +213,11 @@
           for(int var6 = -var2; var6 <= var2; ++var6) {
              if (var5 != 0 || var6 != 0 || var3) {
                 for(int var7 = 255; var7 > (var4 == null ? 0 : var4.getY()); --var7) {
@@ -88,7 +136,7 @@
                    }
                 }
              }
-@@ -238,11 +237,11 @@
+@@ -238,11 +257,11 @@
  
                       var9 = (BlockPos)var8.next();
                       var10 = var0.getBlockState(var9);
@@ -101,7 +149,7 @@
  
              var13 = var9.distSqr(0.0D, 0.0D, 0.0D, true);
           } while(var5 != null && var13 >= var6);
-@@ -251,11 +250,11 @@
+@@ -251,11 +270,11 @@
           var6 = var13;
        }
     }

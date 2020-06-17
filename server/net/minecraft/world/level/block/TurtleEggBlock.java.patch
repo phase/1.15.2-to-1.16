@@ -82,7 +82,7 @@
     }
  
 +   public static boolean isSand(BlockGetter var0, BlockPos var1) {
-+      return var0.getBlockState(var1.below()).is(BlockTags.SAND);
++      return var0.getBlockState(var1).is(BlockTags.SAND);
 +   }
 +
     public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {

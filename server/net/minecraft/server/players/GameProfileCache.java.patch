@@ -61,3 +61,17 @@
           this.profileMRUList.clear();
           if (var2 != null) {
              Iterator var3 = Lists.reverse(var2).iterator();
+@@ -209,12 +198,12 @@
+       try {
+          var2 = Files.newWriter(this.file, StandardCharsets.UTF_8);
+          var2.write(var1);
+          return;
+       } catch (FileNotFoundException var8) {
+-         return;
+       } catch (IOException var9) {
++         return;
+       } finally {
+          IOUtils.closeQuietly((Writer)var2);
+       }
+ 
+    }

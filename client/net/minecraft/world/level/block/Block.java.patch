@@ -115,7 +115,7 @@
     private Item item;
     private static final ThreadLocal<Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>> OCCLUSION_CACHE;
  
-@@ -138,84 +105,27 @@
+@@ -138,214 +105,66 @@
  
     public static VoxelShape box(double var0, double var2, double var4, double var6, double var8, double var10) {
        return Shapes.box(var0 / 16.0D, var2 / 16.0D, var4 / 16.0D, var6 / 16.0D, var8 / 16.0D, var10 / 16.0D);
@@ -205,7 +205,21 @@
  
        return var3;
     }
-@@ -231,121 +141,26 @@
+ 
+    public static void updateOrDestroy(BlockState var0, BlockState var1, LevelAccessor var2, BlockPos var3, int var4) {
++      updateOrDestroy(var0, var1, var2, var3, var4, 512);
++   }
++
++   public static void updateOrDestroy(BlockState var0, BlockState var1, LevelAccessor var2, BlockPos var3, int var4, int var5) {
+       if (var1 != var0) {
+          if (var1.isAir()) {
+             if (!var2.isClientSide()) {
+-               var2.destroyBlock(var3, (var4 & 32) == 0);
++               var2.destroyBlock(var3, (var4 & 32) == 0, (Entity)null, var5);
+             }
+          } else {
+-            var2.setBlock(var3, var1, var4 & -33);
++            var2.setBlock(var3, var1, var4 & -33, var5);
           }
        }
  
@@ -332,7 +346,7 @@
        BlockState var5 = var1.getBlockState(var4);
        if (var0.skipRendering(var5, var3)) {
           return false;
-@@ -369,52 +184,26 @@
+@@ -369,52 +188,26 @@
        } else {
           return true;
        }
@@ -392,7 +406,7 @@
     public static boolean isFaceFull(VoxelShape var0, Direction var1) {
        VoxelShape var2 = var0.getFaceShape(var1);
        return isShapeFullBlock(var2);
-@@ -422,112 +211,20 @@
+@@ -422,112 +215,20 @@
  
     public static boolean isShapeFullBlock(VoxelShape var0) {
        return (Boolean)SHAPE_FULL_BLOCK_CACHE.getUnchecked(var0);
@@ -505,7 +519,7 @@
        return var0.getDrops(var4);
     }
  
-@@ -594,51 +291,18 @@
+@@ -594,51 +295,18 @@
     }
  
     public void wasExploded(Level var1, BlockPos var2, Explosion var3) {
@@ -557,7 +571,7 @@
        var2.causeFoodExhaustion(0.005F);
        dropResources(var4, var1, var3, var5, var2, var6);
     }
-@@ -648,37 +312,22 @@
+@@ -648,37 +316,22 @@
  
     public boolean isPossibleToRespawnInThis() {
        return !this.material.isSolid() && !this.material.isLiquid();
@@ -597,7 +611,7 @@
     }
  
     public void updateEntityAfterFallOn(BlockGetter var1, Entity var2) {
-@@ -691,15 +340,10 @@
+@@ -691,15 +344,10 @@
  
     public void fillItemCategory(CreativeModeTab var1, NonNullList<ItemStack> var2) {
        var2.add(new ItemStack(this));
@@ -613,7 +627,7 @@
     }
  
     public float getSpeedFactor() {
-@@ -708,39 +352,25 @@
+@@ -708,39 +356,25 @@
  
     public float getJumpFactor() {
        return this.jumpFactor;
@@ -657,7 +671,7 @@
  
     public StateDefinition<Block, BlockState> getStateDefinition() {
        return this.stateDefinition;
-@@ -752,25 +382,10 @@
+@@ -752,25 +386,10 @@
  
     public final BlockState defaultBlockState() {
        return this.defaultBlockState;
@@ -683,7 +697,7 @@
     }
  
     public Item asItem() {
-@@ -790,17 +405,15 @@
+@@ -790,17 +409,15 @@
     }
  
     public void appendHoverText(ItemStack var1, @Nullable BlockGetter var2, List<Component> var3, TooltipFlag var4) {
@@ -705,7 +719,7 @@
        OCCLUSION_CACHE = ThreadLocal.withInitial(() -> {
           Object2ByteLinkedOpenHashMap var0 = new Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>(2048, 0.25F) {
              protected void rehash(int var1) {
-@@ -809,146 +422,10 @@
+@@ -809,146 +426,10 @@
           var0.defaultReturnValue((byte)127);
           return var0;
        });

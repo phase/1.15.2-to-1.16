@@ -15,7 +15,14 @@
     }
  
     public double max(Direction.Axis var1) {
-@@ -309,6 +313,10 @@
+@@ -303,12 +307,16 @@
+          return var1;
+       }
+    }
+ 
+    public String toString() {
+-      return "box[" + this.minX + ", " + this.minY + ", " + this.minZ + "] -> [" + this.maxX + ", " + this.maxY + ", " + this.maxZ + "]";
++      return "AABB[" + this.minX + ", " + this.minY + ", " + this.minZ + "] -> [" + this.maxX + ", " + this.maxY + ", " + this.maxZ + "]";
     }
  
     public Vec3 getCenter() {

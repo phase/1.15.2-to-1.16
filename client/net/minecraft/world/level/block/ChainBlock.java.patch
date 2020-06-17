@@ -1,12 +1,11 @@
 --- net/minecraft/world/level/block/ChainBlock.java
 +++ net/minecraft/world/level/block/ChainBlock.java
-@@ -1,0 +1,64 @@
+@@ -1,0 +1,63 @@
 +package net.minecraft.world.level.block;
 +
 +import javax.annotation.Nullable;
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.core.Direction;
-+import net.minecraft.tags.FluidTags;
 +import net.minecraft.world.item.BlockPlaceContext;
 +import net.minecraft.world.level.BlockGetter;
 +import net.minecraft.world.level.LevelAccessor;
@@ -37,7 +36,7 @@
 +   @Nullable
 +   public BlockState getStateForPlacement(BlockPlaceContext var1) {
 +      FluidState var2 = var1.getLevel().getFluidState(var1.getClickedPos());
-+      boolean var3 = var2.is(FluidTags.WATER) && var2.getAmount() == 8;
++      boolean var3 = var2.getType() == Fluids.WATER;
 +      return (BlockState)super.getStateForPlacement(var1).setValue(WATERLOGGED, var3);
 +   }
 +

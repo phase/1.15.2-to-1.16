@@ -23,10 +23,10 @@
 -      this.stable = true;
 -      this.worldVersion = 2230;
 -      this.protocolVersion = 578;
-+      this.name = "1.16-pre5";
++      this.name = "1.16-pre7";
 +      this.stable = false;
-+      this.worldVersion = 2561;
-+      this.protocolVersion = 729;
++      this.worldVersion = 2563;
++      this.protocolVersion = 732;
        this.packVersion = 5;
        this.buildTime = new Date();
 -      this.releaseTarget = "1.15.2";
@@ -40,86 +40,16 @@
        this.releaseTarget = GsonHelper.getAsString(var1, "release_target");
        this.stable = GsonHelper.getAsBoolean(var1, "stable");
        this.worldVersion = GsonHelper.getAsInt(var1, "world_version");
-@@ -50,41 +51,44 @@
-    public static GameVersion tryDetectVersion() {
-       try {
-          InputStream var0 = DetectedVersion.class.getResourceAsStream("/version.json");
-          Throwable var1 = null;
+@@ -54,11 +55,11 @@
  
--         Object var4;
-+         GameVersion var2;
+          Object var4;
           try {
--            if (var0 == null) {
--               LOGGER.warn("Missing version information!");
+             if (var0 == null) {
+                LOGGER.warn("Missing version information!");
 -               DetectedVersion var35 = new DetectedVersion();
--               return var35;
--            }
-+            if (var0 != null) {
-+               InputStreamReader var35 = new InputStreamReader(var0);
-+               Throwable var3 = null;
- 
--            InputStreamReader var2 = new InputStreamReader(var0);
--            Throwable var3 = null;
--
--            try {
--               var4 = new DetectedVersion(GsonHelper.parse((Reader)var2));
--            } catch (Throwable var30) {
--               var4 = var30;
--               var3 = var30;
--               throw var30;
--            } finally {
--               if (var2 != null) {
--                  if (var3 != null) {
--                     try {
--                        var2.close();
--                     } catch (Throwable var29) {
--                        var3.addSuppressed(var29);
-+               try {
-+                  Object var4;
-+                  try {
-+                     var4 = new DetectedVersion(GsonHelper.parse((Reader)var35));
-+                     return (GameVersion)var4;
-+                  } catch (Throwable var30) {
-+                     var4 = var30;
-+                     var3 = var30;
-+                     throw var30;
-+                  }
-+               } finally {
-+                  if (var35 != null) {
-+                     if (var3 != null) {
-+                        try {
-+                           var35.close();
-+                        } catch (Throwable var29) {
-+                           var3.addSuppressed(var29);
-+                        }
-+                     } else {
-+                        var35.close();
-                      }
--                  } else {
--                     var2.close();
-                   }
--               }
- 
-+               }
-             }
-+
-+            LOGGER.warn("Missing version information!");
-+            var2 = BUILT_IN;
-          } catch (Throwable var32) {
-             var1 = var32;
-             throw var32;
-          } finally {
-             if (var0 != null) {
-@@ -99,11 +103,11 @@
-                }
++               GameVersion var35 = BUILT_IN;
+                return var35;
              }
  
-          }
- 
--         return (GameVersion)var4;
-+         return var2;
-       } catch (JsonParseException | IOException var34) {
-          throw new IllegalStateException("Game version information is corrupt", var34);
-       }
-    }
- 
+             InputStreamReader var2 = new InputStreamReader(var0);
+             Throwable var3 = null;

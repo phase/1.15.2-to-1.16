@@ -1,6 +1,18 @@
 --- net/minecraft/commands/arguments/blocks/BlockInput.java
 +++ net/minecraft/commands/arguments/blocks/BlockInput.java
-@@ -29,11 +29,11 @@
+@@ -6,10 +6,11 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtUtils;
+ import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.pattern.BlockInWorld;
+ import net.minecraft.world.level.block.state.properties.Property;
+ 
+@@ -29,11 +30,11 @@
        return this.state;
     }
  
@@ -13,14 +25,36 @@
           Iterator var3 = this.properties.iterator();
  
           while(var3.hasNext()) {
-@@ -61,11 +61,11 @@
-             if (var4 != null) {
-                CompoundTag var5 = this.tag.copy();
-                var5.putInt("x", var2.getX());
-                var5.putInt("y", var2.getY());
-                var5.putInt("z", var2.getZ());
+@@ -51,21 +52,26 @@
+          }
+       }
+    }
+ 
+    public boolean place(ServerLevel var1, BlockPos var2, int var3) {
+-      if (!var1.setBlock(var2, this.state, var3)) {
++      BlockState var4 = Block.updateFromNeighbourShapes(this.state, var1, var2);
++      if (var4.isAir()) {
++         var4 = this.state;
++      }
++
++      if (!var1.setBlock(var2, var4, var3)) {
+          return false;
+       } else {
+          if (this.tag != null) {
+-            BlockEntity var4 = var1.getBlockEntity(var2);
+-            if (var4 != null) {
+-               CompoundTag var5 = this.tag.copy();
+-               var5.putInt("x", var2.getX());
+-               var5.putInt("y", var2.getY());
+-               var5.putInt("z", var2.getZ());
 -               var4.load(var5);
-+               var4.load(this.state, var5);
++            BlockEntity var5 = var1.getBlockEntity(var2);
++            if (var5 != null) {
++               CompoundTag var6 = this.tag.copy();
++               var6.putInt("x", var2.getX());
++               var6.putInt("y", var2.getY());
++               var6.putInt("z", var2.getZ());
++               var5.load(var4, var6);
              }
           }
  

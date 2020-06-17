@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/debug/GameModeSwitcherScreen.java
 +++ net/minecraft/client/gui/screens/debug/GameModeSwitcherScreen.java
-@@ -1,0 +1,234 @@
+@@ -1,0 +1,247 @@
 +package net.minecraft.client.gui.screens.debug;
 +
 +import com.google.common.collect.Lists;
@@ -29,7 +29,7 @@
 +   private static final ResourceLocation GAMEMODE_SWITCHER_LOCATION = new ResourceLocation("textures/gui/container/gamemode_switcher.png");
 +   private static final int ALL_SLOTS_WIDTH = GameModeSwitcherScreen.GameModeIcon.values().length * 30 - 5;
 +   private static final Component SELECT_KEY;
-+   private final Optional<GameModeSwitcherScreen.GameModeIcon> previousHovered;
++   private final Optional<GameModeSwitcherScreen.GameModeIcon> previousHovered = GameModeSwitcherScreen.GameModeIcon.getFromGameType(this.getDefaultSelected());
 +   private Optional<GameModeSwitcherScreen.GameModeIcon> currentlyHovered = Optional.empty();
 +   private int firstMouseX;
 +   private int firstMouseY;
@@ -38,7 +38,20 @@
 +
 +   public GameModeSwitcherScreen() {
 +      super(NarratorChatListener.NO_TITLE);
-+      this.previousHovered = GameModeSwitcherScreen.GameModeIcon.getFromGameType(Minecraft.getInstance().gameMode.getPrevPlayerMode());
++   }
++
++   private GameType getDefaultSelected() {
++      GameType var1 = Minecraft.getInstance().gameMode.getPlayerMode();
++      GameType var2 = Minecraft.getInstance().gameMode.getPreviousPlayerMode();
++      if (var2 == GameType.NOT_SET) {
++         if (var1 == GameType.CREATIVE) {
++            var2 = GameType.SURVIVAL;
++         } else {
++            var2 = GameType.CREATIVE;
++         }
++      }
++
++      return var2;
 +   }
 +
 +   protected void init() {

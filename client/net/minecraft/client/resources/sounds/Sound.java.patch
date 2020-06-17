@@ -1,0 +1,17 @@
+--- net/minecraft/client/resources/sounds/Sound.java
++++ net/minecraft/client/resources/sounds/Sound.java
+@@ -70,10 +70,14 @@
+ 
+    public int getAttenuationDistance() {
+       return this.attenuationDistance;
+    }
+ 
++   public String toString() {
++      return "Sound[" + this.location + "]";
++   }
++
+    public static enum Type {
+       FILE("file"),
+       SOUND_EVENT("event");
+ 
+       private final String name;

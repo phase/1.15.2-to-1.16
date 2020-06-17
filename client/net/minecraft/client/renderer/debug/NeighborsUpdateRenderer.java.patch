@@ -1,6 +1,34 @@
 --- net/minecraft/client/renderer/debug/NeighborsUpdateRenderer.java
 +++ net/minecraft/client/renderer/debug/NeighborsUpdateRenderer.java
-@@ -65,11 +65,11 @@
+@@ -24,22 +24,15 @@
+    NeighborsUpdateRenderer(Minecraft var1) {
+       this.minecraft = var1;
+    }
+ 
+    public void addUpdate(long var1, BlockPos var3) {
+-      Object var4 = (Map)this.lastUpdate.get(var1);
+-      if (var4 == null) {
+-         var4 = Maps.newHashMap();
+-         this.lastUpdate.put(var1, var4);
+-      }
+-
+-      Integer var5 = (Integer)((Map)var4).get(var3);
+-      if (var5 == null) {
+-         var5 = 0;
+-      }
+-
+-      ((Map)var4).put(var3, var5 + 1);
++      Map var4 = (Map)this.lastUpdate.computeIfAbsent(var1, (var0) -> {
++         return Maps.newHashMap();
++      });
++      int var5 = (Integer)var4.getOrDefault(var3, 0);
++      var4.put(var3, var5 + 1);
+    }
+ 
+    public void render(PoseStack var1, MultiBufferSource var2, double var3, double var5, double var7) {
+       long var9 = this.minecraft.level.getGameTime();
+       boolean var11 = true;
+@@ -65,11 +58,11 @@
                    Entry var24 = (Entry)var23.next();
                    BlockPos var25 = (BlockPos)var24.getKey();
                    Integer var26 = (Integer)var24.getValue();

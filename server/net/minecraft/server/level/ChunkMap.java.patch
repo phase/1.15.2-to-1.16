@@ -289,13 +289,15 @@
     }
  
     protected void removeEntity(Entity var1) {
-@@ -1016,11 +1043,11 @@
+@@ -1015,12 +1042,12 @@
+ 
     }
  
     private void playerLoadedChunk(ServerPlayer var1, Packet<?>[] var2, LevelChunk var3) {
        if (var2[0] == null) {
-          var2[0] = new ClientboundLevelChunkPacket(var3, 65535);
+-         var2[0] = new ClientboundLevelChunkPacket(var3, 65535);
 -         var2[1] = new ClientboundLightUpdatePacket(var3.getPos(), this.lightEngine);
++         var2[0] = new ClientboundLevelChunkPacket(var3, 65535, true);
 +         var2[1] = new ClientboundLightUpdatePacket(var3.getPos(), this.lightEngine, true);
        }
  

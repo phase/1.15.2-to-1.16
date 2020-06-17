@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/monster/Zoglin.java
 +++ net/minecraft/world/entity/monster/Zoglin.java
-@@ -1,0 +1,278 @@
+@@ -1,0 +1,267 @@
 +package net.minecraft.world.entity.monster;
 +
 +import com.google.common.collect.ImmutableList;
@@ -111,7 +111,7 @@
 +   }
 +
 +   public static AttributeSupplier.Builder createAttributes() {
-+      return Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 40.0D).add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D).add(Attributes.KNOCKBACK_RESISTANCE, 0.5D).add(Attributes.ATTACK_KNOCKBACK, 1.0D).add(Attributes.ATTACK_DAMAGE, 6.0D);
++      return Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 40.0D).add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D).add(Attributes.KNOCKBACK_RESISTANCE, 0.6000000238418579D).add(Attributes.ATTACK_KNOCKBACK, 1.0D).add(Attributes.ATTACK_DAMAGE, 6.0D);
 +   }
 +
 +   public boolean isAdult() {
@@ -165,8 +165,8 @@
 +      Activity var1 = (Activity)this.brain.getActiveNonCoreActivity().orElse((Object)null);
 +      this.brain.setActiveActivityToFirstValid(ImmutableList.of(Activity.FIGHT, Activity.IDLE));
 +      Activity var2 = (Activity)this.brain.getActiveNonCoreActivity().orElse((Object)null);
-+      if (var1 != var2) {
-+         this.playActivitySound();
++      if (var2 == Activity.FIGHT && var1 != Activity.FIGHT) {
++         this.playAngrySound();
 +      }
 +
 +      this.setAggressive(this.brain.hasMemoryValue(MemoryModuleType.ATTACK_TARGET));
@@ -177,21 +177,6 @@
 +      this.getBrain().tick((ServerLevel)this.level, this);
 +      this.level.getProfiler().pop();
 +      this.updateActivity();
-+      this.maybePlayActivitySound();
-+   }
-+
-+   private void playActivitySound() {
-+      if (this.brain.hasMemoryValue(MemoryModuleType.ATTACK_TARGET)) {
-+         this.playAngrySound();
-+      }
-+
-+   }
-+
-+   protected void maybePlayActivitySound() {
-+      if ((double)this.random.nextFloat() < 0.0125D) {
-+         this.playActivitySound();
-+      }
-+
 +   }
 +
 +   public void setBaby(boolean var1) {
@@ -229,7 +214,11 @@
 +   }
 +
 +   protected SoundEvent getAmbientSound() {
-+      return SoundEvents.ZOGLIN_AMBIENT;
++      if (this.level.isClientSide) {
++         return null;
++      } else {
++         return this.brain.hasMemoryValue(MemoryModuleType.ATTACK_TARGET) ? SoundEvents.ZOGLIN_ANGRY : SoundEvents.ZOGLIN_AMBIENT;
++      }
 +   }
 +
 +   protected SoundEvent getHurtSound(DamageSource var1) {

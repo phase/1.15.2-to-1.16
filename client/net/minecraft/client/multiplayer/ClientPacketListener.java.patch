@@ -73,7 +73,7 @@
  import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
  import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
  import net.minecraft.network.protocol.game.ClientboundAwardStatsPacket;
-@@ -139,10 +144,11 @@
+@@ -139,22 +144,22 @@
  import net.minecraft.network.protocol.game.ClientboundSetBorderPacket;
  import net.minecraft.network.protocol.game.ClientboundSetCameraPacket;
  import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
@@ -84,8 +84,9 @@
  import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
  import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
  import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
- import net.minecraft.network.protocol.game.ClientboundSetEquippedItemPacket;
-@@ -150,11 +156,10 @@
+-import net.minecraft.network.protocol.game.ClientboundSetEquippedItemPacket;
++import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+ import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
  import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
  import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket;
  import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
@@ -113,7 +114,7 @@
  import net.minecraft.stats.Stat;
  import net.minecraft.stats.StatsCounter;
  import net.minecraft.tags.BlockTags;
-@@ -187,36 +194,34 @@
+@@ -187,36 +194,35 @@
  import net.minecraft.tags.FluidTags;
  import net.minecraft.tags.ItemTags;
  import net.minecraft.tags.TagManager;
@@ -127,6 +128,7 @@
  import net.minecraft.world.entity.AreaEffectCloud;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.entity.EquipmentSlot;
  import net.minecraft.world.entity.ExperienceOrb;
 +import net.minecraft.world.entity.LightningBolt;
  import net.minecraft.world.entity.LivingEntity;
@@ -153,7 +155,7 @@
  import net.minecraft.world.entity.item.PrimedTnt;
  import net.minecraft.world.entity.monster.Guardian;
  import net.minecraft.world.entity.player.Inventory;
-@@ -225,10 +230,11 @@
+@@ -225,10 +231,11 @@
  import net.minecraft.world.entity.projectile.Arrow;
  import net.minecraft.world.entity.projectile.DragonFireball;
  import net.minecraft.world.entity.projectile.EvokerFangs;
@@ -165,7 +167,7 @@
  import net.minecraft.world.entity.projectile.ShulkerBullet;
  import net.minecraft.world.entity.projectile.SmallFireball;
  import net.minecraft.world.entity.projectile.Snowball;
-@@ -258,11 +264,11 @@
+@@ -258,11 +265,11 @@
  import net.minecraft.world.item.crafting.RecipeManager;
  import net.minecraft.world.item.trading.MerchantOffers;
  import net.minecraft.world.level.ChunkPos;
@@ -178,7 +180,7 @@
  import net.minecraft.world.level.block.entity.BannerBlockEntity;
  import net.minecraft.world.level.block.entity.BeaconBlockEntity;
  import net.minecraft.world.level.block.entity.BedBlockEntity;
-@@ -299,10 +305,11 @@
+@@ -299,10 +306,11 @@
     private final Connection connection;
     private final GameProfile localGameProfile;
     private final Screen callbackScreen;
@@ -190,7 +192,7 @@
     private final ClientAdvancements advancements;
     private final ClientSuggestionProvider suggestionsProvider;
     private TagManager tags = new TagManager();
-@@ -310,10 +317,12 @@
+@@ -310,10 +318,12 @@
     private int serverChunkRadius = 3;
     private final Random random = new Random();
     private CommandDispatcher<SharedSuggestionProvider> commands = new CommandDispatcher();
@@ -203,7 +205,7 @@
        this.minecraft = var1;
        this.callbackScreen = var2;
        this.connection = var3;
-@@ -335,12 +344,30 @@
+@@ -335,12 +345,30 @@
     }
  
     public void handleLogin(ClientboundLoginPacket var1) {
@@ -235,7 +237,7 @@
           this.minecraft.player = this.minecraft.gameMode.createPlayer(this.level, new StatsCounter(), new ClientRecipeBook(this.level.getRecipeManager()));
           this.minecraft.player.yRot = -180.0F;
           if (this.minecraft.getSingleplayerServer() != null) {
-@@ -348,18 +375,17 @@
+@@ -348,21 +376,21 @@
           }
        }
  
@@ -255,9 +257,13 @@
        this.minecraft.player.setReducedDebugInfo(var1.isReducedDebugInfo());
        this.minecraft.player.setShowDeathScreen(var1.shouldShowDeathScreen());
        this.minecraft.gameMode.setLocalMode(var1.getGameType());
++      this.minecraft.gameMode.setPreviousLocalMode(var1.getPreviousGameType());
        this.minecraft.options.broadcastOptions();
        this.connection.send(new ServerboundCustomPayloadPacket(ServerboundCustomPayloadPacket.BRAND, (new FriendlyByteBuf(Unpooled.buffer())).writeUtf(ClientBrandRetriever.getClientModName())));
-@@ -458,18 +484,21 @@
+       this.minecraft.getGame().onStartGameSession();
+    }
+ 
+@@ -458,18 +486,21 @@
              var8 = new ItemEntity(this.level, var2, var4, var6);
           } else if (var9 == EntityType.FALLING_BLOCK) {
              var8 = new FallingBlockEntity(this.level, var2, var4, var6, Block.stateById(var1.getData()));
@@ -279,7 +285,7 @@
           ((Entity)var8).setId(var11);
           ((Entity)var8).setUUID(var1.getUUID());
           this.level.putNonPlayerEntity(var11, (Entity)var8);
-@@ -491,26 +520,10 @@
+@@ -491,26 +522,10 @@
        var8.xRot = 0.0F;
        var8.setId(var1.getId());
        this.level.putNonPlayerEntity(var1.getId(), var8);
@@ -306,7 +312,7 @@
        Painting var2 = new Painting(this.level, var1.getPos(), var1.getDirection(), var1.getMotive());
        var2.setId(var1.getId());
        var2.setUUID(var1.getUUID());
-@@ -565,11 +578,11 @@
+@@ -565,11 +580,11 @@
                 var2.lerpTo(var2.getX(), var2.getY(), var2.getZ(), var9, var10, 3, true);
              } else {
                 var2.lerpTo(var3, var5, var7, var9, var10, 3, true);
@@ -319,7 +325,7 @@
        }
     }
  
-@@ -599,11 +612,11 @@
+@@ -599,11 +614,11 @@
                 float var6 = (float)(var1.getyRot() * 360) / 256.0F;
                 var4 = (float)(var1.getxRot() * 360) / 256.0F;
                 var2.lerpTo(var2.getX(), var2.getY(), var2.getZ(), var6, var4, 3, false);
@@ -332,7 +338,7 @@
        }
     }
  
-@@ -667,10 +680,14 @@
+@@ -667,10 +682,14 @@
           var15 = 0.0D;
           var17 = var1.getZ();
           var2.zOld = var17;
@@ -347,7 +353,7 @@
        var2.yo = var13;
        var2.zo = var17;
        var2.setDeltaMovement(var7, var11, var15);
-@@ -708,11 +725,11 @@
+@@ -708,30 +727,49 @@
  
     public void handleLevelChunk(ClientboundLevelChunkPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
@@ -359,8 +365,14 @@
           this.level.reAddEntitiesToChunk(var4);
        }
  
-       for(int var5 = 0; var5 < 16; ++var5) {
-@@ -724,11 +741,11 @@
+-      for(int var5 = 0; var5 < 16; ++var5) {
++      int var5;
++      for(var5 = 0; var5 < 16; ++var5) {
+          this.level.setSectionDirtyWithNeighbors(var2, var5, var3);
+       }
+ 
+       Iterator var9 = var1.getBlockEntitiesTags().iterator();
+ 
        while(var9.hasNext()) {
           CompoundTag var6 = (CompoundTag)var9.next();
           BlockPos var7 = new BlockPos(var6.getInt("x"), var6.getInt("y"), var6.getInt("z"));
@@ -371,9 +383,30 @@
           }
        }
  
++      if (!var1.forgetOldData()) {
++         this.level.getLightEngine().enableLightSources(var4.getPos(), false);
++         var5 = var1.getAvailableSections();
++
++         for(int var10 = 0; var10 < 16; ++var10) {
++            if ((var5 & 1 << var10) != 0) {
++               this.level.getLightEngine().queueSectionData(LightLayer.BLOCK, SectionPos.of(var4.getPos(), var10), new DataLayer(), false);
++               this.level.getLightEngine().queueSectionData(LightLayer.SKY, SectionPos.of(var4.getPos(), var10), new DataLayer(), false);
++            }
++         }
++
++         this.level.getLightEngine().runUpdates(Integer.MAX_VALUE, true, true);
++         this.level.getLightEngine().enableLightSources(var4.getPos(), true);
++         var4.getLights().forEach((var2x) -> {
++            this.level.getLightEngine().onBlockEmissionIncrease(var2x, var4.getLightEmission(var2x));
++         });
++      }
++
     }
  
-@@ -758,12 +775,12 @@
+    public void handleForgetLevelChunk(ClientboundForgetLevelChunkPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+       int var2 = var1.getX();
+@@ -758,12 +796,12 @@
     }
  
     public void onDisconnect(Component var1) {
@@ -388,7 +421,7 @@
           }
        } else {
           this.minecraft.setScreen(new DisconnectedScreen(new JoinMultiplayerScreen(new TitleScreen()), "disconnect.lost", var1));
-@@ -788,23 +805,28 @@
+@@ -788,23 +826,28 @@
              this.level.playLocalSound(var2.getX(), var2.getY(), var2.getZ(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.1F, (this.random.nextFloat() - this.random.nextFloat()) * 0.35F + 0.9F, false);
           } else {
              this.level.playLocalSound(var2.getX(), var2.getY(), var2.getZ(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, (this.random.nextFloat() - this.random.nextFloat()) * 1.4F + 2.0F, false);
@@ -422,7 +455,7 @@
     public void handleAnimate(ClientboundAnimatePacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = this.level.getEntity(var1.getId());
-@@ -862,11 +884,11 @@
+@@ -862,11 +905,11 @@
                 var14 = new BeeAggressiveSoundInstance((Bee)var10);
              } else {
                 var14 = new BeeFlyingSoundInstance((Bee)var10);
@@ -435,7 +468,7 @@
           LOGGER.warn("Skipping Entity with id {}", var1.getType());
        }
  
-@@ -876,14 +898,13 @@
+@@ -876,14 +919,13 @@
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        this.minecraft.level.setGameTime(var1.getGameTime());
        this.minecraft.level.setDayTime(var1.getDayTime());
@@ -452,7 +485,7 @@
     public void handleSetEntityPassengersPacket(ClientboundSetPassengersPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = this.level.getEntity(var1.getVehicle());
-@@ -899,11 +920,11 @@
+@@ -899,11 +941,11 @@
              int var7 = var4[var6];
              Entity var8 = this.level.getEntity(var7);
              if (var8 != null) {
@@ -465,7 +498,7 @@
           }
  
        }
-@@ -965,41 +986,52 @@
+@@ -965,46 +1007,58 @@
        this.minecraft.player.setExperienceValues(var1.getExperienceProgress(), var1.getTotalExperience(), var1.getExperienceLevel());
     }
  
@@ -543,7 +576,13 @@
        }
  
        this.minecraft.gameMode.setLocalMode(var1.getPlayerGameType());
-@@ -1104,21 +1136,20 @@
++      this.minecraft.gameMode.setPreviousLocalMode(var1.getPreviousPlayerGameType());
+    }
+ 
+    public void handleExplosion(ClientboundExplodePacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+       Explosion var2 = new Explosion(this.minecraft.level, (Entity)null, var1.getX(), var1.getY(), var1.getZ(), var1.getPower(), var1.getToBlow());
+@@ -1104,21 +1158,20 @@
        this.minecraft.player.openTextEdit((SignBlockEntity)var2);
     }
  
@@ -574,7 +613,27 @@
     }
  
     public void handleContainerSetData(ClientboundContainerSetDataPacket var1) {
-@@ -1155,35 +1186,33 @@
+@@ -1128,15 +1181,17 @@
+          var2.containerMenu.setData(var1.getId(), var1.getValue());
+       }
+ 
+    }
+ 
+-   public void handleSetEquippedItem(ClientboundSetEquippedItemPacket var1) {
++   public void handleSetEquipment(ClientboundSetEquipmentPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
+       Entity var2 = this.level.getEntity(var1.getEntity());
+       if (var2 != null) {
+-         var2.setItemSlot(var1.getSlot(), var1.getItem());
++         var1.getSlots().forEach((var1x) -> {
++            var2.setItemSlot((EquipmentSlot)var1x.getFirst(), (ItemStack)var1x.getSecond());
++         });
+       }
+ 
+    }
+ 
+    public void handleContainerClose(ClientboundContainerClosePacket var1) {
+@@ -1155,35 +1210,33 @@
     }
  
     public void handleGameEvent(ClientboundGameEventPacket var1) {
@@ -618,7 +677,7 @@
              this.minecraft.setScreen(new DemoIntroScreen());
           } else if (var4 == 101.0F) {
              this.minecraft.gui.getChat().addMessage(new TranslatableComponent("demo.help.movement", new Object[]{var6.keyUp.getTranslatedKeyMessage(), var6.keyLeft.getTranslatedKeyMessage(), var6.keyDown.getTranslatedKeyMessage(), var6.keyRight.getTranslatedKeyMessage()}));
-@@ -1192,22 +1221,24 @@
+@@ -1192,22 +1245,24 @@
           } else if (var4 == 103.0F) {
              this.minecraft.gui.getChat().addMessage(new TranslatableComponent("demo.help.inventory", new Object[]{var6.keyInventory.getTranslatedKeyMessage()}));
           } else if (var4 == 104.0F) {
@@ -650,7 +709,7 @@
  
     }
  
-@@ -1389,23 +1420,20 @@
+@@ -1389,23 +1444,20 @@
        if (var2 instanceof LivingEntity) {
           MobEffect var3 = MobEffect.byId(var1.getEffectId());
           if (var3 != null) {
@@ -676,7 +735,7 @@
        this.minecraft.getSearchTree(SearchRegistry.CREATIVE_TAGS).refresh();
     }
  
-@@ -1424,12 +1452,12 @@
+@@ -1424,12 +1476,12 @@
  
     }
  
@@ -691,7 +750,7 @@
     public void handleSetCamera(ClientboundSetCameraPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = var1.getEntity(this.level);
-@@ -1445,13 +1473,13 @@
+@@ -1445,13 +1497,13 @@
     }
  
     public void handleSetTitles(ClientboundSetTitlesPacket var1) {
@@ -708,7 +767,7 @@
           var3 = var5;
           break;
        case SUBTITLE:
-@@ -1459,21 +1487,21 @@
+@@ -1459,21 +1511,21 @@
           break;
        case ACTIONBAR:
           this.minecraft.gui.setOverlayMessage(var5, false);
@@ -733,7 +792,7 @@
     public void handleRemoveMobEffect(ClientboundRemoveMobEffectPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        Entity var2 = var1.getEntity(this.level);
-@@ -1548,11 +1576,11 @@
+@@ -1548,11 +1600,11 @@
        }
     }
  
@@ -746,7 +805,7 @@
     public void handleResourcePack(ClientboundResourcePackPacket var1) {
        String var2 = var1.getUrl();
        String var3 = var1.getHash();
-@@ -1562,11 +1590,11 @@
+@@ -1562,11 +1614,11 @@
                 String var9 = URLDecoder.decode(var2.substring("level://".length()), StandardCharsets.UTF_8.toString());
                 File var5 = new File(this.minecraft.gameDirectory, "saves");
                 File var6 = new File(var5, var9);
@@ -759,7 +818,7 @@
                 }
              } catch (UnsupportedEncodingException var8) {
              }
-@@ -1599,11 +1627,11 @@
+@@ -1599,11 +1651,11 @@
                          this.send(ServerboundResourcePackPacket.Action.DECLINED);
                       }
  
@@ -772,7 +831,7 @@
  
           }
        }
-@@ -1689,228 +1717,238 @@
+@@ -1689,228 +1741,238 @@
                 var4 = var3.readInt();
                 float var5 = var3.readFloat();
                 Path var6 = Path.createFromStream(var3);
@@ -1142,7 +1201,7 @@
                             }
                          }
                       }
-@@ -2060,30 +2098,33 @@
+@@ -2060,30 +2122,33 @@
        Entity var2 = this.level.getEntity(var1.getEntityId());
        if (var2 != null) {
           if (!(var2 instanceof LivingEntity)) {
@@ -1191,7 +1250,7 @@
     }
  
     public void handlePlaceRecipe(ClientboundPlaceGhostRecipePacket var1) {
-@@ -2106,15 +2147,15 @@
+@@ -2106,15 +2171,15 @@
        int var3 = var1.getZ();
        LevelLightEngine var4 = this.level.getChunkSource().getLightEngine();
        int var5 = var1.getSkyYMask();
@@ -1209,7 +1268,7 @@
     public void handleMerchantOffers(ClientboundMerchantOffersPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        AbstractContainerMenu var2 = this.minecraft.player.containerMenu;
-@@ -2142,18 +2183,18 @@
+@@ -2142,18 +2207,18 @@
     public void handleBlockBreakAck(ClientboundBlockBreakAckPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (BlockableEventLoop)this.minecraft);
        this.minecraft.gameMode.handleBlockBreakAck(this.level, var1.getPos(), var1.getState(), var1.action(), var1.allGood());
@@ -1236,7 +1295,7 @@
  
     }
  
-@@ -2211,6 +2252,14 @@
+@@ -2211,6 +2276,14 @@
     }
  
     public UUID getId() {

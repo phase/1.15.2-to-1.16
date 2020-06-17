@@ -13,7 +13,18 @@
     void handleAddObjective(ClientboundSetObjectivePacket var1);
  
     void handleAddPainting(ClientboundAddPaintingPacket var1);
-@@ -109,11 +107,11 @@
+@@ -99,21 +97,21 @@
+ 
+    void handleSetEntityData(ClientboundSetEntityDataPacket var1);
+ 
+    void handleSetEntityMotion(ClientboundSetEntityMotionPacket var1);
+ 
+-   void handleSetEquippedItem(ClientboundSetEquippedItemPacket var1);
++   void handleSetEquipment(ClientboundSetEquipmentPacket var1);
+ 
+    void handleSetExperience(ClientboundSetExperiencePacket var1);
+ 
+    void handleSetHealth(ClientboundSetHealthPacket var1);
  
     void handleSetPlayerTeamPacket(ClientboundSetPlayerTeamPacket var1);
  

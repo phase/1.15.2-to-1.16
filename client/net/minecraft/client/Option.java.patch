@@ -1,6 +1,6 @@
 --- net/minecraft/client/Option.java
 +++ net/minecraft/client/Option.java
-@@ -1,13 +1,22 @@
+@@ -1,13 +1,23 @@
  package net.minecraft.client;
  
 +import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -14,6 +14,7 @@
  import net.minecraft.client.gui.components.AbstractWidget;
  import net.minecraft.client.gui.components.ChatComponent;
 -import net.minecraft.client.resources.language.I18n;
++import net.minecraft.client.renderer.GpuWarnlistManager;
 +import net.minecraft.network.chat.CommonComponents;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.FormattedText;
@@ -25,7 +26,7 @@
  
  public abstract class Option {
     public static final ProgressOption BIOME_BLEND_RADIUS = new ProgressOption("options.biomeBlendRadius", 0.0D, 7.0D, 1.0F, (var0) -> {
-@@ -15,112 +24,127 @@
+@@ -15,112 +25,127 @@
     }, (var0, var1) -> {
        var0.biomeBlendRadius = Mth.clamp((int)var1, 0, 7);
        Minecraft.getInstance().levelRenderer.allChanged();
@@ -172,7 +173,7 @@
        return var0.rawMouseInput;
     }, (var0, var1) -> {
        var0.rawMouseInput = var1;
-@@ -135,211 +159,287 @@
+@@ -135,211 +160,293 @@
     }, (var0, var1) -> {
        var0.renderDistance = (int)var1;
        Minecraft.getInstance().levelRenderer.needsUpdate();
@@ -445,12 +446,18 @@
 +      GRAPHICS_TOOLTIP_FABULOUS = new TranslatableComponent("options.graphics.fabulous.tooltip", new Object[]{(new TranslatableComponent("options.graphics.fabulous")).withStyle(ChatFormatting.ITALIC)});
 +      GRAPHICS_TOOLTIP_FANCY = new TranslatableComponent("options.graphics.fancy.tooltip");
 +      GRAPHICS = new CycleOption("options.graphics", (var0, var1) -> {
-+         var0.graphicsMode = var0.graphicsMode.cycleNext();
-+         if (var0.graphicsMode == GraphicsStatus.FABULOUS && !GlStateManager.supportsFramebufferBlit()) {
-+            var0.graphicsMode = GraphicsStatus.FAST;
-+         }
++         Minecraft var2 = Minecraft.getInstance();
++         GpuWarnlistManager var3 = var2.getGpuWarnlistManager();
++         if (var0.graphicsMode == GraphicsStatus.FANCY && var3.willShowWarning()) {
++            var3.showWarning();
++         } else {
++            var0.graphicsMode = var0.graphicsMode.cycleNext();
++            if (var0.graphicsMode == GraphicsStatus.FABULOUS && (!GlStateManager.supportsFramebufferBlit() || var3.isSkippingFabulous())) {
++               var0.graphicsMode = GraphicsStatus.FAST;
++            }
 +
-+         Minecraft.getInstance().levelRenderer.allChanged();
++            var2.levelRenderer.allChanged();
++         }
 +      }, (var0, var1) -> {
 +         switch(var0.graphicsMode) {
 +         case FAST:

@@ -19,7 +19,7 @@
     }
  
 +   public VertexConsumer buffer(MultiBufferSource var1, Function<ResourceLocation, RenderType> var2, boolean var3) {
-+      return this.sprite().wrap(ItemRenderer.getFoilBufferDirect(var1, this.renderType(var2), false, var3));
++      return this.sprite().wrap(ItemRenderer.getFoilBufferDirect(var1, this.renderType(var2), true, var3));
 +   }
 +
     public boolean equals(Object var1) {

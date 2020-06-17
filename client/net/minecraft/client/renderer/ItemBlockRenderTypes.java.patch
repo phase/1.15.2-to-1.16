@@ -1,6 +1,18 @@
 --- net/minecraft/client/renderer/ItemBlockRenderTypes.java
 +++ net/minecraft/client/renderer/ItemBlockRenderTypes.java
-@@ -14,228 +14,252 @@
+@@ -1,10 +1,11 @@
+ package net.minecraft.client.renderer;
+ 
+ import com.google.common.collect.Maps;
+ import java.util.Map;
+ import net.minecraft.Util;
++import net.minecraft.client.Minecraft;
+ import net.minecraft.world.item.BlockItem;
+ import net.minecraft.world.item.Item;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+@@ -14,228 +15,252 @@
  import net.minecraft.world.level.material.FluidState;
  import net.minecraft.world.level.material.Fluids;
  
@@ -471,7 +483,7 @@
        RenderType var1 = RenderType.translucent();
        var0.put(Fluids.FLOWING_WATER, var1);
        var0.put(Fluids.WATER, var1);
-@@ -250,25 +274,43 @@
+@@ -250,25 +275,47 @@
           RenderType var2 = (RenderType)TYPE_BY_BLOCK.get(var1);
           return var2 != null ? var2 : RenderType.solid();
        }
@@ -502,7 +514,11 @@
 +   public static RenderType getRenderType(BlockState var0, boolean var1) {
 +      RenderType var2 = getChunkRenderType(var0);
 +      if (var2 == RenderType.translucent()) {
-+         return var1 ? Sheets.translucentCullBlockSheet() : Sheets.translucentItemSheet();
++         if (!Minecraft.useShaderTransparency()) {
++            return Sheets.translucentCullBlockSheet();
++         } else {
++            return var1 ? Sheets.translucentCullBlockSheet() : Sheets.translucentItemSheet();
++         }
        } else {
 -         return Sheets.translucentBlockSheet();
 +         return Sheets.cutoutBlockSheet();

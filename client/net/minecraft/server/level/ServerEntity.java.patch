@@ -1,6 +1,30 @@
 --- net/minecraft/server/level/ServerEntity.java
 +++ net/minecraft/server/level/ServerEntity.java
-@@ -24,11 +24,10 @@
+@@ -1,7 +1,10 @@
+ package net.minecraft.server.level;
+ 
++import com.google.common.collect.Lists;
++import com.mojang.datafixers.util.Pair;
++import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Set;
+@@ -11,11 +14,11 @@
+ import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
+ import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket;
+ import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+ import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
+ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetEquippedItemPacket;
++import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+ import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
+ import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
+ import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
+ import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
+ import net.minecraft.network.syncher.SynchedEntityData;
+@@ -24,11 +27,10 @@
  import net.minecraft.world.effect.MobEffectInstance;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EquipmentSlot;
@@ -12,7 +36,7 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.MapItem;
  import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-@@ -66,11 +65,11 @@
+@@ -66,11 +68,11 @@
        this.trackDelta = var4;
        this.updateSentPos();
        this.yRotp = Mth.floor(var2.yRot * 256.0F / 360.0F);
@@ -25,7 +49,7 @@
     public void sendChanges() {
        List var1 = this.entity.getPassengers();
        if (!var1.equals(this.lastPassengers)) {
-@@ -104,11 +103,11 @@
+@@ -104,11 +106,11 @@
           if (this.entity.isPassenger()) {
              var16 = Mth.floor(this.entity.yRot * 256.0F / 360.0F);
              var17 = Mth.floor(this.entity.xRot * 256.0F / 360.0F);
@@ -38,7 +62,7 @@
              }
  
              this.updateSentPos();
-@@ -126,22 +125,22 @@
+@@ -126,22 +128,22 @@
              if (this.tickCount > 0 || this.entity instanceof AbstractArrow) {
                 long var9 = ClientboundMoveEntityPacket.entityToPacket(var18.x);
                 long var11 = ClientboundMoveEntityPacket.entityToPacket(var18.y);
@@ -66,7 +90,7 @@
                 }
              }
  
-@@ -212,14 +211,13 @@
+@@ -212,14 +214,13 @@
           var1.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.entity.getEntityData(), true));
        }
  
@@ -84,42 +108,64 @@
           if (((LivingEntity)this.entity).isFallFlying()) {
              var3 = true;
           }
-@@ -230,28 +228,28 @@
+@@ -229,25 +230,30 @@
+       if (var3 && !(var2 instanceof ClientboundAddMobPacket)) {
           var1.accept(new ClientboundSetEntityMotionPacket(this.entity.getId(), this.ap));
        }
  
        if (this.entity instanceof LivingEntity) {
-          EquipmentSlot[] var9 = EquipmentSlot.values();
+-         EquipmentSlot[] var9 = EquipmentSlot.values();
 -         int var12 = var9.length;
-+         int var5 = var9.length;
++         ArrayList var10 = Lists.newArrayList();
++         EquipmentSlot[] var5 = EquipmentSlot.values();
++         int var6 = var5.length;
  
 -         for(int var6 = 0; var6 < var12; ++var6) {
-+         for(int var6 = 0; var6 < var5; ++var6) {
-             EquipmentSlot var7 = var9[var6];
-             ItemStack var8 = ((LivingEntity)this.entity).getItemBySlot(var7);
-             if (!var8.isEmpty()) {
-                var1.accept(new ClientboundSetEquippedItemPacket(this.entity.getId(), var7, var8));
+-            EquipmentSlot var7 = var9[var6];
+-            ItemStack var8 = ((LivingEntity)this.entity).getItemBySlot(var7);
+-            if (!var8.isEmpty()) {
+-               var1.accept(new ClientboundSetEquippedItemPacket(this.entity.getId(), var7, var8));
++         for(int var7 = 0; var7 < var6; ++var7) {
++            EquipmentSlot var8 = var5[var7];
++            ItemStack var9 = ((LivingEntity)this.entity).getItemBySlot(var8);
++            if (!var9.isEmpty()) {
++               var10.add(Pair.of(var8, var9.copy()));
              }
           }
++
++         if (!var10.isEmpty()) {
++            var1.accept(new ClientboundSetEquipmentPacket(this.entity.getId(), var10));
++         }
        }
  
        if (this.entity instanceof LivingEntity) {
-          LivingEntity var10 = (LivingEntity)this.entity;
+-         LivingEntity var10 = (LivingEntity)this.entity;
 -         Iterator var13 = var10.getActiveEffects().iterator();
-+         Iterator var12 = var10.getActiveEffects().iterator();
++         LivingEntity var11 = (LivingEntity)this.entity;
++         Iterator var13 = var11.getActiveEffects().iterator();
  
--         while(var13.hasNext()) {
--            MobEffectInstance var14 = (MobEffectInstance)var13.next();
--            var1.accept(new ClientboundUpdateMobEffectPacket(this.entity.getId(), var14));
-+         while(var12.hasNext()) {
-+            MobEffectInstance var13 = (MobEffectInstance)var12.next();
-+            var1.accept(new ClientboundUpdateMobEffectPacket(this.entity.getId(), var13));
+          while(var13.hasNext()) {
+             MobEffectInstance var14 = (MobEffectInstance)var13.next();
+             var1.accept(new ClientboundUpdateMobEffectPacket(this.entity.getId(), var14));
+          }
+@@ -260,13 +266,13 @@
+       if (this.entity.isPassenger()) {
+          var1.accept(new ClientboundSetPassengersPacket(this.entity.getVehicle()));
+       }
+ 
+       if (this.entity instanceof Mob) {
+-         Mob var11 = (Mob)this.entity;
+-         if (var11.isLeashed()) {
+-            var1.accept(new ClientboundSetEntityLinkPacket(var11, var11.getLeashHolder()));
++         Mob var12 = (Mob)this.entity;
++         if (var12.isLeashed()) {
++            var1.accept(new ClientboundSetEntityLinkPacket(var12, var12.getLeashHolder()));
           }
        }
  
-       if (!this.entity.getPassengers().isEmpty()) {
-          var1.accept(new ClientboundSetPassengersPacket(this.entity));
-@@ -275,17 +273,16 @@
+    }
+ 
+@@ -275,17 +281,16 @@
        if (var1.isDirty()) {
           this.broadcastAndSend(new ClientboundSetEntityDataPacket(this.entity.getId(), var1, false));
        }

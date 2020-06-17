@@ -70,6 +70,19 @@
        double var3 = 1.0D / ((var2.maxX - var2.minX) * 2.0D + 1.0D);
        double var5 = 1.0D / ((var2.maxY - var2.minY) * 2.0D + 1.0D);
        double var7 = 1.0D / ((var2.maxZ - var2.minZ) * 2.0D + 1.0D);
+@@ -82,11 +90,11 @@
+                for(float var17 = 0.0F; var17 <= 1.0F; var17 = (float)((double)var17 + var7)) {
+                   double var18 = Mth.lerp((double)var15, var2.minX, var2.maxX);
+                   double var20 = Mth.lerp((double)var16, var2.minY, var2.maxY);
+                   double var22 = Mth.lerp((double)var17, var2.minZ, var2.maxZ);
+                   Vec3 var24 = new Vec3(var18 + var9, var20, var22 + var11);
+-                  if (var1.level.clip(new ClipContext(var24, var0, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, var1)).getType() == HitResult.Type.MISS) {
++                  if (var1.level.clip(new ClipContext(var24, var0, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, var1)).getType() == HitResult.Type.MISS) {
+                      ++var13;
+                   }
+ 
+                   ++var14;
+                }
 @@ -123,20 +131,16 @@
  
                    for(float var21 = 0.3F; var14 > 0.0F; var14 -= 0.22500001F) {

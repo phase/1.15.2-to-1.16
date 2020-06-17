@@ -25,6 +25,19 @@
     private final ResourceManager resourceManager;
     private final Random random = new Random();
     private float renderDistance;
+@@ -149,11 +148,11 @@
+       } catch (IOException var3) {
+          LOGGER.warn("Failed to load shader: {}", var1, var3);
+          this.effectIndex = EFFECT_NONE;
+          this.effectActive = false;
+       } catch (JsonSyntaxException var4) {
+-         LOGGER.warn("Failed to load shader: {}", var1, var4);
++         LOGGER.warn("Failed to parse shader: {}", var1, var4);
+          this.effectIndex = EFFECT_NONE;
+          this.effectActive = false;
+       }
+ 
+    }
 @@ -296,11 +295,11 @@
           if (var3) {
              var4 = this.minecraft.options.fov;

@@ -119,7 +119,22 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_PLAYER_ABSORPTION_ID, 0.0F);
-@@ -280,17 +274,17 @@
+@@ -224,14 +218,10 @@
+       if (!this.level.isClientSide && this.containerMenu != null && !this.containerMenu.stillValid(this)) {
+          this.closeContainer();
+          this.containerMenu = this.inventoryMenu;
+       }
+ 
+-      if (this.isOnFire() && this.abilities.invulnerable) {
+-         this.clearFire();
+-      }
+-
+       this.moveCloak();
+       if (!this.level.isClientSide) {
+          this.foodData.tick(this);
+          this.awardStat(Stats.PLAY_ONE_MINUTE);
+          if (this.isAlive()) {
+@@ -280,17 +270,17 @@
     protected boolean isStayingOnGroundSurface() {
        return this.isShiftKeyDown();
     }
@@ -139,7 +154,7 @@
  
     }
  
-@@ -411,29 +405,21 @@
+@@ -411,29 +401,21 @@
     protected void closeContainer() {
        this.containerMenu = this.inventoryMenu;
     }
@@ -171,7 +186,7 @@
  
     protected void serverAiStep() {
        super.serverAiStep();
-@@ -457,43 +443,38 @@
+@@ -457,43 +439,38 @@
        }
  
        this.inventory.tick();
@@ -229,7 +244,7 @@
        }
  
        this.playShoulderEntityAmbientSound(this.getShoulderEntityLeft());
-@@ -503,16 +484,19 @@
+@@ -503,16 +480,19 @@
        }
  
     }
@@ -251,7 +266,7 @@
  
     }
  
-@@ -598,10 +582,14 @@
+@@ -598,10 +578,14 @@
     @Nullable
     public ItemEntity drop(ItemStack var1, boolean var2, boolean var3) {
        if (var1.isEmpty()) {
@@ -266,7 +281,7 @@
           var6.setPickUpDelay(40);
           if (var3) {
              var6.setThrower(this.getUUID());
-@@ -660,23 +648,23 @@
+@@ -660,23 +644,23 @@
           }
  
           var2 *= var5;
@@ -293,7 +308,7 @@
     public void readAdditionalSaveData(CompoundTag var1) {
        super.readAdditionalSaveData(var1);
        this.setUUID(createPlayerUUID(this.gameProfile));
-@@ -691,17 +679,13 @@
+@@ -691,17 +675,13 @@
        if (this.enchantmentSeed == 0) {
           this.enchantmentSeed = this.random.nextInt();
        }
@@ -312,7 +327,7 @@
        }
  
        if (var1.contains("ShoulderEntityLeft", 10)) {
-@@ -723,17 +707,10 @@
+@@ -723,17 +703,10 @@
        var1.putFloat("XpP", this.experienceProgress);
        var1.putInt("XpLevel", this.experienceLevel);
        var1.putInt("XpTotal", this.totalExperience);
@@ -330,7 +345,7 @@
        var1.put("EnderItems", this.enderChestInventory.createTag());
        if (!this.getShoulderEntityLeft().isEmpty()) {
           var1.put("ShoulderEntityLeft", this.getShoulderEntityLeft());
-@@ -764,11 +741,11 @@
+@@ -764,11 +737,11 @@
           return false;
        } else if (this.abilities.invulnerable && !var1.isBypassInvul()) {
           return false;
@@ -343,7 +358,7 @@
              this.removeEntitiesOnShoulder();
              if (var1.scalesWithDifficulty()) {
                 if (this.level.getDifficulty() == Difficulty.PEACEFUL) {
-@@ -805,33 +782,39 @@
+@@ -805,33 +778,39 @@
        } else {
           return !var2.isAlliedTo(var3) ? true : var2.isAllowFriendlyFire();
        }
@@ -400,7 +415,7 @@
     protected void actuallyHurt(DamageSource var1, float var2) {
        if (!this.isInvulnerableTo(var1)) {
           var2 = this.getDamageAfterArmorAbsorb(var1, var2);
-@@ -855,10 +838,14 @@
+@@ -855,10 +834,14 @@
  
           }
        }
@@ -415,7 +430,7 @@
  
     public void openMinecartCommandBlock(BaseCommandBlock var1) {
     }
-@@ -893,49 +880,55 @@
+@@ -893,49 +876,55 @@
  
           return InteractionResult.PASS;
        } else {
@@ -478,7 +493,7 @@
           double var3 = var1.x;
           double var5 = var1.z;
           double var7 = 0.05D;
-@@ -992,11 +985,11 @@
+@@ -992,11 +981,11 @@
     }
  
     public void attack(Entity var1) {
@@ -491,7 +506,7 @@
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), ((LivingEntity)var1).getMobType());
              } else {
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), MobType.UNDEFINED);
-@@ -1015,11 +1008,11 @@
+@@ -1015,11 +1004,11 @@
                    this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
                    ++var21;
                    var6 = true;
@@ -504,7 +519,7 @@
                    var2 *= 1.5F;
                 }
  
-@@ -1047,11 +1040,11 @@
+@@ -1047,11 +1036,11 @@
                 Vec3 var15 = var1.getDeltaMovement();
                 boolean var16 = var1.hurt(DamageSource.playerAttack(this), var2);
                 if (var16) {
@@ -517,7 +532,7 @@
                       }
  
                       this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
-@@ -1081,11 +1074,11 @@
+@@ -1081,11 +1070,11 @@
                                } while(var20 == var1);
                             } while(this.isAlliedTo(var20));
                          } while(var20 instanceof ArmorStand && ((ArmorStand)var20).isMarker());
@@ -530,7 +545,7 @@
                       }
                    }
  
-@@ -1206,75 +1199,15 @@
+@@ -1206,75 +1195,15 @@
     public GameProfile getGameProfile() {
        return this.gameProfile;
     }
@@ -606,7 +621,7 @@
        if (this.level instanceof ServerLevel && var2) {
           ((ServerLevel)this.level).updateSleepingPlayerList();
        }
-@@ -1284,22 +1217,28 @@
+@@ -1284,22 +1213,28 @@
  
     public void stopSleeping() {
        this.stopSleepInBed(true, true);
@@ -645,7 +660,7 @@
  
     public boolean isSleepingLongEnough() {
        return this.isSleeping() && this.sleepCounter >= 100;
-@@ -1310,33 +1249,10 @@
+@@ -1310,33 +1245,10 @@
     }
  
     public void displayClientMessage(Component var1, boolean var2) {
@@ -679,7 +694,7 @@
     }
  
     public void awardStat(ResourceLocation var1, int var2) {
-@@ -1418,11 +1334,11 @@
+@@ -1418,11 +1330,11 @@
     protected boolean freeAt(BlockPos var1) {
        return !this.level.getBlockState(var1).isSuffocating(this.level, var1);
     }
@@ -692,7 +707,7 @@
     public void checkMovementStatistics(double var1, double var3, double var5) {
        if (!this.isPassenger()) {
           int var7;
-@@ -1430,11 +1346,11 @@
+@@ -1430,11 +1342,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var3 * var3 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.SWIM_ONE_CM, var7);
@@ -705,7 +720,7 @@
                 this.awardStat(Stats.WALK_UNDER_WATER_ONE_CM, var7);
                 this.causeFoodExhaustion(0.01F * (float)var7 * 0.01F);
              }
-@@ -1442,11 +1358,11 @@
+@@ -1442,11 +1354,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.WALK_ON_WATER_ONE_CM, var7);
@@ -718,7 +733,7 @@
              }
           } else if (this.onGround) {
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
-@@ -1473,22 +1389,25 @@
+@@ -1473,22 +1385,25 @@
           }
  
        }
@@ -749,7 +764,7 @@
        }
  
     }
-@@ -1504,11 +1423,11 @@
+@@ -1504,11 +1419,11 @@
           return super.causeFallDamage(var1, var2);
        }
     }
@@ -762,7 +777,7 @@
              this.startFallFlying();
              return true;
           }
-@@ -1762,31 +1681,31 @@
+@@ -1762,31 +1677,31 @@
        return !this.abilities.flying && !this.isSpectator() && super.isSwimming();
     }
  
@@ -798,6 +813,21 @@
  
     public String getScoreboardName() {
        return this.getGameProfile().getName();
+@@ -1877,10 +1792,14 @@
+             return true;
+          }
+       }
+    }
+ 
++   public void setRemainingFireTicks(int var1) {
++      super.setRemainingFireTicks(this.abilities.invulnerable ? Math.min(var1, 1) : var1);
++   }
++
+    public HumanoidArm getMainArm() {
+       return (Byte)this.entityData.get(DATA_PLAYER_MAIN_HAND) == 0 ? HumanoidArm.LEFT : HumanoidArm.RIGHT;
+    }
+ 
+    public void setMainArm(HumanoidArm var1) {
 @@ -1902,11 +1821,11 @@
     protected void setShoulderEntityRight(CompoundTag var1) {
        this.entityData.set(DATA_SHOULDER_RIGHT, var1);

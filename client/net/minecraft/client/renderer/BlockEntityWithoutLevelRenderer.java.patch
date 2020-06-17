@@ -120,7 +120,7 @@
 +            var3.pushPose();
 +            var3.scale(1.0F, -1.0F, -1.0F);
 +            Material var9 = var8 ? ModelBakery.SHIELD_BASE : ModelBakery.NO_PATTERN_SHIELD;
-+            VertexConsumer var10 = var9.sprite().wrap(ItemRenderer.getFoilBufferDirect(var4, this.shieldModel.renderType(var9.atlasLocation()), false, var1.hasFoil()));
++            VertexConsumer var10 = var9.sprite().wrap(ItemRenderer.getFoilBufferDirect(var4, this.shieldModel.renderType(var9.atlasLocation()), true, var1.hasFoil()));
 +            this.shieldModel.handle().render(var3, var10, var5, var6, 1.0F, 1.0F, 1.0F, 1.0F);
 +            if (var8) {
 +               List var11 = BannerBlockEntity.createPatterns(ShieldItem.getColor(var1), BannerBlockEntity.getItemPatterns(var1));

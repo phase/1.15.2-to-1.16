@@ -56,16 +56,15 @@
 +   private static final Map<Direction, VoxelShape> SHAPES_UP;
 +   private final Map<BlockState, VoxelShape> SHAPES_CACHE = Maps.newHashMap();
 +   private static final Vector3f[] COLORS;
-+   private final BlockState dotState;
++   private final BlockState crossState;
     private boolean shouldSignal = true;
 -   private final Set<BlockPos> toUpdate = Sets.newHashSet();
  
 -   public RedStoneWireBlock(Block.Properties var1) {
 +   public RedStoneWireBlock(BlockBehaviour.Properties var1) {
        super(var1);
--      this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(NORTH, RedstoneSide.NONE)).setValue(EAST, RedstoneSide.NONE)).setValue(SOUTH, RedstoneSide.NONE)).setValue(WEST, RedstoneSide.NONE)).setValue(POWER, 0));
-+      this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(NORTH, RedstoneSide.SIDE)).setValue(EAST, RedstoneSide.SIDE)).setValue(SOUTH, RedstoneSide.SIDE)).setValue(WEST, RedstoneSide.SIDE)).setValue(POWER, 0));
-+      this.dotState = (BlockState)((BlockState)((BlockState)((BlockState)this.defaultBlockState().setValue(NORTH, RedstoneSide.NONE)).setValue(EAST, RedstoneSide.NONE)).setValue(SOUTH, RedstoneSide.NONE)).setValue(WEST, RedstoneSide.NONE);
+       this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(NORTH, RedstoneSide.NONE)).setValue(EAST, RedstoneSide.NONE)).setValue(SOUTH, RedstoneSide.NONE)).setValue(WEST, RedstoneSide.NONE)).setValue(POWER, 0));
++      this.crossState = (BlockState)((BlockState)((BlockState)((BlockState)this.defaultBlockState().setValue(NORTH, RedstoneSide.SIDE)).setValue(EAST, RedstoneSide.SIDE)).setValue(SOUTH, RedstoneSide.SIDE)).setValue(WEST, RedstoneSide.SIDE);
 +      UnmodifiableIterator var2 = this.getStateDefinition().getPossibleStates().iterator();
 +
 +      while(var2.hasNext()) {
@@ -109,7 +108,7 @@
 -         var1 |= 1 << Direction.NORTH.get2DDataValue();
 -      }
 +   public BlockState getStateForPlacement(BlockPlaceContext var1) {
-+      return this.getConnectionState(var1.getLevel(), this.defaultBlockState(), var1.getClickedPos());
++      return this.getConnectionState(var1.getLevel(), this.crossState, var1.getClickedPos());
 +   }
  
 -      if (var3 || var5 && !var2 && !var3 && !var4) {
@@ -117,16 +116,16 @@
 -      }
 +   private BlockState getConnectionState(BlockGetter var1, BlockState var2, BlockPos var3) {
 +      boolean var4 = isDot(var2);
-+      var2 = this.getMissingConnections(var1, (BlockState)this.dotState.setValue(POWER, var2.getValue(POWER)), var3);
-+      boolean var5 = ((RedstoneSide)var2.getValue(NORTH)).isConnected();
-+      boolean var6 = ((RedstoneSide)var2.getValue(SOUTH)).isConnected();
-+      boolean var7 = ((RedstoneSide)var2.getValue(EAST)).isConnected();
-+      boolean var8 = ((RedstoneSide)var2.getValue(WEST)).isConnected();
-+      boolean var9 = !var5 && !var6;
-+      boolean var10 = !var7 && !var8;
++      var2 = this.getMissingConnections(var1, (BlockState)this.defaultBlockState().setValue(POWER, var2.getValue(POWER)), var3);
 +      if (var4 && isDot(var2)) {
 +         return var2;
 +      } else {
++         boolean var5 = ((RedstoneSide)var2.getValue(NORTH)).isConnected();
++         boolean var6 = ((RedstoneSide)var2.getValue(SOUTH)).isConnected();
++         boolean var7 = ((RedstoneSide)var2.getValue(EAST)).isConnected();
++         boolean var8 = ((RedstoneSide)var2.getValue(WEST)).isConnected();
++         boolean var9 = !var5 && !var6;
++         boolean var10 = !var7 && !var8;
 +         if (!var8 && var9) {
 +            var2 = (BlockState)var2.setValue(WEST, RedstoneSide.SIDE);
 +         }
@@ -181,7 +180,7 @@
        } else {
 -         return var2 == Direction.UP ? (BlockState)((BlockState)((BlockState)((BlockState)var1.setValue(WEST, this.getConnectingSide(var4, var5, Direction.WEST))).setValue(EAST, this.getConnectingSide(var4, var5, Direction.EAST))).setValue(NORTH, this.getConnectingSide(var4, var5, Direction.NORTH))).setValue(SOUTH, this.getConnectingSide(var4, var5, Direction.SOUTH)) : (BlockState)var1.setValue((Property)PROPERTY_BY_DIRECTION.get(var2), this.getConnectingSide(var4, var5, var2));
 +         RedstoneSide var7 = this.getConnectingSide(var4, var5, var2);
-+         return var7.isConnected() == ((RedstoneSide)var1.getValue((Property)PROPERTY_BY_DIRECTION.get(var2))).isConnected() && !isCross(var1) ? (BlockState)var1.setValue((Property)PROPERTY_BY_DIRECTION.get(var2), var7) : this.getConnectionState(var4, (BlockState)((BlockState)this.defaultBlockState().setValue(POWER, var1.getValue(POWER))).setValue((Property)PROPERTY_BY_DIRECTION.get(var2), var7), var5);
++         return var7.isConnected() == ((RedstoneSide)var1.getValue((Property)PROPERTY_BY_DIRECTION.get(var2))).isConnected() && !isCross(var1) ? (BlockState)var1.setValue((Property)PROPERTY_BY_DIRECTION.get(var2), var7) : this.getConnectionState(var4, (BlockState)((BlockState)this.crossState.setValue(POWER, var1.getValue(POWER))).setValue((Property)PROPERTY_BY_DIRECTION.get(var2), var7), var5);
        }
     }
  
@@ -209,9 +208,9 @@
 -                  BlockState var12 = var10.updateShape(var8.getOpposite(), var2.getBlockState(var11), var2, var5, var11);
 -                  updateOrDestroy(var10, var12, var2, var5, var4);
 -               }
-+   public void updateIndirectNeighbourShapes(BlockState var1, LevelAccessor var2, BlockPos var3, int var4) {
-+      BlockPos.MutableBlockPos var5 = new BlockPos.MutableBlockPos();
-+      Iterator var6 = Direction.Plane.HORIZONTAL.iterator();
++   public void updateIndirectNeighbourShapes(BlockState var1, LevelAccessor var2, BlockPos var3, int var4, int var5) {
++      BlockPos.MutableBlockPos var6 = new BlockPos.MutableBlockPos();
++      Iterator var7 = Direction.Plane.HORIZONTAL.iterator();
  
 -               var5.set((Vec3i)var3).move(var8).move(Direction.UP);
 -               BlockState var23 = var2.getBlockState(var5);
@@ -220,16 +219,16 @@
 -                  BlockState var13 = var23.updateShape(var8.getOpposite(), var2.getBlockState(var24), var2, var5, var24);
 -                  updateOrDestroy(var23, var13, var2, var5, var4);
 -               }
-+      while(var6.hasNext()) {
-+         Direction var7 = (Direction)var6.next();
-+         RedstoneSide var8 = (RedstoneSide)var1.getValue((Property)PROPERTY_BY_DIRECTION.get(var7));
-+         if (var8 != RedstoneSide.NONE && !var2.getBlockState(var5.setWithOffset(var3, var7)).is(this)) {
-+            var5.move(Direction.DOWN);
-+            BlockState var9 = var2.getBlockState(var5);
-+            if (!var9.is(Blocks.OBSERVER)) {
-+               BlockPos var10 = var5.relative(var7.getOpposite());
-+               BlockState var11 = var9.updateShape(var7.getOpposite(), var2.getBlockState(var10), var2, var5, var10);
-+               updateOrDestroy(var9, var11, var2, var5, var4);
++      while(var7.hasNext()) {
++         Direction var8 = (Direction)var7.next();
++         RedstoneSide var9 = (RedstoneSide)var1.getValue((Property)PROPERTY_BY_DIRECTION.get(var8));
++         if (var9 != RedstoneSide.NONE && !var2.getBlockState(var6.setWithOffset(var3, var8)).is(this)) {
++            var6.move(Direction.DOWN);
++            BlockState var10 = var2.getBlockState(var6);
++            if (!var10.is(Blocks.OBSERVER)) {
++               BlockPos var11 = var6.relative(var8.getOpposite());
++               BlockState var12 = var10.updateShape(var8.getOpposite(), var2.getBlockState(var11), var2, var6, var11);
++               updateOrDestroy(var10, var12, var2, var6, var4, var5);
              }
 -         }
 -      } catch (Throwable var21) {
@@ -246,12 +245,12 @@
 -            } else {
 -               var5.close();
 +
-+            var5.setWithOffset(var3, var7).move(Direction.UP);
-+            BlockState var13 = var2.getBlockState(var5);
-+            if (!var13.is(Blocks.OBSERVER)) {
-+               BlockPos var14 = var5.relative(var7.getOpposite());
-+               BlockState var12 = var13.updateShape(var7.getOpposite(), var2.getBlockState(var14), var2, var5, var14);
-+               updateOrDestroy(var13, var12, var2, var5, var4);
++            var6.setWithOffset(var3, var8).move(Direction.UP);
++            BlockState var14 = var2.getBlockState(var6);
++            if (!var14.is(Blocks.OBSERVER)) {
++               BlockPos var15 = var6.relative(var8.getOpposite());
++               BlockState var13 = var14.updateShape(var8.getOpposite(), var2.getBlockState(var15), var2, var6, var15);
++               updateOrDestroy(var14, var13, var2, var6, var4, var5);
              }
           }
 -
@@ -420,7 +419,7 @@
           int var4 = var3.length;
  
           for(int var5 = 0; var5 < var4; ++var5) {
-@@ -245,44 +288,26 @@
+@@ -245,44 +288,25 @@
  
        }
     }
@@ -428,7 +427,6 @@
     public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
 -      if (var4.getBlock() != var1.getBlock() && !var2.isClientSide) {
 +      if (!var4.is(var1.getBlock()) && !var2.isClientSide) {
-+         var2.setBlock(var3, this.getConnectionState(var2, this.defaultBlockState(), var3), 2);
           this.updatePowerStrength(var2, var3, var1);
           Iterator var6 = Direction.Plane.VERTICAL.iterator();
  
@@ -470,7 +468,7 @@
              Direction[] var6 = Direction.values();
              int var7 = var6.length;
  
-@@ -290,41 +315,36 @@
+@@ -290,41 +314,36 @@
                 Direction var9 = var6[var8];
                 var2.updateNeighborsAt(var3.relative(var9), this);
              }
@@ -531,7 +529,7 @@
     public void neighborChanged(BlockState var1, Level var2, BlockPos var3, Block var4, BlockPos var5, boolean var6) {
        if (!var2.isClientSide) {
           if (var1.canSurvive(var2, var3)) {
-@@ -340,117 +360,80 @@
+@@ -340,117 +359,80 @@
     public int getDirectSignal(BlockState var1, BlockGetter var2, BlockPos var3, Direction var4) {
        return !this.shouldSignal ? 0 : var1.getSignal(var2, var3, var4);
     }
@@ -688,7 +686,7 @@
  
     public BlockState rotate(BlockState var1, Rotation var2) {
        switch(var2) {
-@@ -478,15 +461,59 @@
+@@ -478,15 +460,59 @@
  
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> var1) {
        var1.add(NORTH, EAST, SOUTH, WEST, POWER);
@@ -699,7 +697,7 @@
 +         return InteractionResult.PASS;
 +      } else {
 +         if (isCross(var1) || isDot(var1)) {
-+            BlockState var7 = isCross(var1) ? this.dotState : this.defaultBlockState();
++            BlockState var7 = isCross(var1) ? this.defaultBlockState() : this.crossState;
 +            var7 = (BlockState)var7.setValue(POWER, var1.getValue(POWER));
 +            var7 = this.getConnectionState(var2, var7, var3);
 +            if (var7 != var1) {

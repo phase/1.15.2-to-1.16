@@ -614,7 +614,7 @@
           float var1 = this.getBrightness();
           BlockPos var2 = this.getVehicle() instanceof Boat ? (new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ())).above() : new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ());
           if (var1 > 0.5F && this.random.nextFloat() * 30.0F < (var1 - 0.4F) * 2.0F && this.level.canSeeSky(var2)) {
-@@ -1227,13 +1394,9 @@
+@@ -1227,12 +1394,13 @@
           this.setDeltaMovement(this.getDeltaMovement().add(0.0D, 0.3D, 0.0D));
        }
  
@@ -622,9 +622,11 @@
  
 -   public boolean isHolding(Item var1) {
 -      return this.getMainHandItem().getItem() == var1 || this.getOffhandItem().getItem() == var1;
--   }
--
++   protected void removeAfterChangingDimensions() {
++      super.removeAfterChangingDimensions();
++      this.dropLeash(true, false);
+    }
+ 
     static {
        DATA_MOB_FLAGS_ID = SynchedEntityData.defineId(Mob.class, EntityDataSerializers.BYTE);
     }
- }

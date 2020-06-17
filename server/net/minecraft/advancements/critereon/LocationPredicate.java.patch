@@ -79,7 +79,7 @@
     public boolean matches(ServerLevel var1, double var2, double var4, double var6) {
        return this.matches(var1, (float)var2, (float)var4, (float)var6);
     }
-@@ -63,18 +72,20 @@
+@@ -63,27 +72,27 @@
           return false;
        } else if (!this.y.matches(var3)) {
           return false;
@@ -94,15 +94,30 @@
           if (this.biome != null && (!var6 || this.biome != var1.getBiome(var5))) {
              return false;
 -         } else if (this.feature == null || var6 && this.feature.isInsideFeature(var1, var5)) {
+-            if (!this.light.matches(var1, var5)) {
+-               return false;
+-            } else if (!this.block.matches(var1, var5)) {
+-               return false;
+-            } else {
+-               return this.fluid.matches(var1, var5);
+-            }
+-         } else {
 +         } else if (this.feature != null && (!var6 || !var1.structureFeatureManager().getStructureAt(var5, true, this.feature).isValid())) {
+             return false;
++         } else if (this.smokey != null && (!var6 || this.smokey != CampfireBlock.isSmokeyPos(var1, var5))) {
 +            return false;
-+         } else if (this.smokey == null || var6 && this.smokey == CampfireBlock.isSmokeyPos(var1, var5)) {
-             if (!this.light.matches(var1, var5)) {
-                return false;
-             } else if (!this.block.matches(var1, var5)) {
-                return false;
-             } else {
-@@ -98,21 +109,30 @@
++         } else if (!this.light.matches(var1, var5)) {
++            return false;
++         } else if (!this.block.matches(var1, var5)) {
++            return false;
++         } else {
++            return this.fluid.matches(var1, var5);
+          }
+       }
+    }
+ 
+    public JsonElement serializeToJson() {
+@@ -98,21 +107,30 @@
              var2.add("z", this.z.serializeToJson());
              var1.add("position", var2);
           }
@@ -135,7 +150,7 @@
           var1.add("fluid", this.fluid.serializeToJson());
           return var1;
        }
-@@ -123,31 +143,44 @@
+@@ -123,31 +141,44 @@
           JsonObject var1 = GsonHelper.convertToJsonObject(var0, "location");
           JsonObject var2 = GsonHelper.getAsJsonObject(var1, "position", new JsonObject());
           MinMaxBounds.Floats var3 = MinMaxBounds.Floats.fromJson(var2.get("x"));
@@ -187,7 +202,7 @@
     public static class Builder {
        private MinMaxBounds.Floats x;
        private MinMaxBounds.Floats y;
-@@ -155,11 +188,13 @@
+@@ -155,11 +186,13 @@
        @Nullable
        private Biome biome;
        @Nullable
@@ -202,7 +217,7 @@
        private FluidPredicate fluid;
  
        public Builder() {
-@@ -178,10 +213,20 @@
+@@ -178,10 +211,20 @@
        public LocationPredicate.Builder setBiome(@Nullable Biome var1) {
           this.biome = var1;
           return this;

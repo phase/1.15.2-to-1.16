@@ -1,6 +1,12 @@
 --- net/minecraft/client/renderer/entity/ItemRenderer.java
 +++ net/minecraft/client/renderer/entity/ItemRenderer.java
-@@ -10,27 +10,26 @@
+@@ -5,32 +5,32 @@
+ import com.mojang.blaze3d.platform.Lighting;
+ import com.mojang.blaze3d.systems.RenderSystem;
+ import com.mojang.blaze3d.vertex.BufferBuilder;
+ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+ import com.mojang.blaze3d.vertex.PoseStack;
++import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
  import com.mojang.blaze3d.vertex.Tesselator;
  import com.mojang.blaze3d.vertex.VertexConsumer;
  import com.mojang.blaze3d.vertex.VertexMultiConsumer;
@@ -29,7 +35,7 @@
  import net.minecraft.client.renderer.texture.OverlayTexture;
  import net.minecraft.client.renderer.texture.TextureAtlas;
  import net.minecraft.client.renderer.texture.TextureManager;
-@@ -42,14 +41,18 @@
+@@ -42,14 +42,18 @@
  import net.minecraft.resources.ResourceLocation;
  import net.minecraft.server.packs.resources.ResourceManager;
  import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -48,7 +54,7 @@
  public class ItemRenderer implements ResourceManagerReloadListener {
     public static final ResourceLocation ENCHANT_GLINT_LOCATION = new ResourceLocation("textures/misc/enchanted_item_glint.png");
     private static final Set<Item> IGNORED;
-@@ -94,41 +97,55 @@
+@@ -94,41 +98,79 @@
     }
  
     public void render(ItemStack var1, ItemTransforms.TransformType var2, boolean var3, PoseStack var4, MultiBufferSource var5, int var6, int var7, BakedModel var8) {
@@ -69,7 +75,9 @@
 -            RenderType var12;
 -            if (var9 && Objects.equals(var11, Sheets.translucentBlockSheet())) {
 -               var12 = Sheets.translucentCullBlockSheet();
-+         if (!var8.isCustomRenderer() && (var1.getItem() != Items.TRIDENT || var9)) {
++         if (var8.isCustomRenderer() || var1.getItem() == Items.TRIDENT && !var9) {
++            BlockEntityWithoutLevelRenderer.instance.renderByItem(var1, var2, var4, var5, var6, var7);
++         } else {
 +            boolean var10;
 +            if (var2 != ItemTransforms.TransformType.GUI && !var2.firstPerson() && var1.getItem() instanceof BlockItem) {
 +               Block var11 = ((BlockItem)var1.getItem()).getBlock();
@@ -81,18 +89,33 @@
  
 -            VertexConsumer var13 = getFoilBuffer(var5, var12, true, var1.hasFoil());
 -            this.renderModelLists(var8, var1, var6, var7, var4, var13);
-+            RenderType var13 = ItemBlockRenderTypes.getRenderType(var1, var10);
+-         } else {
+-            BlockEntityWithoutLevelRenderer.instance.renderByItem(var1, var4, var5, var6, var7);
++            RenderType var14 = ItemBlockRenderTypes.getRenderType(var1, var10);
 +            VertexConsumer var12;
-+            if (var10) {
-+               var12 = getFoilBufferDirect(var5, var13, true, var1.hasFoil());
++            if (var1.getItem() == Items.COMPASS && var1.hasFoil()) {
++               var4.pushPose();
++               PoseStack.Pose var13 = var4.last();
++               if (var2 == ItemTransforms.TransformType.GUI) {
++                  var13.pose().multiply(0.5F);
++               } else if (var2.firstPerson()) {
++                  var13.pose().multiply(0.75F);
++               }
++
++               if (var10) {
++                  var12 = getCompassFoilBufferDirect(var5, var14, var13);
++               } else {
++                  var12 = getCompassFoilBuffer(var5, var14, var13);
++               }
++
++               var4.popPose();
++            } else if (var10) {
++               var12 = getFoilBufferDirect(var5, var14, true, var1.hasFoil());
 +            } else {
-+               var12 = getFoilBuffer(var5, var13, true, var1.hasFoil());
++               var12 = getFoilBuffer(var5, var14, true, var1.hasFoil());
 +            }
 +
 +            this.renderModelLists(var8, var1, var6, var7, var4, var12);
-          } else {
--            BlockEntityWithoutLevelRenderer.instance.renderByItem(var1, var4, var5, var6, var7);
-+            BlockEntityWithoutLevelRenderer.instance.renderByItem(var1, var2, var4, var5, var6, var7);
           }
  
           var4.popPose();
@@ -101,6 +124,14 @@
  
 +   public static VertexConsumer getArmorFoilBuffer(MultiBufferSource var0, RenderType var1, boolean var2, boolean var3) {
 +      return var3 ? VertexMultiConsumer.create(var0.getBuffer(var2 ? RenderType.armorGlint() : RenderType.armorEntityGlint()), var0.getBuffer(var1)) : var0.getBuffer(var1);
++   }
++
++   public static VertexConsumer getCompassFoilBuffer(MultiBufferSource var0, RenderType var1, PoseStack.Pose var2) {
++      return VertexMultiConsumer.create(new SheetedDecalTextureGenerator(var0.getBuffer(RenderType.glint()), var2.pose(), var2.normal()), var0.getBuffer(var1));
++   }
++
++   public static VertexConsumer getCompassFoilBufferDirect(MultiBufferSource var0, RenderType var1, PoseStack.Pose var2) {
++      return VertexMultiConsumer.create(new SheetedDecalTextureGenerator(var0.getBuffer(RenderType.glintDirect()), var2.pose(), var2.normal()), var0.getBuffer(var1));
 +   }
 +
     public static VertexConsumer getFoilBuffer(MultiBufferSource var0, RenderType var1, boolean var2, boolean var3) {
@@ -116,7 +147,7 @@
        PoseStack.Pose var8 = var1.last();
        Iterator var9 = var3.iterator();
  
-@@ -154,18 +171,15 @@
+@@ -154,18 +196,15 @@
           var4 = this.itemModelShaper.getModelManager().getModel(new ModelResourceLocation("minecraft:trident_in_hand#inventory"));
        } else {
           var4 = this.itemModelShaper.getItemModel(var1);
@@ -138,7 +169,7 @@
     }
  
     public void renderStatic(@Nullable LivingEntity var1, ItemStack var2, ItemTransforms.TransformType var3, boolean var4, PoseStack var5, MultiBufferSource var6, @Nullable Level var7, int var8, int var9) {
-@@ -211,14 +225,22 @@
+@@ -211,14 +250,22 @@
        RenderSystem.disableRescaleNormal();
        RenderSystem.popMatrix();
     }
@@ -163,7 +194,7 @@
  
           try {
              this.renderGuiItem(var2, var3, var4, this.getModel(var2, (Level)null, var1));
-@@ -253,11 +275,11 @@
+@@ -253,11 +300,11 @@
           PoseStack var6 = new PoseStack();
           if (var2.getCount() != 1 || var5 != null) {
              String var7 = var5 == null ? String.valueOf(var2.getCount()) : var5;

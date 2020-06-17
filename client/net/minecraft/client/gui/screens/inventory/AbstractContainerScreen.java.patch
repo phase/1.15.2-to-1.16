@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.java
 +++ net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.java
-@@ -1,19 +1,21 @@
+@@ -1,19 +1,22 @@
  package net.minecraft.client.gui.screens.inventory;
  
  import com.google.common.collect.Sets;
@@ -10,6 +10,7 @@
  import com.mojang.datafixers.util.Pair;
  import java.util.Iterator;
  import java.util.Set;
++import javax.annotation.Nullable;
  import net.minecraft.ChatFormatting;
  import net.minecraft.Util;
  import net.minecraft.client.Minecraft;
@@ -22,7 +23,7 @@
  import net.minecraft.world.entity.player.Inventory;
  import net.minecraft.world.inventory.AbstractContainerMenu;
  import net.minecraft.world.inventory.ClickType;
-@@ -22,10 +24,14 @@
+@@ -22,33 +25,42 @@
  
  public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> extends Screen implements MenuAccess<T> {
     public static final ResourceLocation INVENTORY_LOCATION = new ResourceLocation("textures/gui/container/inventory.png");
@@ -34,10 +35,43 @@
 +   protected int inventoryLabelY;
     protected final T menu;
     protected final Inventory inventory;
-    protected int leftPos;
-    protected int topPos;
+-   protected int leftPos;
+-   protected int topPos;
++   @Nullable
     protected Slot hoveredSlot;
-@@ -58,96 +64,100 @@
++   @Nullable
+    private Slot clickedSlot;
++   @Nullable
++   private Slot snapbackEnd;
++   @Nullable
++   private Slot quickdropSlot;
++   @Nullable
++   private Slot lastClickSlot;
++   protected int leftPos;
++   protected int topPos;
+    private boolean isSplittingStack;
+    private ItemStack draggingItem;
+    private int snapbackStartX;
+    private int snapbackStartY;
+-   private Slot snapbackEnd;
+    private long snapbackTime;
+    private ItemStack snapbackItem;
+-   private Slot quickdropSlot;
+    private long quickdropTime;
+    protected final Set<Slot> quickCraftSlots;
+    protected boolean isQuickCrafting;
+    private int quickCraftingType;
+    private int quickCraftingButton;
+    private boolean skipNextRelease;
+    private int quickCraftingRemainder;
+    private long lastClickTime;
+-   private Slot lastClickSlot;
+    private int lastClickButton;
+    private boolean doubleclick;
+    private ItemStack lastQuickMoved;
+ 
+    public AbstractContainerScreen(T var1, Inventory var2, Component var3) {
+@@ -58,96 +70,100 @@
        this.quickCraftSlots = Sets.newHashSet();
        this.lastQuickMoved = ItemStack.EMPTY;
        this.menu = var1;
@@ -179,7 +213,7 @@
     }
  
     private void renderFloatingItem(ItemStack var1, int var2, int var3, String var4) {
-@@ -158,66 +168,68 @@
+@@ -158,66 +174,68 @@
        this.itemRenderer.renderGuiItemDecorations(this.font, var1, var2, var3 - (this.draggingItem.isEmpty() ? 0 : 8), var4);
        this.setBlitOffset(0);
        this.itemRenderer.blitOffset = 0.0F;
@@ -283,7 +317,61 @@
        this.itemRenderer.blitOffset = 0.0F;
        this.setBlitOffset(0);
     }
-@@ -509,30 +521,34 @@
+@@ -246,10 +264,11 @@
+ 
+          }
+       }
+    }
+ 
++   @Nullable
+    private Slot findSlot(double var1, double var3) {
+       for(int var5 = 0; var5 < this.menu.slots.size(); ++var5) {
+          Slot var6 = (Slot)this.menu.slots.get(var5);
+          if (this.isHovering(var6, var1, var3) && var6.isActive()) {
+             return var6;
+@@ -266,11 +285,13 @@
+          boolean var6 = this.minecraft.options.keyPickItem.matchesMouse(var5);
+          Slot var7 = this.findSlot(var1, var3);
+          long var8 = Util.getMillis();
+          this.doubleclick = this.lastClickSlot == var7 && var8 - this.lastClickTime < 250L && this.lastClickButton == var5;
+          this.skipNextRelease = false;
+-         if (var5 == 0 || var5 == 1 || var6) {
++         if (var5 != 0 && var5 != 1 && !var6) {
++            this.checkHotbarMouseClicked(var5);
++         } else {
+             int var10 = this.leftPos;
+             int var11 = this.topPos;
+             boolean var12 = this.hasClickedOutside(var1, var3, var10, var11, var5);
+             int var13 = -1;
+             if (var7 != null) {
+@@ -334,10 +355,26 @@
+          this.lastClickButton = var5;
+          return true;
+       }
+    }
+ 
++   private void checkHotbarMouseClicked(int var1) {
++      if (this.hoveredSlot != null && this.minecraft.player.inventory.getCarried().isEmpty()) {
++         if (this.minecraft.options.keySwapOffhand.matchesMouse(var1)) {
++            this.slotClicked(this.hoveredSlot, this.hoveredSlot.index, 40, ClickType.SWAP);
++            return;
++         }
++
++         for(int var2 = 0; var2 < 9; ++var2) {
++            if (this.minecraft.options.keyHotbarSlots[var2].matchesMouse(var1)) {
++               this.slotClicked(this.hoveredSlot, this.hoveredSlot.index, var2, ClickType.SWAP);
++            }
++         }
++      }
++
++   }
++
+    protected boolean hasClickedOutside(double var1, double var3, int var5, int var6, int var7) {
+       return var1 < (double)var5 || var3 < (double)var6 || var1 >= (double)(var5 + this.imageWidth) || var3 >= (double)(var6 + this.imageHeight);
+    }
+ 
+    public boolean mouseDragged(double var1, double var3, int var5, double var6, double var8) {
+@@ -509,30 +546,34 @@
     }
  
     public boolean keyPressed(int var1, int var2, int var3) {

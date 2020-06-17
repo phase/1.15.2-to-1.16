@@ -46,10 +46,10 @@
 -      return (BlockState)this.defaultBlockState().setValue(FACING, var1.getHorizontalDirection().getOpposite());
 +      Level var2 = var1.getLevel();
 +      ItemStack var3 = var1.getItemInHand();
-+      CompoundTag var4 = var3.getOrCreateTag();
++      CompoundTag var4 = var3.getTag();
 +      Player var5 = var1.getPlayer();
 +      boolean var6 = false;
-+      if (!var2.isClientSide && var5 != null && var5.canUseGameMasterBlocks() && var4.contains("BlockEntityTag")) {
++      if (!var2.isClientSide && var5 != null && var4 != null && var5.canUseGameMasterBlocks() && var4.contains("BlockEntityTag")) {
 +         CompoundTag var7 = var4.getCompound("BlockEntityTag");
 +         if (var7.contains("Book")) {
 +            var6 = true;

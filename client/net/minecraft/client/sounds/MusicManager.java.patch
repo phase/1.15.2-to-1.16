@@ -1,6 +1,6 @@
 --- net/minecraft/client/sounds/MusicManager.java
 +++ net/minecraft/client/sounds/MusicManager.java
-@@ -1,93 +1,63 @@
+@@ -1,93 +1,64 @@
  package net.minecraft.client.sounds;
  
  import java.util.Random;
@@ -66,6 +66,7 @@
 -         this.nextSongDelay = 0;
        }
  
++      this.nextSongDelay += 100;
     }
  
 -   public boolean isPlayingMusic(MusicManager.Music var1) {

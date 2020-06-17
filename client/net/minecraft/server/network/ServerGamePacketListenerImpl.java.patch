@@ -551,7 +551,7 @@
        }
     }
  
-@@ -1056,40 +1110,36 @@
+@@ -1056,40 +1110,39 @@
  
     }
  
@@ -598,15 +598,18 @@
                 this.player.attack(var3);
              }
 +
-+            if (var7.isPresent() && ((InteractionResult)var7.get()).shouldSwing()) {
-+               this.player.swing(var6, true);
++            if (var7.isPresent() && ((InteractionResult)var7.get()).consumesAction()) {
++               CriteriaTriggers.PLAYER_INTERACTED_WITH_ENTITY.trigger(this.player, this.player.getItemInHand(var6), var3);
++               if (((InteractionResult)var7.get()).shouldSwing()) {
++                  this.player.swing(var6, true);
++               }
 +            }
           }
        }
  
     }
  
-@@ -1099,18 +1149,18 @@
+@@ -1099,18 +1152,18 @@
        ServerboundClientCommandPacket.Action var2 = var1.getAction();
        switch(var2) {
        case PERFORM_RESPAWN:
@@ -628,7 +631,7 @@
                 ((GameRules.BooleanValue)this.player.getLevel().getGameRules().getRule(GameRules.RULE_SPECTATORSGENERATECHUNKS)).set(false, this.server);
              }
           }
-@@ -1231,22 +1281,22 @@
+@@ -1231,22 +1284,22 @@
     }
  
     public void handleSignUpdate(ServerboundSignUpdatePacket var1) {
@@ -653,7 +656,7 @@
  
           String[] var7 = var1.getLines();
  
-@@ -1264,11 +1314,11 @@
+@@ -1264,11 +1317,11 @@
        if (this.keepAlivePending && var1.getId() == this.keepAliveChallenge) {
           int var2 = (int)(Util.getMillis() - this.keepAliveTime);
           this.player.latency = (this.player.latency * 3 + var2) / 4;

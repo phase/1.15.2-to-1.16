@@ -139,7 +139,7 @@
     public boolean isClientSide() {
        return this.isClientSide;
     }
-@@ -104,64 +129,106 @@
+@@ -104,90 +129,136 @@
     @Nullable
     public MinecraftServer getServer() {
        return null;
@@ -233,70 +233,115 @@
     }
  
     public boolean setBlock(BlockPos var1, BlockState var2, int var3) {
++      return this.setBlock(var1, var2, var3, 512);
++   }
++
++   public boolean setBlock(BlockPos var1, BlockState var2, int var3, int var4) {
        if (isOutsideBuildHeight(var1)) {
           return false;
 -      } else if (!this.isClientSide && this.levelData.getGeneratorType() == LevelType.DEBUG_ALL_BLOCK_STATES) {
 +      } else if (!this.isClientSide && this.isDebug()) {
           return false;
        } else {
-          LevelChunk var4 = this.getChunkAt(var1);
-          Block var5 = var2.getBlock();
-          BlockState var6 = var4.setBlockState(var1, var2, (var3 & 64) != 0);
-          if (var6 == null) {
+-         LevelChunk var4 = this.getChunkAt(var1);
+-         Block var5 = var2.getBlock();
+-         BlockState var6 = var4.setBlockState(var1, var2, (var3 & 64) != 0);
+-         if (var6 == null) {
++         LevelChunk var5 = this.getChunkAt(var1);
++         Block var6 = var2.getBlock();
++         BlockState var7 = var5.setBlockState(var1, var2, (var3 & 64) != 0);
++         if (var7 == null) {
              return false;
           } else {
-             BlockState var7 = this.getBlockState(var1);
-             if (var7 != var6 && (var7.getLightBlock(this, var1) != var6.getLightBlock(this, var1) || var7.getLightEmission() != var6.getLightEmission() || var7.useShapeForLightOcclusion() || var6.useShapeForLightOcclusion())) {
+-            BlockState var7 = this.getBlockState(var1);
+-            if (var7 != var6 && (var7.getLightBlock(this, var1) != var6.getLightBlock(this, var1) || var7.getLightEmission() != var6.getLightEmission() || var7.useShapeForLightOcclusion() || var6.useShapeForLightOcclusion())) {
 -               this.profiler.push("queueCheckLight");
++            BlockState var8 = this.getBlockState(var1);
++            if (var8 != var7 && (var8.getLightBlock(this, var1) != var7.getLightBlock(this, var1) || var8.getLightEmission() != var7.getLightEmission() || var8.useShapeForLightOcclusion() || var7.useShapeForLightOcclusion())) {
 +               this.getProfiler().push("queueCheckLight");
                 this.getChunkSource().getLightEngine().checkBlock(var1);
 -               this.profiler.pop();
 +               this.getProfiler().pop();
              }
  
-             if (var7 == var2) {
-                if (var6 != var7) {
-                   this.setBlocksDirty(var1, var6, var7);
-@@ -169,19 +236,19 @@
+-            if (var7 == var2) {
+-               if (var6 != var7) {
+-                  this.setBlocksDirty(var1, var6, var7);
++            if (var8 == var2) {
++               if (var7 != var8) {
++                  this.setBlocksDirty(var1, var7, var8);
+                }
  
-                if ((var3 & 2) != 0 && (!this.isClientSide || (var3 & 4) == 0) && (this.isClientSide || var4.getFullStatus() != null && var4.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING))) {
-                   this.sendBlockUpdated(var1, var6, var2, var3);
+-               if ((var3 & 2) != 0 && (!this.isClientSide || (var3 & 4) == 0) && (this.isClientSide || var4.getFullStatus() != null && var4.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING))) {
+-                  this.sendBlockUpdated(var1, var6, var2, var3);
++               if ((var3 & 2) != 0 && (!this.isClientSide || (var3 & 4) == 0) && (this.isClientSide || var5.getFullStatus() != null && var5.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING))) {
++                  this.sendBlockUpdated(var1, var7, var2, var3);
                 }
  
 -               if (!this.isClientSide && (var3 & 1) != 0) {
-+               if ((var3 & 1) != 0) {
-                   this.blockUpdated(var1, var6.getBlock());
+-                  this.blockUpdated(var1, var6.getBlock());
 -                  if (var2.hasAnalogOutputSignal()) {
+-                     this.updateNeighbourForOutputSignal(var1, var5);
++               if ((var3 & 1) != 0) {
++                  this.blockUpdated(var1, var7.getBlock());
 +                  if (!this.isClientSide && var2.hasAnalogOutputSignal()) {
-                      this.updateNeighbourForOutputSignal(var1, var5);
++                     this.updateNeighbourForOutputSignal(var1, var6);
                    }
                 }
  
-                if ((var3 & 16) == 0) {
+-               if ((var3 & 16) == 0) {
 -                  int var8 = var3 & -2;
-+                  int var8 = var3 & -34;
-                   var6.updateIndirectNeighbourShapes(this, var1, var8);
-                   var2.updateNeighbourShapes(this, var1, var8);
-                   var2.updateIndirectNeighbourShapes(this, var1, var8);
+-                  var6.updateIndirectNeighbourShapes(this, var1, var8);
+-                  var2.updateNeighbourShapes(this, var1, var8);
+-                  var2.updateIndirectNeighbourShapes(this, var1, var8);
++               if ((var3 & 16) == 0 && var4 > 0) {
++                  int var9 = var3 & -34;
++                  var7.updateIndirectNeighbourShapes(this, var1, var9, var4 - 1);
++                  var2.updateNeighbourShapes(this, var1, var9, var4 - 1);
++                  var2.updateIndirectNeighbourShapes(this, var1, var9, var4 - 1);
                 }
  
-@@ -205,11 +272,14 @@
-       BlockState var4 = this.getBlockState(var1);
-       if (var4.isAir()) {
+-               this.onBlockStateChange(var1, var6, var7);
++               this.onBlockStateChange(var1, var7, var8);
+             }
+ 
+             return true;
+          }
+       }
+@@ -199,39 +270,35 @@
+    public boolean removeBlock(BlockPos var1, boolean var2) {
+       FluidState var3 = this.getFluidState(var1);
+       return this.setBlock(var1, var3.createLegacyBlock(), 3 | (var2 ? 64 : 0));
+    }
+ 
+-   public boolean destroyBlock(BlockPos var1, boolean var2, @Nullable Entity var3) {
+-      BlockState var4 = this.getBlockState(var1);
+-      if (var4.isAir()) {
++   public boolean destroyBlock(BlockPos var1, boolean var2, @Nullable Entity var3, int var4) {
++      BlockState var5 = this.getBlockState(var1);
++      if (var5.isAir()) {
           return false;
        } else {
-          FluidState var5 = this.getFluidState(var1);
+-         FluidState var5 = this.getFluidState(var1);
 -         this.levelEvent(2001, var1, Block.getId(var4));
-+         if (!(var4.getBlock() instanceof BaseFireBlock)) {
-+            this.levelEvent(2001, var1, Block.getId(var4));
++         FluidState var6 = this.getFluidState(var1);
++         if (!(var5.getBlock() instanceof BaseFireBlock)) {
++            this.levelEvent(2001, var1, Block.getId(var5));
 +         }
 +
           if (var2) {
-             BlockEntity var6 = var4.getBlock().isEntityBlock() ? this.getBlockEntity(var1) : null;
-             Block.dropResources(var4, this, var1, var6, var3, ItemStack.EMPTY);
+-            BlockEntity var6 = var4.getBlock().isEntityBlock() ? this.getBlockEntity(var1) : null;
+-            Block.dropResources(var4, this, var1, var6, var3, ItemStack.EMPTY);
++            BlockEntity var7 = var5.getBlock().isEntityBlock() ? this.getBlockEntity(var1) : null;
++            Block.dropResources(var5, this, var1, var7, var3, ItemStack.EMPTY);
           }
  
-@@ -221,17 +291,10 @@
+-         return this.setBlock(var1, var5.createLegacyBlock(), 3);
++         return this.setBlock(var1, var6.createLegacyBlock(), 3, var4);
+       }
+    }
+ 
+    public boolean setBlockAndUpdate(BlockPos var1, BlockState var2) {
        return this.setBlock(var1, var2, 3);
     }
  
@@ -314,7 +359,7 @@
  
     public void updateNeighborsAt(BlockPos var1, Block var2) {
        this.neighborChanged(var1.west(), var2, var1);
-@@ -327,15 +390,15 @@
+@@ -327,15 +394,15 @@
           return var2.getFluidState(var1);
        }
     }
@@ -332,7 +377,7 @@
     public void playSound(@Nullable Player var1, BlockPos var2, SoundEvent var3, SoundSource var4, float var5, float var6) {
        this.playSound(var1, (double)var2.getX() + 0.5D, (double)var2.getY() + 0.5D, (double)var2.getZ() + 0.5D, var3, var4, var5, var6);
     }
-@@ -410,11 +473,11 @@
+@@ -410,11 +477,11 @@
  
        while(var2.hasNext()) {
           BlockEntity var3 = (BlockEntity)var2.next();
@@ -345,7 +390,7 @@
                       return String.valueOf(BlockEntityType.getKey(var3.getType()));
                    });
                    if (var3.getType().isValid(this.getBlockState(var4).getBlock())) {
-@@ -476,143 +539,25 @@
+@@ -476,143 +543,25 @@
           var2.fillCrashReportCategory(var5);
           throw new ReportedException(var4);
        }
@@ -496,7 +541,7 @@
        if (isOutsideBuildHeight(var1)) {
           return null;
        } else if (!this.isClientSide && Thread.currentThread() != this.thread) {
-@@ -688,22 +633,26 @@
+@@ -688,22 +637,26 @@
        }
  
     }
@@ -527,7 +572,7 @@
        double var3 = 1.0D - (double)(this.getThunderLevel(1.0F) * 5.0F) / 16.0D;
        double var5 = 0.5D + 2.0D * Mth.clamp((double)Mth.cos(this.getTimeOfDay(1.0F) * 6.2831855F), -0.25D, 0.25D);
        this.skyDarken = (int)((1.0D - var5 * var1 * var3) * 11.0D);
-@@ -722,11 +671,11 @@
+@@ -722,11 +675,11 @@
        }
  
     }
@@ -540,7 +585,7 @@
     @Nullable
     public BlockGetter getChunkForCollisions(int var1, int var2) {
        return this.getChunk(var1, var2, ChunkStatus.FULL, false);
-@@ -737,16 +686,17 @@
+@@ -737,16 +690,17 @@
        ArrayList var4 = Lists.newArrayList();
        int var5 = Mth.floor((var2.minX - 2.0D) / 16.0D);
        int var6 = Mth.floor((var2.maxX + 2.0D) / 16.0D);
@@ -563,7 +608,7 @@
        }
  
        return var4;
-@@ -830,14 +780,10 @@
+@@ -830,14 +784,10 @@
  
     public Level getLevel() {
        return this;
@@ -578,7 +623,7 @@
        int var3 = Math.max(var2, this.getDirectSignal(var1.below(), Direction.DOWN));
        if (var3 >= 15) {
           return var3;
-@@ -871,11 +817,12 @@
+@@ -871,11 +821,12 @@
        return this.getSignal(var1, var2) > 0;
     }
  
@@ -592,7 +637,7 @@
     public boolean hasNeighborSignal(BlockPos var1) {
        if (this.getSignal(var1.below(), Direction.DOWN) > 0) {
           return true;
-@@ -910,62 +857,25 @@
+@@ -910,62 +861,25 @@
        }
  
        return var2;
@@ -655,7 +700,7 @@
     }
  
     public LevelData getLevelData() {
-@@ -983,11 +893,11 @@
+@@ -983,11 +897,11 @@
     public float getRainLevel(float var1) {
        return Mth.lerp(var1, this.oRainLevel, this.rainLevel);
     }
@@ -668,7 +713,7 @@
           return false;
        }
     }
-@@ -1002,11 +912,12 @@
+@@ -1002,11 +916,12 @@
        } else if (!this.canSeeSky(var1)) {
           return false;
        } else if (this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, var1).getY() > var1.getY()) {
@@ -682,7 +727,7 @@
  
     public boolean isHumidAt(BlockPos var1) {
        Biome var2 = this.getBiome(var1);
-@@ -1021,23 +932,19 @@
+@@ -1021,23 +936,19 @@
     public abstract int getFreeMapId();
  
     public void globalLevelEvent(int var1, BlockPos var2, int var3) {
@@ -708,7 +753,7 @@
        try {
           this.levelData.fillCrashReportCategory(var2);
        } catch (Throwable var4) {
-@@ -1057,16 +964,16 @@
+@@ -1057,16 +968,16 @@
        while(var3.hasNext()) {
           Direction var4 = (Direction)var3.next();
           BlockPos var5 = var1.relative(var4);
@@ -727,7 +772,7 @@
              }
           }
        }
-@@ -1097,11 +1004,19 @@
+@@ -1097,11 +1008,19 @@
  
     public void sendPacketToServer(Packet<?> var1) {
        throw new UnsupportedOperationException("Can't send packets to server unless you're on the client.");
@@ -748,7 +793,7 @@
  
     public Random getRandom() {
        return this.random;
-@@ -1124,12 +1039,28 @@
+@@ -1124,12 +1043,28 @@
     public boolean noSave() {
        return false;
     }

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/CollisionSpliterator.java
 +++ net/minecraft/world/level/CollisionSpliterator.java
-@@ -1,0 +1,135 @@
+@@ -1,0 +1,145 @@
 +package net.minecraft.world.level;
 +
 +import java.util.Objects;
@@ -118,14 +118,24 @@
 +      Objects.requireNonNull(this.source);
 +      this.needsBorderCheck = false;
 +      WorldBorder var2 = this.collisionGetter.getWorldBorder();
-+      boolean var3 = isBoxFullyWithinWorldBorder(var2, this.source.getBoundingBox().deflate(1.0E-7D));
-+      boolean var4 = var3 && !isBoxFullyWithinWorldBorder(var2, this.source.getBoundingBox().inflate(1.0E-7D));
-+      if (var4) {
-+         var1.accept(var2.getCollisionShape());
-+         return true;
-+      } else {
-+         return false;
++      AABB var3 = this.source.getBoundingBox();
++      if (!isBoxFullyWithinWorldBorder(var2, var3)) {
++         VoxelShape var4 = var2.getCollisionShape();
++         if (!isOutsideBorder(var4, var3) && isCloseToBorder(var4, var3)) {
++            var1.accept(var4);
++            return true;
++         }
 +      }
++
++      return false;
++   }
++
++   private static boolean isCloseToBorder(VoxelShape var0, AABB var1) {
++      return Shapes.joinIsNotEmpty(var0, Shapes.create(var1.inflate(1.0E-7D)), BooleanOp.AND);
++   }
++
++   private static boolean isOutsideBorder(VoxelShape var0, AABB var1) {
++      return Shapes.joinIsNotEmpty(var0, Shapes.create(var1.deflate(1.0E-7D)), BooleanOp.AND);
 +   }
 +
 +   public static boolean isBoxFullyWithinWorldBorder(WorldBorder var0, AABB var1) {

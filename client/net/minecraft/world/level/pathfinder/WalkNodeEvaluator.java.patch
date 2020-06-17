@@ -509,7 +509,7 @@
     }
  
     public BlockPathTypes getBlockPathTypes(BlockGetter var1, int var2, int var3, int var4, int var5, int var6, int var7, boolean var8, boolean var9, EnumSet<BlockPathTypes> var10, BlockPathTypes var11, BlockPos var12) {
-@@ -335,146 +394,149 @@
+@@ -335,146 +394,148 @@
        if (var5 == BlockPathTypes.DOOR_OPEN && !var3) {
           var5 = BlockPathTypes.BLOCKED;
        }
@@ -629,11 +629,12 @@
 +                     return BlockPathTypes.DANGER_FIRE;
 +                  }
 +
-+                  if (var0.getFluidState(var1).is(FluidTags.WATER)) {
++                  FluidState var10 = var0.getFluidState(var1);
++                  if (var10.is(FluidTags.WATER)) {
 +                     return BlockPathTypes.WATER_BORDER;
 +                  }
 +
-+                  if (var0.getFluidState(var1).is(FluidTags.LAVA)) {
++                  if (var10.is(FluidTags.LAVA)) {
 +                     return BlockPathTypes.LAVA;
 +                  }
                 }
@@ -709,23 +710,22 @@
 -         } else if (!var6.is(BlockTags.FENCES) && !var6.is(BlockTags.WALLS) && (!(var6 instanceof FenceGateBlock) || (Boolean)var5.getValue(FenceGateBlock.OPEN))) {
 -            FluidState var8 = var0.getFluidState(var4);
 -            if (var8.is(FluidTags.WATER)) {
--               return BlockPathTypes.WATER;
++         } else if (var3.is((Tag)BlockTags.FENCES) || var3.is((Tag)BlockTags.WALLS) || var3 instanceof FenceGateBlock && !(Boolean)var2.getValue(FenceGateBlock.OPEN)) {
++            return BlockPathTypes.FENCE;
++         } else if (!var2.isPathfindable(var0, var1, PathComputationType.LAND)) {
++            return BlockPathTypes.BLOCKED;
++         } else {
++            FluidState var5 = var0.getFluidState(var1);
++            if (var5.is(FluidTags.WATER)) {
+                return BlockPathTypes.WATER;
 -            } else if (var8.is(FluidTags.LAVA)) {
 -               return BlockPathTypes.LAVA;
-+         } else if (!var3.is((Tag)BlockTags.FENCES) && !var3.is((Tag)BlockTags.WALLS) && (!(var3 instanceof FenceGateBlock) || (Boolean)var2.getValue(FenceGateBlock.OPEN))) {
-+            if (!var2.isPathfindable(var0, var1, PathComputationType.LAND)) {
-+               return BlockPathTypes.BLOCKED;
              } else {
 -               return var5.isPathfindable(var0, var4, PathComputationType.LAND) ? BlockPathTypes.OPEN : BlockPathTypes.BLOCKED;
-+               FluidState var5 = var0.getFluidState(var1);
-+               if (var5.is(FluidTags.WATER)) {
-+                  return BlockPathTypes.WATER;
-+               } else {
-+                  return var5.is(FluidTags.LAVA) ? BlockPathTypes.LAVA : BlockPathTypes.OPEN;
-+               }
++               return var5.is(FluidTags.LAVA) ? BlockPathTypes.LAVA : BlockPathTypes.OPEN;
              }
-          } else {
-             return BlockPathTypes.FENCE;
+-         } else {
+-            return BlockPathTypes.FENCE;
           }
        } else {
           return BlockPathTypes.TRAPDOOR;

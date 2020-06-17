@@ -178,6 +178,37 @@
           this.repairItemCountCost = 0;
           if (!var6.isEmpty()) {
              boolean var8 = var6.getItem() == Items.ENCHANTED_BOOK && !EnchantedBookItem.getEnchantments(var6).isEmpty();
+@@ -179,27 +141,27 @@
+                Map var21 = EnchantmentHelper.getEnchantments(var6);
+                boolean var22 = false;
+                boolean var23 = false;
+                Iterator var24 = var21.keySet().iterator();
+ 
+-               label160:
++               label155:
+                while(true) {
+                   Enchantment var25;
+                   do {
+                      if (!var24.hasNext()) {
+                         if (var23 && !var22) {
+                            this.resultSlots.setItem(0, ItemStack.EMPTY);
+                            this.cost.set(0);
+                            return;
+                         }
+-                        break label160;
++                        break label155;
+                      }
+ 
+                      var25 = (Enchantment)var24.next();
+                   } while(var25 == null);
+ 
+-                  int var14 = var7.containsKey(var25) ? (Integer)var7.get(var25) : 0;
++                  int var14 = (Integer)var7.getOrDefault(var25, 0);
+                   int var15 = (Integer)var21.get(var25);
+                   var15 = var14 == var15 ? var15 + 1 : Math.max(var15, var14);
+                   boolean var16 = var25.canEnchant(var1);
+                   if (this.player.abilities.instabuild || var1.getItem() == Items.ENCHANTED_BOOK) {
+                      var16 = true;
 @@ -298,59 +260,10 @@
  
     public static int calculateIncreasedRepairCost(int var0) {

@@ -20,7 +20,58 @@
  import net.minecraft.world.level.GameType;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.Block;
-@@ -130,25 +130,19 @@
+@@ -28,10 +28,11 @@
+ public class ServerPlayerGameMode {
+    private static final Logger LOGGER = LogManager.getLogger();
+    public ServerLevel level;
+    public ServerPlayer player;
+    private GameType gameModeForPlayer;
++   private GameType previousGameModeForPlayer;
+    private boolean isDestroyingBlock;
+    private int destroyProgressStart;
+    private BlockPos destroyPos;
+    private int gameTicks;
+    private boolean hasDelayedDestroy;
+@@ -39,17 +40,23 @@
+    private int delayedTickStart;
+    private int lastSentState;
+ 
+    public ServerPlayerGameMode(ServerLevel var1) {
+       this.gameModeForPlayer = GameType.NOT_SET;
++      this.previousGameModeForPlayer = GameType.NOT_SET;
+       this.destroyPos = BlockPos.ZERO;
+       this.delayedDestroyPos = BlockPos.ZERO;
+       this.lastSentState = -1;
+       this.level = var1;
+    }
+ 
+    public void setGameModeForPlayer(GameType var1) {
++      this.setGameModeForPlayer(var1, var1 != this.gameModeForPlayer ? this.gameModeForPlayer : this.previousGameModeForPlayer);
++   }
++
++   public void setGameModeForPlayer(GameType var1, GameType var2) {
++      this.previousGameModeForPlayer = var2;
+       this.gameModeForPlayer = var1;
+       var1.updatePlayerAbilities(this.player.abilities);
+       this.player.onUpdateAbilities();
+       this.player.server.getPlayerList().broadcastAll(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.UPDATE_GAME_MODE, new ServerPlayer[]{this.player}));
+       this.level.updateSleepingPlayerList();
+@@ -57,10 +64,14 @@
+ 
+    public GameType getGameModeForPlayer() {
+       return this.gameModeForPlayer;
+    }
+ 
++   public GameType getPreviousGameModeForPlayer() {
++      return this.previousGameModeForPlayer;
++   }
++
+    public boolean isSurvival() {
+       return this.gameModeForPlayer.isSurvival();
+    }
+ 
+    public boolean isCreative() {
+@@ -130,25 +141,19 @@
                 this.player.connection.send(new ClientboundBlockBreakAckPacket(var1, this.level.getBlockState(var1), var2, false, "may not interact"));
                 return;
              }
@@ -47,7 +98,7 @@
              var14 = this.level.getBlockState(var1);
              if (!var14.isAir()) {
                 var14.attack(this.level, var1, this.player);
-@@ -238,11 +232,11 @@
+@@ -238,11 +243,11 @@
              if (this.isCreative()) {
                 return true;
              } else {
@@ -60,7 +111,7 @@
                    var4.playerDestroy(this.level, this.player, var1, var2, var3, var7);
                 }
  
-@@ -250,11 +244,11 @@
+@@ -250,11 +255,11 @@
              }
           }
        }
@@ -73,7 +124,7 @@
        } else if (var1.getCooldowns().isOnCooldown(var3.getItem())) {
           return InteractionResult.PASS;
        } else {
-@@ -278,49 +272,57 @@
+@@ -278,49 +283,57 @@
              if (var8.isEmpty()) {
                 var1.setItemInHand(var4, ItemStack.EMPTY);
              }

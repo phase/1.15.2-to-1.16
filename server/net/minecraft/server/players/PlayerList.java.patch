@@ -171,7 +171,7 @@
 +      GameRules var14 = var10.getGameRules();
 +      boolean var15 = var14.getBoolean(GameRules.RULE_DO_IMMEDIATE_RESPAWN);
 +      boolean var16 = var14.getBoolean(GameRules.RULE_REDUCEDDEBUGINFO);
-+      var13.send(new ClientboundLoginPacket(var2.getId(), var2.gameMode.getGameModeForPlayer(), BiomeManager.obfuscateSeed(var10.getSeed()), var12.isHardcore(), this.server.levelKeys(), this.registryHolder, var10.dimensionTypeKey(), var10.dimension(), this.getMaxPlayers(), this.viewDistance, var16, !var15, var10.isDebug(), var10.isFlat()));
++      var13.send(new ClientboundLoginPacket(var2.getId(), var2.gameMode.getGameModeForPlayer(), var2.gameMode.getPreviousGameModeForPlayer(), BiomeManager.obfuscateSeed(var10.getSeed()), var12.isHardcore(), this.server.levelKeys(), this.registryHolder, var10.dimensionTypeKey(), var10.dimension(), this.getMaxPlayers(), this.viewDistance, var16, !var15, var10.isDebug(), var10.isFlat()));
 +      var13.send(new ClientboundCustomPayloadPacket(ClientboundCustomPayloadPacket.BRAND, (new FriendlyByteBuf(Unpooled.buffer())).writeUtf(this.getServer().getServerModName())));
 +      var13.send(new ClientboundChangeDifficultyPacket(var12.getDifficulty(), var12.isDifficultyLocked()));
 +      var13.send(new ClientboundPlayerAbilitiesPacket(var2.abilities));
@@ -474,7 +474,7 @@
 -      var7.setHealth(var7.getHealth());
 -      return var7;
 +      LevelData var14 = var9.level.getLevelData();
-+      var9.connection.send(new ClientboundRespawnPacket(var9.level.dimensionTypeKey(), var9.level.dimension(), BiomeManager.obfuscateSeed(var9.getLevel().getSeed()), var9.gameMode.getGameModeForPlayer(), var9.getLevel().isDebug(), var9.getLevel().isFlat(), var2));
++      var9.connection.send(new ClientboundRespawnPacket(var9.level.dimensionTypeKey(), var9.level.dimension(), BiomeManager.obfuscateSeed(var9.getLevel().getSeed()), var9.gameMode.getGameModeForPlayer(), var9.gameMode.getPreviousGameModeForPlayer(), var9.getLevel().isDebug(), var9.getLevel().isFlat(), var2));
 +      var9.connection.teleport(var9.getX(), var9.getY(), var9.getZ(), var9.yRot, var9.xRot);
 +      var9.connection.send(new ClientboundSetDefaultSpawnPositionPacket(var8.getSharedSpawnPos()));
 +      var9.connection.send(new ClientboundChangeDifficultyPacket(var14.getDifficulty(), var14.isDifficultyLocked()));
@@ -607,9 +607,11 @@
 -   private void updatePlayerGameMode(ServerPlayer var1, ServerPlayer var2, LevelAccessor var3) {
 +   private void updatePlayerGameMode(ServerPlayer var1, @Nullable ServerPlayer var2, ServerLevel var3) {
        if (var2 != null) {
-          var1.gameMode.setGameModeForPlayer(var2.gameMode.getGameModeForPlayer());
+-         var1.gameMode.setGameModeForPlayer(var2.gameMode.getGameModeForPlayer());
++         var1.gameMode.setGameModeForPlayer(var2.gameMode.getGameModeForPlayer(), var2.gameMode.getPreviousGameModeForPlayer());
        } else if (this.overrideGameMode != null) {
-          var1.gameMode.setGameModeForPlayer(this.overrideGameMode);
+-         var1.gameMode.setGameModeForPlayer(this.overrideGameMode);
++         var1.gameMode.setGameModeForPlayer(this.overrideGameMode, GameType.NOT_SET);
        }
  
 -      var1.gameMode.updateGameMode(var3.getLevelData().getGameType());
