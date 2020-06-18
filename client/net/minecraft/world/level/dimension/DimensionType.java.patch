@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/dimension/DimensionType.java
 +++ net/minecraft/world/level/dimension/DimensionType.java
-@@ -1,101 +1,264 @@
+@@ -1,101 +1,265 @@
  package net.minecraft.world.level.dimension;
  
 -import com.mojang.datafixers.Dynamic;
@@ -298,7 +298,8 @@
 +   }
 +
 +   public Tag<Block> infiniburn() {
-+      return BlockTags.getAllTags().getTag(this.infiniburn);
++      Tag var1 = BlockTags.getAllTags().getTag(this.infiniburn);
++      return (Tag)(var1 != null ? var1 : BlockTags.INFINIBURN_OVERWORLD);
 +   }
 +
     static {

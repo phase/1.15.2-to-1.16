@@ -1,0 +1,51 @@
+--- com/mojang/datafixers/types/templates/Sum.java
++++ com/mojang/datafixers/types/templates/Sum.java
+@@ -15,16 +15,16 @@
+ import com.mojang.datafixers.kinds.K1;
+ import com.mojang.datafixers.optics.Optic;
+ import com.mojang.datafixers.optics.Optics;
+ import com.mojang.datafixers.optics.Traversal;
+ import com.mojang.datafixers.optics.profunctors.TraversalP;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+-import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.IntFunction;
+ import javax.annotation.Nullable;
+ 
+@@ -172,27 +172,14 @@
+          return DataFixUtils.or(this.first.findCheckedType(var1), () -> {
+             return this.second.findCheckedType(var1);
+          });
+       }
+ 
+-      public <T> Pair<T, Optional<Either<F, G>>> read(DynamicOps<T> var1, T var2) {
+-         Pair var3 = this.first.read(var1, var2).mapSecond((var0) -> {
+-            return var0.map(Either::left);
+-         });
+-         return ((Optional)var3.getSecond()).isPresent() ? var3 : this.second.read(var1, var2).mapSecond((var0) -> {
+-            return var0.map(Either::right);
+-         });
++      protected Codec<Either<F, G>> buildCodec() {
++         return Codec.either(this.first.codec(), this.second.codec());
+       }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, Either<F, G> var3) {
+-         return var3.map((var3x) -> {
+-            return this.first.write(var1, var2, var3x);
+-         }, (var3x) -> {
+-            return this.second.write(var1, var2, var3x);
+-         });
+-      }
+-
+       public String toString() {
+          return "(" + this.first + " | " + this.second + ")";
+       }
+ 
+       public boolean equals(Object var1, boolean var2, boolean var3) {

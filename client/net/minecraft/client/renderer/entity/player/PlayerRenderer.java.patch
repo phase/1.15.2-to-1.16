@@ -13,7 +13,105 @@
  import net.minecraft.world.InteractionHand;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.HumanoidArm;
-@@ -136,19 +138,19 @@
+@@ -70,65 +72,63 @@
+       if (var1.isSpectator()) {
+          var2.setAllVisible(false);
+          var2.head.visible = true;
+          var2.hat.visible = true;
+       } else {
+-         ItemStack var3 = var1.getMainHandItem();
+-         ItemStack var4 = var1.getOffhandItem();
+          var2.setAllVisible(true);
+          var2.hat.visible = var1.isModelPartShown(PlayerModelPart.HAT);
+          var2.jacket.visible = var1.isModelPartShown(PlayerModelPart.JACKET);
+          var2.leftPants.visible = var1.isModelPartShown(PlayerModelPart.LEFT_PANTS_LEG);
+          var2.rightPants.visible = var1.isModelPartShown(PlayerModelPart.RIGHT_PANTS_LEG);
+          var2.leftSleeve.visible = var1.isModelPartShown(PlayerModelPart.LEFT_SLEEVE);
+          var2.rightSleeve.visible = var1.isModelPartShown(PlayerModelPart.RIGHT_SLEEVE);
+          var2.crouching = var1.isCrouching();
+-         HumanoidModel.ArmPose var5 = this.getArmPose(var1, var3, var4, InteractionHand.MAIN_HAND);
+-         HumanoidModel.ArmPose var6 = this.getArmPose(var1, var3, var4, InteractionHand.OFF_HAND);
++         HumanoidModel.ArmPose var3 = getArmPose(var1, InteractionHand.MAIN_HAND);
++         HumanoidModel.ArmPose var4 = getArmPose(var1, InteractionHand.OFF_HAND);
++         if (var3.isTwoHanded()) {
++            var4 = var1.getOffhandItem().isEmpty() ? HumanoidModel.ArmPose.EMPTY : HumanoidModel.ArmPose.ITEM;
++         }
++
+          if (var1.getMainArm() == HumanoidArm.RIGHT) {
+-            var2.rightArmPose = var5;
+-            var2.leftArmPose = var6;
++            var2.rightArmPose = var3;
++            var2.leftArmPose = var4;
+          } else {
+-            var2.rightArmPose = var6;
+-            var2.leftArmPose = var5;
++            var2.rightArmPose = var4;
++            var2.leftArmPose = var3;
+          }
+       }
+ 
+    }
+ 
+-   private HumanoidModel.ArmPose getArmPose(AbstractClientPlayer var1, ItemStack var2, ItemStack var3, InteractionHand var4) {
+-      HumanoidModel.ArmPose var5 = HumanoidModel.ArmPose.EMPTY;
+-      ItemStack var6 = var4 == InteractionHand.MAIN_HAND ? var2 : var3;
+-      if (!var6.isEmpty()) {
+-         var5 = HumanoidModel.ArmPose.ITEM;
+-         if (var1.getUseItemRemainingTicks() > 0) {
+-            UseAnim var7 = var6.getUseAnimation();
+-            if (var7 == UseAnim.BLOCK) {
+-               var5 = HumanoidModel.ArmPose.BLOCK;
+-            } else if (var7 == UseAnim.BOW) {
+-               var5 = HumanoidModel.ArmPose.BOW_AND_ARROW;
+-            } else if (var7 == UseAnim.SPEAR) {
+-               var5 = HumanoidModel.ArmPose.THROW_SPEAR;
+-            } else if (var7 == UseAnim.CROSSBOW && var4 == var1.getUsedItemHand()) {
+-               var5 = HumanoidModel.ArmPose.CROSSBOW_CHARGE;
++   private static HumanoidModel.ArmPose getArmPose(AbstractClientPlayer var0, InteractionHand var1) {
++      ItemStack var2 = var0.getItemInHand(var1);
++      if (var2.isEmpty()) {
++         return HumanoidModel.ArmPose.EMPTY;
++      } else {
++         if (var0.getUsedItemHand() == var1 && var0.getUseItemRemainingTicks() > 0) {
++            UseAnim var3 = var2.getUseAnimation();
++            if (var3 == UseAnim.BLOCK) {
++               return HumanoidModel.ArmPose.BLOCK;
+             }
+-         } else {
+-            boolean var11 = var2.getItem() == Items.CROSSBOW;
+-            boolean var8 = CrossbowItem.isCharged(var2);
+-            boolean var9 = var3.getItem() == Items.CROSSBOW;
+-            boolean var10 = CrossbowItem.isCharged(var3);
+-            if (var11 && var8) {
+-               var5 = HumanoidModel.ArmPose.CROSSBOW_HOLD;
++
++            if (var3 == UseAnim.BOW) {
++               return HumanoidModel.ArmPose.BOW_AND_ARROW;
+             }
+ 
+-            if (var9 && var10 && var2.getItem().getUseAnimation(var2) == UseAnim.NONE) {
+-               var5 = HumanoidModel.ArmPose.CROSSBOW_HOLD;
++            if (var3 == UseAnim.SPEAR) {
++               return HumanoidModel.ArmPose.THROW_SPEAR;
+             }
++
++            if (var3 == UseAnim.CROSSBOW && var1 == var0.getUsedItemHand()) {
++               return HumanoidModel.ArmPose.CROSSBOW_CHARGE;
++            }
++         } else if (!var0.swinging && var2.getItem() == Items.CROSSBOW && CrossbowItem.isCharged(var2)) {
++            return HumanoidModel.ArmPose.CROSSBOW_HOLD;
+          }
+-      }
+ 
+-      return var5;
++         return HumanoidModel.ArmPose.ITEM;
++      }
+    }
+ 
+    public ResourceLocation getTextureLocation(AbstractClientPlayer var1) {
+       return var1.getSkinTextureLocation();
+    }
+@@ -136,19 +136,19 @@
     protected void scale(AbstractClientPlayer var1, PoseStack var2, float var3) {
        float var4 = 0.9375F;
        var2.scale(0.9375F, 0.9375F, 0.9375F);

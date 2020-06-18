@@ -1,0 +1,48 @@
+--- com/mojang/datafixers/DataFix.java
++++ com/mojang/datafixers/DataFix.java
+@@ -1,10 +1,13 @@
+ package com.mojang.datafixers;
+ 
+ import com.mojang.datafixers.schemas.Schema;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
++import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.Dynamic;
++import com.mojang.serialization.DynamicOps;
+ import java.util.BitSet;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.Function;
+ import javax.annotation.Nullable;
+@@ -38,13 +41,27 @@
+    }
+ 
+    protected <A, B> TypeRewriteRule writeFixAndRead(String var1, Type<A> var2, Type<B> var3, Function<Dynamic<?>, Dynamic<?>> var4) {
+       return this.fixTypeEverywhere(var1, var2, var3, (var4x) -> {
+          return (var5) -> {
+-            return ((Typed)((Optional)var3.readTyped((Dynamic)var4.apply(var2.writeDynamic(var4x, var5))).getSecond()).orElseThrow(() -> {
+-               return new IllegalStateException("Could not read new type in \"" + var1 + "\"");
+-            })).getValue();
++            DataResult var10000 = var2.writeDynamic(var4x, var5);
++            Logger var10001 = LOGGER;
++            var10001.getClass();
++            Optional var6 = var10000.resultOrPartial(var10001::error);
++            if (!var6.isPresent()) {
++               throw new RuntimeException("Could not write the object in " + var1);
++            } else {
++               var10000 = var3.readTyped((Dynamic)var4.apply(var6.get()));
++               var10001 = LOGGER;
++               var10001.getClass();
++               Optional var7 = var10000.resultOrPartial(var10001::error);
++               if (!var7.isPresent()) {
++                  throw new RuntimeException("Could not read the new object in " + var1);
++               } else {
++                  return ((Typed)((Pair)var7.get()).getFirst()).getValue();
++               }
++            }
+          };
+       });
+    }
+ 
+    protected <A, B> TypeRewriteRule fixTypeEverywhere(String var1, Type<A> var2, Type<B> var3, Function<DynamicOps<?>, Function<A, B>> var4) {

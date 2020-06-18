@@ -1,0 +1,250 @@
+--- com/mojang/datafixers/Dynamic.java
++++ com/mojang/datafixers/Dynamic.java
+@@ -1,247 +1,0 @@
+-package com.mojang.datafixers;
+-
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.Type;
+-import com.mojang.datafixers.util.Pair;
+-import java.nio.ByteBuffer;
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Objects;
+-import java.util.Optional;
+-import java.util.Map.Entry;
+-import java.util.function.Function;
+-import java.util.stream.Collectors;
+-import java.util.stream.IntStream;
+-import java.util.stream.LongStream;
+-import java.util.stream.Stream;
+-import javax.annotation.Nullable;
+-
+-public class Dynamic<T> extends DynamicLike<T> {
+-   private final T value;
+-
+-   public Dynamic(DynamicOps<T> var1) {
+-      this(var1, var1.empty());
+-   }
+-
+-   public Dynamic(DynamicOps<T> var1, @Nullable T var2) {
+-      super(var1);
+-      this.value = var2 == null ? var1.empty() : var2;
+-   }
+-
+-   public T getValue() {
+-      return this.value;
+-   }
+-
+-   public Dynamic<T> map(Function<? super T, ? extends T> var1) {
+-      return new Dynamic(this.ops, var1.apply(this.value));
+-   }
+-
+-   public <U> Dynamic<U> castTyped(DynamicOps<U> var1) {
+-      if (!Objects.equals(this.ops, var1)) {
+-         throw new IllegalStateException("Dynamic type doesn't match");
+-      } else {
+-         return this;
+-      }
+-   }
+-
+-   public <U> U cast(DynamicOps<U> var1) {
+-      return this.castTyped(var1).getValue();
+-   }
+-
+-   public Dynamic<T> merge(Dynamic<?> var1) {
+-      return this.map((var2) -> {
+-         return this.ops.mergeInto(var2, var1.cast(this.ops));
+-      });
+-   }
+-
+-   public Dynamic<T> merge(Dynamic<?> var1, Dynamic<?> var2) {
+-      return this.map((var3) -> {
+-         return this.ops.mergeInto(var3, var1.cast(this.ops), var2.cast(this.ops));
+-      });
+-   }
+-
+-   public Optional<Map<Dynamic<T>, Dynamic<T>>> getMapValues() {
+-      return this.ops.getMapValues(this.value).map((var1) -> {
+-         ImmutableMap.Builder var2 = ImmutableMap.builder();
+-         Iterator var3 = var1.entrySet().iterator();
+-
+-         while(var3.hasNext()) {
+-            Entry var4 = (Entry)var3.next();
+-            var2.put(new Dynamic(this.ops, var4.getKey()), new Dynamic(this.ops, var4.getValue()));
+-         }
+-
+-         return var2.build();
+-      });
+-   }
+-
+-   public Dynamic<T> updateMapValues(Function<Pair<Dynamic<?>, Dynamic<?>>, Pair<Dynamic<?>, Dynamic<?>>> var1) {
+-      return (Dynamic)DataFixUtils.orElse(this.getMapValues().map((var2) -> {
+-         return (Map)var2.entrySet().stream().map((var2x) -> {
+-            Pair var3 = (Pair)var1.apply(Pair.of(var2x.getKey(), var2x.getValue()));
+-            return Pair.of(((Dynamic)var3.getFirst()).castTyped(this.ops), ((Dynamic)var3.getSecond()).castTyped(this.ops));
+-         }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
+-      }).map(this::createMap), this);
+-   }
+-
+-   public Optional<Number> asNumber() {
+-      return this.ops.getNumberValue(this.value);
+-   }
+-
+-   public Optional<String> asString() {
+-      return this.ops.getStringValue(this.value);
+-   }
+-
+-   public Optional<Stream<Dynamic<T>>> asStreamOpt() {
+-      return this.ops.getStream(this.value).map((var1) -> {
+-         return var1.map((var1x) -> {
+-            return new Dynamic(this.ops, var1x);
+-         });
+-      });
+-   }
+-
+-   public Optional<ByteBuffer> asByteBufferOpt() {
+-      return this.ops.getByteBuffer(this.value);
+-   }
+-
+-   public Optional<IntStream> asIntStreamOpt() {
+-      return this.ops.getIntStream(this.value);
+-   }
+-
+-   public Optional<LongStream> asLongStreamOpt() {
+-      return this.ops.getLongStream(this.value);
+-   }
+-
+-   public OptionalDynamic<T> get(String var1) {
+-      return new OptionalDynamic(this.ops, this.ops.get(this.value, var1).map((var1x) -> {
+-         return new Dynamic(this.ops, var1x);
+-      }));
+-   }
+-
+-   public Optional<T> getGeneric(T var1) {
+-      return this.ops.getGeneric(this.value, var1);
+-   }
+-
+-   public Dynamic<T> remove(String var1) {
+-      return this.map((var2) -> {
+-         return this.ops.remove(var2, var1);
+-      });
+-   }
+-
+-   public Dynamic<T> set(String var1, Dynamic<?> var2) {
+-      return this.map((var3) -> {
+-         return this.ops.set(var3, var1, var2.cast(this.ops));
+-      });
+-   }
+-
+-   public Dynamic<T> update(String var1, Function<Dynamic<?>, Dynamic<?>> var2) {
+-      return this.map((var3) -> {
+-         return this.ops.update(var3, var1, (var2x) -> {
+-            return ((Dynamic)var2.apply(new Dynamic(this.ops, var2x))).cast(this.ops);
+-         });
+-      });
+-   }
+-
+-   public Dynamic<T> updateGeneric(T var1, Function<T, T> var2) {
+-      return this.map((var3) -> {
+-         return this.ops.updateGeneric(var3, var1, var2);
+-      });
+-   }
+-
+-   public Optional<T> getElement(String var1) {
+-      return this.getElementGeneric(this.ops.createString(var1));
+-   }
+-
+-   public Optional<T> getElementGeneric(T var1) {
+-      return this.ops.getMapValues(this.value).flatMap((var1x) -> {
+-         return Optional.ofNullable(var1x.get(var1));
+-      });
+-   }
+-
+-   public <U> Optional<List<U>> asListOpt(Function<Dynamic<T>, U> var1) {
+-      return this.asStreamOpt().map((var1x) -> {
+-         return (List)var1x.map(var1).collect(Collectors.toList());
+-      });
+-   }
+-
+-   public <K, V> Optional<Map<K, V>> asMapOpt(Function<Dynamic<T>, K> var1, Function<Dynamic<T>, V> var2) {
+-      return this.ops.getMapValues(this.value).map((var3) -> {
+-         ImmutableMap.Builder var4 = ImmutableMap.builder();
+-         Iterator var5 = var3.entrySet().iterator();
+-
+-         while(var5.hasNext()) {
+-            Entry var6 = (Entry)var5.next();
+-            var4.put(var1.apply(new Dynamic(this.ops, var6.getKey())), var2.apply(new Dynamic(this.ops, var6.getValue())));
+-         }
+-
+-         return var4.build();
+-      });
+-   }
+-
+-   public boolean equals(Object var1) {
+-      if (this == var1) {
+-         return true;
+-      } else if (var1 != null && this.getClass() == var1.getClass()) {
+-         Dynamic var2 = (Dynamic)var1;
+-         return Objects.equals(this.ops, var2.ops) && Objects.equals(this.value, var2.value);
+-      } else {
+-         return false;
+-      }
+-   }
+-
+-   public int hashCode() {
+-      return Objects.hash(new Object[]{this.ops, this.value});
+-   }
+-
+-   public String toString() {
+-      return String.format("%s[%s]", this.ops, this.value);
+-   }
+-
+-   public <R> Dynamic<R> convert(DynamicOps<R> var1) {
+-      return new Dynamic(var1, convert(this.ops, var1, this.value));
+-   }
+-
+-   public static <S, T> T convert(DynamicOps<S> var0, DynamicOps<T> var1, S var2) {
+-      if (Objects.equals(var0, var1)) {
+-         return var2;
+-      } else {
+-         Type var3 = var0.getType(var2);
+-         if (Objects.equals(var3, DSL.nilType())) {
+-            return var1.empty();
+-         } else if (Objects.equals(var3, DSL.byteType())) {
+-            return var1.createByte(var0.getNumberValue(var2, 0).byteValue());
+-         } else if (Objects.equals(var3, DSL.shortType())) {
+-            return var1.createShort(var0.getNumberValue(var2, 0).shortValue());
+-         } else if (Objects.equals(var3, DSL.intType())) {
+-            return var1.createInt(var0.getNumberValue(var2, 0).intValue());
+-         } else if (Objects.equals(var3, DSL.longType())) {
+-            return var1.createLong(var0.getNumberValue(var2, 0).longValue());
+-         } else if (Objects.equals(var3, DSL.floatType())) {
+-            return var1.createFloat(var0.getNumberValue(var2, 0).floatValue());
+-         } else if (Objects.equals(var3, DSL.doubleType())) {
+-            return var1.createDouble(var0.getNumberValue(var2, 0).doubleValue());
+-         } else if (Objects.equals(var3, DSL.bool())) {
+-            return var1.createBoolean(var0.getNumberValue(var2, 0).byteValue() != 0);
+-         } else if (Objects.equals(var3, DSL.string())) {
+-            return var1.createString((String)var0.getStringValue(var2).orElse(""));
+-         } else if (Objects.equals(var3, DSL.list(DSL.byteType()))) {
+-            return var1.createByteList((ByteBuffer)var0.getByteBuffer(var2).orElse(ByteBuffer.wrap(new byte[0])));
+-         } else if (Objects.equals(var3, DSL.list(DSL.intType()))) {
+-            return var1.createIntList((IntStream)var0.getIntStream(var2).orElse(IntStream.empty()));
+-         } else if (Objects.equals(var3, DSL.list(DSL.longType()))) {
+-            return var1.createLongList((LongStream)var0.getLongStream(var2).orElse(LongStream.empty()));
+-         } else if (Objects.equals(var3, DSL.list(DSL.remainderType()))) {
+-            return var1.createList(((Stream)var0.getStream(var2).orElse(Stream.empty())).map((var2x) -> {
+-               return convert(var0, var1, var2x);
+-            }));
+-         } else if (Objects.equals(var3, DSL.compoundList(DSL.remainderType(), DSL.remainderType()))) {
+-            return var1.createMap((Map)((Map)var0.getMapValues(var2).orElse(ImmutableMap.of())).entrySet().stream().map((var2x) -> {
+-               return Pair.of(convert(var0, var1, var2x.getKey()), convert(var0, var1, var2x.getValue()));
+-            }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
+-         } else {
+-            throw new IllegalStateException("Could not convert value of type " + var3);
+-         }
+-      }
+-   }
+-}

@@ -98,7 +98,7 @@
     private double lastCameraZ;
     private int lastCameraChunkX;
     private int lastCameraChunkY;
-@@ -246,17 +259,18 @@
+@@ -246,20 +259,23 @@
           int var11 = Mth.floor(var3);
           int var12 = Mth.floor(var5);
           int var13 = Mth.floor(var7);
@@ -110,15 +110,20 @@
           RenderSystem.enableBlend();
           RenderSystem.defaultBlendFunc();
           RenderSystem.defaultAlphaFunc();
++         RenderSystem.enableDepthTest();
           byte var16 = 5;
 -         if (this.minecraft.options.fancyGraphics) {
 +         if (Minecraft.useFancyGraphics()) {
              var16 = 10;
           }
  
++         RenderSystem.depthMask(Minecraft.useShaderTransparency());
           byte var17 = -1;
           float var18 = (float)this.ticks + var2;
-@@ -355,81 +369,54 @@
+          RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+          BlockPos.MutableBlockPos var19 = new BlockPos.MutableBlockPos();
+ 
+@@ -355,81 +371,54 @@
           }
  
           RenderSystem.enableCull();
@@ -228,7 +233,7 @@
  
        }
     }
-@@ -437,18 +424,26 @@
+@@ -437,18 +426,26 @@
     public void close() {
        if (this.entityEffect != null) {
           this.entityEffect.close();
@@ -255,7 +260,7 @@
     public void initOutline() {
        if (this.entityEffect != null) {
           this.entityEffect.close();
-@@ -463,17 +458,62 @@
+@@ -463,17 +460,62 @@
        } catch (IOException var3) {
           LOGGER.warn("Failed to load shader: {}", var1, var3);
           this.entityEffect = null;
@@ -319,7 +324,7 @@
           RenderSystem.enableBlend();
           RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
           this.entityTarget.blitToScreen(this.minecraft.getWindow().getWidth(), this.minecraft.getWindow().getHeight(), false);
-@@ -623,20 +663,26 @@
+@@ -623,20 +665,26 @@
  
     }
  
@@ -347,7 +352,7 @@
              this.viewArea.releaseAllBuffers();
           }
  
-@@ -665,10 +711,14 @@
+@@ -665,10 +713,14 @@
        this.needsUpdate();
        if (this.entityEffect != null) {
           this.entityEffect.resize(var1, var2);
@@ -362,7 +367,7 @@
     public String getChunkStatistics() {
        int var1 = this.viewArea.chunks.length;
        int var2 = this.countRenderedChunks();
-@@ -727,44 +777,27 @@
+@@ -727,44 +779,27 @@
        this.prevCamY = var6.y;
        this.prevCamZ = var6.z;
        this.prevCamRotX = (double)var17;
@@ -414,7 +419,7 @@
              int var22 = Mth.floor(var6.x / 16.0D) * 16;
              int var23 = Mth.floor(var6.z / 16.0D) * 16;
              ArrayList var24 = Lists.newArrayList();
-@@ -792,23 +825,23 @@
+@@ -792,23 +827,23 @@
           }
  
           this.minecraft.getProfiler().push("iteration");
@@ -449,7 +454,7 @@
              }
           }
  
-@@ -827,45 +860,29 @@
+@@ -827,45 +862,29 @@
                    this.chunksToCompile.addAll(var30);
                    this.minecraft.getProfiler().pop();
                    return;
@@ -504,7 +509,7 @@
        BlockPos var4 = var2.getRelativeOrigin(var3);
        if (Mth.abs(var1.getX() - var4.getX()) > this.lastViewDistance * 16) {
           return null;
-@@ -930,11 +947,11 @@
+@@ -930,11 +949,11 @@
  
        var10.popPush("clear");
        FogRenderer.setupColor(var6, var2, this.minecraft.level, this.minecraft.options.renderDistance, var7.getDarkenWorldAmount(var2));
@@ -517,7 +522,7 @@
           var10.popPush("sky");
           this.renderSky(var1, var2);
        }
-@@ -961,16 +978,31 @@
+@@ -961,16 +980,31 @@
        this.compileChunksUntil(var3 + var35);
        var10.popPush("terrain");
        this.renderChunkLayer(RenderType.solid(), var1, var12, var14, var16);
@@ -550,7 +555,7 @@
           this.minecraft.getMainRenderTarget().bindWrite(false);
        }
  
-@@ -989,29 +1021,29 @@
+@@ -989,29 +1023,29 @@
                       var38.endBatch(RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS));
                       var38.endBatch(RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS));
                       var38.endBatch(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));
@@ -589,7 +594,7 @@
                                }
  
                                this.checkPoseStack(var1);
-@@ -1027,108 +1059,148 @@
+@@ -1027,108 +1061,148 @@
                                   this.entityEffect.process(var2);
                                   this.minecraft.getMainRenderTarget().bindWrite(false);
                                }
@@ -788,7 +793,7 @@
                       }
                    }
  
-@@ -1143,11 +1215,11 @@
+@@ -1143,11 +1217,11 @@
              var40.yOld = var40.getY();
              var40.zOld = var40.getZ();
           }
@@ -801,7 +806,7 @@
              var41 = var42;
              int var43 = var40.getTeamColor();
              boolean var44 = true;
-@@ -1281,16 +1353,16 @@
+@@ -1281,16 +1355,16 @@
  
              if (this.minecraft.chunkVisibility && !var12.getCompiledChunk().hasNoRenderableLayers()) {
                 var3.begin(1, DefaultVertexFormat.POSITION_COLOR);
@@ -820,7 +825,7 @@
                    for(int var21 = 0; var21 < var20; ++var21) {
                       Direction var22 = var19[var21];
                       boolean var23 = var12.getCompiledChunk().facesCanSeeEachother(var18, var22);
-@@ -1483,13 +1555,13 @@
+@@ -1483,13 +1557,13 @@
        RenderSystem.disableBlend();
        RenderSystem.enableAlphaTest();
     }
@@ -836,7 +841,7 @@
           float var4 = (float)var3.x;
           float var5 = (float)var3.y;
           float var6 = (float)var3.z;
-@@ -1505,11 +1577,11 @@
+@@ -1505,11 +1579,11 @@
           this.skyFormat.clearBufferState();
           RenderSystem.disableFog();
           RenderSystem.disableAlphaTest();
@@ -849,7 +854,7 @@
           float var16;
           float var17;
           float var18;
-@@ -1591,11 +1663,11 @@
+@@ -1591,11 +1665,11 @@
           RenderSystem.enableAlphaTest();
           RenderSystem.enableFog();
           var1.popPose();
@@ -862,7 +867,7 @@
              var1.translate(0.0D, 12.0D, 0.0D);
              this.darkBuffer.bind();
              this.skyFormat.setupBufferState(0L);
-@@ -1603,11 +1675,11 @@
+@@ -1603,11 +1677,11 @@
              VertexBuffer.unbind();
              this.skyFormat.clearBufferState();
              var1.popPose();
@@ -875,7 +880,7 @@
              RenderSystem.color3f(var4, var5, var6);
           }
  
-@@ -1616,67 +1688,68 @@
+@@ -1616,67 +1690,69 @@
           RenderSystem.disableFog();
        }
     }
@@ -913,6 +918,7 @@
 -            this.prevCloudY = var26;
 -            this.prevCloudZ = var27;
 -            this.prevCloudColor = var24;
++         RenderSystem.depthMask(true);
 +         float var10 = 12.0F;
 +         float var11 = 4.0F;
 +         double var12 = 2.0E-4D;
@@ -975,20 +981,20 @@
                    RenderSystem.colorMask(true, true, true, true);
                 }
  
-@@ -1833,11 +1906,11 @@
+@@ -1833,11 +1909,11 @@
           double var12 = var1.getPosition().z;
           RenderSystem.enableBlend();
           RenderSystem.enableDepthTest();
           RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
           this.textureManager.bind(FORCEFIELD_LOCATION);
 -         RenderSystem.depthMask(false);
-+         RenderSystem.depthMask(true);
++         RenderSystem.depthMask(Minecraft.useShaderTransparency());
           RenderSystem.pushMatrix();
           int var14 = var3.getStatus().getColor();
           float var15 = (float)(var14 >> 16 & 255) / 255.0F;
           float var16 = (float)(var14 >> 8 & 255) / 255.0F;
           float var17 = (float)(var14 & 255) / 255.0F;
-@@ -1959,14 +2032,10 @@
+@@ -1959,14 +2035,10 @@
           var1.vertex(var13, (float)(var12x + var3), (float)(var14 + var5), (float)(var16 + var7)).color(var9, var10, var11, var12).endVertex();
           var1.vertex(var13, (float)(var18 + var3), (float)(var20 + var5), (float)(var22 + var7)).color(var9, var10, var11, var12).endVertex();
        });
@@ -1003,7 +1009,7 @@
     }
  
     public static void renderLineBox(PoseStack var0, VertexConsumer var1, double var2, double var4, double var6, double var8, double var10, double var12, float var14, float var15, float var16, float var17) {
-@@ -2100,14 +2169,14 @@
+@@ -2100,14 +2172,14 @@
        }
  
        if (var1 != null) {
@@ -1020,7 +1026,7 @@
        }
  
        this.notifyNearbyEntities(this.level, var2, var1 != null);
-@@ -2217,23 +2286,17 @@
+@@ -2217,23 +2289,17 @@
        }
     }
  
@@ -1047,7 +1053,7 @@
           this.level.playLocalSound(var3, SoundEvents.DISPENSER_DISPENSE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
           break;
        case 1001:
-@@ -2247,20 +2310,20 @@
+@@ -2247,20 +2313,20 @@
           break;
        case 1004:
           this.level.playLocalSound(var3, SoundEvents.FIREWORK_ROCKET_SHOOT, SoundSource.NEUTRAL, 1.0F, 1.2F, false);
@@ -1072,7 +1078,7 @@
           this.level.playLocalSound(var3, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (var5.nextFloat() - var5.nextFloat()) * 0.8F, false);
           break;
        case 1010:
-@@ -2269,20 +2332,20 @@
+@@ -2269,20 +2335,20 @@
           } else {
              this.playStreamingMusic((SoundEvent)null, var3);
           }
@@ -1097,7 +1103,7 @@
           this.level.playLocalSound(var3, SoundEvents.GHAST_WARN, SoundSource.HOSTILE, 10.0F, (var5.nextFloat() - var5.nextFloat()) * 0.2F + 1.0F, false);
           break;
        case 1016:
-@@ -2317,20 +2380,20 @@
+@@ -2317,20 +2383,20 @@
           break;
        case 1027:
           this.level.playLocalSound(var3, SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.NEUTRAL, 2.0F, (var5.nextFloat() - var5.nextFloat()) * 0.2F + 1.0F, false);
@@ -1121,7 +1127,7 @@
           this.level.playLocalSound(var3, SoundEvents.CHORUS_FLOWER_GROW, SoundSource.BLOCKS, 1.0F, 1.0F, false);
           break;
        case 1034:
-@@ -2338,14 +2401,14 @@
+@@ -2338,14 +2404,14 @@
           break;
        case 1035:
           this.level.playLocalSound(var3, SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 1.0F, 1.0F, false);
@@ -1138,7 +1144,7 @@
           this.level.playLocalSound(var3, SoundEvents.PHANTOM_BITE, SoundSource.HOSTILE, 0.3F, this.level.random.nextFloat() * 0.1F + 0.9F, false);
           break;
        case 1040:
-@@ -2358,156 +2421,156 @@
+@@ -2358,156 +2424,156 @@
           this.level.playLocalSound(var3, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 1.0F, this.level.random.nextFloat() * 0.1F + 0.9F, false);
           break;
        case 1043:
@@ -1360,7 +1366,7 @@
           return;
        case 3000:
           this.level.addParticle(ParticleTypes.EXPLOSION_EMITTER, true, (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 0.0D, 0.0D, 0.0D);
-@@ -2565,11 +2628,11 @@
+@@ -2565,11 +2631,11 @@
     public static int getLightColor(BlockAndTintGetter var0, BlockPos var1) {
        return getLightColor(var0, var0.getBlockState(var1), var1);
     }
@@ -1373,7 +1379,7 @@
           int var3 = var0.getBrightness(LightLayer.SKY, var2);
           int var4 = var0.getBrightness(LightLayer.BLOCK, var2);
           int var5 = var1.getLightEmission();
-@@ -2579,14 +2642,46 @@
+@@ -2579,14 +2645,46 @@
  
           return var3 << 20 | var4 << 4;
        }

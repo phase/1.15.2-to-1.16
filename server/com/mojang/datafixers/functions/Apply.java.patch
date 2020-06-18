@@ -1,0 +1,14 @@
+--- com/mojang/datafixers/functions/Apply.java
++++ com/mojang/datafixers/functions/Apply.java
+@@ -1,10 +1,10 @@
+ package com.mojang.datafixers.functions;
+ 
+ import com.mojang.datafixers.DSL;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.Function;
+ 
+ final class Apply<A, B> extends PointFree<B> {

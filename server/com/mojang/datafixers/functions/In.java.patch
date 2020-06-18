@@ -1,0 +1,13 @@
+--- com/mojang/datafixers/functions/In.java
++++ com/mojang/datafixers/functions/In.java
+@@ -1,9 +1,9 @@
+ package com.mojang.datafixers.functions;
+ 
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.templates.RecursivePoint;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Objects;
+ import java.util.function.Function;
+ 
+ final class In<A> extends PointFree<Function<A, A>> {
+    protected final RecursivePoint.RecursivePointType<A> type;

@@ -1,0 +1,16 @@
+--- com/mojang/datafixers/View.java
++++ com/mojang/datafixers/View.java
+@@ -3,12 +3,12 @@
+ import com.mojang.datafixers.functions.Functions;
+ import com.mojang.datafixers.functions.PointFree;
+ import com.mojang.datafixers.functions.PointFreeRule;
+ import com.mojang.datafixers.kinds.App2;
+ import com.mojang.datafixers.kinds.K2;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.Function;
+ 
+ public final class View<A, B> implements App2<View.Mu, A, B> {

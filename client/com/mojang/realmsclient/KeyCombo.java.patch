@@ -1,0 +1,34 @@
+--- com/mojang/realmsclient/KeyCombo.java
++++ com/mojang/realmsclient/KeyCombo.java
+@@ -11,28 +11,25 @@
+       this.onCompletion = var2;
+       if (var1.length < 1) {
+          throw new IllegalArgumentException("Must have at least one char");
+       } else {
+          this.chars = var1;
+-         this.matchIndex = 0;
+       }
+    }
+ 
+    public boolean keyPressed(char var1) {
+-      if (var1 == this.chars[this.matchIndex]) {
+-         ++this.matchIndex;
++      if (var1 == this.chars[this.matchIndex++]) {
+          if (this.matchIndex == this.chars.length) {
+             this.reset();
+             this.onCompletion.run();
+             return true;
+-         } else {
+-            return false;
+          }
+       } else {
+          this.reset();
+-         return false;
+       }
++
++      return false;
+    }
+ 
+    public void reset() {
+       this.matchIndex = 0;
+    }

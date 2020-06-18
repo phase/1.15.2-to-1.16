@@ -1,0 +1,11 @@
+--- com/mojang/blaze3d/platform/WindowEventHandler.java
++++ com/mojang/blaze3d/platform/WindowEventHandler.java
+@@ -2,6 +2,8 @@
+ 
+ public interface WindowEventHandler {
+    void setWindowActive(boolean var1);
+ 
+    void resizeDisplay();
++
++   void cursorEntered();
+ }

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/TallSeagrass.java
 +++ net/minecraft/world/level/block/TallSeagrass.java
-@@ -6,10 +6,11 @@
+@@ -6,33 +6,34 @@
  import net.minecraft.tags.FluidTags;
  import net.minecraft.world.item.BlockPlaceContext;
  import net.minecraft.world.level.BlockGetter;
@@ -12,9 +12,12 @@
  import net.minecraft.world.level.block.state.properties.EnumProperty;
  import net.minecraft.world.level.material.Fluid;
  import net.minecraft.world.level.material.FluidState;
-@@ -19,20 +20,20 @@
+ import net.minecraft.world.level.material.Fluids;
+ import net.minecraft.world.phys.shapes.CollisionContext;
+ import net.minecraft.world.phys.shapes.VoxelShape;
  
- public class TallSeagrass extends ShearableDoublePlantBlock implements LiquidBlockContainer {
+-public class TallSeagrass extends ShearableDoublePlantBlock implements LiquidBlockContainer {
++public class TallSeagrass extends DoublePlantBlock implements LiquidBlockContainer {
     public static final EnumProperty<DoubleBlockHalf> HALF;
     protected static final VoxelShape SHAPE;
  
@@ -48,3 +51,14 @@
           return super.canSurvive(var1, var2, var3) && var4.is(FluidTags.WATER) && var4.getAmount() == 8;
        }
     }
+@@ -67,9 +68,9 @@
+    public boolean placeLiquid(LevelAccessor var1, BlockPos var2, BlockState var3, FluidState var4) {
+       return false;
+    }
+ 
+    static {
+-      HALF = ShearableDoublePlantBlock.HALF;
++      HALF = DoublePlantBlock.HALF;
+       SHAPE = Block.box(2.0D, 0.0D, 2.0D, 14.0D, 16.0D, 14.0D);
+    }
+ }

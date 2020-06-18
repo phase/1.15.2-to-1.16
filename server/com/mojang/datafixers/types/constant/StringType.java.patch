@@ -1,0 +1,30 @@
+--- com/mojang/datafixers/types/constant/StringType.java
++++ com/mojang/datafixers/types/constant/StringType.java
+@@ -1,27 +1,0 @@
+-package com.mojang.datafixers.types.constant;
+-
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.templates.Const;
+-import com.mojang.datafixers.util.Pair;
+-import java.util.Optional;
+-
+-public final class StringType extends Const.ConstType<String> {
+-   public StringType() {
+-   }
+-
+-   public <T> Pair<T, Optional<String>> read(DynamicOps<T> var1, T var2) {
+-      return (Pair)var1.getStringValue(var2).map((var1x) -> {
+-         return Pair.of(var1.empty(), Optional.of(var1x));
+-      }).orElseGet(() -> {
+-         return Pair.of(var2, Optional.empty());
+-      });
+-   }
+-
+-   public <T> T write(DynamicOps<T> var1, T var2, String var3) {
+-      return var1.createString(var3);
+-   }
+-
+-   public String toString() {
+-      return "String";
+-   }
+-}

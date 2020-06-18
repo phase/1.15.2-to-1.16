@@ -1,0 +1,32 @@
+--- com/mojang/datafixers/Typed.java
++++ com/mojang/datafixers/Typed.java
+@@ -13,15 +13,17 @@
+ import com.mojang.datafixers.optics.Optic;
+ import com.mojang.datafixers.optics.Optics;
+ import com.mojang.datafixers.optics.ReForgetC;
+ import com.mojang.datafixers.optics.Traversal;
+ import com.mojang.datafixers.optics.profunctors.TraversalP;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.templates.RecursivePoint;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.Dynamic;
++import com.mojang.serialization.DynamicOps;
+ import java.util.List;
+ import java.util.Optional;
+ import java.util.function.Function;
+ import java.util.stream.Collectors;
+ 
+@@ -204,9 +206,9 @@
+ 
+    public A getValue() {
+       return this.value;
+    }
+ 
+-   public Dynamic<?> write() {
++   public DataResult<? extends Dynamic<?>> write() {
+       return this.type.writeDynamic(this.ops, this.value);
+    }
+ }

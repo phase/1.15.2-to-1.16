@@ -1,0 +1,40 @@
+--- com/mojang/math/Matrix3f.java
++++ com/mojang/math/Matrix3f.java
+@@ -369,10 +369,37 @@
+       } else {
+          return false;
+       }
+    }
+ 
++   public void set(int var1, int var2, float var3) {
++      if (var1 == 0) {
++         if (var2 == 0) {
++            this.m00 = var3;
++         } else if (var2 == 1) {
++            this.m01 = var3;
++         } else {
++            this.m02 = var3;
++         }
++      } else if (var1 == 1) {
++         if (var2 == 0) {
++            this.m10 = var3;
++         } else if (var2 == 1) {
++            this.m11 = var3;
++         } else {
++            this.m12 = var3;
++         }
++      } else if (var2 == 0) {
++         this.m20 = var3;
++      } else if (var2 == 1) {
++         this.m21 = var3;
++      } else {
++         this.m22 = var3;
++      }
++
++   }
++
+    public void mul(Matrix3f var1) {
+       float var2 = this.m00 * var1.m00 + this.m01 * var1.m10 + this.m02 * var1.m20;
+       float var3 = this.m00 * var1.m01 + this.m01 * var1.m11 + this.m02 * var1.m21;
+       float var4 = this.m00 * var1.m02 + this.m01 * var1.m12 + this.m02 * var1.m22;
+       float var5 = this.m10 * var1.m00 + this.m11 * var1.m10 + this.m12 * var1.m20;

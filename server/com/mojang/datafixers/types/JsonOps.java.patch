@@ -1,0 +1,212 @@
+--- com/mojang/datafixers/types/JsonOps.java
++++ com/mojang/datafixers/types/JsonOps.java
+@@ -1,209 +1,0 @@
+-package com.mojang.datafixers.types;
+-
+-import com.google.gson.JsonArray;
+-import com.google.gson.JsonElement;
+-import com.google.gson.JsonNull;
+-import com.google.gson.JsonObject;
+-import com.google.gson.JsonPrimitive;
+-import com.mojang.datafixers.DSL;
+-import com.mojang.datafixers.util.Pair;
+-import java.math.BigDecimal;
+-import java.util.Iterator;
+-import java.util.Map;
+-import java.util.Objects;
+-import java.util.Optional;
+-import java.util.Map.Entry;
+-import java.util.stream.Collectors;
+-import java.util.stream.Stream;
+-import java.util.stream.StreamSupport;
+-
+-public class JsonOps implements DynamicOps<JsonElement> {
+-   public static final JsonOps INSTANCE = new JsonOps();
+-
+-   protected JsonOps() {
+-   }
+-
+-   public JsonElement empty() {
+-      return JsonNull.INSTANCE;
+-   }
+-
+-   public Type<?> getType(JsonElement var1) {
+-      if (var1.isJsonObject()) {
+-         return DSL.compoundList(DSL.remainderType(), DSL.remainderType());
+-      } else if (var1.isJsonArray()) {
+-         return DSL.list(DSL.remainderType());
+-      } else if (var1.isJsonNull()) {
+-         return DSL.nilType();
+-      } else {
+-         JsonPrimitive var2 = var1.getAsJsonPrimitive();
+-         if (var2.isString()) {
+-            return DSL.string();
+-         } else if (var2.isBoolean()) {
+-            return DSL.bool();
+-         } else {
+-            BigDecimal var3 = var2.getAsBigDecimal();
+-
+-            try {
+-               long var4 = var3.longValueExact();
+-               if ((long)((byte)((int)var4)) == var4) {
+-                  return DSL.byteType();
+-               } else if ((long)((short)((int)var4)) == var4) {
+-                  return DSL.shortType();
+-               } else {
+-                  return (long)((int)var4) == var4 ? DSL.intType() : DSL.longType();
+-               }
+-            } catch (ArithmeticException var7) {
+-               double var5 = var3.doubleValue();
+-               return (double)((float)var5) == var5 ? DSL.floatType() : DSL.doubleType();
+-            }
+-         }
+-      }
+-   }
+-
+-   public Optional<Number> getNumberValue(JsonElement var1) {
+-      return var1.isJsonPrimitive() && var1.getAsJsonPrimitive().isNumber() ? Optional.of(var1.getAsNumber()) : Optional.empty();
+-   }
+-
+-   public JsonElement createNumeric(Number var1) {
+-      return new JsonPrimitive(var1);
+-   }
+-
+-   public JsonElement createBoolean(boolean var1) {
+-      return new JsonPrimitive(var1);
+-   }
+-
+-   public Optional<String> getStringValue(JsonElement var1) {
+-      return var1.isJsonPrimitive() && var1.getAsJsonPrimitive().isString() ? Optional.of(var1.getAsString()) : Optional.empty();
+-   }
+-
+-   public JsonElement createString(String var1) {
+-      return new JsonPrimitive(var1);
+-   }
+-
+-   public JsonElement mergeInto(JsonElement var1, JsonElement var2) {
+-      if (var2.isJsonNull()) {
+-         return var1;
+-      } else if (!var1.isJsonObject()) {
+-         if (var1.isJsonNull()) {
+-            throw new IllegalArgumentException("mergeInto called with null input.");
+-         } else if (var1.isJsonArray()) {
+-            JsonArray var3 = new JsonArray();
+-            StreamSupport.stream(var1.getAsJsonArray().spliterator(), false).forEach(var3::add);
+-            var3.add(var2);
+-            return var3;
+-         } else {
+-            return var1;
+-         }
+-      } else if (!var2.isJsonObject()) {
+-         return var1;
+-      } else {
+-         JsonObject var4 = new JsonObject();
+-         JsonObject var5 = var1.getAsJsonObject();
+-         Iterator var6 = var5.entrySet().iterator();
+-
+-         while(var6.hasNext()) {
+-            Entry var7 = (Entry)var6.next();
+-            var4.add((String)var7.getKey(), (JsonElement)var7.getValue());
+-         }
+-
+-         JsonObject var9 = var2.getAsJsonObject();
+-         Iterator var10 = var9.entrySet().iterator();
+-
+-         while(var10.hasNext()) {
+-            Entry var8 = (Entry)var10.next();
+-            var4.add((String)var8.getKey(), (JsonElement)var8.getValue());
+-         }
+-
+-         return var4;
+-      }
+-   }
+-
+-   public JsonElement mergeInto(JsonElement var1, JsonElement var2, JsonElement var3) {
+-      JsonObject var4;
+-      if (var1.isJsonNull()) {
+-         var4 = new JsonObject();
+-      } else {
+-         if (!var1.isJsonObject()) {
+-            return var1;
+-         }
+-
+-         var4 = new JsonObject();
+-         var1.getAsJsonObject().entrySet().forEach((var1x) -> {
+-            var4.add((String)var1x.getKey(), (JsonElement)var1x.getValue());
+-         });
+-      }
+-
+-      var4.add(var2.getAsString(), var3);
+-      return var4;
+-   }
+-
+-   public JsonElement merge(JsonElement var1, JsonElement var2) {
+-      if (var1.isJsonNull()) {
+-         return var2;
+-      } else if (var2.isJsonNull()) {
+-         return var1;
+-      } else if (var1.isJsonObject() && var2.isJsonObject()) {
+-         JsonObject var4 = new JsonObject();
+-         var1.getAsJsonObject().entrySet().forEach((var1x) -> {
+-            var4.add((String)var1x.getKey(), (JsonElement)var1x.getValue());
+-         });
+-         var2.getAsJsonObject().entrySet().forEach((var1x) -> {
+-            var4.add((String)var1x.getKey(), (JsonElement)var1x.getValue());
+-         });
+-         return var4;
+-      } else if (var1.isJsonArray() && var2.isJsonArray()) {
+-         JsonArray var3 = new JsonArray();
+-         var1.getAsJsonArray().forEach(var3::add);
+-         var2.getAsJsonArray().forEach(var3::add);
+-         return var3;
+-      } else {
+-         throw new IllegalArgumentException("Could not merge " + var1 + " and " + var2);
+-      }
+-   }
+-
+-   public Optional<Map<JsonElement, JsonElement>> getMapValues(JsonElement var1) {
+-      return var1.isJsonObject() ? Optional.of(var1.getAsJsonObject().entrySet().stream().map((var0) -> {
+-         return Pair.of(new JsonPrimitive((String)var0.getKey()), var0.getValue());
+-      }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond))) : Optional.empty();
+-   }
+-
+-   public JsonElement createMap(Map<JsonElement, JsonElement> var1) {
+-      JsonObject var2 = new JsonObject();
+-      Iterator var3 = var1.entrySet().iterator();
+-
+-      while(var3.hasNext()) {
+-         Entry var4 = (Entry)var3.next();
+-         var2.add(((JsonElement)var4.getKey()).getAsString(), (JsonElement)var4.getValue());
+-      }
+-
+-      return var2;
+-   }
+-
+-   public Optional<Stream<JsonElement>> getStream(JsonElement var1) {
+-      return var1.isJsonArray() ? Optional.of(StreamSupport.stream(var1.getAsJsonArray().spliterator(), false)) : Optional.empty();
+-   }
+-
+-   public JsonElement createList(Stream<JsonElement> var1) {
+-      JsonArray var2 = new JsonArray();
+-      var1.forEach(var2::add);
+-      return var2;
+-   }
+-
+-   public JsonElement remove(JsonElement var1, String var2) {
+-      if (var1.isJsonObject()) {
+-         JsonObject var3 = new JsonObject();
+-         var1.getAsJsonObject().entrySet().stream().filter((var1x) -> {
+-            return !Objects.equals(var1x.getKey(), var2);
+-         }).forEach((var1x) -> {
+-            var3.add((String)var1x.getKey(), (JsonElement)var1x.getValue());
+-         });
+-         return var3;
+-      } else {
+-         return var1;
+-      }
+-   }
+-
+-   public String toString() {
+-      return "JSON";
+-   }
+-}

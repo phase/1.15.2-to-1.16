@@ -1,0 +1,12 @@
+--- com/mojang/datafixers/functions/Bang.java
++++ com/mojang/datafixers/functions/Bang.java
+@@ -1,8 +1,8 @@
+ package com.mojang.datafixers.functions;
+ 
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.DynamicOps;
+ import java.util.function.Function;
+ 
+ final class Bang<A> extends PointFree<Function<A, Void>> {
+    Bang() {
+    }

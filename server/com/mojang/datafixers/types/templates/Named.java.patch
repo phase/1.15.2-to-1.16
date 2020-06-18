@@ -1,0 +1,79 @@
+--- com/mojang/datafixers/types/templates/Named.java
++++ com/mojang/datafixers/types/templates/Named.java
+@@ -7,19 +7,21 @@
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.TypedOptic;
+ import com.mojang.datafixers.functions.Functions;
+ import com.mojang.datafixers.optics.Optics;
+ import com.mojang.datafixers.optics.profunctors.Cartesian;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.DynamicOps;
++import com.mojang.serialization.Lifecycle;
+ import java.util.Objects;
+ import java.util.Optional;
+-import java.util.function.Function;
+ import java.util.function.IntFunction;
+ import javax.annotation.Nullable;
+ 
+ public final class Named implements TypeTemplate {
+    private final String name;
+@@ -119,24 +121,24 @@
+ 
+       public Optional<Type<?>> findCheckedType(int var1) {
+          return this.element.findCheckedType(var1);
+       }
+ 
+-      public <T> Pair<T, Optional<Pair<String, A>>> read(DynamicOps<T> var1, T var2) {
+-         return this.element.read(var1, var2).mapSecond((var1x) -> {
+-            return var1x.map((var1) -> {
+-               return Pair.of(this.name, var1);
+-            });
+-         });
+-      }
++      protected Codec<Pair<String, A>> buildCodec() {
++         return new Codec<Pair<String, A>>() {
++            public <T> DataResult<Pair<Pair<String, A>, T>> decode(DynamicOps<T> var1, T var2) {
++               return NamedType.this.element.codec().decode(var1, var2).map((var1x) -> {
++                  return var1x.mapFirst((var1) -> {
++                     return Pair.of(NamedType.this.name, var1);
++                  });
++               }).setLifecycle(Lifecycle.experimental());
++            }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, Pair<String, A> var3) {
+-         if (!Objects.equals(var3.getFirst(), this.name)) {
+-            throw new IllegalStateException("Named type name doesn't match: expected: " + this.name + ", got: " + (String)var3.getFirst());
+-         } else {
+-            return this.element.write(var1, var2, var3.getSecond());
+-         }
++            public <T> DataResult<T> encode(Pair<String, A> var1, DynamicOps<T> var2, T var3) {
++               return !Objects.equals(var1.getFirst(), NamedType.this.name) ? DataResult.error("Named type name doesn't match: expected: " + NamedType.this.name + ", got: " + (String)var1.getFirst(), var3) : NamedType.this.element.codec().encode(var1.getSecond(), var2, var3).setLifecycle(Lifecycle.experimental());
++            }
++         };
+       }
+ 
+       public String toString() {
+          return "NamedType[\"" + this.name + "\", " + this.element + "]";
+       }
+@@ -162,14 +164,10 @@
+ 
+       public int hashCode() {
+          return Objects.hash(new Object[]{this.name, this.element});
+       }
+ 
+-      public <A2> Named.NamedType<A2> map(Function<? super Type<A>, ? extends Type<A2>> var1) {
+-         return new Named.NamedType(this.name, (Type)var1.apply(this.element));
+-      }
+-
+       public Optional<Type<?>> findFieldTypeOpt(String var1) {
+          return this.element.findFieldTypeOpt(var1);
+       }
+ 
+       public Optional<Pair<String, A>> point(DynamicOps<?> var1) {

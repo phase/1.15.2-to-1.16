@@ -108,7 +108,7 @@
  
     protected int getScrollbarPosition() {
        return super.getScrollbarPosition() + 20;
-@@ -115,18 +130,21 @@
+@@ -115,18 +130,20 @@
  
     public void setSelected(@Nullable WorldSelectionList.WorldListEntry var1) {
        super.setSelected(var1);
@@ -118,6 +118,7 @@
 +         NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.select", new Object[]{new TranslatableComponent("narrator.select.world", new Object[]{var2.getLevelName(), new Date(var2.getLastPlayed()), var2.isHardcore() ? new TranslatableComponent("gameMode.hardcore") : new TranslatableComponent("gameMode." + var2.getGameMode().getName()), var2.hasCheats() ? new TranslatableComponent("selectWorld.cheats") : TextComponent.EMPTY, var2.getWorldVersionName()})})).getString());
        }
  
++      this.screen.updateButtonStatus(var1 != null && !var1.summary.isLocked());
     }
  
 -   protected void moveSelection(int var1) {
@@ -127,14 +128,12 @@
 +      this.moveSelection(var1, (var0) -> {
 +         return !var0.summary.isLocked();
 +      });
-+      WorldSelectionList.WorldListEntry var2 = (WorldSelectionList.WorldListEntry)this.getSelected();
-+      this.screen.updateButtonStatus(var2 != null && var2.summary.isLocked());
     }
  
     public Optional<WorldSelectionList.WorldListEntry> getSelectedOpt() {
        return Optional.ofNullable(this.getSelected());
     }
-@@ -148,214 +166,310 @@
+@@ -148,214 +165,310 @@
        public WorldListEntry(WorldSelectionList var2, LevelSummary var3, LevelStorageSource var4) {
           this.screen = var2.getScreen();
           this.summary = var3;

@@ -1,0 +1,15 @@
+--- com/mojang/datafixers/types/templates/TypeTemplate.java
++++ com/mojang/datafixers/types/templates/TypeTemplate.java
+@@ -15,11 +15,11 @@
+    TypeFamily apply(TypeFamily var1);
+ 
+    default Type<?> toSimpleType() {
+       return this.apply(new TypeFamily() {
+          public Type<?> apply(int var1) {
+-            return DSL.nilType();
++            return DSL.emptyPartType();
+          }
+       }).apply(-1);
+    }
+ 
+    <A, B> Either<TypeTemplate, Type.FieldNotFoundException> findFieldOrType(int var1, @Nullable String var2, Type<A> var3, Type<B> var4);

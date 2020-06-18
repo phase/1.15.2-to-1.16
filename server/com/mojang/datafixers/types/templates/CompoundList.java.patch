@@ -1,0 +1,82 @@
+--- com/mojang/datafixers/types/templates/CompoundList.java
++++ com/mojang/datafixers/types/templates/CompoundList.java
+@@ -1,9 +1,8 @@
+ package com.mojang.datafixers.types.templates;
+ 
+ import com.google.common.collect.ImmutableList;
+-import com.google.common.collect.ImmutableMap;
+ import com.google.common.collect.Sets;
+ import com.mojang.datafixers.DSL;
+ import com.mojang.datafixers.DataFixUtils;
+ import com.mojang.datafixers.FamilyOptic;
+ import com.mojang.datafixers.OpticParts;
+@@ -12,21 +11,20 @@
+ import com.mojang.datafixers.TypedOptic;
+ import com.mojang.datafixers.optics.ListTraversal;
+ import com.mojang.datafixers.optics.Optic;
+ import com.mojang.datafixers.optics.Optics;
+ import com.mojang.datafixers.optics.profunctors.TraversalP;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DynamicOps;
+ import java.util.HashSet;
+-import java.util.Iterator;
+ import java.util.Objects;
+ import java.util.Optional;
+-import java.util.Map.Entry;
+ import java.util.function.IntFunction;
+ import javax.annotation.Nullable;
+ 
+ public final class CompoundList implements TypeTemplate {
+    private final TypeTemplate key;
+@@ -153,43 +151,14 @@
+ 
+       private <FT, V2, FR> TypedOptic<java.util.List<Pair<K, V>>, ?, FT, FR> capRight(TypedOptic<V, V2, FT, FR> var1) {
+          return TypedOptic.compoundListElements(this.key, var1.sType(), var1.tType()).compose(var1);
+       }
+ 
+-      public <T> Pair<T, Optional<java.util.List<Pair<K, V>>>> read(DynamicOps<T> var1, T var2) {
+-         return (Pair)var1.getMapValues(var2).map((var2x) -> {
+-            ImmutableList.Builder var3 = ImmutableList.builder();
+-            ImmutableMap.Builder var4 = ImmutableMap.builder();
+-            Iterator var5 = var2x.entrySet().iterator();
+-
+-            while(true) {
+-               while(var5.hasNext()) {
+-                  Entry var6 = (Entry)var5.next();
+-                  Pair var7 = this.key.read(var1, var6.getKey());
+-                  Pair var8 = this.element.read(var1, var6.getValue());
+-                  if (((Optional)var7.getSecond()).isPresent() && ((Optional)var8.getSecond()).isPresent()) {
+-                     var3.add((Object)Pair.of(((Optional)var7.getSecond()).get(), ((Optional)var8.getSecond()).get()));
+-                  } else {
+-                     var4.put(var6);
+-                  }
+-               }
+-
+-               return Pair.of(var1.createMap(var4.build()), Optional.of(var3.build()));
+-            }
+-         }).orElseGet(() -> {
+-            return Pair.of(var2, Optional.empty());
+-         });
++      protected Codec<java.util.List<Pair<K, V>>> buildCodec() {
++         return Codec.compoundList(this.key.codec(), this.element.codec());
+       }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, java.util.List<Pair<K, V>> var3) {
+-         ImmutableMap.Builder var4 = ImmutableMap.builder();
+-         var3.forEach((var3x) -> {
+-            var4.put(this.key.write(var1, var1.empty(), var3x.getFirst()), this.element.write(var1, var1.empty(), var3x.getSecond()));
+-         });
+-         return var1.merge(var2, var1.createMap(var4.build()));
+-      }
+-
+       public String toString() {
+          return "CompoundList[" + this.key + " -> " + this.element + "]";
+       }
+ 
+       public boolean equals(Object var1, boolean var2, boolean var3) {

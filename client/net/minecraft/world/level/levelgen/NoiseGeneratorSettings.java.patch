@@ -124,8 +124,8 @@
 +         return this.settings;
 +      }
 +
-+      private static NoiseGeneratorSettings end(StructureSettings var0, BlockState var1, BlockState var2, NoiseGeneratorSettings.Preset var3, boolean var4) {
-+         return new NoiseGeneratorSettings(var0, new NoiseSettings(128, new NoiseSamplingSettings(2.0D, 1.0D, 80.0D, 160.0D), new NoiseSlideSettings(-3000, 64, -46), new NoiseSlideSettings(-30, 7, 1), 2, 1, 0.0D, 0.0D, true, false, var4, false), var1, var2, -10, -10, 0, true, Optional.of(var3));
++      private static NoiseGeneratorSettings end(StructureSettings var0, BlockState var1, BlockState var2, NoiseGeneratorSettings.Preset var3, boolean var4, boolean var5) {
++         return new NoiseGeneratorSettings(var0, new NoiseSettings(128, new NoiseSamplingSettings(2.0D, 1.0D, 80.0D, 160.0D), new NoiseSlideSettings(-3000, 64, -46), new NoiseSlideSettings(-30, 7, 1), 2, 1, 0.0D, 0.0D, true, false, var5, false), var1, var2, -10, -10, 0, var4, Optional.of(var3));
 +      }
 +
 +      private static NoiseGeneratorSettings nether(StructureSettings var0, BlockState var1, BlockState var2, NoiseGeneratorSettings.Preset var3) {
@@ -157,13 +157,13 @@
 +            return nether(new StructureSettings(false), Blocks.NETHERRACK.defaultBlockState(), Blocks.LAVA.defaultBlockState(), var0);
 +         });
 +         END = new NoiseGeneratorSettings.Preset("end", (var0) -> {
-+            return end(new StructureSettings(false), Blocks.END_STONE.defaultBlockState(), Blocks.AIR.defaultBlockState(), var0, true);
++            return end(new StructureSettings(false), Blocks.END_STONE.defaultBlockState(), Blocks.AIR.defaultBlockState(), var0, true, true);
 +         });
 +         CAVES = new NoiseGeneratorSettings.Preset("caves", (var0) -> {
 +            return nether(new StructureSettings(false), Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), var0);
 +         });
 +         FLOATING_ISLANDS = new NoiseGeneratorSettings.Preset("floating_islands", (var0) -> {
-+            return end(new StructureSettings(false), Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), var0, false);
++            return end(new StructureSettings(false), Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), var0, false, false);
 +         });
 +      }
 +   }

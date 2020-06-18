@@ -1,0 +1,103 @@
+--- com/mojang/datafixers/OptionalDynamic.java
++++ com/mojang/datafixers/OptionalDynamic.java
+@@ -1,100 +1,0 @@
+-package com.mojang.datafixers;
+-
+-import com.mojang.datafixers.types.DynamicOps;
+-import java.nio.ByteBuffer;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Optional;
+-import java.util.function.Function;
+-import java.util.stream.IntStream;
+-import java.util.stream.LongStream;
+-import java.util.stream.Stream;
+-
+-public final class OptionalDynamic<T> extends DynamicLike<T> {
+-   private final Optional<Dynamic<T>> delegate;
+-
+-   public OptionalDynamic(DynamicOps<T> var1, Optional<Dynamic<T>> var2) {
+-      super(var1);
+-      this.delegate = var2;
+-   }
+-
+-   public Optional<Dynamic<T>> get() {
+-      return this.delegate;
+-   }
+-
+-   public <U> Optional<U> map(Function<? super Dynamic<T>, ? extends U> var1) {
+-      return this.delegate.map(var1);
+-   }
+-
+-   public <U> Optional<U> flatMap(Function<? super Dynamic<T>, Optional<U>> var1) {
+-      return this.delegate.flatMap(var1);
+-   }
+-
+-   public Optional<Number> asNumber() {
+-      return this.flatMap(DynamicLike::asNumber);
+-   }
+-
+-   public Optional<String> asString() {
+-      return this.flatMap(DynamicLike::asString);
+-   }
+-
+-   public Optional<Stream<Dynamic<T>>> asStreamOpt() {
+-      return this.flatMap(DynamicLike::asStreamOpt);
+-   }
+-
+-   public Optional<ByteBuffer> asByteBufferOpt() {
+-      return this.flatMap(DynamicLike::asByteBufferOpt);
+-   }
+-
+-   public Optional<IntStream> asIntStreamOpt() {
+-      return this.flatMap(DynamicLike::asIntStreamOpt);
+-   }
+-
+-   public Optional<LongStream> asLongStreamOpt() {
+-      return this.flatMap(DynamicLike::asLongStreamOpt);
+-   }
+-
+-   public OptionalDynamic<T> get(String var1) {
+-      return new OptionalDynamic(this.ops, this.flatMap((var1x) -> {
+-         return var1x.get(var1).get();
+-      }));
+-   }
+-
+-   public Optional<T> getGeneric(T var1) {
+-      return this.flatMap((var1x) -> {
+-         return var1x.getGeneric(var1);
+-      });
+-   }
+-
+-   public Optional<T> getElement(String var1) {
+-      return this.flatMap((var1x) -> {
+-         return var1x.getElement(var1);
+-      });
+-   }
+-
+-   public Optional<T> getElementGeneric(T var1) {
+-      return this.flatMap((var1x) -> {
+-         return var1x.getElementGeneric(var1);
+-      });
+-   }
+-
+-   public <U> Optional<List<U>> asListOpt(Function<Dynamic<T>, U> var1) {
+-      return this.flatMap((var1x) -> {
+-         return var1x.asListOpt(var1);
+-      });
+-   }
+-
+-   public <K, V> Optional<Map<K, V>> asMapOpt(Function<Dynamic<T>, K> var1, Function<Dynamic<T>, V> var2) {
+-      return this.flatMap((var2x) -> {
+-         return var2x.asMapOpt(var1, var2);
+-      });
+-   }
+-
+-   public Dynamic<T> orElseEmptyMap() {
+-      return (Dynamic)this.delegate.orElseGet(this::emptyMap);
+-   }
+-
+-   public Dynamic<T> orElseEmptyList() {
+-      return (Dynamic)this.delegate.orElseGet(this::emptyList);
+-   }
+-}

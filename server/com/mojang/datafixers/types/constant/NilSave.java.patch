@@ -1,0 +1,35 @@
+--- com/mojang/datafixers/types/constant/NilSave.java
++++ com/mojang/datafixers/types/constant/NilSave.java
+@@ -1,32 +1,0 @@
+-package com.mojang.datafixers.types.constant;
+-
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.templates.Const;
+-import com.mojang.datafixers.util.Pair;
+-import java.util.Optional;
+-
+-public final class NilSave extends Const.ConstType<Dynamic<?>> {
+-   public NilSave() {
+-   }
+-
+-   public <T> Pair<T, Optional<Dynamic<?>>> read(DynamicOps<T> var1, T var2) {
+-      return Pair.of(var1.empty(), Optional.of(new Dynamic(var1, var2)));
+-   }
+-
+-   public <T> T write(DynamicOps<T> var1, T var2, Dynamic<?> var3) {
+-      return var1.mergeInto(var1.mergeInto(var1.emptyMap(), var2), var3.cast(var1));
+-   }
+-
+-   public String toString() {
+-      return "NilSave";
+-   }
+-
+-   public Optional<Dynamic<?>> point(DynamicOps<?> var1) {
+-      return Optional.of(this.capEmpty(var1));
+-   }
+-
+-   private <T> Dynamic<T> capEmpty(DynamicOps<T> var1) {
+-      return new Dynamic(var1, var1.emptyMap());
+-   }
+-}

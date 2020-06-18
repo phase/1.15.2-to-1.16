@@ -1,0 +1,25 @@
+--- com/mojang/realmsclient/exception/RealmsServiceException.java
++++ com/mojang/realmsclient/exception/RealmsServiceException.java
+@@ -1,9 +1,9 @@
+ package com.mojang.realmsclient.exception;
+ 
+ import com.mojang.realmsclient.client.RealmsError;
+-import net.minecraft.realms.RealmsScreen;
++import net.minecraft.client.resources.language.I18n;
+ 
+ public class RealmsServiceException extends Exception {
+    public final int httpResultCode;
+    public final String httpResponseContent;
+    public final int errorCode;
+@@ -28,10 +28,10 @@
+    public String toString() {
+       if (this.errorCode == -1) {
+          return "Realms (" + this.httpResultCode + ") " + this.httpResponseContent;
+       } else {
+          String var1 = "mco.errorMessage." + this.errorCode;
+-         String var2 = RealmsScreen.getLocalizedString(var1);
++         String var2 = I18n.get(var1);
+          return (var2.equals(var1) ? this.errorMsg : var2) + " - " + this.errorCode;
+       }
+    }
+ }

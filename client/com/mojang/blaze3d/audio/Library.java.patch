@@ -1,0 +1,14 @@
+--- com/mojang/blaze3d/audio/Library.java
++++ com/mojang/blaze3d/audio/Library.java
+@@ -185,10 +185,11 @@
+       }
+ 
+       @Nullable
+       public Channel acquire() {
+          if (this.activeChannels.size() >= this.limit) {
++            Library.LOGGER.warn("Maximum sound pool size {} reached", this.limit);
+             return null;
+          } else {
+             Channel var1 = Channel.create();
+             if (var1 != null) {
+                this.activeChannels.add(var1);

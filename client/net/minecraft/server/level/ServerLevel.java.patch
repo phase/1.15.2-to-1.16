@@ -1101,8 +1101,8 @@
                    var3.close();
 -               } catch (Throwable var148) {
 -                  var4.addSuppressed(var148);
-+               } catch (Throwable var110) {
-+                  var4.addSuppressed(var110);
++               } catch (Throwable var111) {
++                  var4.addSuppressed(var111);
                 }
              } else {
                 var3.close();
@@ -1139,8 +1139,8 @@
 -               } catch (Throwable var149) {
 -                  var168.addSuppressed(var149);
 +                  var124.close();
-+               } catch (Throwable var109) {
-+                  var125.addSuppressed(var109);
++               } catch (Throwable var110) {
++                  var125.addSuppressed(var110);
                 }
              } else {
 -               var167.close();
@@ -1176,8 +1176,8 @@
 -               } catch (Throwable var150) {
 -                  var171.addSuppressed(var150);
 +                  var127.close();
-+               } catch (Throwable var111) {
-+                  var128.addSuppressed(var111);
++               } catch (Throwable var108) {
++                  var128.addSuppressed(var108);
                 }
              } else {
 -               var170.close();
@@ -1213,8 +1213,8 @@
 -               } catch (Throwable var153) {
 -                  var7.addSuppressed(var153);
 +                  var130.close();
-+               } catch (Throwable var108) {
-+                  var131.addSuppressed(var108);
++               } catch (Throwable var109) {
++                  var131.addSuppressed(var109);
                 }
              } else {
 -               var173.close();

@@ -524,14 +524,33 @@
           this.leashHolder.forcedLoading = true;
        }
  
-@@ -1085,11 +1244,13 @@
-             this.setLeashedTo(LeashFenceKnotEntity.getOrCreateKnot(this.level, var1), true);
-          } else {
-             this.dropLeash(false, true);
+@@ -1073,23 +1232,26 @@
+    }
+ 
+    private void restoreLeashFromSave() {
+       if (this.leashInfoTag != null && this.level instanceof ServerLevel) {
+          if (this.leashInfoTag.hasUUID("UUID")) {
+-            UUID var3 = this.leashInfoTag.getUUID("UUID");
+-            Entity var2 = ((ServerLevel)this.level).getEntity(var3);
++            UUID var1 = this.leashInfoTag.getUUID("UUID");
++            Entity var2 = ((ServerLevel)this.level).getEntity(var1);
+             if (var2 != null) {
+                this.setLeashedTo(var2, true);
++               return;
+             }
+          } else if (this.leashInfoTag.contains("X", 99) && this.leashInfoTag.contains("Y", 99) && this.leashInfoTag.contains("Z", 99)) {
+-            BlockPos var1 = new BlockPos(this.leashInfoTag.getInt("X"), this.leashInfoTag.getInt("Y"), this.leashInfoTag.getInt("Z"));
+-            this.setLeashedTo(LeashFenceKnotEntity.getOrCreateKnot(this.level, var1), true);
+-         } else {
+-            this.dropLeash(false, true);
++            BlockPos var3 = new BlockPos(this.leashInfoTag.getInt("X"), this.leashInfoTag.getInt("Y"), this.leashInfoTag.getInt("Z"));
++            this.setLeashedTo(LeashFenceKnotEntity.getOrCreateKnot(this.level, var3), true);
++            return;
           }
  
 -         this.leashInfoTag = null;
 +         if (this.tickCount > 100) {
++            this.spawnAtLocation(Items.LEAD);
 +            this.leashInfoTag = null;
 +         }
        }
@@ -539,7 +558,7 @@
     }
  
     public boolean setSlot(int var1, ItemStack var2) {
-@@ -1158,21 +1319,24 @@
+@@ -1158,21 +1320,24 @@
  
     public boolean isAggressive() {
        return ((Byte)this.entityData.get(DATA_MOB_FLAGS_ID) & 4) != 0;
@@ -566,7 +585,7 @@
           var3 += (float)EnchantmentHelper.getKnockbackBonus(this);
        }
  
-@@ -1182,34 +1346,37 @@
+@@ -1182,34 +1347,37 @@
        }
  
        boolean var5 = var1.hurt(DamageSource.mobAttack(this), var2);
@@ -614,7 +633,7 @@
           float var1 = this.getBrightness();
           BlockPos var2 = this.getVehicle() instanceof Boat ? (new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ())).above() : new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ());
           if (var1 > 0.5F && this.random.nextFloat() * 30.0F < (var1 - 0.4F) * 2.0F && this.level.canSeeSky(var2)) {
-@@ -1227,12 +1394,13 @@
+@@ -1227,12 +1395,13 @@
           this.setDeltaMovement(this.getDeltaMovement().add(0.0D, 0.3D, 0.0D));
        }
  

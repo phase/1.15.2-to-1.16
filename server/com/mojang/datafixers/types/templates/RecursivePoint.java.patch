@@ -1,0 +1,49 @@
+--- com/mojang/datafixers/types/templates/RecursivePoint.java
++++ com/mojang/datafixers/types/templates/RecursivePoint.java
+@@ -6,16 +6,19 @@
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.TypedOptic;
+ import com.mojang.datafixers.View;
+ import com.mojang.datafixers.functions.Functions;
+ import com.mojang.datafixers.functions.PointFreeRule;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.DynamicOps;
++import com.mojang.serialization.Lifecycle;
+ import java.util.BitSet;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.IntFunction;
+ import java.util.function.Supplier;
+@@ -117,16 +120,20 @@
+          }
+ 
+          return this.type;
+       }
+ 
+-      public <T> Pair<T, Optional<A>> read(DynamicOps<T> var1, T var2) {
+-         return this.unfold().read(var1, var2);
+-      }
++      protected Codec<A> buildCodec() {
++         return new Codec<A>() {
++            public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> var1, T var2) {
++               return RecursivePointType.this.unfold().codec().decode(var1, var2).setLifecycle(Lifecycle.experimental());
++            }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, A var3) {
+-         return this.unfold().write(var1, var2, var3);
++            public <T> DataResult<T> encode(A var1, DynamicOps<T> var2, T var3) {
++               return RecursivePointType.this.unfold().codec().encode(var1, var2, var3).setLifecycle(Lifecycle.experimental());
++            }
++         };
+       }
+ 
+       public RewriteResult<A, ?> all(TypeRewriteRule var1, boolean var2, boolean var3) {
+          return this.unfold().all(var1, var2, var3);
+       }

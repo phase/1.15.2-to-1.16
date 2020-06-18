@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/PresetFlatWorldScreen.java
 +++ net/minecraft/client/gui/screens/PresetFlatWorldScreen.java
-@@ -1,63 +1,183 @@
+@@ -1,63 +1,182 @@
  package net.minecraft.client.gui.screens;
  
 +import com.google.common.base.Splitter;
@@ -19,7 +19,6 @@
  import net.minecraft.client.Minecraft;
  import net.minecraft.client.gui.GuiComponent;
  import net.minecraft.client.gui.chat.NarratorChatListener;
-+import net.minecraft.client.gui.components.AbstractSelectionList;
  import net.minecraft.client.gui.components.Button;
  import net.minecraft.client.gui.components.EditBox;
  import net.minecraft.client.gui.components.ObjectSelectionList;
@@ -195,7 +194,7 @@
        this.updateButtonValidity(this.list.getSelected() != null);
     }
  
-@@ -77,21 +197,21 @@
+@@ -77,21 +196,21 @@
  
     public void removed() {
        this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
@@ -225,7 +224,7 @@
     public void tick() {
        this.export.tick();
        super.tick();
-@@ -99,51 +219,64 @@
+@@ -99,51 +218,64 @@
  
     public void updateButtonValidity(boolean var1) {
        this.selectButton.active = var1 || this.export.getValue().length() > 1;
@@ -314,7 +313,7 @@
     class PresetsList extends ObjectSelectionList<PresetFlatWorldScreen.PresetsList.Entry> {
        public PresetsList() {
           super(PresetFlatWorldScreen.this.minecraft, PresetFlatWorldScreen.this.width, PresetFlatWorldScreen.this.height, 80, PresetFlatWorldScreen.this.height - 37, 24);
-@@ -155,16 +288,16 @@
+@@ -155,20 +287,16 @@
        }
  
        public void setSelected(@Nullable PresetFlatWorldScreen.PresetsList.Entry var1) {
@@ -324,16 +323,20 @@
 +            NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.select", new Object[]{((PresetFlatWorldScreen.PresetInfo)PresetFlatWorldScreen.PRESETS.get(this.children().indexOf(var1))).getName()})).getString());
           }
  
++         PresetFlatWorldScreen.this.updateButtonValidity(var1 != null);
        }
  
 -      protected void moveSelection(int var1) {
-+      protected void moveSelection(AbstractSelectionList.SelectionDirection var1) {
-          super.moveSelection(var1);
-          PresetFlatWorldScreen.this.updateButtonValidity(true);
+-         super.moveSelection(var1);
+-         PresetFlatWorldScreen.this.updateButtonValidity(true);
+-      }
+-
+       protected boolean isFocused() {
+          return PresetFlatWorldScreen.this.getFocused() == this;
        }
  
-       protected boolean isFocused() {
-@@ -185,14 +318,14 @@
+       public boolean keyPressed(int var1, int var2, int var3) {
+@@ -185,14 +313,14 @@
  
        public class Entry extends ObjectSelectionList.Entry<PresetFlatWorldScreen.PresetsList.Entry> {
           public Entry() {
@@ -352,12 +355,13 @@
           public boolean mouseClicked(double var1, double var3, int var5) {
              if (var5 == 0) {
                 this.select();
-@@ -202,24 +335,26 @@
+@@ -201,25 +329,26 @@
+             return false;
           }
  
           private void select() {
              PresetsList.this.setSelected(this);
-             PresetFlatWorldScreen.this.updateButtonValidity(true);
+-            PresetFlatWorldScreen.this.updateButtonValidity(true);
 -            PresetFlatWorldScreen.this.export.setValue(((PresetFlatWorldScreen.PresetInfo)PresetFlatWorldScreen.PRESETS.get(PresetsList.this.children().indexOf(this))).value);
 +            PresetFlatWorldScreen.PresetInfo var1 = (PresetFlatWorldScreen.PresetInfo)PresetFlatWorldScreen.PRESETS.get(PresetsList.this.children().indexOf(this));
 +            PresetFlatWorldScreen.this.export.setValue(PresetFlatWorldScreen.save(var1.settings));

@@ -1,0 +1,40 @@
+--- com/mojang/datafixers/kinds/OptionalBox.java
++++ com/mojang/datafixers/kinds/OptionalBox.java
+@@ -13,15 +13,15 @@
+ 
+    public static <T> OptionalBox<T> create(Optional<T> var0) {
+       return new OptionalBox(var0);
+    }
+ 
+-   OptionalBox(Optional<T> var1) {
++   private OptionalBox(Optional<T> var1) {
+       this.value = var1;
+    }
+ 
+-   public static enum Instance implements Applicative<OptionalBox.Mu, OptionalBox.Instance.Mu> {
++   public static enum Instance implements Applicative<OptionalBox.Mu, OptionalBox.Instance.Mu>, Traversable<OptionalBox.Mu, OptionalBox.Instance.Mu> {
+       INSTANCE;
+ 
+       private Instance() {
+       }
+ 
+@@ -51,11 +51,18 @@
+                });
+             }));
+          };
+       }
+ 
+-      public static final class Mu implements Applicative.Mu {
++      public <F extends K1, A, B> App<F, App<OptionalBox.Mu, B>> traverse(Applicative<F, ?> var1, Function<A, App<F, B>> var2, App<OptionalBox.Mu, A> var3) {
++         Optional var4 = OptionalBox.unbox(var3).map(var2);
++         return var4.isPresent() ? var1.map((var0) -> {
++            return OptionalBox.create(Optional.of(var0));
++         }, (App)var4.get()) : var1.point(OptionalBox.create(Optional.empty()));
++      }
++
++      public static final class Mu implements Applicative.Mu, Traversable.Mu {
+          public Mu() {
+          }
+       }
+    }
+ 

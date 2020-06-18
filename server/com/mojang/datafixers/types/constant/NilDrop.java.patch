@@ -1,0 +1,31 @@
+--- com/mojang/datafixers/types/constant/NilDrop.java
++++ com/mojang/datafixers/types/constant/NilDrop.java
+@@ -1,28 +1,0 @@
+-package com.mojang.datafixers.types.constant;
+-
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.templates.Const;
+-import com.mojang.datafixers.util.Pair;
+-import com.mojang.datafixers.util.Unit;
+-import java.util.Optional;
+-
+-public final class NilDrop extends Const.ConstType<Unit> {
+-   public NilDrop() {
+-   }
+-
+-   public <T> Pair<T, Optional<Unit>> read(DynamicOps<T> var1, T var2) {
+-      return Pair.of(var2, this.point(var1));
+-   }
+-
+-   public <T> T write(DynamicOps<T> var1, T var2, Unit var3) {
+-      return var2;
+-   }
+-
+-   public String toString() {
+-      return "NilDrop";
+-   }
+-
+-   public Optional<Unit> point(DynamicOps<?> var1) {
+-      return Optional.of(Unit.INSTANCE);
+-   }
+-}

@@ -1,0 +1,23 @@
+--- com/mojang/realmsclient/dto/PlayerInfo.java
++++ com/mojang/realmsclient/dto/PlayerInfo.java
+@@ -1,12 +1,19 @@
+ package com.mojang.realmsclient.dto;
+ 
+-public class PlayerInfo extends ValueObject {
++import com.google.gson.annotations.SerializedName;
++
++public class PlayerInfo extends ValueObject implements ReflectionBasedSerialization {
++   @SerializedName("name")
+    private String name;
++   @SerializedName("uuid")
+    private String uuid;
++   @SerializedName("operator")
+    private boolean operator;
++   @SerializedName("accepted")
+    private boolean accepted;
++   @SerializedName("online")
+    private boolean online;
+ 
+    public PlayerInfo() {
+    }
+ 

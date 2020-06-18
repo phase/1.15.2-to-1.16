@@ -1,0 +1,12 @@
+--- com/mojang/datafixers/functions/Id.java
++++ com/mojang/datafixers/functions/Id.java
+@@ -1,8 +1,8 @@
+ package com.mojang.datafixers.functions;
+ 
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.DynamicOps;
+ import java.util.function.Function;
+ 
+ final class Id<A> extends PointFree<Function<A, A>> {
+    public Id() {
+    }

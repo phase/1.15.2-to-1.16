@@ -1,0 +1,32 @@
+--- com/mojang/blaze3d/platform/Window.java
++++ com/mojang/blaze3d/platform/Window.java
+@@ -95,10 +95,11 @@
+       this.refreshFramebufferSize();
+       GLFW.glfwSetFramebufferSizeCallback(this.window, this::onFramebufferResize);
+       GLFW.glfwSetWindowPosCallback(this.window, this::onMove);
+       GLFW.glfwSetWindowSizeCallback(this.window, this::onResize);
+       GLFW.glfwSetWindowFocusCallback(this.window, this::onFocus);
++      GLFW.glfwSetCursorEnterCallback(this.window, this::onEnter);
+    }
+ 
+    public int getRefreshRate() {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+       return GLX._getRefreshRate(this);
+@@ -311,10 +312,17 @@
+          this.eventHandler.setWindowActive(var3);
+       }
+ 
+    }
+ 
++   private void onEnter(long var1, boolean var3) {
++      if (var3) {
++         this.eventHandler.cursorEntered();
++      }
++
++   }
++
+    public void setFramerateLimit(int var1) {
+       this.framerateLimit = var1;
+    }
+ 
+    public int getFramerateLimit() {

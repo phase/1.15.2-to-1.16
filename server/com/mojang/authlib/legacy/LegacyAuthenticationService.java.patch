@@ -1,0 +1,15 @@
+--- com/mojang/authlib/legacy/LegacyAuthenticationService.java
++++ com/mojang/authlib/legacy/LegacyAuthenticationService.java
+@@ -4,10 +4,12 @@
+ import com.mojang.authlib.GameProfileRepository;
+ import com.mojang.authlib.HttpAuthenticationService;
+ import java.net.Proxy;
+ import org.apache.commons.lang3.Validate;
+ 
++/** @deprecated */
++@Deprecated
+ public class LegacyAuthenticationService extends HttpAuthenticationService {
+    protected LegacyAuthenticationService(Proxy var1) {
+       super(var1);
+    }
+ 

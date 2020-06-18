@@ -1,0 +1,30 @@
+--- com/mojang/datafixers/types/constant/LongType.java
++++ com/mojang/datafixers/types/constant/LongType.java
+@@ -1,27 +1,0 @@
+-package com.mojang.datafixers.types.constant;
+-
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.templates.Const;
+-import com.mojang.datafixers.util.Pair;
+-import java.util.Optional;
+-
+-public final class LongType extends Const.ConstType<Long> {
+-   public LongType() {
+-   }
+-
+-   public <T> Pair<T, Optional<Long>> read(DynamicOps<T> var1, T var2) {
+-      return (Pair)var1.getNumberValue(var2).map((var1x) -> {
+-         return Pair.of(var1.empty(), Optional.of(var1x.longValue()));
+-      }).orElseGet(() -> {
+-         return Pair.of(var2, Optional.empty());
+-      });
+-   }
+-
+-   public <T> T write(DynamicOps<T> var1, T var2, Long var3) {
+-      return var1.createLong(var3);
+-   }
+-
+-   public String toString() {
+-      return "Long";
+-   }
+-}

@@ -1,0 +1,30 @@
+--- com/mojang/datafixers/types/constant/IntType.java
++++ com/mojang/datafixers/types/constant/IntType.java
+@@ -1,27 +1,0 @@
+-package com.mojang.datafixers.types.constant;
+-
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.templates.Const;
+-import com.mojang.datafixers.util.Pair;
+-import java.util.Optional;
+-
+-public final class IntType extends Const.ConstType<Integer> {
+-   public IntType() {
+-   }
+-
+-   public <T> Pair<T, Optional<Integer>> read(DynamicOps<T> var1, T var2) {
+-      return (Pair)var1.getNumberValue(var2).map((var1x) -> {
+-         return Pair.of(var1.empty(), Optional.of(var1x.intValue()));
+-      }).orElseGet(() -> {
+-         return Pair.of(var2, Optional.empty());
+-      });
+-   }
+-
+-   public <T> T write(DynamicOps<T> var1, T var2, Integer var3) {
+-      return var1.createInt(var3);
+-   }
+-
+-   public String toString() {
+-      return "Int";
+-   }
+-}

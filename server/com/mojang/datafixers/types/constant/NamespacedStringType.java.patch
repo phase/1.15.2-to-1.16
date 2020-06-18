@@ -1,0 +1,35 @@
+--- com/mojang/datafixers/types/constant/NamespacedStringType.java
++++ com/mojang/datafixers/types/constant/NamespacedStringType.java
+@@ -1,32 +1,0 @@
+-package com.mojang.datafixers.types.constant;
+-
+-import com.google.common.base.Function;
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.templates.Const;
+-import com.mojang.datafixers.util.Pair;
+-import java.util.Optional;
+-
+-public final class NamespacedStringType extends Const.ConstType<String> {
+-   public static Function<String, String> ENSURE_NAMESPACE = (var0) -> {
+-      return var0;
+-   };
+-
+-   public NamespacedStringType() {
+-   }
+-
+-   public <T> Pair<T, Optional<String>> read(DynamicOps<T> var1, T var2) {
+-      return (Pair)var1.getStringValue(var2).map((var1x) -> {
+-         return Pair.of(var1.empty(), Optional.of(ENSURE_NAMESPACE.apply(var1x)));
+-      }).orElseGet(() -> {
+-         return Pair.of(var2, Optional.empty());
+-      });
+-   }
+-
+-   public <T> T write(DynamicOps<T> var1, T var2, String var3) {
+-      return var1.createString(var3);
+-   }
+-
+-   public String toString() {
+-      return "NamespacedString";
+-   }
+-}

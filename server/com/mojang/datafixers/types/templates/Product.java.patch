@@ -1,0 +1,63 @@
+--- com/mojang/datafixers/types/templates/Product.java
++++ com/mojang/datafixers/types/templates/Product.java
+@@ -15,16 +15,17 @@
+ import com.mojang.datafixers.kinds.K1;
+ import com.mojang.datafixers.optics.Optic;
+ import com.mojang.datafixers.optics.Optics;
+ import com.mojang.datafixers.optics.Traversal;
+ import com.mojang.datafixers.optics.profunctors.TraversalP;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.IntFunction;
+ import javax.annotation.Nullable;
+ 
+@@ -64,11 +65,11 @@
+       final Traversal var9 = Optics.toTraversal(var7);
+       final Traversal var10 = Optics.toTraversal(var8);
+       return new OpticParts(ImmutableSet.of(var4), new Traversal<Pair<LS, RS>, Pair<LT, RT>, A, B>() {
+          public <F extends K1> FunctionType<Pair<LS, RS>, App<F, Pair<LT, RT>>> wander(Applicative<F, ?> var1, FunctionType<A, App<F, B>> var2) {
+             return (var4) -> {
+-               return var1.ap2(Pair::of, (App)var9.wander(var1, var2).apply(var4.getFirst()), (App)var10.wander(var1, var2).apply(var4.getSecond()));
++               return var1.ap2(var1.point(Pair::of), (App)var9.wander(var1, var2).apply(var4.getFirst()), (App)var10.wander(var1, var2).apply(var4.getSecond()));
+             };
+          }
+       });
+    }
+ 
+@@ -170,26 +171,14 @@
+          return DataFixUtils.or(this.first.findCheckedType(var1), () -> {
+             return this.second.findCheckedType(var1);
+          });
+       }
+ 
+-      public <T> Pair<T, Optional<Pair<F, G>>> read(DynamicOps<T> var1, T var2) {
+-         Pair var3 = this.first.read(var1, var2);
+-         if (((Optional)var3.getSecond()).isPresent()) {
+-            Pair var4 = this.second.read(var1, var3.getFirst());
+-            if (((Optional)var4.getSecond()).isPresent()) {
+-               return Pair.of(var4.getFirst(), Optional.of(Pair.of(((Optional)var3.getSecond()).get(), ((Optional)var4.getSecond()).get())));
+-            }
+-         }
+-
+-         return Pair.of(var2, Optional.empty());
++      public Codec<Pair<F, G>> buildCodec() {
++         return Codec.pair(this.first.codec(), this.second.codec());
+       }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, Pair<F, G> var3) {
+-         return this.second.write(var1, this.first.write(var1, var2, var3.getFirst()), var3.getSecond());
+-      }
+-
+       public String toString() {
+          return "(" + this.first + ", " + this.second + ")";
+       }
+ 
+       public boolean equals(Object var1, boolean var2, boolean var3) {

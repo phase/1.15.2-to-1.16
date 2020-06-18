@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/ItemSteerable.java
 +++ net/minecraft/world/entity/ItemSteerable.java
-@@ -1,0 +1,54 @@
+@@ -1,0 +1,55 @@
 +package net.minecraft.world.entity;
 +
 +import net.minecraft.util.Mth;
@@ -43,6 +43,7 @@
 +               var1.lerpSteps = 0;
 +            } else {
 +               var1.calculateEntityAnimation(var1, false);
++               var1.setDeltaMovement(Vec3.ZERO);
 +            }
 +
 +            return true;

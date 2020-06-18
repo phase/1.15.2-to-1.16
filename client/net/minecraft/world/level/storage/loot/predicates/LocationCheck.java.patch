@@ -30,13 +30,19 @@
        return var2 != null && this.predicate.matches(var1.getLevel(), (float)(var2.getX() + this.offset.getX()), (float)(var2.getY() + this.offset.getY()), (float)(var2.getZ() + this.offset.getZ()));
     }
  
-@@ -28,13 +31,12 @@
+@@ -28,13 +31,18 @@
        return () -> {
           return new LocationCheck(var0.build(), BlockPos.ZERO);
        };
     }
  
 -   public static class Serializer extends LootItemCondition.Serializer<LocationCheck> {
++   public static LootItemCondition.Builder checkLocation(LocationPredicate.Builder var0, BlockPos var1) {
++      return () -> {
++         return new LocationCheck(var0.build(), var1);
++      };
++   }
++
 +   public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<LocationCheck> {
        public Serializer() {
 -         super(new ResourceLocation("location_check"), LocationCheck.class);

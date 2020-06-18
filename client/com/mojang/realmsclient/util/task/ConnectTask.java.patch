@@ -1,0 +1,35 @@
+--- com/mojang/realmsclient/util/task/ConnectTask.java
++++ com/mojang/realmsclient/util/task/ConnectTask.java
+@@ -1,0 +1,32 @@
++package com.mojang.realmsclient.util.task;
++
++import com.mojang.realmsclient.dto.RealmsServerAddress;
++import net.minecraft.client.Minecraft;
++import net.minecraft.client.gui.screens.Screen;
++import net.minecraft.client.resources.language.I18n;
++import net.minecraft.realms.RealmsConnect;
++
++public class ConnectTask extends LongRunningTask {
++   private final RealmsConnect realmsConnect;
++   private final RealmsServerAddress address;
++
++   public ConnectTask(Screen var1, RealmsServerAddress var2) {
++      this.address = var2;
++      this.realmsConnect = new RealmsConnect(var1);
++   }
++
++   public void run() {
++      this.setTitle(I18n.get("mco.connect.connecting"));
++      net.minecraft.realms.RealmsServerAddress var1 = net.minecraft.realms.RealmsServerAddress.parseString(this.address.address);
++      this.realmsConnect.connect(var1.getHost(), var1.getPort());
++   }
++
++   public void abortTask() {
++      this.realmsConnect.abort();
++      Minecraft.getInstance().getClientPackSource().clearServerPack();
++   }
++
++   public void tick() {
++      this.realmsConnect.tick();
++   }
++}

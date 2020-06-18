@@ -1,0 +1,32 @@
+--- com/mojang/blaze3d/vertex/VertexFormatElement.java
++++ com/mojang/blaze3d/vertex/VertexFormatElement.java
+@@ -37,14 +37,10 @@
+ 
+    public final VertexFormatElement.Usage getUsage() {
+       return this.usage;
+    }
+ 
+-   public final int getCount() {
+-      return this.count;
+-   }
+-
+    public final int getIndex() {
+       return this.index;
+    }
+ 
+    public String toString() {
+@@ -53,14 +49,10 @@
+ 
+    public final int getByteSize() {
+       return this.byteSize;
+    }
+ 
+-   public final boolean isPosition() {
+-      return this.usage == VertexFormatElement.Usage.POSITION;
+-   }
+-
+    public boolean equals(Object var1) {
+       if (this == var1) {
+          return true;
+       } else if (var1 != null && this.getClass() == var1.getClass()) {
+          VertexFormatElement var2 = (VertexFormatElement)var1;

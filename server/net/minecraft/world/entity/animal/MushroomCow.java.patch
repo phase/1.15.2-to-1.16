@@ -1,6 +1,12 @@
 --- net/minecraft/world/entity/animal/MushroomCow.java
 +++ net/minecraft/world/entity/animal/MushroomCow.java
-@@ -6,49 +6,55 @@
+@@ -1,54 +1,63 @@
+ package net.minecraft.world.entity.animal;
+ 
++import java.util.Optional;
+ import java.util.Random;
+ import java.util.UUID;
+ import net.minecraft.core.BlockPos;
  import net.minecraft.core.particles.ParticleTypes;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.network.syncher.EntityDataAccessor;
@@ -24,6 +30,7 @@
  import net.minecraft.world.entity.item.ItemEntity;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.BlockItem;
++import net.minecraft.world.item.Item;
  import net.minecraft.world.item.ItemStack;
 +import net.minecraft.world.item.ItemUtils;
  import net.minecraft.world.item.Items;
@@ -31,6 +38,7 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
  import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.FlowerBlock;
  import net.minecraft.world.level.block.state.BlockState;
@@ -60,7 +68,7 @@
     public void thunderHit(LightningBolt var1) {
        UUID var2 = var1.getUUID();
        if (!var2.equals(this.lastLightningBoltUUID)) {
-@@ -62,14 +68,13 @@
+@@ -62,14 +71,13 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_TYPE, MushroomCow.MushroomType.RED.type);
@@ -77,7 +85,7 @@
           if (this.effect != null) {
              var10 = true;
              var9 = new ItemStack(Items.SUSPICIOUS_STEW);
-@@ -78,85 +83,88 @@
+@@ -78,85 +86,93 @@
              this.effectDuration = 0;
           } else {
              var9 = new ItemStack(Items.MUSHROOM_STEW);
@@ -90,8 +98,8 @@
 -         }
 -
 -         SoundEvent var6;
-+         ItemStack var6 = ItemUtils.createBucketResult(var3, var1, var9);
-+         var1.setItemInHand(var2, var6);
++         ItemStack var11 = ItemUtils.createBucketResult(var3, var1, var9);
++         var1.setItemInHand(var2, var11);
 +         SoundEvent var7;
           if (var10) {
 -            var6 = SoundEvents.MOOSHROOM_MILK_SUSPICIOUSLY;
@@ -137,35 +145,29 @@
 +               this.level.addParticle(ParticleTypes.SMOKE, this.getX() + this.random.nextDouble() / 2.0D, this.getY(0.5D), this.getZ() + this.random.nextDouble() / 2.0D, 0.0D, this.random.nextDouble() / 5.0D, 0.0D);
 +            }
 +         } else {
-+            Pair var8 = this.getEffectFromItemStack(var3);
-+            if (!var1.abilities.instabuild) {
-+               var3.shrink(1);
++            Optional var8 = this.getEffectFromItemStack(var3);
++            if (!var8.isPresent()) {
++               return InteractionResult.PASS;
 +            }
  
 -               var8.setInvulnerable(this.isInvulnerable());
 -               this.level.addFreshEntity(var8);
-+            for(int var5 = 0; var5 < 4; ++var5) {
-+               this.level.addParticle(ParticleTypes.EFFECT, this.getX() + this.random.nextDouble() / 2.0D, this.getY(0.5D), this.getZ() + this.random.nextDouble() / 2.0D, 0.0D, this.random.nextDouble() / 5.0D, 0.0D);
++            Pair var5 = (Pair)var8.get();
++            if (!var1.abilities.instabuild) {
++               var3.shrink(1);
 +            }
  
 -               for(var5 = 0; var5 < 5; ++var5) {
 -                  this.level.addFreshEntity(new ItemEntity(this.level, this.getX(), this.getY(1.0D), this.getZ(), new ItemStack(this.getMushroomType().blockState.getBlock())));
 -               }
-+            this.effect = (MobEffect)var8.getLeft();
-+            this.effectDuration = (Integer)var8.getRight();
-+            this.playSound(SoundEvents.MOOSHROOM_EAT, 2.0F, 1.0F);
-+         }
- 
+-
 -               var3.hurtAndBreak(1, var1, (var1x) -> {
 -                  var1x.broadcastBreakEvent(var2);
 -               });
 -               this.playSound(SoundEvents.MOOSHROOM_SHEAR, 1.0F, 1.0F);
--            }
-+         return InteractionResult.sidedSuccess(this.level.isClientSide);
-+      } else {
-+         return super.mobInteract(var1, var2);
-+      }
-+   }
++            for(int var6 = 0; var6 < 4; ++var6) {
++               this.level.addParticle(ParticleTypes.EFFECT, this.getX() + this.random.nextDouble() / 2.0D, this.getY(0.5D), this.getZ() + this.random.nextDouble() / 2.0D, 0.0D, this.random.nextDouble() / 5.0D, 0.0D);
+             }
  
 -            return true;
 -         } else {
@@ -179,6 +181,25 @@
 -                  if (!var1.abilities.instabuild) {
 -                     var3.shrink(1);
 -                  }
++            this.effect = (MobEffect)var5.getLeft();
++            this.effectDuration = (Integer)var5.getRight();
++            this.playSound(SoundEvents.MOOSHROOM_EAT, 2.0F, 1.0F);
++         }
+ 
+-                  for(var5 = 0; var5 < 4; ++var5) {
+-                     this.level.addParticle(ParticleTypes.EFFECT, this.getX() + (double)(this.random.nextFloat() / 2.0F), this.getY(0.5D), this.getZ() + (double)(this.random.nextFloat() / 2.0F), 0.0D, (double)(this.random.nextFloat() / 5.0F), 0.0D);
+-                  }
++         return InteractionResult.sidedSuccess(this.level.isClientSide);
++      } else {
++         return super.mobInteract(var1, var2);
++      }
++   }
+ 
+-                  this.effect = (MobEffect)var7.getLeft();
+-                  this.effectDuration = (Integer)var7.getRight();
+-                  this.playSound(SoundEvents.MOOSHROOM_EAT, 2.0F, 1.0F);
+-               }
+-            }
 +   public void shear(SoundSource var1) {
 +      this.level.playSound((Player)null, (Entity)this, SoundEvents.MOOSHROOM_SHEAR, var1, 1.0F, 1.0F);
 +      if (!this.level.isClientSide()) {
@@ -193,25 +214,17 @@
 +            var2.setCustomNameVisible(this.isCustomNameVisible());
 +         }
  
--                  for(var5 = 0; var5 < 4; ++var5) {
--                     this.level.addParticle(ParticleTypes.EFFECT, this.getX() + (double)(this.random.nextFloat() / 2.0F), this.getY(0.5D), this.getZ() + (double)(this.random.nextFloat() / 2.0F), 0.0D, (double)(this.random.nextFloat() / 5.0F), 0.0D);
--                  }
+-            return super.mobInteract(var1, var2);
 +         if (this.isPersistenceRequired()) {
 +            var2.setPersistenceRequired();
-+         }
- 
--                  this.effect = (MobEffect)var7.getLeft();
--                  this.effectDuration = (Integer)var7.getRight();
--                  this.playSound(SoundEvents.MOOSHROOM_EAT, 2.0F, 1.0F);
--               }
--            }
+          }
++
 +         var2.setInvulnerable(this.isInvulnerable());
 +         this.level.addFreshEntity(var2);
- 
--            return super.mobInteract(var1, var2);
++
 +         for(int var3 = 0; var3 < 5; ++var3) {
 +            this.level.addFreshEntity(new ItemEntity(this.level, this.getX(), this.getY(1.0D), this.getZ(), new ItemStack(this.getMushroomType().blockState.getBlock())));
-          }
++         }
        }
 +
     }
@@ -225,3 +238,28 @@
        var1.putString("Type", this.getMushroomType().type);
        if (this.effect != null) {
           var1.putByte("EffectId", (byte)MobEffect.getId(this.effect));
+@@ -176,13 +192,21 @@
+          this.effectDuration = var1.getInt("EffectDuration");
+       }
+ 
+    }
+ 
+-   private Pair<MobEffect, Integer> getEffectFromItemStack(ItemStack var1) {
+-      FlowerBlock var2 = (FlowerBlock)((BlockItem)var1.getItem()).getBlock();
+-      return Pair.of(var2.getSuspiciousStewEffect(), var2.getEffectDuration());
++   private Optional<Pair<MobEffect, Integer>> getEffectFromItemStack(ItemStack var1) {
++      Item var2 = var1.getItem();
++      if (var2 instanceof BlockItem) {
++         Block var3 = ((BlockItem)var2).getBlock();
++         if (var3 instanceof FlowerBlock) {
++            FlowerBlock var4 = (FlowerBlock)var3;
++            return Optional.of(Pair.of(var4.getSuspiciousStewEffect(), var4.getEffectDuration()));
++         }
++      }
++
++      return Optional.empty();
+    }
+ 
+    private void setMushroomType(MushroomCow.MushroomType var1) {
+       this.entityData.set(DATA_TYPE, var1.type);
+    }

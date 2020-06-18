@@ -1,0 +1,382 @@
+--- com/mojang/blaze3d/platform/GlStateManager.java
++++ com/mojang/blaze3d/platform/GlStateManager.java
+@@ -7,12 +7,12 @@
+ import java.nio.ByteBuffer;
+ import java.nio.FloatBuffer;
+ import java.nio.IntBuffer;
+ import java.util.stream.IntStream;
+ import javax.annotation.Nullable;
+-import net.minecraft.Util;
+ import org.lwjgl.opengl.ARBFramebufferObject;
++import org.lwjgl.opengl.EXTFramebufferBlit;
+ import org.lwjgl.opengl.EXTFramebufferObject;
+ import org.lwjgl.opengl.GL11;
+ import org.lwjgl.opengl.GL13;
+ import org.lwjgl.opengl.GL14;
+ import org.lwjgl.opengl.GL15;
+@@ -38,26 +38,24 @@
+    private static final GlStateManager.FogState FOG = new GlStateManager.FogState();
+    private static final GlStateManager.CullState CULL = new GlStateManager.CullState();
+    private static final GlStateManager.PolygonOffsetState POLY_OFFSET = new GlStateManager.PolygonOffsetState();
+    private static final GlStateManager.ColorLogicState COLOR_LOGIC = new GlStateManager.ColorLogicState();
+    private static final GlStateManager.TexGenState TEX_GEN = new GlStateManager.TexGenState();
+-   private static final GlStateManager.ClearState CLEAR = new GlStateManager.ClearState();
+    private static final GlStateManager.StencilState STENCIL = new GlStateManager.StencilState();
+    private static final FloatBuffer FLOAT_ARG_BUFFER = MemoryTracker.createFloatBuffer(4);
+-   private static final Vector3f DIFFUSE_LIGHT_0 = (Vector3f)Util.make(new Vector3f(0.2F, 1.0F, -0.7F), Vector3f::normalize);
+-   private static final Vector3f DIFFUSE_LIGHT_1 = (Vector3f)Util.make(new Vector3f(-0.2F, 1.0F, 0.7F), Vector3f::normalize);
+    private static int activeTexture;
+-   private static final GlStateManager.TextureState[] TEXTURES = (GlStateManager.TextureState[])IntStream.range(0, 8).mapToObj((var0) -> {
++   private static final GlStateManager.TextureState[] TEXTURES = (GlStateManager.TextureState[])IntStream.range(0, 12).mapToObj((var0) -> {
+       return new GlStateManager.TextureState();
+    }).toArray((var0) -> {
+       return new GlStateManager.TextureState[var0];
+    });
+    private static int shadeModel = 7425;
+    private static final GlStateManager.BooleanState RESCALE_NORMAL = new GlStateManager.BooleanState(32826);
+    private static final GlStateManager.ColorMask COLOR_MASK = new GlStateManager.ColorMask();
+    private static final GlStateManager.Color COLOR = new GlStateManager.Color();
+    private static GlStateManager.FboMode fboMode;
++   private static GlStateManager.FboBlitMode fboBlitMode;
+ 
+    @Deprecated
+    public static void _pushLightingAttributes() {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+       GL11.glPushAttrib(8256);
+@@ -227,10 +225,18 @@
+    }
+ 
+    public static String _init_fbo(GLCapabilities var0) {
+       RenderSystem.assertThread(RenderSystem::isInInitPhase);
+       if (var0.OpenGL30) {
++         fboBlitMode = GlStateManager.FboBlitMode.BASE;
++      } else if (var0.GL_EXT_framebuffer_blit) {
++         fboBlitMode = GlStateManager.FboBlitMode.EXT;
++      } else {
++         fboBlitMode = GlStateManager.FboBlitMode.NONE;
++      }
++
++      if (var0.OpenGL30) {
+          fboMode = GlStateManager.FboMode.BASE;
+          GlConst.GL_FRAMEBUFFER = 36160;
+          GlConst.GL_RENDERBUFFER = 36161;
+          GlConst.GL_COLOR_ATTACHMENT0 = 36064;
+          GlConst.GL_DEPTH_ATTACHMENT = 36096;
+@@ -412,10 +418,15 @@
+    public static void _glDeleteBuffers(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+       GL15.glDeleteBuffers(var0);
+    }
+ 
++   public static void _glCopyTexSubImage2D(int var0, int var1, int var2, int var3, int var4, int var5, int var6, int var7) {
++      RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
++      GL20.glCopyTexSubImage2D(var0, var1, var2, var3, var4, var5, var6, var7);
++   }
++
+    public static void _glBindFramebuffer(int var0, int var1) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       switch(fboMode) {
+       case BASE:
+          GL30.glBindFramebuffer(var0, var1);
+@@ -427,36 +438,41 @@
+          EXTFramebufferObject.glBindFramebufferEXT(var0, var1);
+       }
+ 
+    }
+ 
+-   public static void _glBindRenderbuffer(int var0, int var1) {
++   public static int getFramebufferDepthTexture() {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       switch(fboMode) {
+       case BASE:
+-         GL30.glBindRenderbuffer(var0, var1);
++         if (GL30.glGetFramebufferAttachmentParameteri(36160, 36096, 36048) == 5890) {
++            return GL30.glGetFramebufferAttachmentParameteri(36160, 36096, 36049);
++         }
+          break;
+       case ARB:
+-         ARBFramebufferObject.glBindRenderbuffer(var0, var1);
++         if (ARBFramebufferObject.glGetFramebufferAttachmentParameteri(36160, 36096, 36048) == 5890) {
++            return ARBFramebufferObject.glGetFramebufferAttachmentParameteri(36160, 36096, 36049);
++         }
+          break;
+       case EXT:
+-         EXTFramebufferObject.glBindRenderbufferEXT(var0, var1);
++         if (EXTFramebufferObject.glGetFramebufferAttachmentParameteriEXT(36160, 36096, 36048) == 5890) {
++            return EXTFramebufferObject.glGetFramebufferAttachmentParameteriEXT(36160, 36096, 36049);
++         }
+       }
+ 
++      return 0;
+    }
+ 
+-   public static void _glDeleteRenderbuffers(int var0) {
++   public static void _glBlitFrameBuffer(int var0, int var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+-      switch(fboMode) {
++      switch(fboBlitMode) {
+       case BASE:
+-         GL30.glDeleteRenderbuffers(var0);
++         GL30.glBlitFramebuffer(var0, var1, var2, var3, var4, var5, var6, var7, var8, var9);
+          break;
+-      case ARB:
+-         ARBFramebufferObject.glDeleteRenderbuffers(var0);
+-         break;
+       case EXT:
+-         EXTFramebufferObject.glDeleteRenderbuffersEXT(var0);
++         EXTFramebufferBlit.glBlitFramebufferEXT(var0, var1, var2, var3, var4, var5, var6, var7, var8, var9);
++      case NONE:
+       }
+ 
+    }
+ 
+    public static void _glDeleteFramebuffers(int var0) {
+@@ -486,54 +502,10 @@
+       default:
+          return -1;
+       }
+    }
+ 
+-   public static int glGenRenderbuffers() {
+-      RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+-      switch(fboMode) {
+-      case BASE:
+-         return GL30.glGenRenderbuffers();
+-      case ARB:
+-         return ARBFramebufferObject.glGenRenderbuffers();
+-      case EXT:
+-         return EXTFramebufferObject.glGenRenderbuffersEXT();
+-      default:
+-         return -1;
+-      }
+-   }
+-
+-   public static void _glRenderbufferStorage(int var0, int var1, int var2, int var3) {
+-      RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+-      switch(fboMode) {
+-      case BASE:
+-         GL30.glRenderbufferStorage(var0, var1, var2, var3);
+-         break;
+-      case ARB:
+-         ARBFramebufferObject.glRenderbufferStorage(var0, var1, var2, var3);
+-         break;
+-      case EXT:
+-         EXTFramebufferObject.glRenderbufferStorageEXT(var0, var1, var2, var3);
+-      }
+-
+-   }
+-
+-   public static void _glFramebufferRenderbuffer(int var0, int var1, int var2, int var3) {
+-      RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+-      switch(fboMode) {
+-      case BASE:
+-         GL30.glFramebufferRenderbuffer(var0, var1, var2, var3);
+-         break;
+-      case ARB:
+-         ARBFramebufferObject.glFramebufferRenderbuffer(var0, var1, var2, var3);
+-         break;
+-      case EXT:
+-         EXTFramebufferObject.glFramebufferRenderbufferEXT(var0, var1, var2, var3);
+-      }
+-
+-   }
+-
+    public static int glCheckFramebufferStatus(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       switch(fboMode) {
+       case BASE:
+          return GL30.glCheckFramebufferStatus(var0);
+@@ -559,10 +531,15 @@
+          EXTFramebufferObject.glFramebufferTexture2DEXT(var0, var1, var2, var3, var4);
+       }
+ 
+    }
+ 
++   @Deprecated
++   public static int getActiveTextureName() {
++      return TEXTURES[activeTexture].binding;
++   }
++
+    public static void glActiveTexture(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+       GL13.glActiveTexture(var0);
+    }
+ 
+@@ -652,55 +629,55 @@
+       _texEnv(8960, 34162, var0);
+       _texEnv(8960, 34184, var1);
+       _texEnv(8960, 34200, 770);
+    }
+ 
+-   public static void setupLevelDiffuseLighting(Matrix4f var0) {
++   public static void setupLevelDiffuseLighting(Vector3f var0, Vector3f var1, Matrix4f var2) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+       _pushMatrix();
+       _loadIdentity();
+       _enableLight(0);
+       _enableLight(1);
+-      Vector4f var1 = new Vector4f(DIFFUSE_LIGHT_0);
+-      var1.transform(var0);
+-      _light(16384, 4611, getBuffer(var1.x(), var1.y(), var1.z(), 0.0F));
+-      float var2 = 0.6F;
++      Vector4f var3 = new Vector4f(var0);
++      var3.transform(var2);
++      _light(16384, 4611, getBuffer(var3.x(), var3.y(), var3.z(), 0.0F));
++      float var4 = 0.6F;
+       _light(16384, 4609, getBuffer(0.6F, 0.6F, 0.6F, 1.0F));
+       _light(16384, 4608, getBuffer(0.0F, 0.0F, 0.0F, 1.0F));
+       _light(16384, 4610, getBuffer(0.0F, 0.0F, 0.0F, 1.0F));
+-      Vector4f var3 = new Vector4f(DIFFUSE_LIGHT_1);
+-      var3.transform(var0);
+-      _light(16385, 4611, getBuffer(var3.x(), var3.y(), var3.z(), 0.0F));
++      Vector4f var5 = new Vector4f(var1);
++      var5.transform(var2);
++      _light(16385, 4611, getBuffer(var5.x(), var5.y(), var5.z(), 0.0F));
+       _light(16385, 4609, getBuffer(0.6F, 0.6F, 0.6F, 1.0F));
+       _light(16385, 4608, getBuffer(0.0F, 0.0F, 0.0F, 1.0F));
+       _light(16385, 4610, getBuffer(0.0F, 0.0F, 0.0F, 1.0F));
+       _shadeModel(7424);
+-      float var4 = 0.4F;
++      float var6 = 0.4F;
+       _lightModel(2899, getBuffer(0.4F, 0.4F, 0.4F, 1.0F));
+       _popMatrix();
+    }
+ 
+-   public static void setupGuiFlatDiffuseLighting() {
++   public static void setupGuiFlatDiffuseLighting(Vector3f var0, Vector3f var1) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+-      Matrix4f var0 = new Matrix4f();
+-      var0.setIdentity();
+-      var0.multiply(Matrix4f.createScaleMatrix(1.0F, -1.0F, 1.0F));
+-      var0.multiply(Vector3f.YP.rotationDegrees(-22.5F));
+-      var0.multiply(Vector3f.XP.rotationDegrees(135.0F));
+-      setupLevelDiffuseLighting(var0);
++      Matrix4f var2 = new Matrix4f();
++      var2.setIdentity();
++      var2.multiply(Matrix4f.createScaleMatrix(1.0F, -1.0F, 1.0F));
++      var2.multiply(Vector3f.YP.rotationDegrees(-22.5F));
++      var2.multiply(Vector3f.XP.rotationDegrees(135.0F));
++      setupLevelDiffuseLighting(var0, var1, var2);
+    }
+ 
+-   public static void setupGui3DDiffuseLighting() {
++   public static void setupGui3DDiffuseLighting(Vector3f var0, Vector3f var1) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+-      Matrix4f var0 = new Matrix4f();
+-      var0.setIdentity();
+-      var0.multiply(Vector3f.YP.rotationDegrees(62.0F));
+-      var0.multiply(Vector3f.XP.rotationDegrees(185.5F));
+-      var0.multiply(Matrix4f.createScaleMatrix(1.0F, -1.0F, 1.0F));
+-      var0.multiply(Vector3f.YP.rotationDegrees(-22.5F));
+-      var0.multiply(Vector3f.XP.rotationDegrees(135.0F));
+-      setupLevelDiffuseLighting(var0);
++      Matrix4f var2 = new Matrix4f();
++      var2.setIdentity();
++      var2.multiply(Vector3f.YP.rotationDegrees(62.0F));
++      var2.multiply(Vector3f.XP.rotationDegrees(185.5F));
++      var2.multiply(Matrix4f.createScaleMatrix(1.0F, -1.0F, 1.0F));
++      var2.multiply(Vector3f.YP.rotationDegrees(-22.5F));
++      var2.multiply(Vector3f.XP.rotationDegrees(135.0F));
++      setupLevelDiffuseLighting(var0, var1, var2);
+    }
+ 
+    private static FloatBuffer getBuffer(float var0, float var1, float var2, float var3) {
+       FLOAT_ARG_BUFFER.clear();
+       FLOAT_ARG_BUFFER.put(var0).put(var1).put(var2).put(var3);
+@@ -1065,36 +1042,21 @@
+ 
+    }
+ 
+    public static void _clearDepth(double var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+-      if (var0 != CLEAR.depth) {
+-         CLEAR.depth = var0;
+-         GL11.glClearDepth(var0);
+-      }
+-
++      GL11.glClearDepth(var0);
+    }
+ 
+    public static void _clearColor(float var0, float var1, float var2, float var3) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+-      if (var0 != CLEAR.color.r || var1 != CLEAR.color.g || var2 != CLEAR.color.b || var3 != CLEAR.color.a) {
+-         CLEAR.color.r = var0;
+-         CLEAR.color.g = var1;
+-         CLEAR.color.b = var2;
+-         CLEAR.color.a = var3;
+-         GL11.glClearColor(var0, var1, var2, var3);
+-      }
+-
++      GL11.glClearColor(var0, var1, var2, var3);
+    }
+ 
+    public static void _clearStencil(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+-      if (var0 != CLEAR.stencil) {
+-         CLEAR.stencil = var0;
+-         GL11.glClearStencil(var0);
+-      }
+-
++      GL11.glClearStencil(var0);
+    }
+ 
+    public static void _clear(int var0, boolean var1) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       GL11.glClear(var0);
+@@ -1295,10 +1257,14 @@
+    public static int _getInteger(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       return GL11.glGetInteger(var0);
+    }
+ 
++   public static boolean supportsFramebufferBlit() {
++      return fboBlitMode != GlStateManager.FboBlitMode.NONE;
++   }
++
+    public static enum DestFactor {
+       CONSTANT_ALPHA(32771),
+       CONSTANT_COLOR(32769),
+       DST_ALPHA(772),
+       DST_COLOR(774),
+@@ -1474,21 +1440,10 @@
+          this.func = 519;
+          this.mask = -1;
+       }
+    }
+ 
+-   static class ClearState {
+-      public double depth;
+-      public final GlStateManager.Color color;
+-      public int stencil;
+-
+-      private ClearState() {
+-         this.depth = 1.0D;
+-         this.color = new GlStateManager.Color(0.0F, 0.0F, 0.0F, 0.0F);
+-      }
+-   }
+-
+    static class ColorLogicState {
+       public final GlStateManager.BooleanState enable;
+       public int op;
+ 
+       private ColorLogicState() {
+@@ -1596,10 +1551,19 @@
+       private TextureState() {
+          this.enable = new GlStateManager.BooleanState(3553);
+       }
+    }
+ 
++   public static enum FboBlitMode {
++      BASE,
++      EXT,
++      NONE;
++
++      private FboBlitMode() {
++      }
++   }
++
+    public static enum FboMode {
+       BASE,
+       ARB,
+       EXT;
+ 

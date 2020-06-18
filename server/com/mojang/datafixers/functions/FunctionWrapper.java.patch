@@ -1,0 +1,12 @@
+--- com/mojang/datafixers/functions/FunctionWrapper.java
++++ com/mojang/datafixers/functions/FunctionWrapper.java
+@@ -1,8 +1,8 @@
+ package com.mojang.datafixers.functions;
+ 
+-import com.mojang.datafixers.types.DynamicOps;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Objects;
+ import java.util.function.Function;
+ 
+ final class FunctionWrapper<A, B> extends PointFree<Function<A, B>> {
+    private final String name;

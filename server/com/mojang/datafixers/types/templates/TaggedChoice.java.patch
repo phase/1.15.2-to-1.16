@@ -1,0 +1,193 @@
+--- com/mojang/datafixers/types/templates/TaggedChoice.java
++++ com/mojang/datafixers/types/templates/TaggedChoice.java
+@@ -3,11 +3,10 @@
+ import com.google.common.base.Joiner;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Sets;
+ import com.google.common.reflect.TypeToken;
+ import com.mojang.datafixers.DSL;
+-import com.mojang.datafixers.DataFixerUpper;
+ import com.mojang.datafixers.FamilyOptic;
+ import com.mojang.datafixers.FunctionType;
+ import com.mojang.datafixers.RewriteResult;
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.Typed;
+@@ -23,16 +22,20 @@
+ import com.mojang.datafixers.optics.Optics;
+ import com.mojang.datafixers.optics.Traversal;
+ import com.mojang.datafixers.optics.profunctors.AffineP;
+ import com.mojang.datafixers.optics.profunctors.Cartesian;
+ import com.mojang.datafixers.optics.profunctors.TraversalP;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.DynamicOps;
++import com.mojang.serialization.Encoder;
++import com.mojang.serialization.codecs.KeyDispatchCodec;
+ import java.util.Arrays;
+ import java.util.BitSet;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.Iterator;
+@@ -40,17 +43,13 @@
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.Map.Entry;
+ import java.util.function.Function;
+ import java.util.function.IntFunction;
+-import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
+-import org.apache.logging.log4j.LogManager;
+-import org.apache.logging.log4j.Logger;
+ 
+ public final class TaggedChoice<K> implements TypeTemplate {
+-   private static final Logger LOGGER = LogManager.getLogger();
+    private final String name;
+    private final Type<K> keyType;
+    private final Map<K, TypeTemplate> templates;
+    private final Map<Pair<TypeFamily, Integer>, Type<?>> types = Maps.newConcurrentMap();
+    private final int size;
+@@ -69,11 +68,11 @@
+    public TypeFamily apply(TypeFamily var1) {
+       return (var2) -> {
+          return (Type)this.types.computeIfAbsent(Pair.of(var1, var2), (var1x) -> {
+             return DSL.taggedChoiceType(this.name, this.keyType, (Map)this.templates.entrySet().stream().map((var1) -> {
+                return Pair.of(var1.getKey(), ((TypeTemplate)var1.getValue()).apply((TypeFamily)var1x.getFirst()).apply((Integer)var1x.getSecond()));
+-            }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
++            }).collect(Pair.toMap()));
+          });
+       };
+    }
+ 
+    public <A, B> FamilyOptic<A, B> applyO(FamilyOptic<A, B> var1, Type<A> var2, Type<B> var3) {
+@@ -136,11 +135,11 @@
+             return var1.rewrite((Type)var1x.getValue()).map((var1xx) -> {
+                return Pair.of(var1x.getKey(), var1xx);
+             });
+          }).filter((var0) -> {
+             return var0.isPresent() && !Objects.equals(((RewriteResult)((Pair)var0.get()).getSecond()).view().function(), Functions.id());
+-         }).map(Optional::get).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
++         }).map(Optional::get).collect(Pair.toMap());
+          if (var4.isEmpty()) {
+             return RewriteResult.nop(this);
+          } else if (var4.size() == 1) {
+             Entry var9 = (Entry)var4.entrySet().iterator().next();
+             return elementResult(var9.getKey(), this, (RewriteResult)var9.getValue());
+@@ -181,62 +180,47 @@
+       }
+ 
+       public Type<?> updateMu(RecursiveTypeFamily var1) {
+          return DSL.taggedChoiceType(this.name, this.keyType, (Map)this.types.entrySet().stream().map((var1x) -> {
+             return Pair.of(var1x.getKey(), ((Type)var1x.getValue()).updateMu(var1));
+-         }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
++         }).collect(Pair.toMap()));
+       }
+ 
+       public TypeTemplate buildTemplate() {
+          return DSL.taggedChoice(this.name, this.keyType, (Map)this.types.entrySet().stream().map((var0) -> {
+             return Pair.of(var0.getKey(), ((Type)var0.getValue()).template());
+-         }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
++         }).collect(Pair.toMap()));
+       }
+ 
+-      public <T> Pair<T, Optional<Pair<K, ?>>> read(DynamicOps<T> var1, T var2) {
+-         Optional var3 = var1.getMapValues(var2);
+-         if (var3.isPresent()) {
+-            Map var4 = (Map)var3.get();
+-            Object var5 = var1.createString(this.name);
+-            Object var6 = var4.get(var5);
+-            if (var6 != null) {
+-               Optional var7 = (Optional)this.keyType.read(var1, var6).getSecond();
+-               Object var8 = var7.isPresent() ? var7.get() : null;
+-               Type var9 = var8 != null ? (Type)this.types.get(var8) : null;
+-               if (var9 == null) {
+-                  if (DataFixerUpper.ERRORS_ARE_FATAL) {
+-                     throw new IllegalArgumentException("Unsupported key: " + var8 + " in " + this);
+-                  }
++      private <V> DataResult<? extends Encoder<Pair<K, ?>>> encoder(Pair<K, V> var1) {
++         return this.getCodec(var1.getFirst()).map((var0) -> {
++            return var0.comap((var0x) -> {
++               return var0x.getSecond();
++            });
++         });
++      }
+ 
+-                  TaggedChoice.LOGGER.warn((String)"Unsupported key: {} in {}", (Object)var8, (Object)this);
+-                  return Pair.of(var2, Optional.empty());
+-               }
+-
+-               return var9.read(var1, var2).mapSecond((var1x) -> {
+-                  return var1x.map((var1) -> {
+-                     return Pair.of(var8, var1);
+-                  });
++      protected Codec<Pair<K, ?>> buildCodec() {
++         return (new KeyDispatchCodec(this.name, this.keyType.codec(), (var0) -> {
++            return DataResult.success(var0.getFirst());
++         }, (var1) -> {
++            return this.getCodec(var1).map((var1x) -> {
++               return var1x.map((var1xx) -> {
++                  return Pair.of(var1, var1xx);
+                });
+-            }
+-         }
+-
+-         return Pair.of(var2, Optional.empty());
++            });
++         }, this::encoder)).codec();
+       }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, Pair<K, ?> var3) {
+-         Type var4 = (Type)this.types.get(var3.getFirst());
+-         if (var4 == null) {
+-            throw new IllegalArgumentException("Unsupported key: " + var3.getFirst() + " in " + this);
+-         } else {
+-            return this.capWrite(var1, var4, var3.getFirst(), var3.getSecond(), var2);
+-         }
++      private DataResult<? extends Codec<?>> getCodec(K var1) {
++         return (DataResult)Optional.ofNullable(this.types.get(var1)).map((var0) -> {
++            return DataResult.success(var0.codec());
++         }).orElseGet(() -> {
++            return DataResult.error("Unsupported key: " + var1);
++         });
+       }
+ 
+-      private <T, A> T capWrite(DynamicOps<T> var1, Type<A> var2, K var3, Object var4, T var5) {
+-         return var1.mergeInto(var2.write(var1, var5, var4), var1.createString(this.name), this.keyType.write(var1, var1.empty(), var3));
+-      }
+-
+       public Optional<Type<?>> findFieldTypeOpt(String var1) {
+          return this.types.values().stream().map((var1x) -> {
+             return var1x.findFieldTypeOpt(var1);
+          }).filter(Optional::isPresent).findFirst().flatMap(Function.identity());
+       }
+@@ -262,11 +246,11 @@
+             return ((Either)var0.getSecond()).left().isPresent();
+          }).map((var0) -> {
+             return var0.mapSecond((var0x) -> {
+                return (TypedOptic)var0x.left().get();
+             });
+-         }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
++         }).collect(Pair.toMap());
+          if (var5.isEmpty()) {
+             return Either.right(new Type.FieldNotFoundException("Not found in any choices"));
+          } else if (var5.size() == 1) {
+             Entry var10 = (Entry)var5.entrySet().iterator().next();
+             return Either.left(this.cap(this, var10.getKey(), (TypedOptic)var10.getValue()));
+@@ -356,11 +340,11 @@
+                };
+             }
+ 
+             Map var9 = (Map)this.types.entrySet().stream().map((var1x) -> {
+                return Pair.of(var1x.getKey(), var5.containsKey(var1x.getKey()) ? ((TypedOptic)var5.get(var1x.getKey())).tType() : (Type)var1x.getValue());
+-            }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
++            }).collect(Pair.toMap());
+             return Either.left(new TypedOptic(var8, this, DSL.taggedChoiceType(this.name, this.keyType, var9), var1, var2, (Optic)var7));
+          }
+       }
+ 
+       private <S, T, FT, FR> TypedOptic<Pair<K, ?>, Pair<K, ?>, FT, FR> cap(TaggedChoice.TaggedChoiceType<K> var1, K var2, TypedOptic<S, T, FT, FR> var3) {

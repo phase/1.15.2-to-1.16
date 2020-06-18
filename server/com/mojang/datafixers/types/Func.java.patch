@@ -1,0 +1,38 @@
+--- com/mojang/datafixers/types/Func.java
++++ com/mojang/datafixers/types/Func.java
+@@ -1,11 +1,12 @@
+ package com.mojang.datafixers.types;
+ 
+ import com.mojang.datafixers.types.templates.TypeTemplate;
+-import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.Decoder;
++import com.mojang.serialization.Encoder;
+ import java.util.Objects;
+-import java.util.Optional;
+ import java.util.function.Function;
+ 
+ public final class Func<A, B> extends Type<Function<A, B>> {
+    protected final Type<A> first;
+    protected final Type<B> second;
+@@ -17,18 +18,14 @@
+ 
+    public TypeTemplate buildTemplate() {
+       throw new UnsupportedOperationException("No template for function types.");
+    }
+ 
+-   public <T> Pair<T, Optional<Function<A, B>>> read(DynamicOps<T> var1, T var2) {
+-      return Pair.of(var2, Optional.empty());
++   protected Codec<Function<A, B>> buildCodec() {
++      return Codec.of(Encoder.error("Cannot save a function"), Decoder.error("Cannot read a function"));
+    }
+ 
+-   public <T> T write(DynamicOps<T> var1, T var2, Function<A, B> var3) {
+-      return var2;
+-   }
+-
+    public String toString() {
+       return "(" + this.first + " -> " + this.second + ")";
+    }
+ 
+    public boolean equals(Object var1, boolean var2, boolean var3) {

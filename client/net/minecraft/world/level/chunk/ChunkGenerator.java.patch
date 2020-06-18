@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/chunk/ChunkGenerator.java
 +++ net/minecraft/world/level/chunk/ChunkGenerator.java
-@@ -1,222 +1,305 @@
+@@ -1,222 +1,322 @@
  package net.minecraft.world.level.chunk;
  
 +import com.google.common.collect.Lists;
@@ -16,6 +16,7 @@
 +import java.util.function.Function;
  import javax.annotation.Nullable;
  import net.minecraft.CrashReport;
++import net.minecraft.CrashReportCategory;
  import net.minecraft.ReportedException;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Registry;
@@ -380,9 +381,25 @@
 -                  DebugPackets.sendStructurePacket(var1, var14);
 +            while(var14.hasNext()) {
 +               StructureStart var15 = (StructureStart)var14.next();
-+               if (var15 != StructureStart.INVALID_START && var15.getBoundingBox().intersects(var7, var8, var7 + 15, var8 + 15)) {
-+                  var2.addReferenceForFeature(var9, var15.getFeature(), var12, var3);
-+                  DebugPackets.sendStructurePacket(var1, var15);
++
++               try {
++                  if (var15 != StructureStart.INVALID_START && var15.getBoundingBox().intersects(var7, var8, var7 + 15, var8 + 15)) {
++                     var2.addReferenceForFeature(var9, var15.getFeature(), var12, var3);
++                     DebugPackets.sendStructurePacket(var1, var15);
++                  }
++               } catch (Exception var19) {
++                  CrashReport var17 = CrashReport.forThrowable(var19, "Generating structure reference");
++                  CrashReportCategory var18 = var17.addCategory("Structure");
++                  var18.setDetail("Id", () -> {
++                     return Registry.STRUCTURE_FEATURE.getKey(var15.getFeature()).toString();
++                  });
++                  var18.setDetail("Name", () -> {
++                     return var15.getFeature().getFeatureName();
++                  });
++                  var18.setDetail("Class", () -> {
++                     return var15.getFeature().getClass().getCanonicalName();
++                  });
++                  throw new ReportedException(var17);
                 }
              }
           }

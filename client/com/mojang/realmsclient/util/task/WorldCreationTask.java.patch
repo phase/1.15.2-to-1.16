@@ -1,0 +1,41 @@
+--- com/mojang/realmsclient/util/task/WorldCreationTask.java
++++ com/mojang/realmsclient/util/task/WorldCreationTask.java
+@@ -1,0 +1,38 @@
++package com.mojang.realmsclient.util.task;
++
++import com.mojang.realmsclient.client.RealmsClient;
++import com.mojang.realmsclient.exception.RealmsServiceException;
++import net.minecraft.client.gui.screens.Screen;
++import net.minecraft.client.resources.language.I18n;
++
++public class WorldCreationTask extends LongRunningTask {
++   private final String name;
++   private final String motd;
++   private final long worldId;
++   private final Screen lastScreen;
++
++   public WorldCreationTask(long var1, String var3, String var4, Screen var5) {
++      this.worldId = var1;
++      this.name = var3;
++      this.motd = var4;
++      this.lastScreen = var5;
++   }
++
++   public void run() {
++      String var1 = I18n.get("mco.create.world.wait");
++      this.setTitle(var1);
++      RealmsClient var2 = RealmsClient.create();
++
++      try {
++         var2.initializeWorld(this.worldId, this.name, this.motd);
++         setScreen(this.lastScreen);
++      } catch (RealmsServiceException var4) {
++         LOGGER.error("Couldn't create world");
++         this.error(var4.toString());
++      } catch (Exception var5) {
++         LOGGER.error("Could not create world");
++         this.error(var5.getLocalizedMessage());
++      }
++
++   }
++}

@@ -1,0 +1,15 @@
+--- com/mojang/datafixers/functions/Comp.java
++++ com/mojang/datafixers/functions/Comp.java
+@@ -1,11 +1,11 @@
+ package com.mojang.datafixers.functions;
+ 
+ import com.mojang.datafixers.DSL;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Func;
+ import com.mojang.datafixers.types.Type;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.Function;
+ 
+ final class Comp<A, B, C> extends PointFree<Function<A, C>> {

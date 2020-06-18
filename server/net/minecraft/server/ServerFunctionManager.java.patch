@@ -129,9 +129,38 @@
     public int execute(CommandFunction var1, CommandSourceStack var2) {
        int var3 = this.getCommandLimit();
        if (this.isInFunction) {
-@@ -154,97 +110,39 @@
+@@ -111,16 +67,16 @@
+             this.nestedCalls.add(new ServerFunctionManager.QueuedCommand(this, var2, new CommandFunction.FunctionEntry(var1)));
+          }
  
-          return var6;
+          return 0;
+       } else {
+-         int var6;
+          try {
+             this.isInFunction = true;
+             int var4 = 0;
+             CommandFunction.Entry[] var5 = var1.getEntries();
+ 
++            int var6;
+             for(var6 = var5.length - 1; var6 >= 0; --var6) {
+                this.commandQueue.push(new ServerFunctionManager.QueuedCommand(this, var2, var5[var6]));
+             }
+ 
+             while(!this.commandQueue.isEmpty()) {
+@@ -144,107 +100,48 @@
+                   return var6;
+                }
+             }
+ 
+             var6 = var4;
++            return var6;
+          } finally {
+             this.commandQueue.clear();
+             this.nestedCalls.clear();
+             this.isInFunction = false;
+          }
+-
+-         return var6;
        }
     }
  

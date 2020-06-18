@@ -1,0 +1,33 @@
+--- com/mojang/datafixers/util/Pair.java
++++ com/mojang/datafixers/util/Pair.java
+@@ -3,12 +3,15 @@
+ import com.mojang.datafixers.kinds.App;
+ import com.mojang.datafixers.kinds.Applicative;
+ import com.mojang.datafixers.kinds.CartesianLike;
+ import com.mojang.datafixers.kinds.K1;
+ import com.mojang.datafixers.kinds.Traversable;
++import java.util.Map;
+ import java.util.Objects;
+ import java.util.function.Function;
++import java.util.stream.Collector;
++import java.util.stream.Collectors;
+ 
+ public class Pair<F, S> implements App<Pair.Mu<S>, F> {
+    private final F first;
+    private final S second;
+ 
+@@ -60,10 +63,14 @@
+ 
+    public static <F, S> Pair<F, S> of(F var0, S var1) {
+       return new Pair(var0, var1);
+    }
+ 
++   public static <F, S> Collector<Pair<F, S>, ?, Map<F, S>> toMap() {
++      return Collectors.toMap(Pair::getFirst, Pair::getSecond);
++   }
++
+    public static final class Instance<S2> implements Traversable<Pair.Mu<S2>, Pair.Instance.Mu<S2>>, CartesianLike<Pair.Mu<S2>, S2, Pair.Instance.Mu<S2>> {
+       public Instance() {
+       }
+ 
+       public <T, R> App<Pair.Mu<S2>, R> map(Function<? super T, ? extends R> var1, App<Pair.Mu<S2>, T> var2) {

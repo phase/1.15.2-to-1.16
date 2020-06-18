@@ -1,0 +1,15 @@
+--- com/mojang/authlib/legacy/LegacyMinecraftSessionService.java
++++ com/mojang/authlib/legacy/LegacyMinecraftSessionService.java
+@@ -10,10 +10,12 @@
+ import java.net.InetAddress;
+ import java.net.URL;
+ import java.util.HashMap;
+ import java.util.Map;
+ 
++/** @deprecated */
++@Deprecated
+ public class LegacyMinecraftSessionService extends HttpMinecraftSessionService {
+    private static final String BASE_URL = "http://session.minecraft.net/game/";
+    private static final URL JOIN_URL = HttpAuthenticationService.constantURL("http://session.minecraft.net/game/joinserver.jsp");
+    private static final URL CHECK_URL = HttpAuthenticationService.constantURL("http://session.minecraft.net/game/checkserver.jsp");
+ 

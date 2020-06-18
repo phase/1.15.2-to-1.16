@@ -1,0 +1,40 @@
+--- com/mojang/realmsclient/client/FileUpload.java
++++ com/mojang/realmsclient/client/FileUpload.java
+@@ -14,10 +14,11 @@
+ import java.util.Optional;
+ import java.util.concurrent.CompletableFuture;
+ import java.util.concurrent.TimeUnit;
+ import java.util.concurrent.atomic.AtomicBoolean;
+ import java.util.function.Consumer;
++import net.minecraft.client.User;
+ import org.apache.http.Header;
+ import org.apache.http.HttpResponse;
+ import org.apache.http.client.config.RequestConfig;
+ import org.apache.http.client.methods.CloseableHttpResponse;
+ import org.apache.http.client.methods.HttpPost;
+@@ -41,20 +42,20 @@
+    private final UploadStatus uploadStatus;
+    private final AtomicBoolean cancelled = new AtomicBoolean(false);
+    private CompletableFuture<UploadResult> uploadTask;
+    private final RequestConfig requestConfig;
+ 
+-   public FileUpload(File var1, long var2, int var4, UploadInfo var5, String var6, String var7, String var8, UploadStatus var9) {
++   public FileUpload(File var1, long var2, int var4, UploadInfo var5, User var6, String var7, UploadStatus var8) {
+       this.requestConfig = RequestConfig.custom().setSocketTimeout((int)TimeUnit.MINUTES.toMillis(10L)).setConnectTimeout((int)TimeUnit.SECONDS.toMillis(15L)).build();
+       this.file = var1;
+       this.worldId = var2;
+       this.slotId = var4;
+       this.uploadInfo = var5;
+-      this.sessionId = var6;
+-      this.username = var7;
+-      this.clientVersion = var8;
+-      this.uploadStatus = var9;
++      this.sessionId = var6.getSessionId();
++      this.username = var6.getName();
++      this.clientVersion = var7;
++      this.uploadStatus = var8;
+    }
+ 
+    public void upload(Consumer<UploadResult> var1) {
+       if (this.uploadTask == null) {
+          this.uploadTask = CompletableFuture.supplyAsync(() -> {

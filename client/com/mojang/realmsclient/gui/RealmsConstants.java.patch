@@ -1,0 +1,10 @@
+--- com/mojang/realmsclient/gui/RealmsConstants.java
++++ com/mojang/realmsclient/gui/RealmsConstants.java
+@@ -1,7 +1,0 @@
+-package com.mojang.realmsclient.gui;
+-
+-public class RealmsConstants {
+-   public static int row(int var0) {
+-      return 40 + var0 * 13;
+-   }
+-}

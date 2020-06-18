@@ -1,0 +1,28 @@
+--- com/mojang/realmsclient/dto/RealmsServerPlayerList.java
++++ com/mojang/realmsclient/dto/RealmsServerPlayerList.java
+@@ -12,11 +12,11 @@
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class RealmsServerPlayerList extends ValueObject {
+    private static final Logger LOGGER = LogManager.getLogger();
+-   private static final JsonParser jsonParser = new JsonParser();
++   private static final JsonParser JSON_PARSER = new JsonParser();
+    public long serverId;
+    public List<String> players;
+ 
+    public RealmsServerPlayerList() {
+    }
+@@ -26,11 +26,11 @@
+ 
+       try {
+          var1.serverId = JsonUtils.getLongOr("serverId", var0, -1L);
+          String var2 = JsonUtils.getStringOr("playerList", var0, (String)null);
+          if (var2 != null) {
+-            JsonElement var3 = jsonParser.parse(var2);
++            JsonElement var3 = JSON_PARSER.parse(var2);
+             if (var3.isJsonArray()) {
+                var1.players = parsePlayers(var3.getAsJsonArray());
+             } else {
+                var1.players = Lists.newArrayList();
+             }

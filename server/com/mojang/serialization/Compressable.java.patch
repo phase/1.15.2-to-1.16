@@ -1,0 +1,8 @@
+--- com/mojang/serialization/Compressable.java
++++ com/mojang/serialization/Compressable.java
+@@ -1,0 +1,5 @@
++package com.mojang.serialization;
++
++public interface Compressable extends Keyable {
++   <T> KeyCompressor<T> compressor(DynamicOps<T> var1);
++}

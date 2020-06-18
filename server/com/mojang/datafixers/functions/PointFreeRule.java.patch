@@ -1,0 +1,28 @@
+--- com/mojang/datafixers/functions/PointFreeRule.java
++++ com/mojang/datafixers/functions/PointFreeRule.java
+@@ -10,11 +10,11 @@
+ import com.mojang.datafixers.kinds.K2;
+ import com.mojang.datafixers.optics.Optic;
+ import com.mojang.datafixers.optics.Optics;
+ import com.mojang.datafixers.types.Func;
+ import com.mojang.datafixers.types.Type;
+-import com.mojang.datafixers.types.constant.NilDrop;
++import com.mojang.datafixers.types.constant.EmptyPart;
+ import com.mojang.datafixers.types.families.ListAlgebra;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import java.util.ArrayList;
+ import java.util.BitSet;
+ import java.util.Collection;
+@@ -653,11 +653,11 @@
+          if (var2 instanceof Bang) {
+             return Optional.empty();
+          } else {
+             if (var1 instanceof Func) {
+                Func var3 = (Func)var1;
+-               if (var3.second() instanceof NilDrop) {
++               if (var3.second() instanceof EmptyPart) {
+                   return Optional.of(Functions.bang());
+                }
+             }
+ 
+             return Optional.empty();

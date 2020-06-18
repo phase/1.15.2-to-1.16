@@ -1,0 +1,51 @@
+--- com/mojang/realmsclient/client/Request.java
++++ com/mojang/realmsclient/client/Request.java
+@@ -106,34 +106,29 @@
+ 
+    private void dispose() {
+       byte[] var1 = new byte[1024];
+ 
+       try {
+-         InputStream var3;
+-         try {
+-            boolean var2 = false;
+-            var3 = this.connection.getInputStream();
++         InputStream var2 = this.connection.getInputStream();
+ 
+-            while(var3.read(var1) > 0) {
+-            }
++         while(var2.read(var1) > 0) {
++         }
+ 
+-            var3.close();
+-            return;
+-         } catch (Exception var10) {
+-            try {
+-               var3 = this.connection.getErrorStream();
+-               boolean var4 = false;
+-               if (var3 != null) {
+-                  while(var3.read(var1) > 0) {
+-                  }
+-
+-                  var3.close();
+-                  return;
++         var2.close();
++         return;
++      } catch (Exception var9) {
++         try {
++            InputStream var3 = this.connection.getErrorStream();
++            if (var3 != null) {
++               while(var3.read(var1) > 0) {
+                }
+-            } catch (IOException var9) {
++
++               var3.close();
+                return;
+             }
++         } catch (IOException var8) {
++            return;
+          }
+       } finally {
+          if (this.connection != null) {
+             this.connection.disconnect();
+          }

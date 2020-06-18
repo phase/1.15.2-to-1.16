@@ -1,0 +1,15 @@
+--- com/mojang/datafixers/optics/ListTraversal.java
++++ com/mojang/datafixers/optics/ListTraversal.java
+@@ -15,11 +15,11 @@
+    public <F extends K1> FunctionType<List<A>, App<F, List<B>>> wander(Applicative<F, ?> var1, FunctionType<A, App<F, B>> var2) {
+       return (var2x) -> {
+          App var3 = var1.point(ImmutableList.builder());
+ 
+          Object var5;
+-         for(Iterator var4 = var2x.iterator(); var4.hasNext(); var3 = var1.ap2(ImmutableList.Builder::add, var3, (App)var2.apply(var5))) {
++         for(Iterator var4 = var2x.iterator(); var4.hasNext(); var3 = var1.ap2(var1.point(ImmutableList.Builder::add), var3, (App)var2.apply(var5))) {
+             var5 = var4.next();
+          }
+ 
+          return var1.map(ImmutableList.Builder::build, var3);
+       };

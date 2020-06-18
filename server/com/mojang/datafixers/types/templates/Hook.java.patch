@@ -1,0 +1,51 @@
+--- com/mojang/datafixers/types/templates/Hook.java
++++ com/mojang/datafixers/types/templates/Hook.java
+@@ -4,16 +4,19 @@
+ import com.mojang.datafixers.FamilyOptic;
+ import com.mojang.datafixers.RewriteResult;
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.TypedOptic;
+ import com.mojang.datafixers.functions.Functions;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+ import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.DynamicOps;
++import com.mojang.serialization.Lifecycle;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.IntFunction;
+ import javax.annotation.Nullable;
+ 
+@@ -87,16 +90,22 @@
+          this.delegate = var1;
+          this.preRead = var2;
+          this.postWrite = var3;
+       }
+ 
+-      public <T> Pair<T, Optional<A>> read(DynamicOps<T> var1, T var2) {
+-         return this.delegate.read(var1, this.preRead.apply(var1, var2));
+-      }
++      protected Codec<A> buildCodec() {
++         return new Codec<A>() {
++            public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> var1, T var2) {
++               return HookType.this.delegate.codec().decode(var1, HookType.this.preRead.apply(var1, var2)).setLifecycle(Lifecycle.experimental());
++            }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, A var3) {
+-         return this.postWrite.apply(var1, this.delegate.write(var1, var2, var3));
++            public <T> DataResult<T> encode(A var1, DynamicOps<T> var2, T var3) {
++               return HookType.this.delegate.codec().encode(var1, var2, var3).map((var2x) -> {
++                  return HookType.this.postWrite.apply(var2, var2x);
++               }).setLifecycle(Lifecycle.experimental());
++            }
++         };
+       }
+ 
+       public RewriteResult<A, ?> all(TypeRewriteRule var1, boolean var2, boolean var3) {
+          return fix(this, this.delegate.rewriteOrNop(var1));
+       }

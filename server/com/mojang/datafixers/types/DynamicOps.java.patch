@@ -1,0 +1,178 @@
+--- com/mojang/datafixers/types/DynamicOps.java
++++ com/mojang/datafixers/types/DynamicOps.java
+@@ -1,175 +1,0 @@
+-package com.mojang.datafixers.types;
+-
+-import com.google.common.collect.ImmutableMap;
+-import com.mojang.datafixers.Dynamic;
+-import com.mojang.datafixers.Typed;
+-import java.nio.ByteBuffer;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Optional;
+-import java.util.function.Function;
+-import java.util.stream.Collectors;
+-import java.util.stream.IntStream;
+-import java.util.stream.LongStream;
+-import java.util.stream.Stream;
+-
+-public interface DynamicOps<T> {
+-   T empty();
+-
+-   default T emptyMap() {
+-      return this.createMap(ImmutableMap.of());
+-   }
+-
+-   default T emptyList() {
+-      return this.createList(Stream.empty());
+-   }
+-
+-   Type<?> getType(T var1);
+-
+-   default <R> Optional<R> cast(T var1, Type<R> var2) {
+-      return var2 == this.getType(var1) ? Optional.of(((Typed)((Optional)var2.readTyped(new Dynamic(this, var1)).getSecond()).orElseThrow(() -> {
+-         return new IllegalStateException("Parse error during dynamic cast");
+-      })).getValue()) : Optional.empty();
+-   }
+-
+-   Optional<Number> getNumberValue(T var1);
+-
+-   default Number getNumberValue(T var1, Number var2) {
+-      return (Number)this.getNumberValue(var1).orElse(var2);
+-   }
+-
+-   T createNumeric(Number var1);
+-
+-   default T createByte(byte var1) {
+-      return this.createNumeric(var1);
+-   }
+-
+-   default T createShort(short var1) {
+-      return this.createNumeric(var1);
+-   }
+-
+-   default T createInt(int var1) {
+-      return this.createNumeric(var1);
+-   }
+-
+-   default T createLong(long var1) {
+-      return this.createNumeric(var1);
+-   }
+-
+-   default T createFloat(float var1) {
+-      return this.createNumeric(var1);
+-   }
+-
+-   default T createDouble(double var1) {
+-      return this.createNumeric(var1);
+-   }
+-
+-   default T createBoolean(boolean var1) {
+-      return this.createByte((byte)(var1 ? 1 : 0));
+-   }
+-
+-   Optional<String> getStringValue(T var1);
+-
+-   T createString(String var1);
+-
+-   T mergeInto(T var1, T var2);
+-
+-   T mergeInto(T var1, T var2, T var3);
+-
+-   T merge(T var1, T var2);
+-
+-   Optional<Map<T, T>> getMapValues(T var1);
+-
+-   T createMap(Map<T, T> var1);
+-
+-   Optional<Stream<T>> getStream(T var1);
+-
+-   T createList(Stream<T> var1);
+-
+-   default Optional<ByteBuffer> getByteBuffer(T var1) {
+-      return this.getStream(var1).flatMap((var1x) -> {
+-         List var2 = (List)var1x.collect(Collectors.toList());
+-         if (!var2.stream().allMatch((var1) -> {
+-            return this.getNumberValue(var1).isPresent();
+-         })) {
+-            return Optional.empty();
+-         } else {
+-            ByteBuffer var3 = ByteBuffer.wrap(new byte[var2.size()]);
+-
+-            for(int var4 = 0; var4 < var2.size(); ++var4) {
+-               var3.put(var4, ((Number)this.getNumberValue(var2.get(var4)).get()).byteValue());
+-            }
+-
+-            return Optional.of(var3);
+-         }
+-      });
+-   }
+-
+-   default T createByteList(ByteBuffer var1) {
+-      int[] var2 = new int[]{0};
+-      return this.createList(Stream.generate(() -> {
+-         int var10005 = var2[0];
+-         int var10002 = var2[0];
+-         var2[0] = var10005 + 1;
+-         return this.createByte(var1.get(var10002));
+-      }).limit((long)var1.capacity()));
+-   }
+-
+-   default Optional<IntStream> getIntStream(T var1) {
+-      return this.getStream(var1).flatMap((var1x) -> {
+-         List var2 = (List)var1x.collect(Collectors.toList());
+-         return var2.stream().allMatch((var1) -> {
+-            return this.getNumberValue(var1).isPresent();
+-         }) ? Optional.of(var2.stream().mapToInt((var1) -> {
+-            return ((Number)this.getNumberValue(var1).get()).intValue();
+-         })) : Optional.empty();
+-      });
+-   }
+-
+-   default T createIntList(IntStream var1) {
+-      return this.createList(var1.mapToObj(this::createInt));
+-   }
+-
+-   default Optional<LongStream> getLongStream(T var1) {
+-      return this.getStream(var1).flatMap((var1x) -> {
+-         List var2 = (List)var1x.collect(Collectors.toList());
+-         return var2.stream().allMatch((var1) -> {
+-            return this.getNumberValue(var1).isPresent();
+-         }) ? Optional.of(var2.stream().mapToLong((var1) -> {
+-            return ((Number)this.getNumberValue(var1).get()).longValue();
+-         })) : Optional.empty();
+-      });
+-   }
+-
+-   default T createLongList(LongStream var1) {
+-      return this.createList(var1.mapToObj(this::createLong));
+-   }
+-
+-   T remove(T var1, String var2);
+-
+-   default Optional<T> get(T var1, String var2) {
+-      return this.getGeneric(var1, this.createString(var2));
+-   }
+-
+-   default Optional<T> getGeneric(T var1, T var2) {
+-      return this.getMapValues(var1).flatMap((var1x) -> {
+-         return Optional.ofNullable(var1x.get(var2));
+-      });
+-   }
+-
+-   default T set(T var1, String var2, T var3) {
+-      return this.mergeInto(var1, this.createString(var2), var3);
+-   }
+-
+-   default T update(T var1, String var2, Function<T, T> var3) {
+-      return this.get(var1, var2).map((var4) -> {
+-         return this.set(var1, var2, var3.apply(var4));
+-      }).orElse(var1);
+-   }
+-
+-   default T updateGeneric(T var1, T var2, Function<T, T> var3) {
+-      return this.getGeneric(var1, var2).map((var4) -> {
+-         return this.mergeInto(var1, var2, var3.apply(var4));
+-      }).orElse(var1);
+-   }
+-}

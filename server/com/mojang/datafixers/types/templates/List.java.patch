@@ -1,0 +1,58 @@
+--- com/mojang/datafixers/types/templates/List.java
++++ com/mojang/datafixers/types/templates/List.java
+@@ -9,21 +9,20 @@
+ import com.mojang.datafixers.TypeRewriteRule;
+ import com.mojang.datafixers.TypedOptic;
+ import com.mojang.datafixers.optics.ListTraversal;
+ import com.mojang.datafixers.optics.Optic;
+ import com.mojang.datafixers.optics.profunctors.TraversalP;
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
+ import com.mojang.datafixers.types.families.RecursiveTypeFamily;
+ import com.mojang.datafixers.types.families.TypeFamily;
+ import com.mojang.datafixers.util.Either;
+-import com.mojang.datafixers.util.Pair;
++import com.mojang.serialization.Codec;
++import com.mojang.serialization.DynamicOps;
+ import java.util.HashSet;
+ import java.util.Objects;
+ import java.util.Optional;
+ import java.util.function.IntFunction;
+-import java.util.stream.Collectors;
+ import javax.annotation.Nullable;
+ 
+ public final class List implements TypeTemplate {
+    private final TypeTemplate element;
+ 
+@@ -122,29 +121,14 @@
+ 
+       public <B> RewriteResult<java.util.List<A>, ?> fix(RewriteResult<A, B> var1) {
+          return opticView(this, var1, TypedOptic.list(this.element, var1.view().newType()));
+       }
+ 
+-      public <T> Pair<T, Optional<java.util.List<A>>> read(DynamicOps<T> var1, T var2) {
+-         return (Pair)var1.getStream(var2).map((var3) -> {
+-            java.util.List var4 = (java.util.List)var3.map((var2x) -> {
+-               return (Optional)this.element.read(var1, var2x).getSecond();
+-            }).collect(Collectors.toList());
+-            return var4.stream().anyMatch((var0) -> {
+-               return !var0.isPresent();
+-            }) ? Pair.of(var2, Optional.empty()) : Pair.of(var1.empty(), Optional.of(var4.stream().map(Optional::get).collect(Collectors.toList())));
+-         }).orElseGet(() -> {
+-            return Pair.of(var2, Optional.empty());
+-         });
++      public Codec<java.util.List<A>> buildCodec() {
++         return Codec.list(this.element.codec());
+       }
+ 
+-      public <T> T write(DynamicOps<T> var1, T var2, java.util.List<A> var3) {
+-         return var1.merge(var2, var1.createList(var3.stream().map((var2x) -> {
+-            return this.element.write(var1, var1.empty(), var2x);
+-         })));
+-      }
+-
+       public String toString() {
+          return "List[" + this.element + "]";
+       }
+ 
+       public boolean equals(Object var1, boolean var2, boolean var3) {

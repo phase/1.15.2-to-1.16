@@ -1,0 +1,30 @@
+--- com/mojang/datafixers/types/constant/BoolType.java
++++ com/mojang/datafixers/types/constant/BoolType.java
+@@ -1,27 +1,0 @@
+-package com.mojang.datafixers.types.constant;
+-
+-import com.mojang.datafixers.types.DynamicOps;
+-import com.mojang.datafixers.types.templates.Const;
+-import com.mojang.datafixers.util.Pair;
+-import java.util.Optional;
+-
+-public final class BoolType extends Const.ConstType<Boolean> {
+-   public BoolType() {
+-   }
+-
+-   public <T> Pair<T, Optional<Boolean>> read(DynamicOps<T> var1, T var2) {
+-      return (Pair)var1.getNumberValue(var2).map((var1x) -> {
+-         return Pair.of(var1.empty(), Optional.of(var1x.intValue() != 0));
+-      }).orElseGet(() -> {
+-         return Pair.of(var2, Optional.empty());
+-      });
+-   }
+-
+-   public <T> T write(DynamicOps<T> var1, T var2, Boolean var3) {
+-      return var1.createBoolean(var3);
+-   }
+-
+-   public String toString() {
+-      return "Bool";
+-   }
+-}

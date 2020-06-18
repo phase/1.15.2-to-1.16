@@ -1,0 +1,13 @@
+--- com/mojang/datafixers/functions/PointFree.java
++++ com/mojang/datafixers/functions/PointFree.java
+@@ -1,9 +1,9 @@
+ package com.mojang.datafixers.functions;
+ 
+-import com.mojang.datafixers.types.DynamicOps;
+ import com.mojang.datafixers.types.Type;
++import com.mojang.serialization.DynamicOps;
+ import java.util.Optional;
+ import java.util.function.Function;
+ import javax.annotation.Nullable;
+ import org.apache.commons.lang3.StringUtils;
+ 

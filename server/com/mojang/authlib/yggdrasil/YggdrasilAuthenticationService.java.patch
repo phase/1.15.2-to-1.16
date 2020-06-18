@@ -1,0 +1,93 @@
+--- com/mojang/authlib/yggdrasil/YggdrasilAuthenticationService.java
++++ com/mojang/authlib/yggdrasil/YggdrasilAuthenticationService.java
+@@ -8,10 +8,12 @@
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonParseException;
+ import com.google.gson.JsonSerializationContext;
+ import com.google.gson.JsonSerializer;
+ import com.mojang.authlib.Agent;
++import com.mojang.authlib.Environment;
++import com.mojang.authlib.EnvironmentParser;
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.authlib.GameProfileRepository;
+ import com.mojang.authlib.HttpAuthenticationService;
+ import com.mojang.authlib.UserAuthentication;
+ import com.mojang.authlib.exceptions.AuthenticationException;
+@@ -27,36 +29,50 @@
+ import java.lang.reflect.Type;
+ import java.net.Proxy;
+ import java.net.URL;
+ import java.util.UUID;
+ import org.apache.commons.lang3.StringUtils;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
+ 
+ public class YggdrasilAuthenticationService extends HttpAuthenticationService {
++   private static final Logger LOGGER = LogManager.getLogger();
+    private final String clientToken;
+    private final Gson gson;
++   private final Environment environment;
+ 
+    public YggdrasilAuthenticationService(Proxy var1, String var2) {
++      this(var1, var2, determineEnvironment());
++   }
++
++   public YggdrasilAuthenticationService(Proxy var1, String var2, Environment var3) {
+       super(var1);
+       this.clientToken = var2;
+-      GsonBuilder var3 = new GsonBuilder();
+-      var3.registerTypeAdapter(GameProfile.class, new YggdrasilAuthenticationService.GameProfileSerializer());
+-      var3.registerTypeAdapter(PropertyMap.class, new PropertyMap.Serializer());
+-      var3.registerTypeAdapter(UUID.class, new UUIDTypeAdapter());
+-      var3.registerTypeAdapter(ProfileSearchResultsResponse.class, new ProfileSearchResultsResponse.Serializer());
+-      this.gson = var3.create();
++      this.environment = var3;
++      GsonBuilder var4 = new GsonBuilder();
++      var4.registerTypeAdapter(GameProfile.class, new YggdrasilAuthenticationService.GameProfileSerializer());
++      var4.registerTypeAdapter(PropertyMap.class, new PropertyMap.Serializer());
++      var4.registerTypeAdapter(UUID.class, new UUIDTypeAdapter());
++      var4.registerTypeAdapter(ProfileSearchResultsResponse.class, new ProfileSearchResultsResponse.Serializer());
++      this.gson = var4.create();
++      LOGGER.info("Environment: " + var3.asString());
+    }
+ 
++   private static Environment determineEnvironment() {
++      return (Environment)EnvironmentParser.getEnvironmentFromProperties().orElse(YggdrasilEnvironment.PROD);
++   }
++
+    public UserAuthentication createUserAuthentication(Agent var1) {
+-      return new YggdrasilUserAuthentication(this, var1);
++      return new YggdrasilUserAuthentication(this, var1, this.environment);
+    }
+ 
+    public MinecraftSessionService createMinecraftSessionService() {
+-      return new YggdrasilMinecraftSessionService(this);
++      return new YggdrasilMinecraftSessionService(this, this.environment);
+    }
+ 
+    public GameProfileRepository createProfileRepository() {
+-      return new YggdrasilGameProfileRepository(this);
++      return new YggdrasilGameProfileRepository(this, this.environment);
+    }
+ 
+    protected <T extends Response> T makeRequest(URL var1, Object var2, Class<T> var3) throws AuthenticationException {
+       try {
+          String var4 = var2 == null ? this.performGetRequest(var1) : this.performPostRequest(var1, this.gson.toJson(var2), "application/json");
+@@ -72,16 +88,12 @@
+                throw new AuthenticationException(var5.getErrorMessage());
+             }
+          } else {
+             return var5;
+          }
+-      } catch (IOException var6) {
++      } catch (IllegalStateException | JsonParseException | IOException var6) {
+          throw new AuthenticationUnavailableException("Cannot contact authentication server", var6);
+-      } catch (IllegalStateException var7) {
+-         throw new AuthenticationUnavailableException("Cannot contact authentication server", var7);
+-      } catch (JsonParseException var8) {
+-         throw new AuthenticationUnavailableException("Cannot contact authentication server", var8);
+       }
+    }
+ 
+    public String getClientToken() {
+       return this.clientToken;

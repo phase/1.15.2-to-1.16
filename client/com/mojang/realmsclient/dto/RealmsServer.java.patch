@@ -1,0 +1,185 @@
+--- com/mojang/realmsclient/dto/RealmsServer.java
++++ com/mojang/realmsclient/dto/RealmsServer.java
+@@ -1,7 +1,8 @@
+ package com.mojang.realmsclient.dto;
+ 
++import com.google.common.base.Joiner;
+ import com.google.common.collect.ComparisonChain;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.google.gson.JsonArray;
+ import com.google.gson.JsonElement;
+@@ -14,14 +15,14 @@
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Locale;
+ import java.util.Map;
++import java.util.Objects;
+ import java.util.Map.Entry;
+-import net.minecraft.realms.Realms;
++import net.minecraft.client.Minecraft;
+ import org.apache.commons.lang3.builder.EqualsBuilder;
+-import org.apache.commons.lang3.builder.HashCodeBuilder;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ public class RealmsServer extends ValueObject {
+    private static final Logger LOGGER = LogManager.getLogger();
+@@ -66,40 +67,36 @@
+    public void setDescription(String var1) {
+       this.motd = var1;
+    }
+ 
+    public void updateServerPing(RealmsServerPlayerList var1) {
+-      StringBuilder var2 = new StringBuilder();
++      ArrayList var2 = Lists.newArrayList();
+       int var3 = 0;
+       Iterator var4 = var1.players.iterator();
+ 
+       while(true) {
+          String var5;
+          do {
+             if (!var4.hasNext()) {
+                this.serverPing.nrOfPlayers = String.valueOf(var3);
+-               this.serverPing.playerList = var2.toString();
++               this.serverPing.playerList = Joiner.on('\n').join(var2);
+                return;
+             }
+ 
+             var5 = (String)var4.next();
+-         } while(var5.equals(Realms.getUUID()));
++         } while(var5.equals(Minecraft.getInstance().getUser().getUuid()));
+ 
+          String var6 = "";
+ 
+          try {
+             var6 = RealmsUtil.uuidToName(var5);
+          } catch (Exception var8) {
+             LOGGER.error("Could not get name for " + var5, var8);
+             continue;
+          }
+ 
+-         if (var2.length() > 0) {
+-            var2.append("\n");
+-         }
+-
+-         var2.append(var6);
++         var2.add(var6);
+          ++var3;
+       }
+    }
+ 
+    public static RealmsServer parse(JsonObject var0) {
+@@ -125,11 +122,11 @@
+          var1.worldType = getWorldType(JsonUtils.getStringOr("worldType", var0, RealmsServer.WorldType.NORMAL.name()));
+          var1.ownerUUID = JsonUtils.getStringOr("ownerUUID", var0, "");
+          if (var0.get("slots") != null && var0.get("slots").isJsonArray()) {
+             var1.slots = parseSlots(var0.get("slots").getAsJsonArray());
+          } else {
+-            var1.slots = getEmptySlots();
++            var1.slots = createEmptySlots();
+          }
+ 
+          var1.minigameName = JsonUtils.getStringOr("minigameName", var0, (String)null);
+          var1.activeSlot = JsonUtils.getIntOr("activeSlot", var0, -1);
+          var1.minigameId = JsonUtils.getIntOr("minigameId", var0, -1);
+@@ -181,11 +178,11 @@
+             JsonObject var5 = var3.getAsJsonObject();
+             JsonParser var6 = new JsonParser();
+             JsonElement var7 = var6.parse(var5.get("options").getAsString());
+             RealmsWorldOptions var4;
+             if (var7 == null) {
+-               var4 = RealmsWorldOptions.getDefaults();
++               var4 = RealmsWorldOptions.createDefaults();
+             } else {
+                var4 = RealmsWorldOptions.parse(var7.getAsJsonObject());
+             }
+ 
+             int var8 = JsonUtils.getIntOr("slotId", var5, -1);
+@@ -194,37 +191,32 @@
+          }
+       }
+ 
+       for(int var10 = 1; var10 <= 3; ++var10) {
+          if (!var1.containsKey(var10)) {
+-            var1.put(var10, RealmsWorldOptions.getEmptyDefaults());
++            var1.put(var10, RealmsWorldOptions.createEmptyDefaults());
+          }
+       }
+ 
+       return var1;
+    }
+ 
+-   private static Map<Integer, RealmsWorldOptions> getEmptySlots() {
++   private static Map<Integer, RealmsWorldOptions> createEmptySlots() {
+       HashMap var0 = Maps.newHashMap();
+-      var0.put(1, RealmsWorldOptions.getEmptyDefaults());
+-      var0.put(2, RealmsWorldOptions.getEmptyDefaults());
+-      var0.put(3, RealmsWorldOptions.getEmptyDefaults());
++      var0.put(1, RealmsWorldOptions.createEmptyDefaults());
++      var0.put(2, RealmsWorldOptions.createEmptyDefaults());
++      var0.put(3, RealmsWorldOptions.createEmptyDefaults());
+       return var0;
+    }
+ 
+    public static RealmsServer parse(String var0) {
+-      RealmsServer var1 = new RealmsServer();
+-
+       try {
+-         JsonParser var2 = new JsonParser();
+-         JsonObject var3 = var2.parse(var0).getAsJsonObject();
+-         var1 = parse(var3);
+-      } catch (Exception var4) {
+-         LOGGER.error("Could not parse McoServer: " + var4.getMessage());
++         return parse((new JsonParser()).parse(var0).getAsJsonObject());
++      } catch (Exception var2) {
++         LOGGER.error("Could not parse McoServer: " + var2.getMessage());
++         return new RealmsServer();
+       }
+-
+-      return var1;
+    }
+ 
+    private static RealmsServer.State getState(String var0) {
+       try {
+          return RealmsServer.State.valueOf(var0);
+@@ -240,11 +232,11 @@
+          return RealmsServer.WorldType.NORMAL;
+       }
+    }
+ 
+    public int hashCode() {
+-      return (new HashCodeBuilder(17, 37)).append(this.id).append(this.name).append(this.motd).append(this.state).append(this.owner).append(this.expired).toHashCode();
++      return Objects.hash(new Object[]{this.id, this.name, this.motd, this.state, this.owner, this.expired});
+    }
+ 
+    public boolean equals(Object var1) {
+       if (var1 == null) {
+          return false;
+@@ -293,10 +285,14 @@
+       }
+ 
+       return var2;
+    }
+ 
++   public String getWorldName(int var1) {
++      return this.name + " (" + ((RealmsWorldOptions)this.slots.get(var1)).getSlotName(var1) + ")";
++   }
++
+    public static enum WorldType {
+       NORMAL,
+       MINIGAME,
+       ADVENTUREMAP,
+       EXPERIENCE,
+@@ -321,9 +317,9 @@
+       public McoServerComparator(String var1) {
+          this.refOwner = var1;
+       }
+ 
+       public int compare(RealmsServer var1, RealmsServer var2) {
+-         return ComparisonChain.start().compareTrueFirst(var1.state.equals(RealmsServer.State.UNINITIALIZED), var2.state.equals(RealmsServer.State.UNINITIALIZED)).compareTrueFirst(var1.expiredTrial, var2.expiredTrial).compareTrueFirst(var1.owner.equals(this.refOwner), var2.owner.equals(this.refOwner)).compareFalseFirst(var1.expired, var2.expired).compareTrueFirst(var1.state.equals(RealmsServer.State.OPEN), var2.state.equals(RealmsServer.State.OPEN)).compare(var1.id, var2.id).result();
++         return ComparisonChain.start().compareTrueFirst(var1.state == RealmsServer.State.UNINITIALIZED, var2.state == RealmsServer.State.UNINITIALIZED).compareTrueFirst(var1.expiredTrial, var2.expiredTrial).compareTrueFirst(var1.owner.equals(this.refOwner), var2.owner.equals(this.refOwner)).compareFalseFirst(var1.expired, var2.expired).compareTrueFirst(var1.state == RealmsServer.State.OPEN, var2.state == RealmsServer.State.OPEN).compare(var1.id, var2.id).result();
+       }
+    }
+ }
