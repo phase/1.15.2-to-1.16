@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/packs/PackSelectionModel.java
 +++ net/minecraft/client/gui/screens/packs/PackSelectionModel.java
-@@ -1,0 +1,228 @@
+@@ -1,0 +1,230 @@
 +package net.minecraft.client.gui.screens.packs;
 +
 +import com.google.common.collect.ImmutableList;
@@ -8,29 +8,28 @@
 +import java.util.Collection;
 +import java.util.Collections;
 +import java.util.List;
-+import java.util.function.BiConsumer;
 +import java.util.function.Consumer;
 +import java.util.function.Function;
 +import java.util.stream.Stream;
-+import net.minecraft.client.renderer.texture.TextureManager;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.FormattedText;
++import net.minecraft.resources.ResourceLocation;
 +import net.minecraft.server.packs.repository.Pack;
 +import net.minecraft.server.packs.repository.PackCompatibility;
 +import net.minecraft.server.packs.repository.PackRepository;
 +import net.minecraft.server.packs.repository.PackSource;
 +
-+public class PackSelectionModel<T extends Pack> {
-+   private final PackRepository<T> repository;
-+   private final List<T> selected;
-+   private final List<T> unselected;
-+   private final BiConsumer<T, TextureManager> iconBinder;
++public class PackSelectionModel {
++   private final PackRepository repository;
++   private final List<Pack> selected;
++   private final List<Pack> unselected;
++   private final Function<Pack, ResourceLocation> iconGetter;
 +   private final Runnable onListChanged;
-+   private final Consumer<PackRepository<T>> output;
++   private final Consumer<PackRepository> output;
 +
-+   public PackSelectionModel(Runnable var1, BiConsumer<T, TextureManager> var2, PackRepository<T> var3, Consumer<PackRepository<T>> var4) {
++   public PackSelectionModel(Runnable var1, Function<Pack, ResourceLocation> var2, PackRepository var3, Consumer<PackRepository> var4) {
 +      this.onListChanged = var1;
-+      this.iconBinder = var2;
++      this.iconGetter = var2;
 +      this.repository = var3;
 +      this.selected = Lists.newArrayList(var3.getSelectedPacks());
 +      Collections.reverse(this.selected);
@@ -58,21 +57,24 @@
 +
 +   public void findNewPacks() {
 +      this.repository.reload();
++      this.selected.clear();
++      this.selected.addAll(this.repository.getSelectedPacks());
++      Collections.reverse(this.selected);
 +      this.unselected.clear();
 +      this.unselected.addAll(this.repository.getAvailablePacks());
 +      this.unselected.removeAll(this.selected);
 +   }
 +
-+   class UnselectedPackEntry extends PackSelectionModel<T>.EntryBase {
-+      public UnselectedPackEntry(T var2) {
++   class UnselectedPackEntry extends PackSelectionModel.EntryBase {
++      public UnselectedPackEntry(Pack var2) {
 +         super(var2);
 +      }
 +
-+      protected List<T> getSelfList() {
++      protected List<Pack> getSelfList() {
 +         return PackSelectionModel.this.unselected;
 +      }
 +
-+      protected List<T> getOtherList() {
++      protected List<Pack> getOtherList() {
 +         return PackSelectionModel.this.selected;
 +      }
 +
@@ -88,16 +90,16 @@
 +      }
 +   }
 +
-+   class SelectedPackEntry extends PackSelectionModel<T>.EntryBase {
-+      public SelectedPackEntry(T var2) {
++   class SelectedPackEntry extends PackSelectionModel.EntryBase {
++      public SelectedPackEntry(Pack var2) {
 +         super(var2);
 +      }
 +
-+      protected List<T> getSelfList() {
++      protected List<Pack> getSelfList() {
 +         return PackSelectionModel.this.selected;
 +      }
 +
-+      protected List<T> getOtherList() {
++      protected List<Pack> getOtherList() {
 +         return PackSelectionModel.this.unselected;
 +      }
 +
@@ -114,18 +116,18 @@
 +   }
 +
 +   abstract class EntryBase implements PackSelectionModel.Entry {
-+      private final T pack;
++      private final Pack pack;
 +
-+      public EntryBase(T var2) {
++      public EntryBase(Pack var2) {
 +         this.pack = var2;
 +      }
 +
-+      protected abstract List<T> getSelfList();
++      protected abstract List<Pack> getSelfList();
 +
-+      protected abstract List<T> getOtherList();
++      protected abstract List<Pack> getOtherList();
 +
-+      public void bindIcon(TextureManager var1) {
-+         PackSelectionModel.this.iconBinder.accept(this.pack, var1);
++      public ResourceLocation getIconTexture() {
++         return (ResourceLocation)PackSelectionModel.this.iconGetter.apply(this.pack);
 +      }
 +
 +      public PackCompatibility getCompatibility() {
@@ -188,7 +190,7 @@
 +   }
 +
 +   public interface Entry {
-+      void bindIcon(TextureManager var1);
++      ResourceLocation getIconTexture();
 +
 +      PackCompatibility getCompatibility();
 +

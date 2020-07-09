@@ -1,6 +1,15 @@
 --- net/minecraft/world/entity/animal/Chicken.java
 +++ net/minecraft/world/entity/animal/Chicken.java
-@@ -9,20 +9,22 @@
+@@ -1,28 +1,31 @@
+ package net.minecraft.world.entity.animal;
+ 
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.nbt.CompoundTag;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.damagesource.DamageSource;
  import net.minecraft.world.entity.AgableMob;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityDimensions;
@@ -24,7 +33,7 @@
  import net.minecraft.world.item.Items;
  import net.minecraft.world.item.crafting.Ingredient;
  import net.minecraft.world.level.Level;
-@@ -59,14 +61,12 @@
+@@ -59,14 +62,12 @@
  
     protected float getStandingEyeHeight(Pose var1, EntityDimensions var2) {
        return this.isBaby() ? var2.height * 0.85F : var2.height * 0.92F;
@@ -41,7 +50,22 @@
     public void aiStep() {
        super.aiStep();
        this.oFlap = this.flap;
-@@ -138,20 +138,20 @@
+@@ -110,12 +111,12 @@
+ 
+    protected void playStepSound(BlockPos var1, BlockState var2) {
+       this.playSound(SoundEvents.CHICKEN_STEP, 0.15F, 1.0F);
+    }
+ 
+-   public Chicken getBreedOffspring(AgableMob var1) {
+-      return (Chicken)EntityType.CHICKEN.create(this.level);
++   public Chicken getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      return (Chicken)EntityType.CHICKEN.create(var1);
+    }
+ 
+    public boolean isFood(ItemStack var1) {
+       return FOOD_ITEMS.test(var1);
+    }
+@@ -138,20 +139,20 @@
        var1.putBoolean("IsChickenJockey", this.isChickenJockey);
        var1.putInt("EggLayTime", this.eggTime);
     }

@@ -16,9 +16,9 @@
  
  public class GravityProcessor extends StructureProcessor {
 +   public static final Codec<GravityProcessor> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(Heightmap.Types.CODEC.fieldOf("heightmap").withDefault(Heightmap.Types.WORLD_SURFACE_WG).forGetter((var0x) -> {
++      return var0.group(Heightmap.Types.CODEC.fieldOf("heightmap").orElse(Heightmap.Types.WORLD_SURFACE_WG).forGetter((var0x) -> {
 +         return var0x.heightmap;
-+      }), Codec.INT.fieldOf("offset").withDefault(0).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("offset").orElse(0).forGetter((var0x) -> {
 +         return var0x.offset;
 +      })).apply(var0, GravityProcessor::new);
 +   });

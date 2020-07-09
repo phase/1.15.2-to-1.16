@@ -1,0 +1,41 @@
+--- net/minecraft/network/protocol/game/ClientboundUpdateTagsPacket.java
++++ net/minecraft/network/protocol/game/ClientboundUpdateTagsPacket.java
+@@ -1,33 +1,33 @@
+ package net.minecraft.network.protocol.game;
+ 
+ import java.io.IOException;
+ import net.minecraft.network.FriendlyByteBuf;
+ import net.minecraft.network.protocol.Packet;
+-import net.minecraft.tags.TagManager;
++import net.minecraft.tags.TagContainer;
+ 
+ public class ClientboundUpdateTagsPacket implements Packet<ClientGamePacketListener> {
+-   private TagManager tags;
++   private TagContainer tags;
+ 
+    public ClientboundUpdateTagsPacket() {
+    }
+ 
+-   public ClientboundUpdateTagsPacket(TagManager var1) {
++   public ClientboundUpdateTagsPacket(TagContainer var1) {
+       this.tags = var1;
+    }
+ 
+    public void read(FriendlyByteBuf var1) throws IOException {
+-      this.tags = TagManager.deserializeFromNetwork(var1);
++      this.tags = TagContainer.deserializeFromNetwork(var1);
+    }
+ 
+    public void write(FriendlyByteBuf var1) throws IOException {
+       this.tags.serializeToNetwork(var1);
+    }
+ 
+    public void handle(ClientGamePacketListener var1) {
+       var1.handleUpdateTags(this);
+    }
+ 
+-   public TagManager getTags() {
++   public TagContainer getTags() {
+       return this.tags;
+    }
+ }

@@ -11,8 +11,8 @@
  import net.minecraft.core.Direction;
 -import net.minecraft.core.Vec3i;
  import net.minecraft.tags.BlockTags;
++import net.minecraft.tags.Tag;
  import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.state.BlockState;
@@ -35,7 +35,16 @@
           }
        }
  
-@@ -48,11 +47,11 @@
+@@ -40,19 +39,19 @@
+ 
+    protected boolean isValidPosition(LevelAccessor var1, BlockPos var2, int var3, BlockPos.MutableBlockPos var4, HugeMushroomFeatureConfiguration var5) {
+       int var6 = var2.getY();
+       if (var6 >= 1 && var6 + var3 + 1 < 256) {
+          Block var7 = var1.getBlockState(var2.below()).getBlock();
+-         if (!isDirt(var7)) {
++         if (!isDirt(var7) && !var7.is((Tag)BlockTags.MUSHROOM_GROW_BLOCK)) {
+             return false;
+          } else {
              for(int var8 = 0; var8 <= var3; ++var8) {
                 int var9 = this.getTreeRadiusForHeight(-1, -1, var5.foliageRadius, var8);
  
@@ -48,28 +57,16 @@
                       }
                    }
                 }
-@@ -63,18 +62,18 @@
+@@ -63,11 +62,11 @@
        } else {
           return false;
        }
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, HugeMushroomFeatureConfiguration var5) {
--      int var6 = this.getTreeHeight(var3);
--      BlockPos.MutableBlockPos var7 = new BlockPos.MutableBlockPos();
--      if (!this.isValidPosition(var1, var4, var6, var7, var5)) {
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, HugeMushroomFeatureConfiguration var6) {
-+      int var7 = this.getTreeHeight(var4);
-+      BlockPos.MutableBlockPos var8 = new BlockPos.MutableBlockPos();
-+      if (!this.isValidPosition(var1, var5, var7, var8, var6)) {
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, HugeMushroomFeatureConfiguration var5) {
+       int var6 = this.getTreeHeight(var3);
+       BlockPos.MutableBlockPos var7 = new BlockPos.MutableBlockPos();
+       if (!this.isValidPosition(var1, var4, var6, var7, var5)) {
           return false;
        } else {
--         this.makeCap(var1, var3, var4, var6, var7, var5);
--         this.placeTrunk(var1, var3, var4, var5, var6, var7);
-+         this.makeCap(var1, var4, var5, var7, var8, var6);
-+         this.placeTrunk(var1, var4, var5, var6, var7, var8);
-          return true;
-       }
-    }
- 
-    protected abstract int getTreeRadiusForHeight(int var1, int var2, int var3, int var4);

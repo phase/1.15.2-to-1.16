@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/CreateBuffetWorldScreen.java
 +++ net/minecraft/client/gui/screens/CreateBuffetWorldScreen.java
-@@ -1,137 +1,72 @@
+@@ -1,174 +1,110 @@
  package net.minecraft.client.gui.screens;
  
 +import com.mojang.blaze3d.vertex.PoseStack;
@@ -20,9 +20,12 @@
 -import net.minecraft.nbt.CompoundTag;
 -import net.minecraft.nbt.ListTag;
 -import net.minecraft.nbt.StringTag;
++import net.minecraft.core.RegistryAccess;
++import net.minecraft.core.WritableRegistry;
 +import net.minecraft.network.chat.CommonComponents;
  import net.minecraft.network.chat.TranslatableComponent;
 -import net.minecraft.resources.ResourceLocation;
++import net.minecraft.resources.ResourceKey;
  import net.minecraft.world.level.biome.Biome;
 -import net.minecraft.world.level.biome.BiomeSourceType;
 -import net.minecraft.world.level.chunk.ChunkGeneratorType;
@@ -33,6 +36,7 @@
 -   private final CompoundTag optionsTag;
 +   private final Screen parent;
 +   private final Consumer<Biome> applySettings;
++   private final WritableRegistry<Biome> biomes;
     private CreateBuffetWorldScreen.BiomeList list;
 -   private int generatorIndex;
 +   private Biome biome;
@@ -40,12 +44,13 @@
  
 -   public CreateBuffetWorldScreen(CreateWorldScreen var1, CompoundTag var2) {
 -      super(new TranslatableComponent("createWorld.customize.buffet.title", new Object[0]));
-+   public CreateBuffetWorldScreen(Screen var1, Consumer<Biome> var2, Biome var3) {
++   public CreateBuffetWorldScreen(Screen var1, RegistryAccess var2, Consumer<Biome> var3, Biome var4) {
 +      super(new TranslatableComponent("createWorld.customize.buffet.title"));
        this.parent = var1;
 -      this.optionsTag = var2;
-+      this.applySettings = var2;
-+      this.biome = var3;
++      this.applySettings = var3;
++      this.biome = var4;
++      this.biomes = var2.registryOrThrow(Registry.BIOME_REGISTRY);
     }
  
 +   public void onClose() {
@@ -160,14 +165,16 @@
 -         Registry.BIOME.keySet().stream().sorted(Comparator.comparing((var0) -> {
 -            return ((Biome)Registry.BIOME.get(var0)).getName().getString();
 +         super(CreateBuffetWorldScreen.this.minecraft, CreateBuffetWorldScreen.this.width, CreateBuffetWorldScreen.this.height, 40, CreateBuffetWorldScreen.this.height - 37, 16);
-+         Registry.BIOME.stream().sorted(Comparator.comparing((var0) -> {
-+            return var0.getName().getString();
++         CreateBuffetWorldScreen.this.biomes.entrySet().stream().sorted(Comparator.comparing((var0) -> {
++            return ((ResourceKey)var0.getKey()).location().toString();
           })).forEach((var1x) -> {
-             this.addEntry(new CreateBuffetWorldScreen.BiomeList.Entry(var1x));
+-            this.addEntry(new CreateBuffetWorldScreen.BiomeList.Entry(var1x));
++            this.addEntry(new CreateBuffetWorldScreen.BiomeList.Entry((Biome)var1x.getValue()));
           });
        }
  
-@@ -140,35 +75,31 @@
+       protected boolean isFocused() {
+          return CreateBuffetWorldScreen.this.getFocused() == this;
        }
  
        public void setSelected(@Nullable CreateBuffetWorldScreen.BiomeList.Entry var1) {
@@ -175,7 +182,7 @@
           if (var1 != null) {
 -            NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.select", new Object[]{((Biome)Registry.BIOME.get(var1.key)).getName().getString()})).getString());
 +            CreateBuffetWorldScreen.this.biome = var1.biome;
-+            NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.select", new Object[]{var1.biome.getName().getString()})).getString());
++            NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.select", new Object[]{CreateBuffetWorldScreen.this.biomes.getKey(var1.biome)})).getString());
           }
  
 -      }
@@ -198,7 +205,7 @@
 -         public void render(int var1, int var2, int var3, int var4, int var5, int var6, int var7, boolean var8, float var9) {
 -            BiomeList.this.drawString(CreateBuffetWorldScreen.this.font, ((Biome)Registry.BIOME.get(this.key)).getName().getString(), var3 + 5, var2 + 2, 16777215);
 +         public void render(PoseStack var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, boolean var9, float var10) {
-+            BiomeList.this.drawString(var1, CreateBuffetWorldScreen.this.font, this.biome.getName().getString(), var4 + 5, var3 + 2, 16777215);
++            BiomeList.this.drawString(var1, CreateBuffetWorldScreen.this.font, CreateBuffetWorldScreen.this.biomes.getKey(this.biome).toString(), var4 + 5, var3 + 2, 16777215);
           }
  
           public boolean mouseClicked(double var1, double var3, int var5) {

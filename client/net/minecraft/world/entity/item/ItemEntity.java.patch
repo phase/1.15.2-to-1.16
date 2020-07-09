@@ -52,37 +52,62 @@
     }
  
     protected void defineSynchedData() {
-@@ -77,12 +85,14 @@
+@@ -77,12 +85,15 @@
  
           this.xo = this.getX();
           this.yo = this.getY();
           this.zo = this.getZ();
           Vec3 var1 = this.getDeltaMovement();
 -         if (this.isUnderLiquid(FluidTags.WATER)) {
-+         if (this.isEyeInFluid(FluidTags.WATER)) {
++         float var2 = this.getEyeHeight() - 0.11111111F;
++         if (this.isInWater() && this.getFluidHeight(FluidTags.WATER) > (double)var2) {
              this.setUnderwaterMovement();
-+         } else if (this.isEyeInFluid(FluidTags.LAVA)) {
++         } else if (this.isInLava() && this.getFluidHeight(FluidTags.LAVA) > (double)var2) {
 +            this.setUnderLavaMovement();
           } else if (!this.isNoGravity()) {
              this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.04D, 0.0D));
           }
  
           if (this.level.isClientSide) {
-@@ -108,12 +118,11 @@
+@@ -94,26 +105,28 @@
+             }
           }
  
-          boolean var6 = Mth.floor(this.xo) != Mth.floor(this.getX()) || Mth.floor(this.yo) != Mth.floor(this.getY()) || Mth.floor(this.zo) != Mth.floor(this.getZ());
-          int var3 = var6 ? 2 : 40;
-          if (this.tickCount % var3 == 0) {
+          if (!this.onGround || getHorizontalDistanceSqr(this.getDeltaMovement()) > 9.999999747378752E-6D || (this.tickCount + this.getId()) % 4 == 0) {
+             this.move(MoverType.SELF, this.getDeltaMovement());
+-            float var2 = 0.98F;
++            float var3 = 0.98F;
+             if (this.onGround) {
+-               var2 = this.level.getBlockState(new BlockPos(this.getX(), this.getY() - 1.0D, this.getZ())).getBlock().getFriction() * 0.98F;
++               var3 = this.level.getBlockState(new BlockPos(this.getX(), this.getY() - 1.0D, this.getZ())).getBlock().getFriction() * 0.98F;
+             }
+ 
+-            this.setDeltaMovement(this.getDeltaMovement().multiply((double)var2, 0.98D, (double)var2));
++            this.setDeltaMovement(this.getDeltaMovement().multiply((double)var3, 0.98D, (double)var3));
+             if (this.onGround) {
+-               this.setDeltaMovement(this.getDeltaMovement().multiply(1.0D, -0.5D, 1.0D));
++               Vec3 var4 = this.getDeltaMovement();
++               if (var4.y < 0.0D) {
++                  this.setDeltaMovement(var4.multiply(1.0D, -0.5D, 1.0D));
++               }
+             }
+          }
+ 
+-         boolean var6 = Mth.floor(this.xo) != Mth.floor(this.getX()) || Mth.floor(this.yo) != Mth.floor(this.getY()) || Mth.floor(this.zo) != Mth.floor(this.getZ());
+-         int var3 = var6 ? 2 : 40;
+-         if (this.tickCount % var3 == 0) {
 -            if (this.level.getFluidState(new BlockPos(this)).is(FluidTags.LAVA)) {
 -               this.setDeltaMovement((double)((this.random.nextFloat() - this.random.nextFloat()) * 0.2F), 0.20000000298023224D, (double)((this.random.nextFloat() - this.random.nextFloat()) * 0.2F));
++         boolean var7 = Mth.floor(this.xo) != Mth.floor(this.getX()) || Mth.floor(this.yo) != Mth.floor(this.getY()) || Mth.floor(this.zo) != Mth.floor(this.getZ());
++         int var8 = var7 ? 2 : 40;
++         if (this.tickCount % var8 == 0) {
 +            if (this.level.getFluidState(this.blockPosition()).is(FluidTags.LAVA) && !this.fireImmune()) {
                 this.playSound(SoundEvents.GENERIC_BURN, 0.4F, 2.0F + this.random.nextFloat() * 0.4F);
              }
  
              if (!this.level.isClientSide && this.isMergable()) {
                 this.mergeWithNeighbours();
-@@ -122,11 +131,11 @@
+@@ -122,14 +135,14 @@
  
           if (this.age != -32768) {
              ++this.age;
@@ -91,11 +116,16 @@
 -         this.hasImpulse |= this.updateInWaterState();
 +         this.hasImpulse |= this.updateInWaterStateAndDoFluidPushing();
           if (!this.level.isClientSide) {
-             double var4 = this.getDeltaMovement().subtract(var1).lengthSqr();
-             if (var4 > 0.01D) {
+-            double var4 = this.getDeltaMovement().subtract(var1).lengthSqr();
+-            if (var4 > 0.01D) {
++            double var5 = this.getDeltaMovement().subtract(var1).lengthSqr();
++            if (var5 > 0.01D) {
                 this.hasImpulse = true;
              }
-@@ -142,10 +151,15 @@
+          }
+ 
+          if (!this.level.isClientSide && this.age >= 6000) {
+@@ -142,10 +155,15 @@
     private void setUnderwaterMovement() {
        Vec3 var1 = this.getDeltaMovement();
        this.setDeltaMovement(var1.x * 0.9900000095367432D, var1.y + (double)(var1.y < 0.05999999865889549D ? 5.0E-4F : 0.0F), var1.z * 0.9900000095367432D);
@@ -111,7 +141,7 @@
           List var1 = this.level.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(0.5D, 0.0D, 0.5D), (var1x) -> {
              return var1x != this && var1x.isMergable();
           });
-@@ -215,19 +229,21 @@
+@@ -215,19 +233,21 @@
           var2.remove();
        }
  
@@ -135,7 +165,7 @@
           this.health = (int)((float)this.health - var2);
           if (this.health <= 0) {
              this.remove();
-@@ -240,15 +256,15 @@
+@@ -240,15 +260,15 @@
     public void addAdditionalSaveData(CompoundTag var1) {
        var1.putShort("Health", (short)this.health);
        var1.putShort("Age", (short)this.age);
@@ -153,7 +183,7 @@
        if (!this.getItem().isEmpty()) {
           var1.put("Item", this.getItem().save(new CompoundTag()));
        }
-@@ -260,16 +276,16 @@
+@@ -260,16 +280,16 @@
        this.age = var1.getShort("Age");
        if (var1.contains("PickupDelay")) {
           this.pickupDelay = var1.getShort("PickupDelay");
@@ -174,7 +204,7 @@
        CompoundTag var2 = var1.getCompound("Item");
        this.setItem(ItemStack.of(var2));
        if (this.getItem().isEmpty()) {
-@@ -289,26 +305,27 @@
+@@ -289,26 +309,27 @@
                 this.remove();
                 var2.setCount(var4);
              }
@@ -204,7 +234,7 @@
           ((ItemEntity)var2).mergeWithNeighbours();
        }
  
-@@ -321,10 +338,18 @@
+@@ -321,10 +342,18 @@
  
     public void setItem(ItemStack var1) {
        this.getEntityData().set(DATA_ITEM, var1);
@@ -223,7 +253,7 @@
        return this.owner;
     }
  
-@@ -372,13 +397,21 @@
+@@ -372,13 +401,21 @@
     public void makeFakeItem() {
        this.setNeverPickUp();
        this.age = 5999;

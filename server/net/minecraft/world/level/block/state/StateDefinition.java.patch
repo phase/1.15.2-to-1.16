@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/state/StateDefinition.java
 +++ net/minecraft/world/level/block/state/StateDefinition.java
-@@ -5,63 +5,91 @@
+@@ -5,63 +5,90 @@
  import com.google.common.collect.ImmutableMap;
  import com.google.common.collect.ImmutableSortedMap;
  import com.google.common.collect.Lists;
@@ -25,7 +25,6 @@
  import java.util.stream.Stream;
  import javax.annotation.Nullable;
 -import net.minecraft.core.MapFiller;
-+import net.minecraft.util.Codecs;
  import net.minecraft.world.level.block.state.properties.Property;
  
 -public class StateDefinition<O, S extends StateHolder<S>> {
@@ -103,7 +102,7 @@
     }
  
 +   private static <S extends StateHolder<?, S>, T extends Comparable<T>> MapCodec<S> appendPropertyCodec(MapCodec<S> var0, Supplier<S> var1, String var2, Property<T> var3) {
-+      return Codec.mapPair(var0, Codecs.setPartial(var3.valueCodec().fieldOf(var2), () -> {
++      return Codec.mapPair(var0, var3.valueCodec().fieldOf(var2).setPartial(() -> {
 +         return var3.value((StateHolder)var1.get());
 +      })).xmap((var1x) -> {
 +         return (StateHolder)((StateHolder)var1x.getFirst()).setValue(var3, ((Property.Value)var1x.getSecond()).value());
@@ -117,7 +116,7 @@
     }
  
     public S any() {
-@@ -83,11 +111,11 @@
+@@ -83,11 +110,11 @@
     @Nullable
     public Property<?> getProperty(String var1) {
        return (Property)this.propertiesByName.get(var1);
@@ -130,7 +129,7 @@
  
        public Builder(O var1) {
           this.owner = var1;
-@@ -134,14 +162,14 @@
+@@ -134,14 +161,14 @@
                 throw new IllegalArgumentException(this.owner + " has property: " + var2 + " with invalidly named value: " + var6);
              }
           }

@@ -1,19 +1,18 @@
 --- net/minecraft/world/level/block/piston/PistonMovingBlockEntity.java
 +++ net/minecraft/world/level/block/piston/PistonMovingBlockEntity.java
-@@ -4,10 +4,12 @@
+@@ -4,10 +4,11 @@
  import java.util.List;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtUtils;
-+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 +import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.util.Mth;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.MoverType;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.block.Block;
-@@ -75,24 +77,24 @@
+@@ -75,56 +76,63 @@
     private float getExtendedProgress(float var1) {
        return this.extending ? var1 - 1.0F : 1.0F - var1;
     }
@@ -43,16 +42,57 @@
  
              while(true) {
                 Entity var11;
-                do {
-                   if (!var10.hasNext()) {
-@@ -117,14 +119,17 @@
-                   case Z:
-                      var17 = (double)var2.getStepZ();
+-               do {
+-                  if (!var10.hasNext()) {
+-                     return;
+-                  }
++               while(true) {
++                  do {
++                     if (!var10.hasNext()) {
++                        return;
++                     }
+ 
+-                  var11 = (Entity)var10.next();
+-               } while(var11.getPistonPushReaction() == PushReaction.IGNORE);
++                     var11 = (Entity)var10.next();
++                  } while(var11.getPistonPushReaction() == PushReaction.IGNORE);
+ 
+-               if (var9) {
+-                  Vec3 var12 = var11.getDeltaMovement();
+-                  double var13 = var12.x;
+-                  double var15 = var12.y;
+-                  double var17 = var12.z;
+-                  switch(var2.getAxis()) {
+-                  case X:
+-                     var13 = (double)var2.getStepX();
++                  if (!var9) {
+                      break;
+-                  case Y:
+-                     var15 = (double)var2.getStepY();
+-                     break;
+-                  case Z:
+-                     var17 = (double)var2.getStepZ();
                    }
  
-                   var11.setDeltaMovement(var13, var15, var17);
-+                  if (var11 instanceof ServerPlayer) {
-+                     ((ServerPlayer)var11).connection.send(new ClientboundSetEntityMotionPacket(var11));
+-                  var11.setDeltaMovement(var13, var15, var17);
++                  if (!(var11 instanceof ServerPlayer)) {
++                     Vec3 var12 = var11.getDeltaMovement();
++                     double var13 = var12.x;
++                     double var15 = var12.y;
++                     double var17 = var12.z;
++                     switch(var2.getAxis()) {
++                     case X:
++                        var13 = (double)var2.getStepX();
++                        break;
++                     case Y:
++                        var15 = (double)var2.getStepY();
++                        break;
++                     case Z:
++                        var17 = (double)var2.getStepZ();
++                     }
++
++                     var11.setDeltaMovement(var13, var15, var17);
++                     break;
 +                  }
                 }
  
@@ -64,7 +104,7 @@
                    AABB var20 = (AABB)var14.next();
                    AABB var16 = PistonMath.getMovementArea(this.moveByPositionAndProgress(var20), var2, var3);
                    AABB var21 = var11.getBoundingBox();
-@@ -174,42 +179,21 @@
+@@ -174,42 +182,21 @@
           }
        }
     }
@@ -109,7 +149,7 @@
        case EAST:
           return var0.maxX - var2.minX;
        case WEST:
-@@ -254,11 +238,11 @@
+@@ -254,11 +241,11 @@
        if (this.progressO < 1.0F && this.level != null) {
           this.progress = 1.0F;
           this.progressO = this.progress;
@@ -122,7 +162,7 @@
                 var1 = Blocks.AIR.defaultBlockState();
              } else {
                 var1 = Block.updateFromNeighbourShapes(this.movedState, this.level, this.worldPosition);
-@@ -275,11 +259,11 @@
+@@ -275,11 +262,11 @@
        this.lastTicked = this.level.getGameTime();
        this.progressO = this.progress;
        if (this.progressO >= 1.0F) {
@@ -135,7 +175,7 @@
                 this.level.setBlock(this.worldPosition, this.movedState, 84);
                 Block.updateOrDestroy(this.movedState, var2, this.level, this.worldPosition, 3);
              } else {
-@@ -302,18 +286,18 @@
+@@ -302,18 +289,18 @@
           }
  
        }
@@ -161,7 +201,7 @@
     public CompoundTag save(CompoundTag var1) {
        super.save(var1);
        var1.put("blockState", NbtUtils.writeBlockState(this.movedState));
-@@ -336,11 +320,11 @@
+@@ -336,11 +323,11 @@
        if ((double)this.progress < 1.0D && var4 == this.getMovementDirection()) {
           return var3;
        } else {

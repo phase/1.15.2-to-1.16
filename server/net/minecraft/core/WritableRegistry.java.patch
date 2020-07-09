@@ -9,7 +9,7 @@
  
  public abstract class WritableRegistry<T> extends Registry<T> {
 -   public WritableRegistry() {
-+   public WritableRegistry(ResourceKey<Registry<T>> var1, Lifecycle var2) {
++   public WritableRegistry(ResourceKey<? extends Registry<T>> var1, Lifecycle var2) {
 +      super(var1, var2);
     }
  

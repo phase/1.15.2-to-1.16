@@ -157,8 +157,9 @@
        this.inviteNarrationLimiter = RateLimiter.create(0.01666666753590107D);
     }
  
-    public boolean shouldShowMessageInList() {
+-   public boolean shouldShowMessageInList() {
 -      if (this.hasParentalConsent() && this.hasFetchedServers) {
++   private boolean shouldShowMessageInList() {
 +      if (hasParentalConsent() && this.hasFetchedServers) {
           if (this.trialsAvailable && !this.createdTrial) {
              return true;
@@ -440,7 +441,7 @@
                 this.realmsServers = var1;
                 if (this.shouldShowMessageInList()) {
 -                  this.realmSelectionList.addEntry(new RealmsMainScreen.RealmSelectionListTrialEntry());
-+                  this.realmSelectionList.addEntry(new RealmsMainScreen.TrialEntry());
++                  this.realmSelectionList.addMessageEntry(new RealmsMainScreen.TrialEntry());
                 }
  
                 var4 = this.realmsServers.iterator();
@@ -1170,7 +1171,7 @@
              if (!this.connectLock.tryLock(1L, TimeUnit.SECONDS)) {
                 return;
              }
-@@ -910,225 +903,202 @@
+@@ -910,230 +903,209 @@
           } catch (InterruptedException var4) {
              return;
           }
@@ -1492,8 +1493,16 @@
     }
  
     public RealmsMainScreen newScreen() {
-       return new RealmsMainScreen(this.lastScreen);
-@@ -1141,306 +1111,282 @@
+-      return new RealmsMainScreen(this.lastScreen);
++      RealmsMainScreen var1 = new RealmsMainScreen(this.lastScreen);
++      var1.init(this.minecraft, this.width, this.height);
++      return var1;
+    }
+ 
+    public static void updateTeaserImages(ResourceManager var0) {
+       Collection var1 = var0.listResources("textures/gui/images", (var0x) -> {
+          return var0x.endsWith(".png");
+@@ -1141,306 +1113,294 @@
        teaserImages = (List)var1.stream().filter((var0x) -> {
           return var0x.getNamespace().equals("realms");
        }).collect(ImmutableList.toImmutableList());
@@ -1905,11 +1914,23 @@
 +   }
 +
 +   class RealmSelectionList extends RealmsObjectSelectionList<RealmsMainScreen.Entry> {
++      private boolean showingMessage;
++
        public RealmSelectionList() {
 -         super(RealmsMainScreen.this.width(), RealmsMainScreen.this.height(), 32, RealmsMainScreen.this.height() - 40, 36);
 +         super(RealmsMainScreen.this.width, RealmsMainScreen.this.height, 32, RealmsMainScreen.this.height - 40, 36);
        }
  
++      public void clear() {
++         super.clear();
++         this.showingMessage = false;
++      }
++
++      public int addMessageEntry(RealmsMainScreen.Entry var1) {
++         this.showingMessage = true;
++         return this.addEntry(var1);
++      }
++
        public boolean isFocused() {
 -         return RealmsMainScreen.this.isFocused(this);
 +         return RealmsMainScreen.this.getFocused() == this;
@@ -1943,7 +1964,7 @@
              }
  
              return true;
-@@ -1448,16 +1394,16 @@
+@@ -1448,16 +1408,16 @@
              return super.mouseClicked(var1, var3, var5);
           }
        }
@@ -1953,7 +1974,8 @@
 +         this.setSelectedItem(var1);
           if (var1 != -1) {
              RealmsServer var2;
-             if (RealmsMainScreen.this.shouldShowMessageInList()) {
+-            if (RealmsMainScreen.this.shouldShowMessageInList()) {
++            if (this.showingMessage) {
                 if (var1 == 0) {
 -                  Realms.narrateNow(RealmsScreen.getLocalizedString("mco.trial.message.line1"), RealmsScreen.getLocalizedString("mco.trial.message.line2"));
 +                  NarrationHelper.now(I18n.get("mco.trial.message.line1"), I18n.get("mco.trial.message.line2"));
@@ -1962,7 +1984,7 @@
                    if (var1 - 1 >= RealmsMainScreen.this.realmsServers.size()) {
                       RealmsMainScreen.this.selectedServerId = -1L;
                       return;
-@@ -1476,23 +1422,30 @@
+@@ -1476,25 +1436,36 @@
  
              RealmsMainScreen.this.updateButtonStates(var2);
              if (var2 == null) {
@@ -1986,17 +2008,24 @@
  
 +      public void setSelected(@Nullable RealmsMainScreen.Entry var1) {
 +         super.setSelected(var1);
-+         RealmsServer var2 = (RealmsServer)RealmsMainScreen.this.realmsServers.get(this.children().indexOf(var1) - (RealmsMainScreen.this.shouldShowMessageInList() ? 1 : 0));
-+         RealmsMainScreen.this.selectedServerId = var2.id;
-+         RealmsMainScreen.this.updateButtonStates(var2);
++         int var2 = this.children().indexOf(var1);
++         if (!this.showingMessage || var2 > 0) {
++            RealmsServer var3 = (RealmsServer)RealmsMainScreen.this.realmsServers.get(var2 - (this.showingMessage ? 1 : 0));
++            RealmsMainScreen.this.selectedServerId = var3.id;
++            RealmsMainScreen.this.updateButtonStates(var3);
++         }
++
 +      }
 +
        public void itemClicked(int var1, int var2, double var3, double var5, int var7) {
-          if (RealmsMainScreen.this.shouldShowMessageInList()) {
+-         if (RealmsMainScreen.this.shouldShowMessageInList()) {
++         if (this.showingMessage) {
              if (var2 == 0) {
                 RealmsMainScreen.this.popupOpenedByUser = true;
                 return;
-@@ -1504,22 +1457,22 @@
+             }
+ 
+@@ -1504,22 +1475,22 @@
           if (var2 < RealmsMainScreen.this.realmsServers.size()) {
              RealmsServer var8 = (RealmsServer)RealmsMainScreen.this.realmsServers.get(var2);
              if (var8 != null) {
@@ -2023,7 +2052,7 @@
  
              }
           }
-@@ -1531,6 +1484,16 @@
+@@ -1531,6 +1502,16 @@
  
        public int getRowWidth() {
           return 300;

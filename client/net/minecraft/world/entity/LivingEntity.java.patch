@@ -535,7 +535,46 @@
     private boolean checkTotemDeathProtection(DamageSource var1) {
        if (var1.isBypassInvul()) {
           return false;
-@@ -1092,11 +1206,11 @@
+@@ -999,10 +1113,11 @@
+ 
+             this.setHealth(1.0F);
+             this.removeAllEffects();
+             this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1));
+             this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1));
++            this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 1));
+             this.level.broadcastEntityEvent(this, (byte)35);
+          }
+ 
+          return var2 != null;
+       }
+@@ -1067,21 +1182,21 @@
+          LivingEntity var3 = this.getKillCredit();
+          if (this.deathScore >= 0 && var3 != null) {
+             var3.awardKillScore(this, this.deathScore, var1);
+          }
+ 
+-         if (var2 != null) {
+-            var2.killed(this);
+-         }
+-
+          if (this.isSleeping()) {
+             this.stopSleeping();
+          }
+ 
+          this.dead = true;
+          this.getCombatTracker().recheckStatus();
+-         if (!this.level.isClientSide) {
++         if (this.level instanceof ServerLevel) {
++            if (var2 != null) {
++               var2.killed((ServerLevel)this.level, this);
++            }
++
+             this.dropAllDeathLoot(var1);
+             this.createWitherRose(var3);
+          }
+ 
+          this.level.broadcastEntityEvent(this, (byte)3);
+@@ -1092,11 +1207,11 @@
     protected void createWitherRose(@Nullable LivingEntity var1) {
        if (!this.level.isClientSide) {
           boolean var2 = false;
@@ -548,7 +587,7 @@
                    this.level.setBlock(var3, var4, 3);
                    var2 = true;
                 }
-@@ -1119,11 +1233,11 @@
+@@ -1119,11 +1234,11 @@
        } else {
           var3 = 0;
        }
@@ -561,7 +600,7 @@
        }
  
        this.dropEquipment();
-@@ -1159,24 +1273,25 @@
+@@ -1159,24 +1274,25 @@
        LootContext.Builder var5 = this.createLootContext(var2, var1);
        var4.getRandomItems(var5.create(LootContextParamSets.ENTITY), this::spawnAtLocation);
     }
@@ -593,7 +632,7 @@
  
     @Nullable
     protected SoundEvent getHurtSound(DamageSource var1) {
-@@ -1198,32 +1313,49 @@
+@@ -1198,32 +1314,49 @@
  
     public SoundEvent getEatingSound(ItemStack var1) {
        return var1.getEatingSound();
@@ -651,7 +690,7 @@
        }
  
        return false;
-@@ -1271,24 +1403,23 @@
+@@ -1271,24 +1404,23 @@
        this.hurtTime = this.hurtDuration;
        this.hurtDir = 0.0F;
     }
@@ -680,7 +719,7 @@
        return var2;
     }
  
-@@ -1361,11 +1492,11 @@
+@@ -1361,11 +1493,11 @@
           return this.lastHurtByMob != null ? this.lastHurtByMob : null;
        }
     }
@@ -693,7 +732,7 @@
     public final int getArrowCount() {
        return (Integer)this.entityData.get(DATA_ARROW_COUNT_ID);
     }
-@@ -1541,14 +1672,23 @@
+@@ -1541,14 +1673,23 @@
        case 52:
           this.breakItem(this.getItemBySlot(EquipmentSlot.FEET));
           break;
@@ -717,7 +756,7 @@
     }
  
     protected void updateSwingTime() {
-@@ -1564,19 +1704,24 @@
+@@ -1564,19 +1705,24 @@
        }
  
        this.attackAnim = (float)this.swingTime / (float)var1;
@@ -746,7 +785,7 @@
  
     public MobType getMobType() {
        return MobType.UNDEFINED;
-@@ -1588,10 +1733,20 @@
+@@ -1588,10 +1734,20 @@
  
     public ItemStack getOffhandItem() {
        return this.getItemBySlot(EquipmentSlot.OFFHAND);
@@ -767,7 +806,7 @@
           return this.getItemBySlot(EquipmentSlot.MAINHAND);
        } else if (var1 == InteractionHand.OFF_HAND) {
           return this.getItemBySlot(EquipmentSlot.OFFHAND);
-@@ -1638,17 +1793,17 @@
+@@ -1638,17 +1794,17 @@
        return var2 > 0 ? (float)var3 / (float)var2 : 0.0F;
     }
  
@@ -787,7 +826,7 @@
     }
  
     protected float getSoundVolume() {
-@@ -1658,116 +1813,29 @@
+@@ -1658,116 +1814,29 @@
     protected float getVoicePitch() {
        return this.isBaby() ? (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.5F : (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F;
     }
@@ -912,7 +951,7 @@
     public boolean shouldShowName() {
        return this.isCustomNameVisible();
     }
-@@ -1794,188 +1862,209 @@
+@@ -1794,188 +1863,209 @@
  
     protected void goDownInWater() {
        this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.03999999910593033D, 0.0D));
@@ -1248,7 +1287,7 @@
  
           var1 = new Vec3(var3, var7, var5);
        }
-@@ -2027,95 +2116,58 @@
+@@ -2027,95 +2117,58 @@
              if (this.removeStingerTime <= 0) {
                 this.setStingerCount(var2 - 1);
              }
@@ -1363,7 +1402,7 @@
  
        while(this.yRot - this.yRotO < -180.0F) {
           this.yRotO -= 360.0F;
-@@ -2148,11 +2200,11 @@
+@@ -2148,11 +2201,11 @@
        while(this.yHeadRot - this.yHeadRotO >= 180.0F) {
           this.yHeadRotO += 360.0F;
        }
@@ -1376,7 +1415,7 @@
        } else {
           this.fallFlyTicks = 0;
        }
-@@ -2161,10 +2213,107 @@
+@@ -2161,10 +2214,107 @@
           this.xRot = 0.0F;
        }
  
@@ -1484,7 +1523,7 @@
        this.yBodyRot += var3 * 0.3F;
        float var4 = Mth.wrapDegrees(this.yRot - this.yBodyRot);
        boolean var5 = var4 < -90.0F || var4 >= 90.0F;
-@@ -2215,23 +2364,23 @@
+@@ -2215,23 +2365,23 @@
        if (this.lerpHeadSteps > 0) {
           this.yHeadRot = (float)((double)this.yHeadRot + Mth.wrapDegrees(this.lyHeadRot - (double)this.yHeadRot) / (double)this.lerpHeadSteps);
           --this.lerpHeadSteps;
@@ -1515,7 +1554,7 @@
  
        this.setDeltaMovement(var2, var4, var6);
        this.level.getProfiler().push("ai");
-@@ -2245,44 +2394,65 @@
+@@ -2245,44 +2395,65 @@
           this.level.getProfiler().pop();
        }
  
@@ -1591,7 +1630,7 @@
              var1 = true;
              if (!this.level.isClientSide && (this.fallFlyTicks + 1) % 20 == 0) {
                 var2.hurtAndBreak(1, this, (var0) -> {
-@@ -2376,11 +2546,11 @@
+@@ -2376,11 +2547,11 @@
  
     public void stopRiding() {
        Entity var1 = this.getVehicle();
@@ -1604,7 +1643,7 @@
     }
  
     public void rideTick() {
-@@ -2406,10 +2576,18 @@
+@@ -2406,10 +2577,18 @@
  
     public void setJumping(boolean var1) {
        this.jumping = var1;
@@ -1623,7 +1662,7 @@
           ((ServerLevel)this.level).getChunkSource().broadcast(var1, new ClientboundTakeItemEntityPacket(var1.getId(), this.getId(), var2));
        }
  
-@@ -2441,15 +2619,15 @@
+@@ -2441,15 +2620,15 @@
     public boolean isPickable() {
        return !this.removed;
     }
@@ -1641,7 +1680,7 @@
     public float getYHeadRot() {
        return this.yHeadRot;
     }
-@@ -2495,10 +2673,11 @@
+@@ -2495,10 +2674,11 @@
     }
  
     private void updatingUsingItem() {
@@ -1653,7 +1692,31 @@
                 this.triggerItemUseEffects(this.useItem, 5);
              }
  
-@@ -2752,10 +2931,19 @@
+@@ -2610,16 +2790,21 @@
+       }
+ 
+    }
+ 
+    protected void completeUsingItem() {
+-      if (!this.useItem.equals(this.getItemInHand(this.getUsedItemHand()))) {
++      InteractionHand var1 = this.getUsedItemHand();
++      if (!this.useItem.equals(this.getItemInHand(var1))) {
+          this.releaseUsingItem();
+       } else {
+          if (!this.useItem.isEmpty() && this.isUsingItem()) {
+             this.triggerItemUseEffects(this.useItem, 16);
+-            this.setItemInHand(this.getUsedItemHand(), this.useItem.finishUsingItem(this.level, this));
++            ItemStack var2 = this.useItem.finishUsingItem(this.level, this);
++            if (var2 != this.useItem) {
++               this.setItemInHand(var1, var2);
++            }
++
+             this.stopUsingItem();
+          }
+ 
+       }
+    }
+@@ -2752,10 +2937,19 @@
  
     public EntityDimensions getDimensions(Pose var1) {
        return var1 == Pose.SLEEPING ? SLEEPING_DIMENSIONS : super.getDimensions(var1).scale(this.getScale());
@@ -1673,7 +1736,7 @@
     }
  
     public void setSleepingPos(BlockPos var1) {
-@@ -2786,11 +2974,11 @@
+@@ -2786,11 +2980,11 @@
        this.setDeltaMovement(Vec3.ZERO);
        this.hasImpulse = true;
     }
@@ -1686,7 +1749,7 @@
     private boolean checkBedExists() {
        return (Boolean)this.getSleepingPos().map((var1) -> {
           return this.level.getBlockState(var1).getBlock() instanceof BedBlock;
-@@ -2799,23 +2987,25 @@
+@@ -2799,23 +2993,25 @@
  
     public void stopSleeping() {
        Optional var10000 = this.getSleepingPos();
@@ -1718,7 +1781,7 @@
  
     @Nullable
     public Direction getBedOrientation() {
-@@ -2857,12 +3047,12 @@
+@@ -2857,12 +3053,12 @@
           List var5 = var4.getFoodProperties().getEffects();
           Iterator var6 = var5.iterator();
  
@@ -1733,11 +1796,21 @@
        }
  
     }
-@@ -2893,11 +3083,11 @@
+@@ -2892,12 +3088,21 @@
+ 
     public void broadcastBreakEvent(InteractionHand var1) {
        this.broadcastBreakEvent(var1 == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
     }
  
++   public AABB getBoundingBoxForCulling() {
++      if (this.getItemBySlot(EquipmentSlot.HEAD).getItem() == Items.DRAGON_HEAD) {
++         float var1 = 0.5F;
++         return this.getBoundingBox().inflate(0.5D, 0.5D, 0.5D);
++      } else {
++         return super.getBoundingBoxForCulling();
++      }
++   }
++
     static {
 -      SPEED_MODIFIER_SPRINTING = (new AttributeModifier(SPEED_MODIFIER_SPRINTING_UUID, "Sprinting speed boost", 0.30000001192092896D, AttributeModifier.Operation.MULTIPLY_TOTAL)).setSerialize(false);
 +      SPEED_MODIFIER_SPRINTING = new AttributeModifier(SPEED_MODIFIER_SPRINTING_UUID, "Sprinting speed boost", 0.30000001192092896D, AttributeModifier.Operation.MULTIPLY_TOTAL);

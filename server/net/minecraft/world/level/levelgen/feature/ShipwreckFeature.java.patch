@@ -1,12 +1,13 @@
 --- net/minecraft/world/level/levelgen/feature/ShipwreckFeature.java
 +++ net/minecraft/world/level/levelgen/feature/ShipwreckFeature.java
-@@ -1,56 +1,34 @@
+@@ -1,57 +1,36 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
 -import java.util.function.Function;
 +import com.mojang.serialization.Codec;
  import net.minecraft.core.BlockPos;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.block.Rotation;
  import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -58,10 +59,13 @@
 -      public void generatePieces(ChunkGenerator<?> var1, StructureManager var2, int var3, int var4, Biome var5) {
 -         ShipwreckConfiguration var6 = (ShipwreckConfiguration)var1.getStructureConfiguration(var5, Feature.SHIPWRECK);
 -         Rotation var7 = Rotation.values()[this.random.nextInt(Rotation.values().length)];
-+      public void generatePieces(ChunkGenerator var1, StructureManager var2, int var3, int var4, Biome var5, ShipwreckConfiguration var6) {
-+         Rotation var7 = Rotation.getRandom(this.random);
-          BlockPos var8 = new BlockPos(var3 * 16, 90, var4 * 16);
-          ShipwreckPieces.addPieces(var2, var8, var7, this.pieces, this.random, var6);
+-         BlockPos var8 = new BlockPos(var3 * 16, 90, var4 * 16);
+-         ShipwreckPieces.addPieces(var2, var8, var7, this.pieces, this.random, var6);
++      public void generatePieces(RegistryAccess var1, ChunkGenerator var2, StructureManager var3, int var4, int var5, Biome var6, ShipwreckConfiguration var7) {
++         Rotation var8 = Rotation.getRandom(this.random);
++         BlockPos var9 = new BlockPos(var4 * 16, 90, var5 * 16);
++         ShipwreckPieces.addPieces(var3, var9, var8, this.pieces, this.random, var7);
           this.calculateBoundingBox();
        }
     }
+ }

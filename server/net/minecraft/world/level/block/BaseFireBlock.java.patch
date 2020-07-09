@@ -1,20 +1,20 @@
 --- net/minecraft/world/level/block/BaseFireBlock.java
 +++ net/minecraft/world/level/block/BaseFireBlock.java
-@@ -1,0 +1,99 @@
+@@ -1,0 +1,118 @@
 +package net.minecraft.world.level.block;
 +
-+import java.util.Iterator;
++import java.util.Optional;
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.core.Direction;
 +import net.minecraft.world.damagesource.DamageSource;
 +import net.minecraft.world.entity.Entity;
 +import net.minecraft.world.entity.player.Player;
-+import net.minecraft.world.item.BlockPlaceContext;
++import net.minecraft.world.item.context.BlockPlaceContext;
 +import net.minecraft.world.level.BlockGetter;
 +import net.minecraft.world.level.Level;
-+import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.block.state.BlockBehaviour;
 +import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.portal.PortalShape;
 +import net.minecraft.world.phys.shapes.CollisionContext;
 +import net.minecraft.world.phys.shapes.VoxelShape;
 +
@@ -63,13 +63,23 @@
 +
 +   public void onPlace(BlockState var1, Level var2, BlockPos var3, BlockState var4, boolean var5) {
 +      if (!var4.is(var1.getBlock())) {
-+         if (var2.dimension() != Level.OVERWORLD && var2.dimension() != Level.NETHER || !NetherPortalBlock.trySpawnPortal(var2, var3)) {
-+            if (!var1.canSurvive(var2, var3)) {
-+               var2.removeBlock(var3, false);
++         if (inPortalDimension(var2)) {
++            Optional var6 = PortalShape.findEmptyPortalShape(var2, var3, Direction.Axis.X);
++            if (var6.isPresent()) {
++               ((PortalShape)var6.get()).createPortalBlocks();
++               return;
 +            }
-+
 +         }
++
++         if (!var1.canSurvive(var2, var3)) {
++            var2.removeBlock(var3, false);
++         }
++
 +      }
++   }
++
++   private static boolean inPortalDimension(Level var0) {
++      return var0.dimension() == Level.OVERWORLD || var0.dimension() == Level.NETHER;
 +   }
 +
 +   public void playerWillDestroy(Level var1, BlockPos var2, BlockState var3, Player var4) {
@@ -79,24 +89,33 @@
 +
 +   }
 +
-+   public static boolean canBePlacedAt(LevelAccessor var0, BlockPos var1) {
-+      BlockState var2 = var0.getBlockState(var1);
-+      BlockState var3 = getState(var0, var1);
-+      return var2.isAir() && (var3.canSurvive(var0, var1) || isPortal(var0, var1));
++   public static boolean canBePlacedAt(Level var0, BlockPos var1, Direction var2) {
++      BlockState var3 = var0.getBlockState(var1);
++      if (!var3.isAir()) {
++         return false;
++      } else {
++         return getState(var0, var1).canSurvive(var0, var1) || isPortal(var0, var1, var2);
++      }
 +   }
 +
-+   private static boolean isPortal(LevelAccessor var0, BlockPos var1) {
-+      Iterator var2 = Direction.Plane.HORIZONTAL.iterator();
++   private static boolean isPortal(Level var0, BlockPos var1, Direction var2) {
++      if (!inPortalDimension(var0)) {
++         return false;
++      } else {
++         BlockPos.MutableBlockPos var3 = var1.mutable();
++         boolean var4 = false;
++         Direction[] var5 = Direction.values();
++         int var6 = var5.length;
 +
-+      Direction var3;
-+      do {
-+         if (!var2.hasNext()) {
-+            return false;
++         for(int var7 = 0; var7 < var6; ++var7) {
++            Direction var8 = var5[var7];
++            if (var0.getBlockState(var3.set(var1).move(var8)).is(Blocks.OBSIDIAN)) {
++               var4 = true;
++               break;
++            }
 +         }
 +
-+         var3 = (Direction)var2.next();
-+      } while(!var0.getBlockState(var1.relative(var3)).is(Blocks.OBSIDIAN) || NetherPortalBlock.isPortal(var0, var1) == null);
-+
-+      return true;
++         return var4 && PortalShape.findEmptyPortalShape(var0, var1, var2.getCounterClockWise().getAxis()).isPresent();
++      }
 +   }
 +}

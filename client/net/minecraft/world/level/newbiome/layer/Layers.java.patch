@@ -4,8 +4,9 @@
  package net.minecraft.world.level.newbiome.layer;
  
  import java.util.function.LongFunction;
- import net.minecraft.core.Registry;
+-import net.minecraft.core.Registry;
 -import net.minecraft.world.level.LevelType;
++import net.minecraft.data.BuiltinRegistries;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.biome.Biomes;
 -import net.minecraft.world.level.levelgen.OverworldGeneratorSettings;
@@ -14,7 +15,7 @@
  import net.minecraft.world.level.newbiome.context.BigContext;
  import net.minecraft.world.level.newbiome.context.LazyAreaContext;
  import net.minecraft.world.level.newbiome.layer.traits.AreaTransformer1;
-@@ -32,71 +30,69 @@
+@@ -32,79 +30,77 @@
        }
  
        return var6;
@@ -135,3 +136,41 @@
     public static boolean isSame(int var0, int var1) {
        if (var0 == var1) {
           return true;
+       } else {
+-         Biome var2 = (Biome)Registry.BIOME.byId(var0);
+-         Biome var3 = (Biome)Registry.BIOME.byId(var1);
++         Biome var2 = (Biome)BuiltinRegistries.BIOME.byId(var0);
++         Biome var3 = (Biome)BuiltinRegistries.BIOME.byId(var1);
+          if (var2 != null && var3 != null) {
+             if (var2 != Biomes.WOODED_BADLANDS_PLATEAU && var2 != Biomes.BADLANDS_PLATEAU) {
+                if (var2.getBiomeCategory() != Biome.BiomeCategory.NONE && var3.getBiomeCategory() != Biome.BiomeCategory.NONE && var2.getBiomeCategory() == var3.getBiomeCategory()) {
+                   return true;
+                } else {
+@@ -126,17 +122,17 @@
+    protected static boolean isShallowOcean(int var0) {
+       return var0 == WARM_OCEAN || var0 == LUKEWARM_OCEAN || var0 == OCEAN || var0 == COLD_OCEAN || var0 == FROZEN_OCEAN;
+    }
+ 
+    static {
+-      WARM_OCEAN = Registry.BIOME.getId(Biomes.WARM_OCEAN);
+-      LUKEWARM_OCEAN = Registry.BIOME.getId(Biomes.LUKEWARM_OCEAN);
+-      OCEAN = Registry.BIOME.getId(Biomes.OCEAN);
+-      COLD_OCEAN = Registry.BIOME.getId(Biomes.COLD_OCEAN);
+-      FROZEN_OCEAN = Registry.BIOME.getId(Biomes.FROZEN_OCEAN);
+-      DEEP_WARM_OCEAN = Registry.BIOME.getId(Biomes.DEEP_WARM_OCEAN);
+-      DEEP_LUKEWARM_OCEAN = Registry.BIOME.getId(Biomes.DEEP_LUKEWARM_OCEAN);
+-      DEEP_OCEAN = Registry.BIOME.getId(Biomes.DEEP_OCEAN);
+-      DEEP_COLD_OCEAN = Registry.BIOME.getId(Biomes.DEEP_COLD_OCEAN);
+-      DEEP_FROZEN_OCEAN = Registry.BIOME.getId(Biomes.DEEP_FROZEN_OCEAN);
++      WARM_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.WARM_OCEAN);
++      LUKEWARM_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.LUKEWARM_OCEAN);
++      OCEAN = BuiltinRegistries.BIOME.getId(Biomes.OCEAN);
++      COLD_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.COLD_OCEAN);
++      FROZEN_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.FROZEN_OCEAN);
++      DEEP_WARM_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.DEEP_WARM_OCEAN);
++      DEEP_LUKEWARM_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.DEEP_LUKEWARM_OCEAN);
++      DEEP_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.DEEP_OCEAN);
++      DEEP_COLD_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.DEEP_COLD_OCEAN);
++      DEEP_FROZEN_OCEAN = BuiltinRegistries.BIOME.getId(Biomes.DEEP_FROZEN_OCEAN);
+    }
+ }

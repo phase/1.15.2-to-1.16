@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/SimpleBlockFeature.java
 +++ net/minecraft/world/level/levelgen/feature/SimpleBlockFeature.java
-@@ -1,24 +1,23 @@
+@@ -1,22 +1,20 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -9,7 +9,6 @@
 -import java.util.function.Function;
  import net.minecraft.core.BlockPos;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.chunk.ChunkGenerator;
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
@@ -22,13 +21,9 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, SimpleBlockConfiguration var5) {
--      if (var5.placeOn.contains(var1.getBlockState(var4.below())) && var5.placeIn.contains(var1.getBlockState(var4)) && var5.placeUnder.contains(var1.getBlockState(var4.above()))) {
--         var1.setBlock(var4, var5.toPlace, 2);
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, SimpleBlockConfiguration var6) {
-+      if (var6.placeOn.contains(var1.getBlockState(var5.below())) && var6.placeIn.contains(var1.getBlockState(var5)) && var6.placeUnder.contains(var1.getBlockState(var5.above()))) {
-+         var1.setBlock(var5, var6.toPlace, 2);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, SimpleBlockConfiguration var5) {
+       if (var5.placeOn.contains(var1.getBlockState(var4.below())) && var5.placeIn.contains(var1.getBlockState(var4)) && var5.placeUnder.contains(var1.getBlockState(var4.above()))) {
+          var1.setBlock(var4, var5.toPlace, 2);
           return true;
        } else {
           return false;
-       }
-    }

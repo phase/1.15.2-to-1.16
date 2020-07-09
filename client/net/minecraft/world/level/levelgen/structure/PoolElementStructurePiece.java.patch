@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece.java
 +++ net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece.java
-@@ -1,30 +1,32 @@
+@@ -1,68 +1,78 @@
  package net.minecraft.world.level.levelgen.structure;
  
  import com.google.common.collect.Lists;
@@ -31,16 +31,38 @@
 +import org.apache.logging.log4j.LogManager;
 +import org.apache.logging.log4j.Logger;
  
- public abstract class PoolElementStructurePiece extends StructurePiece {
+-public abstract class PoolElementStructurePiece extends StructurePiece {
++public class PoolElementStructurePiece extends StructurePiece {
 +   private static final Logger LOGGER = LogManager.getLogger();
     protected final StructurePoolElement element;
     protected BlockPos position;
     private final int groundLevelDelta;
     protected final Rotation rotation;
     private final List<JigsawJunction> junctions = Lists.newArrayList();
-@@ -43,11 +45,14 @@
-    public PoolElementStructurePiece(StructureManager var1, CompoundTag var2, StructurePieceType var3) {
-       super(var3, var2);
+    private final StructureManager structureManager;
+ 
+-   public PoolElementStructurePiece(StructurePieceType var1, StructureManager var2, StructurePoolElement var3, BlockPos var4, int var5, Rotation var6, BoundingBox var7) {
+-      super(var1, 0);
+-      this.structureManager = var2;
+-      this.element = var3;
+-      this.position = var4;
+-      this.groundLevelDelta = var5;
+-      this.rotation = var6;
+-      this.boundingBox = var7;
++   public PoolElementStructurePiece(StructureManager var1, StructurePoolElement var2, BlockPos var3, int var4, Rotation var5, BoundingBox var6) {
++      super(StructurePieceType.JIGSAW, 0);
++      this.structureManager = var1;
++      this.element = var2;
++      this.position = var3;
++      this.groundLevelDelta = var4;
++      this.rotation = var5;
++      this.boundingBox = var6;
+    }
+ 
+-   public PoolElementStructurePiece(StructureManager var1, CompoundTag var2, StructurePieceType var3) {
+-      super(var3, var2);
++   public PoolElementStructurePiece(StructureManager var1, CompoundTag var2) {
++      super(StructurePieceType.JIGSAW, var2);
        this.structureManager = var1;
        this.position = new BlockPos(var2.getInt("PosX"), var2.getInt("PosY"), var2.getInt("PosZ"));
        this.groundLevelDelta = var2.getInt("ground_level_delta");
@@ -51,10 +73,15 @@
 +      this.element = (StructurePoolElement)var10001.resultOrPartial(var10002::error).orElse(EmptyPoolElement.INSTANCE);
        this.rotation = Rotation.valueOf(var2.getString("rotation"));
        this.boundingBox = this.element.getBoundingBox(var1, this.position, this.rotation);
-       ListTag var4 = var2.getList("junctions", 10);
+-      ListTag var4 = var2.getList("junctions", 10);
++      ListTag var3 = var2.getList("junctions", 10);
        this.junctions.clear();
-       var4.forEach((var1x) -> {
-@@ -58,11 +63,16 @@
+-      var4.forEach((var1x) -> {
++      var3.forEach((var1x) -> {
+          this.junctions.add(JigsawJunction.deserialize(new Dynamic(NbtOps.INSTANCE, var1x)));
+       });
+    }
+ 
     protected void addAdditionalSaveData(CompoundTag var1) {
        var1.putInt("PosX", this.position.getX());
        var1.putInt("PosY", this.position.getY());

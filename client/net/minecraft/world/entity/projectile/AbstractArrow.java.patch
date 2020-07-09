@@ -247,7 +247,7 @@
           this.piercedAndKilledEntities.clear();
        }
  
-@@ -333,10 +280,11 @@
+@@ -333,13 +280,14 @@
        }
  
     }
@@ -256,10 +256,52 @@
 +      super.onHitEntity(var1);
        Entity var2 = var1.getEntity();
        float var3 = (float)this.getDeltaMovement().length();
-       int var4 = Mth.ceil(Math.max((double)var3 * this.baseDamage, 0.0D));
+-      int var4 = Mth.ceil(Math.max((double)var3 * this.baseDamage, 0.0D));
++      int var4 = Mth.ceil(Mth.clamp((double)var3 * this.baseDamage, 0.0D, 2.147483647E9D));
        if (this.getPierceLevel() > 0) {
           if (this.piercingIgnoreEntityIds == null) {
-@@ -398,24 +346,24 @@
+             this.piercingIgnoreEntityIds = new IntOpenHashSet(5);
+          }
+ 
+@@ -354,19 +302,20 @@
+ 
+          this.piercingIgnoreEntityIds.add(var2.getId());
+       }
+ 
+       if (this.isCritArrow()) {
+-         var4 += this.random.nextInt(var4 / 2 + 2);
++         long var5 = (long)this.random.nextInt(var4 / 2 + 2);
++         var4 = (int)Math.min(var5 + (long)var4, 2147483647L);
+       }
+ 
+       Entity var6 = this.getOwner();
+-      DamageSource var5;
++      DamageSource var11;
+       if (var6 == null) {
+-         var5 = DamageSource.arrow(this, this);
++         var11 = DamageSource.arrow(this, this);
+       } else {
+-         var5 = DamageSource.arrow(this, var6);
++         var11 = DamageSource.arrow(this, var6);
+          if (var6 instanceof LivingEntity) {
+             ((LivingEntity)var6).setLastHurtMob(var2);
+          }
+       }
+ 
+@@ -374,11 +323,11 @@
+       int var8 = var2.getRemainingFireTicks();
+       if (this.isOnFire() && !var7) {
+          var2.setSecondsOnFire(5);
+       }
+ 
+-      if (var2.hurt(var5, (float)var4)) {
++      if (var2.hurt(var11, (float)var4)) {
+          if (var7) {
+             return;
+          }
+ 
+          if (var2 instanceof LivingEntity) {
+@@ -398,24 +347,24 @@
                 EnchantmentHelper.doPostHurtEffects(var9, var6);
                 EnchantmentHelper.doPostDamageEffects((LivingEntity)var6, var9);
              }
@@ -276,19 +318,20 @@
              }
  
              if (!this.level.isClientSide && var6 instanceof ServerPlayer) {
-                ServerPlayer var11 = (ServerPlayer)var6;
+-               ServerPlayer var11 = (ServerPlayer)var6;
++               ServerPlayer var12 = (ServerPlayer)var6;
                 if (this.piercedAndKilledEntities != null && this.shotFromCrossbow()) {
 -                  CriteriaTriggers.KILLED_BY_CROSSBOW.trigger(var11, this.piercedAndKilledEntities, this.piercedAndKilledEntities.size());
-+                  CriteriaTriggers.KILLED_BY_CROSSBOW.trigger(var11, this.piercedAndKilledEntities);
++                  CriteriaTriggers.KILLED_BY_CROSSBOW.trigger(var12, this.piercedAndKilledEntities);
                 } else if (!var2.isAlive() && this.shotFromCrossbow()) {
 -                  CriteriaTriggers.KILLED_BY_CROSSBOW.trigger(var11, Arrays.asList(var2), 0);
-+                  CriteriaTriggers.KILLED_BY_CROSSBOW.trigger(var11, Arrays.asList(var2));
++                  CriteriaTriggers.KILLED_BY_CROSSBOW.trigger(var12, Arrays.asList(var2));
                 }
              }
           }
  
           this.playSound(this.soundEvent, 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
-@@ -425,11 +373,10 @@
+@@ -425,11 +374,10 @@
        } else {
           var2.setRemainingFireTicks(var8);
           this.setDeltaMovement(this.getDeltaMovement().scale(-0.1D));
@@ -300,7 +343,7 @@
                 this.spawnAtLocation(this.getPickupItem(), 0.1F);
              }
  
-@@ -437,10 +384,27 @@
+@@ -437,10 +385,27 @@
           }
        }
  
@@ -328,7 +371,7 @@
     }
  
     protected final SoundEvent getHitGroundSoundEvent() {
-@@ -450,16 +414,19 @@
+@@ -450,16 +415,19 @@
     protected void doPostHurtEffects(LivingEntity var1) {
     }
  
@@ -351,7 +394,7 @@
           var1.put("inBlockState", NbtUtils.writeBlockState(this.lastState));
        }
  
-@@ -467,19 +434,16 @@
+@@ -467,19 +435,16 @@
        var1.putBoolean("inGround", this.inGround);
        var1.putByte("pickup", (byte)this.pickup.ordinal());
        var1.putDouble("damage", this.baseDamage);
@@ -372,7 +415,7 @@
           this.lastState = NbtUtils.readBlockState(var1.getCompound("inBlockState"));
        }
  
-@@ -495,34 +459,25 @@
+@@ -495,34 +460,25 @@
           this.pickup = var1.getBoolean("player") ? AbstractArrow.Pickup.ALLOWED : AbstractArrow.Pickup.DISALLOWED;
        }
  
@@ -408,7 +451,7 @@
           boolean var2 = this.pickup == AbstractArrow.Pickup.ALLOWED || this.pickup == AbstractArrow.Pickup.CREATIVE_ONLY && var1.abilities.instabuild || this.isNoPhysics() && this.getOwner().getUUID() == var1.getUUID();
           if (this.pickup == AbstractArrow.Pickup.ALLOWED && !var1.inventory.add(this.getPickupItem())) {
              var2 = false;
-@@ -557,11 +512,11 @@
+@@ -557,11 +513,11 @@
     public boolean isAttackable() {
        return false;
     }
@@ -421,7 +464,7 @@
     public void setCritArrow(boolean var1) {
        this.setFlag(1, var1);
     }
-@@ -638,11 +593,10 @@
+@@ -638,11 +594,10 @@
        return new ClientboundAddEntityPacket(this, var1 == null ? 0 : var1.getId());
     }
  

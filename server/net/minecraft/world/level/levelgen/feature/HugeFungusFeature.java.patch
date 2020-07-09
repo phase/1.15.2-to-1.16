@@ -1,16 +1,14 @@
 --- net/minecraft/world/level/levelgen/feature/HugeFungusFeature.java
 +++ net/minecraft/world/level/levelgen/feature/HugeFungusFeature.java
-@@ -1,0 +1,196 @@
+@@ -1,0 +1,175 @@
 +package net.minecraft.world.level.levelgen.feature;
 +
 +import com.mojang.serialization.Codec;
 +import java.util.Random;
-+import javax.annotation.Nullable;
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.core.Direction;
 +import net.minecraft.util.Mth;
 +import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
 +import net.minecraft.world.level.block.Block;
 +import net.minecraft.world.level.block.Blocks;
@@ -23,37 +21,33 @@
 +      super(var1);
 +   }
 +
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, HugeFungusConfiguration var6) {
-+      Block var7 = var6.validBaseState.getBlock();
-+      Object var8 = null;
-+      if (var6.planted) {
-+         Block var9 = var1.getBlockState(var5.below()).getBlock();
-+         if (var9 == var7) {
-+            var8 = var5;
-+         }
-+      } else {
-+         var8 = findOnNyliumPosition(var1, var5, var7);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, HugeFungusConfiguration var5) {
++      Block var6 = var5.validBaseState.getBlock();
++      BlockPos var7 = null;
++      Block var8 = var1.getBlockState(var4.below()).getBlock();
++      if (var8 == var6) {
++         var7 = var4;
 +      }
 +
-+      if (var8 == null) {
++      if (var7 == null) {
 +         return false;
 +      } else {
-+         int var11 = Mth.nextInt(var4, 4, 13);
-+         if (var4.nextInt(12) == 0) {
-+            var11 *= 2;
++         int var9 = Mth.nextInt(var3, 4, 13);
++         if (var3.nextInt(12) == 0) {
++            var9 *= 2;
 +         }
 +
-+         if (!var6.planted) {
-+            int var10 = var3.getGenDepth();
-+            if (((BlockPos)var8).getY() + var11 + 1 >= var10) {
++         if (!var5.planted) {
++            int var10 = var2.getGenDepth();
++            if (var7.getY() + var9 + 1 >= var10) {
 +               return false;
 +            }
 +         }
 +
-+         boolean var12 = !var6.planted && var4.nextFloat() < 0.06F;
-+         var1.setBlock(var5, Blocks.AIR.defaultBlockState(), 4);
-+         this.placeStem(var1, var4, var6, (BlockPos)var8, var11, var12);
-+         this.placeHat(var1, var4, var6, (BlockPos)var8, var11, var12);
++         boolean var11 = !var5.planted && var3.nextFloat() < 0.06F;
++         var1.setBlock(var4, Blocks.AIR.defaultBlockState(), 4);
++         this.placeStem(var1, var3, var5, var7, var9, var11);
++         this.placeHat(var1, var3, var5, var7, var9, var11);
 +         return true;
 +      }
 +   }
@@ -61,7 +55,7 @@
 +   private static boolean isReplaceable(LevelAccessor var0, BlockPos var1, boolean var2) {
 +      return var0.isStateAtPosition(var1, (var1x) -> {
 +         Material var2x = var1x.getMaterial();
-+         return var1x.isAir() || var1x.is(Blocks.WATER) || var1x.is(Blocks.LAVA) || var2x == Material.REPLACEABLE_PLANT || var2 && var2x == Material.PLANT;
++         return var1x.getMaterial().isReplaceable() || var2 && var2x == Material.PLANT;
 +      });
 +   }
 +
@@ -166,21 +160,6 @@
 +         }
 +      }
 +
-+   }
-+
-+   @Nullable
-+   private static BlockPos.MutableBlockPos findOnNyliumPosition(LevelAccessor var0, BlockPos var1, Block var2) {
-+      BlockPos.MutableBlockPos var3 = var1.mutable();
-+
-+      for(int var4 = var1.getY(); var4 >= 1; --var4) {
-+         var3.setY(var4);
-+         Block var5 = var0.getBlockState(var3.below()).getBlock();
-+         if (var5 == var2) {
-+            return var3;
-+         }
-+      }
-+
-+      return null;
 +   }
 +
 +   private static void tryPlaceWeepingVines(BlockPos var0, LevelAccessor var1, Random var2) {

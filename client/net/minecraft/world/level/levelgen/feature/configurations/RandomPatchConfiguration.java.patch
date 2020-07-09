@@ -35,19 +35,19 @@
 +         return (List)var0x.whitelist.stream().map(Block::defaultBlockState).collect(Collectors.toList());
 +      }), BlockState.CODEC.listOf().fieldOf("blacklist").forGetter((var0x) -> {
 +         return ImmutableList.copyOf(var0x.blacklist);
-+      }), Codec.INT.fieldOf("tries").withDefault(128).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("tries").orElse(128).forGetter((var0x) -> {
 +         return var0x.tries;
-+      }), Codec.INT.fieldOf("xspread").withDefault(7).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("xspread").orElse(7).forGetter((var0x) -> {
 +         return var0x.xspread;
-+      }), Codec.INT.fieldOf("yspread").withDefault(3).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("yspread").orElse(3).forGetter((var0x) -> {
 +         return var0x.yspread;
-+      }), Codec.INT.fieldOf("zspread").withDefault(7).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("zspread").orElse(7).forGetter((var0x) -> {
 +         return var0x.zspread;
-+      }), Codec.BOOL.fieldOf("can_replace").withDefault(false).forGetter((var0x) -> {
++      }), Codec.BOOL.fieldOf("can_replace").orElse(false).forGetter((var0x) -> {
 +         return var0x.canReplace;
-+      }), Codec.BOOL.fieldOf("project").withDefault(true).forGetter((var0x) -> {
++      }), Codec.BOOL.fieldOf("project").orElse(true).forGetter((var0x) -> {
 +         return var0x.project;
-+      }), Codec.BOOL.fieldOf("need_water").withDefault(false).forGetter((var0x) -> {
++      }), Codec.BOOL.fieldOf("need_water").orElse(false).forGetter((var0x) -> {
 +         return var0x.needWater;
 +      })).apply(var0, RandomPatchConfiguration::new);
 +   });

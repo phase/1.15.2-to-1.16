@@ -1,6 +1,6 @@
 --- com/mojang/serialization/codecs/KeyDispatchCodec.java
 +++ com/mojang/serialization/codecs/KeyDispatchCodec.java
-@@ -1,0 +1,109 @@
+@@ -1,0 +1,124 @@
 +package com.mojang.serialization.codecs;
 +
 +import com.mojang.datafixers.util.Pair;
@@ -22,20 +22,26 @@
 +   private final Function<? super V, ? extends DataResult<? extends K>> type;
 +   private final Function<? super K, ? extends DataResult<? extends Decoder<? extends V>>> decoder;
 +   private final Function<? super V, ? extends DataResult<? extends Encoder<V>>> encoder;
++   private final boolean assumeMap;
 +
-+   public KeyDispatchCodec(String var1, Codec<K> var2, Function<? super V, ? extends DataResult<? extends K>> var3, Function<? super K, ? extends DataResult<? extends Decoder<? extends V>>> var4, Function<? super V, ? extends DataResult<? extends Encoder<V>>> var5) {
++   public static <K, V> KeyDispatchCodec<K, V> unsafe(String var0, Codec<K> var1, Function<? super V, ? extends DataResult<? extends K>> var2, Function<? super K, ? extends DataResult<? extends Decoder<? extends V>>> var3, Function<? super V, ? extends DataResult<? extends Encoder<V>>> var4) {
++      return new KeyDispatchCodec(var0, var1, var2, var3, var4, true);
++   }
++
++   protected KeyDispatchCodec(String var1, Codec<K> var2, Function<? super V, ? extends DataResult<? extends K>> var3, Function<? super K, ? extends DataResult<? extends Decoder<? extends V>>> var4, Function<? super V, ? extends DataResult<? extends Encoder<V>>> var5, boolean var6) {
 +      this.valueKey = "value";
 +      this.typeKey = var1;
 +      this.keyCodec = var2;
 +      this.type = var3;
 +      this.decoder = var4;
 +      this.encoder = var5;
++      this.assumeMap = var6;
 +   }
 +
 +   public KeyDispatchCodec(String var1, Codec<K> var2, Function<? super V, ? extends DataResult<? extends K>> var3, Function<? super K, ? extends DataResult<? extends Codec<? extends V>>> var4) {
 +      this(var1, var2, var3, var4, (var2x) -> {
 +         return getCodec(var3, var4, var2x);
-+      });
++      }, false);
 +   }
 +
 +   public <T> DataResult<V> decode(DynamicOps<T> var1, MapLike<T> var2) {
@@ -46,8 +52,10 @@
 +            if (var1.compressMaps()) {
 +               Object var4 = var2.get(var1.createString("value"));
 +               return var4 == null ? DataResult.error("Input does not have a \"value\" entry: " + var2) : var3.parse(var1, var4).map(Function.identity());
++            } else if (var3 instanceof MapCodec.MapCodecCodec) {
++               return ((MapCodec.MapCodecCodec)var3).codec().decode(var1, var2).map(Function.identity());
 +            } else {
-+               return var3 instanceof MapCodec.MapCodecCodec ? ((MapCodec.MapCodecCodec)var3).codec().decode(var1, var2).map(Function.identity()) : var3.decode(var1, var1.createMap(var2.entries())).map(Pair::getFirst);
++               return this.assumeMap ? var3.decode(var1, var1.createMap(var2.entries())).map(Pair::getFirst) : var3.decode(var1, var2.get("value")).map(Pair::getFirst);
 +            }
 +         });
 +      });
@@ -70,24 +78,31 @@
 +            }));
 +         } else {
 +            Object var7 = var2.createString(this.typeKey);
-+            DataResult var10000 = var6.encodeStart(var2, var1);
-+            var2.getClass();
-+            DataResult var8 = var10000.flatMap(var2::getMap);
-+            return (RecordBuilder)var8.map((var5x) -> {
-+               var5x.entries().forEach((var5) -> {
-+                  if (var5.getFirst().equals(var7)) {
-+                     var3.add(var7, ((DataResult)this.type.apply(var1)).flatMap((var2x) -> {
-+                        return this.keyCodec.encodeStart(var2, var2x);
-+                     }));
-+                  } else {
-+                     var3.add(var5.getFirst(), var5.getSecond());
-+                  }
++            DataResult var8 = var6.encodeStart(var2, var1);
++            if (this.assumeMap) {
++               var2.getClass();
++               DataResult var9 = var8.flatMap(var2::getMap);
++               return (RecordBuilder)var9.map((var5x) -> {
++                  var3.add(var7, ((DataResult)this.type.apply(var1)).flatMap((var2x) -> {
++                     return this.keyCodec.encodeStart(var2, var2x);
++                  }));
++                  var5x.entries().forEach((var2x) -> {
++                     if (!var2x.getFirst().equals(var7)) {
++                        var3.add(var2x.getFirst(), var2x.getSecond());
++                     }
 +
++                  });
++                  return var3;
++               }).result().orElseGet(() -> {
++                  return var3.withErrorsFrom(var9);
 +               });
++            } else {
++               var3.add(var7, ((DataResult)this.type.apply(var1)).flatMap((var2x) -> {
++                  return this.keyCodec.encodeStart(var2, var2x);
++               }));
++               var3.add("value", var8);
 +               return var3;
-+            }).result().orElseGet(() -> {
-+               return var3.withErrorsFrom(var8);
-+            });
++            }
 +         }
 +      }
 +   }

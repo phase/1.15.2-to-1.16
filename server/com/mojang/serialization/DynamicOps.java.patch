@@ -1,10 +1,9 @@
 --- com/mojang/serialization/DynamicOps.java
 +++ com/mojang/serialization/DynamicOps.java
-@@ -1,0 +1,315 @@
+@@ -1,0 +1,280 @@
 +package com.mojang.serialization;
 +
 +import com.google.common.collect.ImmutableMap;
-+import com.mojang.datafixers.util.Function3;
 +import com.mojang.datafixers.util.Pair;
 +import java.nio.ByteBuffer;
 +import java.util.Iterator;
@@ -248,42 +247,8 @@
 +      return new ListBuilder.Builder(this);
 +   }
 +
-+   default <E> DataResult<T> list(Iterable<E> var1, T var2, Encoder<E> var3) {
-+      ListBuilder var4 = this.listBuilder();
-+      var4.addAll(var1, var3);
-+      return var4.build(var2);
-+   }
-+
-+   default <E> DataResult<T> list(Iterable<E> var1, T var2, Function<? super E, ? extends DataResult<T>> var3) {
-+      ListBuilder var4 = this.listBuilder();
-+      var1.forEach((var2x) -> {
-+         var4.add((DataResult)var3.apply(var2x));
-+      });
-+      return var4.build(var2);
-+   }
-+
 +   default RecordBuilder<T> mapBuilder() {
 +      return new RecordBuilder.MapBuilder(this);
-+   }
-+
-+   default <K, V> DataResult<T> map(Map<K, V> var1, T var2, Function<? super K, ? extends DataResult<T>> var3, Function<? super V, ? extends DataResult<T>> var4) {
-+      RecordBuilder var5 = this.mapBuilder();
-+      var1.forEach((var3x, var4x) -> {
-+         var5.add((DataResult)var3.apply(var3x), (DataResult)var4.apply(var4x));
-+      });
-+      return var5.build(var2);
-+   }
-+
-+   default <R> DataResult<R> readMap(T var1, DataResult<R> var2, Function3<R, T, T, DataResult<R>> var3) {
-+      return this.getMapValues(var1).flatMap((var2x) -> {
-+         MutableObject var3x = new MutableObject(var2);
-+         var2x.forEach((var2xx) -> {
-+            var3x.setValue(((DataResult)var3x.getValue()).flatMap((var2) -> {
-+               return (DataResult)var3.apply(var2, var2xx.getFirst(), var2xx.getSecond());
-+            }));
-+         });
-+         return (DataResult)var3x.getValue();
-+      });
 +   }
 +
 +   default <E> Function<E, DataResult<T>> withEncoder(Encoder<E> var1) {

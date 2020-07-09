@@ -1,13 +1,13 @@
 --- net/minecraft/world/level/levelgen/feature/foliageplacers/FoliagePlacer.java
 +++ net/minecraft/world/level/levelgen/feature/foliageplacers/FoliagePlacer.java
-@@ -1,62 +1,122 @@
+@@ -1,62 +1,115 @@
  package net.minecraft.world.level.levelgen.feature.foliageplacers;
  
 -import com.google.common.collect.ImmutableMap;
 -import com.google.common.collect.ImmutableMap.Builder;
 -import com.mojang.datafixers.Dynamic;
 -import com.mojang.datafixers.types.DynamicOps;
-+import com.mojang.datafixers.Products.P4;
++import com.mojang.datafixers.Products.P2;
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 +import com.mojang.serialization.codecs.RecordCodecBuilder.Mu;
@@ -16,6 +16,7 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Registry;
 -import net.minecraft.util.Serializable;
++import net.minecraft.util.UniformInt;
  import net.minecraft.world.level.LevelSimulatedRW;
 -import net.minecraft.world.level.levelgen.feature.AbstractTreeFeature;
 -import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
@@ -24,33 +25,28 @@
 +import net.minecraft.world.level.levelgen.structure.BoundingBox;
  
 -public abstract class FoliagePlacer implements Serializable {
+-   protected final int radius;
+-   protected final int radiusRandom;
+-   protected final FoliagePlacerType<?> type;
 +public abstract class FoliagePlacer {
 +   public static final Codec<FoliagePlacer> CODEC;
-    protected final int radius;
-    protected final int radiusRandom;
--   protected final FoliagePlacerType<?> type;
-+   protected final int offset;
-+   protected final int offsetRandom;
++   protected final UniformInt radius;
++   protected final UniformInt offset;
  
 -   public FoliagePlacer(int var1, int var2, FoliagePlacerType<?> var3) {
-+   protected static <P extends FoliagePlacer> P4<Mu<P>, Integer, Integer, Integer, Integer> foliagePlacerParts(Instance<P> var0) {
-+      return var0.group(Codec.INT.fieldOf("radius").forGetter((var0x) -> {
++   protected static <P extends FoliagePlacer> P2<Mu<P>, UniformInt, UniformInt> foliagePlacerParts(Instance<P> var0) {
++      return var0.group(UniformInt.codec(0, 8, 8).fieldOf("radius").forGetter((var0x) -> {
 +         return var0x.radius;
-+      }), Codec.INT.fieldOf("radius_random").forGetter((var0x) -> {
-+         return var0x.radiusRandom;
-+      }), Codec.INT.fieldOf("offset").forGetter((var0x) -> {
++      }), UniformInt.codec(0, 8, 8).fieldOf("offset").forGetter((var0x) -> {
 +         return var0x.offset;
-+      }), Codec.INT.fieldOf("offset_random").forGetter((var0x) -> {
-+         return var0x.offsetRandom;
 +      }));
 +   }
 +
-+   public FoliagePlacer(int var1, int var2, int var3, int var4) {
++   public FoliagePlacer(UniformInt var1, UniformInt var2) {
        this.radius = var1;
-       this.radiusRandom = var2;
+-      this.radiusRandom = var2;
 -      this.type = var3;
-+      this.offset = var3;
-+      this.offsetRandom = var4;
++      this.offset = var2;
     }
  
 -   public abstract void createFoliage(LevelSimulatedRW var1, Random var2, SmallTreeConfiguration var3, int var4, int var5, int var6, BlockPos var7, Set<BlockPos> var8);
@@ -70,7 +66,7 @@
 -   protected void placeLeavesRow(LevelSimulatedRW var1, Random var2, SmallTreeConfiguration var3, int var4, BlockPos var5, int var6, int var7, Set<BlockPos> var8) {
 -      BlockPos.MutableBlockPos var9 = new BlockPos.MutableBlockPos();
 +   public int foliageRadius(Random var1, int var2) {
-+      return this.radius + var1.nextInt(this.radiusRandom + 1);
++      return this.radius.sample(var1);
 +   }
  
 -      for(int var10 = -var7; var10 <= var7; ++var10) {
@@ -79,7 +75,7 @@
 -               var9.set(var10 + var5.getX(), var6 + var5.getY(), var11 + var5.getZ());
 -               this.placeLeaf(var1, var2, var9, var3, var8);
 +   private int offset(Random var1) {
-+      return this.offset + var1.nextInt(this.offsetRandom + 1);
++      return this.offset.sample(var1);
 +   }
 +
 +   protected abstract boolean shouldSkipLocation(Random var1, int var2, int var3, int var4, int var5, boolean var6);

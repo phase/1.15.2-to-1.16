@@ -1,28 +1,26 @@
 --- net/minecraft/world/level/biome/CheckerboardColumnBiomeSource.java
 +++ net/minecraft/world/level/biome/CheckerboardColumnBiomeSource.java
-@@ -1,18 +1,38 @@
+@@ -1,18 +1,36 @@
  package net.minecraft.world.level.biome;
  
 -import com.google.common.collect.ImmutableSet;
 +import com.google.common.collect.ImmutableList;
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
-+import java.util.Collection;
 +import java.util.List;
 +import java.util.function.BiFunction;
-+import net.minecraft.core.Registry;
-+import net.minecraft.util.Codecs;
++import java.util.function.Supplier;
  
  public class CheckerboardColumnBiomeSource extends BiomeSource {
 -   private final Biome[] allowedBiomes;
 +   public static final Codec<CheckerboardColumnBiomeSource> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(Registry.BIOME.listOf().fieldOf("biomes").forGetter((var0x) -> {
++      return var0.group(Biome.CODEC.listOf().fieldOf("biomes").forGetter((var0x) -> {
 +         return var0x.allowedBiomes;
-+      }), Codecs.intRange(0, 62).fieldOf("scale").withDefault((int)2).forGetter((var0x) -> {
++      }), Codec.intRange(0, 62).fieldOf("scale").orElse(2).forGetter((var0x) -> {
 +         return var0x.size;
 +      })).apply(var0, (BiFunction)(CheckerboardColumnBiomeSource::new));
 +   });
-+   private final List<Biome> allowedBiomes;
++   private final List<Supplier<Biome>> allowedBiomes;
     private final int bitShift;
 +   private final int size;
  
@@ -30,8 +28,8 @@
 -      super(ImmutableSet.copyOf((Object[])var1.getAllowedBiomes()));
 -      this.allowedBiomes = var1.getAllowedBiomes();
 -      this.bitShift = var1.getSize() + 2;
-+   public CheckerboardColumnBiomeSource(List<Biome> var1, int var2) {
-+      super(ImmutableList.copyOf((Collection)var1));
++   public CheckerboardColumnBiomeSource(List<Supplier<Biome>> var1, int var2) {
++      super((List)var1.stream().map(Supplier::get).collect(ImmutableList.toImmutableList()));
 +      this.allowedBiomes = var1;
 +      this.bitShift = var2 + 2;
 +      this.size = var2;
@@ -43,6 +41,6 @@
 +
     public Biome getNoiseBiome(int var1, int var2, int var3) {
 -      return this.allowedBiomes[Math.abs(((var1 >> this.bitShift) + (var3 >> this.bitShift)) % this.allowedBiomes.length)];
-+      return (Biome)this.allowedBiomes.get(Math.floorMod((var1 >> this.bitShift) + (var3 >> this.bitShift), this.allowedBiomes.size()));
++      return (Biome)((Supplier)this.allowedBiomes.get(Math.floorMod((var1 >> this.bitShift) + (var3 >> this.bitShift), this.allowedBiomes.size()))).get();
     }
  }

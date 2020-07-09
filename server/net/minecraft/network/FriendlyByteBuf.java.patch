@@ -29,7 +29,7 @@
     }
  
 +   public <T> T readWithCodec(Codec<T> var1) throws IOException {
-+      CompoundTag var2 = this.readNbt();
++      CompoundTag var2 = this.readAnySizeNbt();
 +      DataResult var3 = var1.parse(NbtOps.INSTANCE, var2);
 +      if (var3.error().isPresent()) {
 +         throw new IOException("Failed to decode: " + ((DataResult.PartialResult)var3.error().get()).message() + " " + var2);
@@ -52,7 +52,46 @@
        this.writeBytes(var1);
        return this;
     }
-@@ -319,11 +341,11 @@
+@@ -216,21 +238,31 @@
+       return this;
+    }
+ 
+    @Nullable
+    public CompoundTag readNbt() {
+-      int var1 = this.readerIndex();
+-      byte var2 = this.readByte();
+-      if (var2 == 0) {
++      return this.readNbt(new NbtAccounter(2097152L));
++   }
++
++   @Nullable
++   public CompoundTag readAnySizeNbt() {
++      return this.readNbt(NbtAccounter.UNLIMITED);
++   }
++
++   @Nullable
++   public CompoundTag readNbt(NbtAccounter var1) {
++      int var2 = this.readerIndex();
++      byte var3 = this.readByte();
++      if (var3 == 0) {
+          return null;
+       } else {
+-         this.readerIndex(var1);
++         this.readerIndex(var2);
+ 
+          try {
+-            return NbtIo.read(new ByteBufInputStream(this), new NbtAccounter(2097152L));
+-         } catch (IOException var4) {
+-            throw new EncoderException(var4);
++            return NbtIo.read(new ByteBufInputStream(this), var1);
++         } catch (IOException var5) {
++            throw new EncoderException(var5);
+          }
+       }
+    }
+ 
+    public FriendlyByteBuf writeItem(ItemStack var1) {
+@@ -319,11 +351,11 @@
        Direction var2 = (Direction)this.readEnum(Direction.class);
        float var3 = this.readFloat();
        float var4 = this.readFloat();

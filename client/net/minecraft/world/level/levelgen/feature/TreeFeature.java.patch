@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/TreeFeature.java
 +++ net/minecraft/world/level/levelgen/feature/TreeFeature.java
-@@ -1,33 +1,270 @@
+@@ -1,33 +1,269 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -26,7 +26,6 @@
 -import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
 +import net.minecraft.world.level.LevelSimulatedReader;
 +import net.minecraft.world.level.LevelWriter;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
 +import net.minecraft.world.level.block.Block;
 +import net.minecraft.world.level.block.Blocks;
@@ -177,25 +176,25 @@
 +      setBlockKnownShape(var1, var2, var3);
 +   }
 +
-+   public final boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, TreeConfiguration var6) {
++   public final boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, TreeConfiguration var5) {
++      HashSet var6 = Sets.newHashSet();
 +      HashSet var7 = Sets.newHashSet();
 +      HashSet var8 = Sets.newHashSet();
-+      HashSet var9 = Sets.newHashSet();
-+      BoundingBox var10 = BoundingBox.getUnknownBox();
-+      boolean var11 = this.doPlace(var1, var4, var5, var7, var8, var10, var6);
-+      if (var10.x0 <= var10.x1 && var11 && !var7.isEmpty()) {
-+         if (!var6.decorators.isEmpty()) {
++      BoundingBox var9 = BoundingBox.getUnknownBox();
++      boolean var10 = this.doPlace(var1, var3, var4, var6, var7, var9, var5);
++      if (var9.x0 <= var9.x1 && var10 && !var6.isEmpty()) {
++         if (!var5.decorators.isEmpty()) {
++            ArrayList var11 = Lists.newArrayList(var6);
 +            ArrayList var12 = Lists.newArrayList(var7);
-+            ArrayList var13 = Lists.newArrayList(var8);
++            var11.sort(Comparator.comparingInt(Vec3i::getY));
 +            var12.sort(Comparator.comparingInt(Vec3i::getY));
-+            var13.sort(Comparator.comparingInt(Vec3i::getY));
-+            var6.decorators.forEach((var6x) -> {
-+               var6x.place(var1, var4, var12, var13, var9, var10);
++            var5.decorators.forEach((var6x) -> {
++               var6x.place(var1, var3, var11, var12, var8, var9);
 +            });
 +         }
 +
-+         DiscreteVoxelShape var14 = this.updateLeaves(var1, var10, var7, var9);
-+         StructureTemplate.updateShapeAtEdge(var1, 3, var14, var10.x0, var10.y0, var10.z0);
++         DiscreteVoxelShape var13 = this.updateLeaves(var1, var9, var6, var8);
++         StructureTemplate.updateShapeAtEdge(var1, 3, var13, var9.x0, var9.y0, var9.z0);
           return true;
 +      } else {
 +         return false;

@@ -32,7 +32,7 @@
                       var2.awardStat(Stats.ITEM_USED.get(this));
                       var2.playSound(var13.is(FluidTags.LAVA) ? SoundEvents.BUCKET_FILL_LAVA : SoundEvents.BUCKET_FILL, 1.0F, 1.0F);
 -                     ItemStack var12 = this.createResultItem(var4, var2, var13.getBucket());
-+                     ItemStack var12 = ItemUtils.createBucketResult(var4, var2, new ItemStack(var13.getBucket()));
++                     ItemStack var12 = ItemUtils.createFilledResult(var4, var2, new ItemStack(var13.getBucket()));
                       if (!var1.isClientSide) {
                          CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer)var2, new ItemStack(var13.getBucket()));
                       }

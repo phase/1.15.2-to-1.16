@@ -27,7 +27,7 @@
     public void add(BlockPos var1, PoiType var2) {
        ((PoiSection)this.getOrCreate(SectionPos.of(var1).asLong())).add(var1, var2);
     }
-@@ -48,12 +49,18 @@
+@@ -48,13 +49,22 @@
  
     public long getCountInRange(Predicate<PoiType> var1, BlockPos var2, int var3, PoiManager.Occupancy var4) {
        return this.getInRange(var1, var2, var3, var4).count();
@@ -43,11 +43,15 @@
 +      int var5 = Math.floorDiv(var3, 16) + 1;
 +      return ChunkPos.rangeClosed(new ChunkPos(var2), var5).flatMap((var3x) -> {
           return this.getInChunk(var1, var3x, var4);
++      }).filter((var2x) -> {
++         BlockPos var3x = var2x.getPos();
++         return Math.abs(var3x.getX() - var2.getX()) <= var3 && Math.abs(var3x.getZ() - var2.getZ()) <= var3;
        });
     }
  
     public Stream<PoiRecord> getInRange(Predicate<PoiType> var1, BlockPos var2, int var3, PoiManager.Occupancy var4) {
-@@ -62,33 +69,29 @@
+       int var5 = var3 * var3;
+@@ -62,33 +72,29 @@
           return var2x.getPos().distSqr(var2) <= (double)var5;
        });
     }
@@ -89,7 +93,7 @@
     public Optional<BlockPos> take(Predicate<PoiType> var1, Predicate<BlockPos> var2, BlockPos var3, int var4) {
        return this.getInRange(var1, var3, var4, PoiManager.Occupancy.HAS_SPACE).filter((var1x) -> {
           return var2.test(var1x.getPos());
-@@ -164,13 +167,13 @@
+@@ -164,13 +170,13 @@
  
        });
     }

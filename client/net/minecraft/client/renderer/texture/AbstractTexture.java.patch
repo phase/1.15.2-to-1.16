@@ -1,0 +1,25 @@
+--- net/minecraft/client/renderer/texture/AbstractTexture.java
++++ net/minecraft/client/renderer/texture/AbstractTexture.java
+@@ -6,11 +6,11 @@
+ import java.io.IOException;
+ import java.util.concurrent.Executor;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.server.packs.resources.ResourceManager;
+ 
+-public abstract class AbstractTexture {
++public abstract class AbstractTexture implements AutoCloseable {
+    protected int id = -1;
+    protected boolean blur;
+    protected boolean mipmap;
+ 
+    public AbstractTexture() {
+@@ -73,6 +73,9 @@
+    }
+ 
+    public void reset(TextureManager var1, ResourceManager var2, ResourceLocation var3, Executor var4) {
+       var1.register(var3, this);
+    }
++
++   public void close() {
++   }
+ }

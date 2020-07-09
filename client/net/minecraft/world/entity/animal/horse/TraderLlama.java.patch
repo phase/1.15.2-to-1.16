@@ -1,0 +1,36 @@
+--- net/minecraft/world/entity/animal/horse/TraderLlama.java
++++ net/minecraft/world/entity/animal/horse/TraderLlama.java
+@@ -15,11 +15,11 @@
+ import net.minecraft.world.entity.ai.goal.target.TargetGoal;
+ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+ import net.minecraft.world.entity.npc.WanderingTrader;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
+ 
+ public class TraderLlama extends Llama {
+    private int despawnDelay = 47999;
+ 
+    public TraderLlama(EntityType<? extends TraderLlama> var1, Level var2) {
+@@ -90,18 +90,17 @@
+    private boolean isLeashedToSomethingOtherThanTheWanderingTrader() {
+       return this.isLeashed() && !this.isLeashedToWanderingTrader();
+    }
+ 
+    @Nullable
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+       if (var3 == MobSpawnType.EVENT) {
+          this.setAge(0);
+       }
+ 
+       if (var4 == null) {
+-         var4 = new AgableMob.AgableMobGroupData();
+-         ((AgableMob.AgableMobGroupData)var4).setShouldSpawnBaby(false);
++         var4 = new AgableMob.AgableMobGroupData(false);
+       }
+ 
+       return super.finalizeSpawn(var1, var2, var3, (SpawnGroupData)var4, var5);
+    }
+ 

@@ -1,9 +1,10 @@
 --- net/minecraft/core/DefaultedRegistry.java
 +++ net/minecraft/core/DefaultedRegistry.java
-@@ -1,22 +1,25 @@
+@@ -1,22 +1,26 @@
  package net.minecraft.core;
  
 +import com.mojang.serialization.Lifecycle;
++import java.util.Optional;
  import java.util.Random;
  import javax.annotation.Nonnull;
  import javax.annotation.Nullable;
@@ -15,7 +16,7 @@
     private T defaultValue;
  
 -   public DefaultedRegistry(String var1) {
-+   public DefaultedRegistry(String var1, ResourceKey<Registry<T>> var2, Lifecycle var3) {
++   public DefaultedRegistry(String var1, ResourceKey<? extends Registry<T>> var2, Lifecycle var3) {
 +      super(var2, var3);
        this.defaultKey = new ResourceLocation(var1);
     }
@@ -28,4 +29,19 @@
        }
  
        return super.registerMapping(var1, var2, var3);
+    }
+@@ -36,10 +40,14 @@
+    public T get(@Nullable ResourceLocation var1) {
+       Object var2 = super.get(var1);
+       return var2 == null ? this.defaultValue : var2;
+    }
+ 
++   public Optional<T> getOptional(@Nullable ResourceLocation var1) {
++      return Optional.ofNullable(super.get(var1));
++   }
++
+    @Nonnull
+    public T byId(int var1) {
+       Object var2 = super.byId(var1);
+       return var2 == null ? this.defaultValue : var2;
     }

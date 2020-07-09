@@ -1,6 +1,6 @@
 --- net/minecraft/core/dispenser/ShearsDispenseItemBehavior.java
 +++ net/minecraft/core/dispenser/ShearsDispenseItemBehavior.java
-@@ -1,0 +1,74 @@
+@@ -1,0 +1,73 @@
 +package net.minecraft.core.dispenser;
 +
 +import java.util.Iterator;
@@ -18,7 +18,6 @@
 +import net.minecraft.world.entity.Shearable;
 +import net.minecraft.world.entity.player.Player;
 +import net.minecraft.world.item.ItemStack;
-+import net.minecraft.world.level.Level;
 +import net.minecraft.world.level.block.BeehiveBlock;
 +import net.minecraft.world.level.block.DispenserBlock;
 +import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
@@ -30,7 +29,7 @@
 +   }
 +
 +   protected ItemStack execute(BlockSource var1, ItemStack var2) {
-+      Level var3 = var1.getLevel();
++      ServerLevel var3 = var1.getLevel();
 +      if (!var3.isClientSide()) {
 +         BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
 +         this.setSuccess(tryShearBeehive((ServerLevel)var3, var4) || tryShearLivingEntity((ServerLevel)var3, var4));

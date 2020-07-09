@@ -52,7 +52,7 @@
 -            throw var20;
 +            CompoundTag var6 = this.applyFilters(var2, TagParser.parseTag(var5));
 +            ByteArrayOutputStream var7 = new ByteArrayOutputStream();
-+            NbtIo.writeCompressed(var6, var7);
++            NbtIo.writeCompressed(var6, (OutputStream)var7);
 +            byte[] var8 = var7.toByteArray();
 +            String var9 = SHA1.hashBytes(var8).toString();
 +            String var10;

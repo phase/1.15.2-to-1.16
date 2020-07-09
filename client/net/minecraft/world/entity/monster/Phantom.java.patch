@@ -9,7 +9,7 @@
  import java.util.List;
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
-@@ -14,20 +15,22 @@
+@@ -14,29 +15,31 @@
  import net.minecraft.sounds.SoundEvents;
  import net.minecraft.sounds.SoundSource;
  import net.minecraft.util.Mth;
@@ -32,6 +32,16 @@
  import net.minecraft.world.entity.ai.control.MoveControl;
  import net.minecraft.world.entity.ai.goal.Goal;
  import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+ import net.minecraft.world.entity.animal.Cat;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class Phantom extends FlyingMob implements Enemy {
+    private static final EntityDataAccessor<Integer> ID_SIZE;
 @@ -63,15 +66,10 @@
        this.goalSelector.addGoal(2, new Phantom.PhantomSweepAttackGoal());
        this.goalSelector.addGoal(3, new Phantom.PhantomCircleAroundAnchorGoal());
@@ -61,13 +71,15 @@
     public int getPhantomSize() {
        return (Integer)this.entityData.get(ID_SIZE);
     }
-@@ -134,11 +132,11 @@
+@@ -133,12 +131,12 @@
+ 
     protected void customServerAiStep() {
        super.customServerAiStep();
     }
  
-    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 -      this.anchorPoint = (new BlockPos(this)).above(5);
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 +      this.anchorPoint = this.blockPosition().above(5);
        this.setPhantomSize(0);
        return super.finalizeSpawn(var1, var2, var3, var4, var5);

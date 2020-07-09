@@ -1,31 +1,25 @@
 --- net/minecraft/world/level/levelgen/feature/configurations/FeatureRadiusConfiguration.java
 +++ net/minecraft/world/level/levelgen/feature/configurations/FeatureRadiusConfiguration.java
-@@ -1,22 +1,18 @@
- package net.minecraft.world.level.levelgen.feature.configurations;
- 
+@@ -1,22 +1,0 @@
+-package net.minecraft.world.level.levelgen.feature.configurations;
+-
 -import com.google.common.collect.ImmutableMap;
 -import com.mojang.datafixers.Dynamic;
 -import com.mojang.datafixers.types.DynamicOps;
-+import com.mojang.serialization.Codec;
- 
- public class FeatureRadiusConfiguration implements FeatureConfiguration {
-+   public static final Codec<FeatureRadiusConfiguration> CODEC;
-    public final int radius;
- 
-    public FeatureRadiusConfiguration(int var1) {
-       this.radius = var1;
-    }
- 
+-
+-public class FeatureRadiusConfiguration implements FeatureConfiguration {
+-   public final int radius;
+-
+-   public FeatureRadiusConfiguration(int var1) {
+-      this.radius = var1;
+-   }
+-
 -   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
 -      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("radius"), var1.createInt(this.radius))));
-+   static {
-+      CODEC = Codec.INT.fieldOf("radius").xmap(FeatureRadiusConfiguration::new, (var0) -> {
-+         return var0.radius;
-+      }).codec();
-    }
+-   }
 -
 -   public static <T> FeatureRadiusConfiguration deserialize(Dynamic<T> var0) {
 -      int var1 = var0.get("radius").asInt(0);
 -      return new FeatureRadiusConfiguration(var1);
 -   }
- }
+-}

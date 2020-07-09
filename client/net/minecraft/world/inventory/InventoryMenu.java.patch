@@ -1,6 +1,6 @@
 --- net/minecraft/world/inventory/InventoryMenu.java
 +++ net/minecraft/world/inventory/InventoryMenu.java
-@@ -187,10 +187,14 @@
+@@ -187,10 +187,18 @@
  
     public int getSize() {
        return 5;
@@ -8,6 +8,10 @@
  
 +   public CraftingContainer getCraftSlots() {
 +      return this.craftSlots;
++   }
++
++   public RecipeBookType getRecipeBookType() {
++      return RecipeBookType.CRAFTING;
 +   }
 +
     static {

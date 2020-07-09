@@ -290,6 +290,19 @@
           int var2 = var1.responseCode();
           if (var2 == 503) {
              int var6 = var1.getRetryAfterHeader();
+@@ -341,11 +340,11 @@
+             } else if (var2 == 401) {
+                String var7 = var1.getHeader("WWW-Authenticate");
+                LOGGER.info("Could not authorize you against Realms server: " + var7);
+                throw new RealmsServiceException(var2, var7, -1, var7);
+             } else if (var3 != null && var3.length() != 0) {
+-               RealmsError var4 = new RealmsError(var3);
++               RealmsError var4 = RealmsError.create(var3);
+                LOGGER.error("Realms http code: " + var2 + " -  error code: " + var4.getErrorCode() + " -  message: " + var4.getErrorMessage() + " - raw body: " + var3);
+                throw new RealmsServiceException(var2, var3, var4);
+             } else {
+                LOGGER.error("Realms error code: " + var2 + " message: " + var3);
+                throw new RealmsServiceException(var2, var3, var2, "");
 @@ -357,11 +356,11 @@
     }
  

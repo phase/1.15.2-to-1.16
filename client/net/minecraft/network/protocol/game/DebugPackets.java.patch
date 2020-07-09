@@ -1,6 +1,19 @@
 --- net/minecraft/network/protocol/game/DebugPackets.java
 +++ net/minecraft/network/protocol/game/DebugPackets.java
-@@ -43,25 +43,31 @@
+@@ -15,11 +15,11 @@
+ import net.minecraft.world.entity.animal.Bee;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.entity.raid.Raid;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.WorldGenLevel;
+ import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
+ import net.minecraft.world.level.levelgen.structure.StructureStart;
+ import net.minecraft.world.level.pathfinder.Path;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+@@ -43,28 +43,37 @@
  
     public static void sendPoiPacketsForChunk(ServerLevel var0, ChunkPos var1) {
     }
@@ -27,9 +40,15 @@
     }
  
 -   public static void sendStructurePacket(LevelAccessor var0, StructureStart var1) {
-+   public static void sendStructurePacket(LevelAccessor var0, StructureStart<?> var1) {
++   public static void sendStructurePacket(WorldGenLevel var0, StructureStart<?> var1) {
     }
  
     public static void sendGoalSelector(Level var0, Mob var1, GoalSelector var2) {
++      if (var0 instanceof ServerLevel) {
++         ;
++      }
+    }
+ 
+    public static void sendRaids(ServerLevel var0, Collection<Raid> var1) {
     }
  

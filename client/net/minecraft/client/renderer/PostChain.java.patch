@@ -64,12 +64,12 @@
                       }
  
 -                     var9.addAuxAsset(var36, var20.getId(), var21, var22);
-+                     var9.addAuxAsset(var38, var22.getId(), var23, var24);
++                     var9.addAuxAsset(var38, var22::getId, var23, var24);
 +                  } else if (var17) {
-+                     var9.addAuxAsset(var38, var19.depthBufferId, var19.width, var19.height);
++                     var9.addAuxAsset(var38, var19::getDepthTextureId, var19.width, var19.height);
                    } else {
 -                     var9.addAuxAsset(var36, var17, var17.width, var17.height);
-+                     var9.addAuxAsset(var38, var19, var19.width, var19.height);
++                     var9.addAuxAsset(var38, var19::getColorTextureId, var19.width, var19.height);
                    }
 -               } catch (Exception var31) {
 -                  ChainedJsonException var15 = ChainedJsonException.forException(var31);

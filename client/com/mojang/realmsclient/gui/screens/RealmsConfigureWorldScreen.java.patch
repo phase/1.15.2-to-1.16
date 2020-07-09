@@ -1,6 +1,6 @@
 --- com/mojang/realmsclient/gui/screens/RealmsConfigureWorldScreen.java
 +++ com/mojang/realmsclient/gui/screens/RealmsConfigureWorldScreen.java
-@@ -1,44 +1,54 @@
+@@ -1,44 +1,53 @@
  package com.mojang.realmsclient.gui.screens;
  
  import com.mojang.blaze3d.systems.RenderSystem;
@@ -31,7 +31,6 @@
 +import net.minecraft.network.chat.CommonComponents;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.FormattedText;
-+import net.minecraft.network.chat.TextComponent;
 +import net.minecraft.network.chat.TranslatableComponent;
 +import net.minecraft.resources.ResourceLocation;
  import org.apache.logging.log4j.LogManager;
@@ -75,7 +74,7 @@
     private int clicks;
  
     public RealmsConfigureWorldScreen(RealmsMainScreen var1, long var2) {
-@@ -49,67 +59,55 @@
+@@ -49,67 +58,55 @@
     public void init() {
        if (this.serverData == null) {
           this.fetchServerData(this.serverId);
@@ -180,7 +179,7 @@
           if (this.isMinigame()) {
              this.hideRegularButtons();
           } else {
-@@ -119,71 +117,93 @@
+@@ -119,71 +116,93 @@
  
     }
  
@@ -299,7 +298,7 @@
     public boolean keyPressed(int var1, int var2, int var3) {
        if (var1 == 256) {
           this.backButtonClicked();
-@@ -196,319 +216,255 @@
+@@ -196,319 +215,255 @@
     private void backButtonClicked() {
        if (this.stateChanged) {
           this.lastScreen.removeSelection();
@@ -332,7 +331,7 @@
 -         } catch (IOException var6) {
 -            LOGGER.error("Couldn't parse response getting own world");
 +            this.minecraft.execute(() -> {
-+               this.minecraft.setScreen(new RealmsGenericErrorScreen(new TextComponent(var5.getMessage()), this.lastScreen));
++               this.minecraft.setScreen(new RealmsGenericErrorScreen(Component.nullToEmpty(var5.getMessage()), this.lastScreen));
 +            });
           }
  

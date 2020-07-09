@@ -1,10 +1,11 @@
 --- net/minecraft/world/level/BlockGetter.java
 +++ net/minecraft/world/level/BlockGetter.java
-@@ -1,16 +1,18 @@
+@@ -1,16 +1,19 @@
  package net.minecraft.world.level;
  
  import java.util.function.BiFunction;
  import java.util.function.Function;
++import java.util.function.Supplier;
 +import java.util.stream.Stream;
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
@@ -19,7 +20,7 @@
  import net.minecraft.world.phys.shapes.VoxelShape;
  
  public interface BlockGetter {
-@@ -31,10 +33,14 @@
+@@ -31,10 +34,14 @@
  
     default int getMaxBuildHeight() {
        return 256;
@@ -34,3 +35,30 @@
           BlockState var3 = this.getBlockState(var2);
           FluidState var4 = this.getFluidState(var2);
           Vec3 var5 = var1x.getFrom();
+@@ -63,10 +70,26 @@
+       }
+ 
+       return var6;
+    }
+ 
++   default double getBlockFloorHeight(VoxelShape var1, Supplier<VoxelShape> var2) {
++      if (!var1.isEmpty()) {
++         return var1.max(Direction.Axis.Y);
++      } else {
++         double var3 = ((VoxelShape)var2.get()).max(Direction.Axis.Y);
++         return var3 >= 1.0D ? var3 - 1.0D : Double.NEGATIVE_INFINITY;
++      }
++   }
++
++   default double getBlockFloorHeight(BlockPos var1) {
++      return this.getBlockFloorHeight(this.getBlockState(var1).getCollisionShape(this, var1), () -> {
++         BlockPos var2 = var1.below();
++         return this.getBlockState(var2).getCollisionShape(this, var2);
++      });
++   }
++
+    static <T> T traverseBlocks(ClipContext var0, BiFunction<ClipContext, BlockPos, T> var1, Function<ClipContext, T> var2) {
+       Vec3 var3 = var0.getFrom();
+       Vec3 var4 = var0.getTo();
+       if (var3.equals(var4)) {
+          return var2.apply(var0);

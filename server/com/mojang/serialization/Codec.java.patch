@@ -1,6 +1,6 @@
 --- com/mojang/serialization/Codec.java
 +++ com/mojang/serialization/Codec.java
-@@ -1,0 +1,552 @@
+@@ -1,0 +1,531 @@
 +package com.mojang.serialization;
 +
 +import com.mojang.datafixers.DataFixUtils;
@@ -254,10 +254,12 @@
 +   }
 +
 +   static <A> MapCodec<A> of(MapEncoder<A> var0, MapDecoder<A> var1) {
-+      return of(var0, var1, "MapCodec[" + var0 + " " + var1 + "]");
++      return of(var0, var1, () -> {
++         return "MapCodec[" + var0 + " " + var1 + "]";
++      });
 +   }
 +
-+   static <A> MapCodec<A> of(final MapEncoder<A> var0, final MapDecoder<A> var1, final String var2) {
++   static <A> MapCodec<A> of(final MapEncoder<A> var0, final MapDecoder<A> var1, final Supplier<String> var2) {
 +      return new MapCodec<A>() {
 +         public <T> Stream<T> keys(DynamicOps<T> var1x) {
 +            return Stream.concat(var0.keys(var1x), var1.keys(var1x));
@@ -272,7 +274,7 @@
 +         }
 +
 +         public String toString() {
-+            return var2;
++            return (String)var2.get();
 +         }
 +      };
 +   }
@@ -334,7 +336,9 @@
 +   }
 +
 +   default MapCodec<A> fieldOf(String var1) {
-+      return MapCodec.of(Encoder.super.fieldOf(var1), Decoder.super.fieldOf(var1), "Field[" + var1 + ": " + this.toString() + "]");
++      return MapCodec.of(Encoder.super.fieldOf(var1), Decoder.super.fieldOf(var1), () -> {
++         return "Field[" + var1 + ": " + this.toString() + "]";
++      });
 +   }
 +
 +   default MapCodec<Optional<A>> optionalFieldOf(String var1) {
@@ -379,11 +383,11 @@
 +      };
 +   }
 +
-+   default Codec<A> withDefault(Consumer<String> var1, A var2) {
-+      return this.withDefault(DataFixUtils.consumerToFunction(var1), var2);
++   default Codec<A> orElse(Consumer<String> var1, A var2) {
++      return this.orElse(DataFixUtils.consumerToFunction(var1), var2);
 +   }
 +
-+   default Codec<A> withDefault(final UnaryOperator<String> var1, final A var2) {
++   default Codec<A> orElse(final UnaryOperator<String> var1, final A var2) {
 +      return this.mapResult(new Codec.ResultFunction<A>() {
 +         public <T> DataResult<Pair<A, T>> apply(DynamicOps<T> var1x, T var2x, DataResult<Pair<A, T>> var3) {
 +            return DataResult.success(var3.mapError(var1).result().orElseGet(() -> {
@@ -396,16 +400,16 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1 + " " + var2 + "]";
++            return "OrElse[" + var1 + " " + var2 + "]";
 +         }
 +      });
 +   }
 +
-+   default Codec<A> withDefault(Consumer<String> var1, Supplier<? extends A> var2) {
-+      return this.withDefault(DataFixUtils.consumerToFunction(var1), var2);
++   default Codec<A> orElseGet(Consumer<String> var1, Supplier<? extends A> var2) {
++      return this.orElseGet(DataFixUtils.consumerToFunction(var1), var2);
 +   }
 +
-+   default Codec<A> withDefault(final UnaryOperator<String> var1, final Supplier<? extends A> var2) {
++   default Codec<A> orElseGet(final UnaryOperator<String> var1, final Supplier<? extends A> var2) {
 +      return this.mapResult(new Codec.ResultFunction<A>() {
 +         public <T> DataResult<Pair<A, T>> apply(DynamicOps<T> var1x, T var2x, DataResult<Pair<A, T>> var3) {
 +            return DataResult.success(var3.mapError(var1).result().orElseGet(() -> {
@@ -418,12 +422,12 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1 + " " + var2.get() + "]";
++            return "OrElseGet[" + var1 + " " + var2.get() + "]";
 +         }
 +      });
 +   }
 +
-+   default Codec<A> withDefault(final A var1) {
++   default Codec<A> orElse(final A var1) {
 +      return this.mapResult(new Codec.ResultFunction<A>() {
 +         public <T> DataResult<Pair<A, T>> apply(DynamicOps<T> var1x, T var2, DataResult<Pair<A, T>> var3) {
 +            return DataResult.success(var3.result().orElseGet(() -> {
@@ -436,12 +440,12 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1 + "]";
++            return "OrElse[" + var1 + "]";
 +         }
 +      });
 +   }
 +
-+   default Codec<A> withDefault(final Supplier<? extends A> var1) {
++   default Codec<A> orElseGet(final Supplier<? extends A> var1) {
 +      return this.mapResult(new Codec.ResultFunction<A>() {
 +         public <T> DataResult<Pair<A, T>> apply(DynamicOps<T> var1x, T var2, DataResult<Pair<A, T>> var3) {
 +            return DataResult.success(var3.result().orElseGet(() -> {
@@ -454,7 +458,7 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1.get() + "]";
++            return "OrElseGet[" + var1.get() + "]";
 +         }
 +      });
 +   }
@@ -482,27 +486,10 @@
 +   }
 +
 +   default <E> Codec<E> dispatchStable(Function<? super E, ? extends A> var1, Function<? super A, ? extends Codec<? extends E>> var2) {
-+      return this.dispatchStable("type", var1, var2);
-+   }
-+
-+   default <E> Codec<E> dispatchStable(String var1, Function<? super E, ? extends A> var2, Function<? super A, ? extends Codec<? extends E>> var3) {
-+      return this.partialDispatch(var1, (var1x) -> {
-+         return DataResult.success(var2.apply(var1x), Lifecycle.stable());
++      return this.partialDispatch("type", (var1x) -> {
++         return DataResult.success(var1.apply(var1x), Lifecycle.stable());
 +      }, (var1x) -> {
-+         return DataResult.success(var3.apply(var1x), Lifecycle.stable());
-+      });
-+   }
-+
-+   default <E> Codec<E> dispatchDeprecated(int var1, Function<? super E, ? extends A> var2, Function<? super A, ? extends Codec<? extends E>> var3) {
-+      return this.dispatchDeprecated(var1, "type", var2, var3);
-+   }
-+
-+   default <E> Codec<E> dispatchDeprecated(int var1, String var2, Function<? super E, ? extends A> var3, Function<? super A, ? extends Codec<? extends E>> var4) {
-+      Lifecycle var5 = Lifecycle.deprecated(var1);
-+      return this.partialDispatch(var2, (var2x) -> {
-+         return DataResult.success(var3.apply(var2x), var5);
-+      }, (var2x) -> {
-+         return DataResult.success(var4.apply(var2x), var5);
++         return DataResult.success(var2.apply(var1x), Lifecycle.stable());
 +      });
 +   }
 +
@@ -515,36 +502,28 @@
 +   }
 +
 +   default <E> MapCodec<E> dispatchMap(String var1, Function<? super E, ? extends A> var2, Function<? super A, ? extends Codec<? extends E>> var3) {
-+      return this.partialDispatchMap(var1, var2.andThen(DataResult::success), var3.andThen(DataResult::success));
++      return new KeyDispatchCodec(var1, this, var2.andThen(DataResult::success), var3.andThen(DataResult::success));
 +   }
 +
-+   default <E> MapCodec<E> dispatchStableMap(Function<? super E, ? extends A> var1, Function<? super A, ? extends Codec<? extends E>> var2) {
-+      return this.dispatchStableMap("type", var1, var2);
++   static <N extends Number & Comparable<N>> Function<N, DataResult<N>> checkRange(N var0, N var1) {
++      return (var2) -> {
++         return ((Comparable)var2).compareTo(var0) >= 0 && ((Comparable)var2).compareTo(var1) <= 0 ? DataResult.success(var2) : DataResult.error("Value " + var2 + " outside of range [" + var0 + ":" + var1 + "]", (Object)var2);
++      };
 +   }
 +
-+   default <E> MapCodec<E> dispatchStableMap(String var1, Function<? super E, ? extends A> var2, Function<? super A, ? extends Codec<? extends E>> var3) {
-+      return this.partialDispatchMap(var1, (var1x) -> {
-+         return DataResult.success(var2.apply(var1x), Lifecycle.stable());
-+      }, (var1x) -> {
-+         return DataResult.success(var3.apply(var1x), Lifecycle.stable());
-+      });
++   static Codec<Integer> intRange(int var0, int var1) {
++      Function var2 = checkRange(var0, var1);
++      return INT.flatXmap(var2, var2);
 +   }
 +
-+   default <E> MapCodec<E> dispatchDeprecatedMap(int var1, Function<? super E, ? extends A> var2, Function<? super A, ? extends Codec<? extends E>> var3) {
-+      return this.dispatchDeprecatedMap(var1, "type", var2, var3);
++   static Codec<Float> floatRange(float var0, float var1) {
++      Function var2 = checkRange(var0, var1);
++      return FLOAT.flatXmap(var2, var2);
 +   }
 +
-+   default <E> MapCodec<E> dispatchDeprecatedMap(int var1, String var2, Function<? super E, ? extends A> var3, Function<? super A, ? extends Codec<? extends E>> var4) {
-+      Lifecycle var5 = Lifecycle.deprecated(var1);
-+      return this.partialDispatchMap(var2, (var2x) -> {
-+         return DataResult.success(var3.apply(var2x), var5);
-+      }, (var2x) -> {
-+         return DataResult.success(var4.apply(var2x), var5);
-+      });
-+   }
-+
-+   default <E> MapCodec<E> partialDispatchMap(String var1, Function<? super E, ? extends DataResult<? extends A>> var2, Function<? super A, ? extends DataResult<? extends Codec<? extends E>>> var3) {
-+      return new KeyDispatchCodec(var1, this, var2, var3);
++   static Codec<Double> doubleRange(double var0, double var2) {
++      Function var4 = checkRange(var0, var2);
++      return DOUBLE.flatXmap(var4, var4);
 +   }
 +
 +   public interface ResultFunction<A> {

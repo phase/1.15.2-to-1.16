@@ -350,6 +350,21 @@
     protected void playStepSound(BlockPos var1, BlockState var2) {
     }
  
+@@ -535,12 +515,12 @@
+ 
+    protected float getSoundVolume() {
+       return 0.4F;
+    }
+ 
+-   public Bee getBreedOffspring(AgableMob var1) {
+-      return (Bee)EntityType.BEE.create(this.level);
++   public Bee getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      return (Bee)EntityType.BEE.create(var1);
+    }
+ 
+    protected float getStandingEyeHeight(Pose var1, EntityDimensions var2) {
+       return this.isBaby() ? var2.height * 0.5F : var2.height * 0.5F;
+    }
 @@ -559,27 +539,17 @@
     public void dropOffNectar() {
        this.setHasNectar(false);

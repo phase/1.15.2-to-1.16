@@ -33,19 +33,20 @@
        this.register(EntityType.LLAMA, new LlamaRenderer(this));
        this.register(EntityType.LLAMA_SPIT, new LlamaSpitRenderer(this));
        this.register(EntityType.MAGMA_CUBE, new MagmaCubeRenderer(this));
-@@ -129,10 +130,11 @@
+@@ -129,10 +130,12 @@
        this.register(EntityType.PAINTING, new PaintingRenderer(this));
        this.register(EntityType.PANDA, new PandaRenderer(this));
        this.register(EntityType.PARROT, new ParrotRenderer(this));
        this.register(EntityType.PHANTOM, new PhantomRenderer(this));
        this.register(EntityType.PIG, new PigRenderer(this));
 +      this.register(EntityType.PIGLIN, new PiglinRenderer(this, false));
++      this.register(EntityType.PIGLIN_BRUTE, new PiglinRenderer(this, false));
        this.register(EntityType.PILLAGER, new PillagerRenderer(this));
        this.register(EntityType.POLAR_BEAR, new PolarBearRenderer(this));
        this.register(EntityType.POTION, new ThrownItemRenderer(this, var1));
        this.register(EntityType.PUFFERFISH, new PufferfishRenderer(this));
        this.register(EntityType.RABBIT, new RabbitRenderer(this));
-@@ -166,14 +168,16 @@
+@@ -166,14 +169,16 @@
        this.register(EntityType.WITCH, new WitchRenderer(this));
        this.register(EntityType.WITHER, new WitherBossRenderer(this));
        this.register(EntityType.WITHER_SKELETON, new WitherSkeletonRenderer(this));
@@ -63,7 +64,7 @@
     public EntityRenderDispatcher(TextureManager var1, ItemRenderer var2, ReloadableResourceManager var3, Font var4, Options var5) {
        this.textureManager = var1;
        this.font = var4;
-@@ -278,13 +282,13 @@
+@@ -278,13 +283,13 @@
  
     private void renderHitbox(PoseStack var1, VertexConsumer var2, Entity var3, float var4) {
        float var5 = var3.getBbWidth() / 2.0F;
@@ -80,7 +81,7 @@
  
           for(int var14 = 0; var14 < var13; ++var14) {
              EnderDragonPart var15 = var12[var14];
-@@ -407,11 +411,11 @@
+@@ -407,11 +412,11 @@
                    double var21 = (double)var3.getY() + var16.minY;
                    double var23 = (double)var3.getZ() + var16.minZ;
                    double var25 = (double)var3.getZ() + var16.maxZ;

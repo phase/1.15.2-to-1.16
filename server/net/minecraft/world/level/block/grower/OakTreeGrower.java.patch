@@ -1,11 +1,14 @@
 --- net/minecraft/world/level/block/grower/OakTreeGrower.java
 +++ net/minecraft/world/level/block/grower/OakTreeGrower.java
-@@ -3,16 +3,16 @@
+@@ -1,18 +1,21 @@
+ package net.minecraft.world.level.block.grower;
+ 
  import java.util.Random;
  import javax.annotation.Nullable;
- import net.minecraft.world.level.biome.BiomeDefaultFeatures;
+-import net.minecraft.world.level.biome.BiomeDefaultFeatures;
++import net.minecraft.data.worldgen.Features;
  import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
- import net.minecraft.world.level.levelgen.feature.Feature;
+-import net.minecraft.world.level.levelgen.feature.Feature;
 -import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
 +import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
  
@@ -17,6 +20,10 @@
 -   protected ConfiguredFeature<SmallTreeConfiguration, ?> getConfiguredFeature(Random var1, boolean var2) {
 -      return var1.nextInt(10) == 0 ? Feature.FANCY_TREE.configured(var2 ? BiomeDefaultFeatures.FANCY_TREE_WITH_BEES_005_CONFIG : BiomeDefaultFeatures.FANCY_TREE_CONFIG) : Feature.NORMAL_TREE.configured(var2 ? BiomeDefaultFeatures.NORMAL_TREE_WITH_BEES_005_CONFIG : BiomeDefaultFeatures.NORMAL_TREE_CONFIG);
 +   protected ConfiguredFeature<TreeConfiguration, ?> getConfiguredFeature(Random var1, boolean var2) {
-+      return var1.nextInt(10) == 0 ? Feature.TREE.configured(var2 ? BiomeDefaultFeatures.FANCY_TREE_WITH_BEES_005_CONFIG : BiomeDefaultFeatures.FANCY_TREE_CONFIG) : Feature.TREE.configured(var2 ? BiomeDefaultFeatures.NORMAL_TREE_WITH_BEES_005_CONFIG : BiomeDefaultFeatures.NORMAL_TREE_CONFIG);
++      if (var1.nextInt(10) == 0) {
++         return var2 ? Features.FANCY_OAK_BEES_005 : Features.FANCY_OAK;
++      } else {
++         return var2 ? Features.OAK_BEES_005 : Features.OAK;
++      }
     }
  }

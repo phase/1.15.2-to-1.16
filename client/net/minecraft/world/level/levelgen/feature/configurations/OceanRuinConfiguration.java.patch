@@ -14,9 +14,9 @@
 +   public static final Codec<OceanRuinConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
 +      return var0.group(OceanRuinFeature.Type.CODEC.fieldOf("biome_temp").forGetter((var0x) -> {
 +         return var0x.biomeTemp;
-+      }), Codec.FLOAT.fieldOf("large_probability").forGetter((var0x) -> {
++      }), Codec.floatRange(0.0F, 1.0F).fieldOf("large_probability").forGetter((var0x) -> {
 +         return var0x.largeProbability;
-+      }), Codec.FLOAT.fieldOf("cluster_probability").forGetter((var0x) -> {
++      }), Codec.floatRange(0.0F, 1.0F).fieldOf("cluster_probability").forGetter((var0x) -> {
 +         return var0x.clusterProbability;
 +      })).apply(var0, OceanRuinConfiguration::new);
 +   });

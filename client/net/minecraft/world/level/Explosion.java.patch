@@ -28,7 +28,18 @@
  import net.minecraft.world.level.block.entity.BlockEntity;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.material.FluidState;
-@@ -48,11 +50,12 @@
+@@ -38,21 +40,23 @@
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.HitResult;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class Explosion {
++   private static final ExplosionDamageCalculator EXPLOSION_DAMAGE_CALCULATOR = new ExplosionDamageCalculator();
+    private final boolean fire;
+    private final Explosion.BlockInteraction blockInteraction;
+    private final Random random;
+    private final Level level;
+    private final double x;
     private final double y;
     private final double z;
     @Nullable
@@ -42,7 +53,7 @@
  
     public Explosion(Level var1, @Nullable Entity var2, double var3, double var5, double var7, float var9, List<BlockPos> var10) {
        this(var1, var2, var3, var5, var7, var9, false, Explosion.BlockInteraction.DESTROY, var10);
-@@ -62,24 +65,33 @@
+@@ -62,24 +66,33 @@
        this(var1, var2, var3, var5, var7, var9, var10, var11);
        this.toBlow.addAll(var12);
     }
@@ -75,7 +86,7 @@
     }
  
 +   private ExplosionDamageCalculator makeDamageCalculator(@Nullable Entity var1) {
-+      return (ExplosionDamageCalculator)(var1 == null ? DefaultExplosionDamageCalculator.INSTANCE : new EntityBasedExplosionDamageCalculator(var1));
++      return (ExplosionDamageCalculator)(var1 == null ? EXPLOSION_DAMAGE_CALCULATOR : new EntityBasedExplosionDamageCalculator(var1));
 +   }
 +
     public static float getSeenPercent(Vec3 var0, Entity var1) {
@@ -83,7 +94,7 @@
        double var3 = 1.0D / ((var2.maxX - var2.minX) * 2.0D + 1.0D);
        double var5 = 1.0D / ((var2.maxY - var2.minY) * 2.0D + 1.0D);
        double var7 = 1.0D / ((var2.maxZ - var2.minZ) * 2.0D + 1.0D);
-@@ -94,11 +106,11 @@
+@@ -94,11 +107,11 @@
                 for(float var17 = 0.0F; var17 <= 1.0F; var17 = (float)((double)var17 + var7)) {
                    double var18 = Mth.lerp((double)var15, var2.minX, var2.maxX);
                    double var20 = Mth.lerp((double)var16, var2.minY, var2.maxY);
@@ -96,7 +107,7 @@
  
                    ++var14;
                 }
-@@ -135,20 +147,16 @@
+@@ -135,20 +148,16 @@
  
                    for(float var21 = 0.3F; var14 > 0.0F; var14 -= 0.22500001F) {
                       BlockPos var22 = new BlockPos(var15, var17, var19);
@@ -121,7 +132,7 @@
  
                       var15 += var6 * 0.30000001192092896D;
                       var17 += var8 * 0.30000001192092896D;
-@@ -174,11 +182,11 @@
+@@ -174,11 +183,11 @@
           Entity var13 = (Entity)var34.get(var35);
           if (!var13.ignoreExplosion()) {
              double var36 = (double)(Mth.sqrt(var13.distanceToSqr(var11)) / var31);
@@ -134,7 +145,7 @@
                 if (var37 != 0.0D) {
                    var16 /= var37;
                    var18 /= var37;
-@@ -261,11 +269,11 @@
+@@ -261,11 +270,11 @@
           Iterator var11 = this.toBlow.iterator();
  
           while(var11.hasNext()) {
@@ -147,7 +158,7 @@
        }
  
     }
-@@ -290,14 +298,10 @@
+@@ -290,14 +299,10 @@
  
     public DamageSource getDamageSource() {
        return this.damageSource;
@@ -162,7 +173,7 @@
     }
  
     @Nullable
-@@ -307,11 +311,18 @@
+@@ -307,11 +312,18 @@
        } else if (this.source instanceof PrimedTnt) {
           return ((PrimedTnt)this.source).getOwner();
        } else if (this.source instanceof LivingEntity) {

@@ -1,6 +1,6 @@
 --- net/minecraft/resources/RegistryReadOps.java
 +++ net/minecraft/resources/RegistryReadOps.java
-@@ -1,0 +1,217 @@
+@@ -1,0 +1,216 @@
 +package net.minecraft.resources;
 +
 +import com.google.common.base.Suppliers;
@@ -29,7 +29,6 @@
 +import net.minecraft.core.WritableRegistry;
 +import net.minecraft.server.packs.resources.Resource;
 +import net.minecraft.server.packs.resources.ResourceManager;
-+import net.minecraft.util.Codecs;
 +import org.apache.logging.log4j.LogManager;
 +import org.apache.logging.log4j.Logger;
 +
@@ -49,7 +48,7 @@
 +      this.registryHolder = var3;
 +   }
 +
-+   protected <E> DataResult<Pair<Supplier<E>, T>> decodeElement(T var1, ResourceKey<Registry<E>> var2, MapCodec<E> var3) {
++   protected <E> DataResult<Pair<Supplier<E>, T>> decodeElement(T var1, ResourceKey<? extends Registry<E>> var2, MapCodec<E> var3) {
 +      Optional var4 = this.registryHolder.registry(var2);
 +      if (!var4.isPresent()) {
 +         return DataResult.error("Unknown registry: " + var2);
@@ -57,7 +56,7 @@
 +         WritableRegistry var5 = (WritableRegistry)var4.get();
 +         DataResult var6 = ResourceLocation.CODEC.decode(this.delegate, var1);
 +         if (!var6.result().isPresent()) {
-+            return Codecs.withName(var2, var3).codec().decode(this.delegate, var1).map((var1x) -> {
++            return MappedRegistry.withName(var2, var3).codec().decode(this.delegate, var1).map((var1x) -> {
 +               return var1x.mapFirst((var1) -> {
 +                  var5.register((ResourceKey)var1.getFirst(), var1.getSecond());
 +                  var5.setPersistent((ResourceKey)var1.getFirst());
@@ -74,7 +73,7 @@
 +      }
 +   }
 +
-+   public <E> DataResult<MappedRegistry<E>> decodeElements(MappedRegistry<E> var1, ResourceKey<Registry<E>> var2, MapCodec<E> var3) {
++   public <E> DataResult<MappedRegistry<E>> decodeElements(MappedRegistry<E> var1, ResourceKey<? extends Registry<E>> var2, MapCodec<E> var3) {
 +      ResourceLocation var4 = var2.location();
 +      Collection var5 = this.resourceManager.listResources(var4, (var0) -> {
 +         return var0.endsWith(".json");
@@ -110,7 +109,7 @@
 +      return var6.setPartial(var1);
 +   }
 +
-+   private <E> DataResult<Supplier<E>> readAndRegisterElement(ResourceKey<Registry<E>> var1, WritableRegistry<E> var2, MapCodec<E> var3, ResourceLocation var4) {
++   private <E> DataResult<Supplier<E>> readAndRegisterElement(ResourceKey<? extends Registry<E>> var1, WritableRegistry<E> var2, MapCodec<E> var3, ResourceLocation var4) {
 +      ResourceKey var5 = ResourceKey.create(var1, var4);
 +      Object var6 = var2.get(var5);
 +      if (var6 != null) {
@@ -147,7 +146,7 @@
 +      }
 +   }
 +
-+   private <E> DataResult<E> readElementFromFile(ResourceKey<Registry<E>> var1, ResourceKey<E> var2, MapCodec<E> var3) {
++   private <E> DataResult<E> readElementFromFile(ResourceKey<? extends Registry<E>> var1, ResourceKey<E> var2, MapCodec<E> var3) {
 +      ResourceLocation var4 = new ResourceLocation(var1.location().getNamespace(), var1.location().getPath() + "/" + var2.location().getNamespace() + "/" + var2.location().getPath() + ".json");
 +
 +      try {
@@ -204,7 +203,7 @@
 +      }
 +   }
 +
-+   private <E> RegistryReadOps.ReadCache<E> readCache(ResourceKey<Registry<E>> var1) {
++   private <E> RegistryReadOps.ReadCache<E> readCache(ResourceKey<? extends Registry<E>> var1) {
 +      return (RegistryReadOps.ReadCache)this.readCache.computeIfAbsent(var1, (var0) -> {
 +         return new RegistryReadOps.ReadCache();
 +      });

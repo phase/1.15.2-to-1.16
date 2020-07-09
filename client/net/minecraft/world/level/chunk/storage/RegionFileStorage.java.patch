@@ -1,6 +1,14 @@
 --- net/minecraft/world/level/chunk/storage/RegionFileStorage.java
 +++ net/minecraft/world/level/chunk/storage/RegionFileStorage.java
-@@ -8,18 +8,21 @@
+@@ -1,25 +1,29 @@
+ package net.minecraft.world.level.chunk.storage;
+ 
+ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+ import it.unimi.dsi.fastutil.objects.ObjectIterator;
++import java.io.DataInput;
+ import java.io.DataInputStream;
+ import java.io.DataOutput;
+ import java.io.DataOutputStream;
  import java.io.File;
  import java.io.IOException;
  import javax.annotation.Nullable;
@@ -23,7 +31,7 @@
     private RegionFile getRegionFile(ChunkPos var1) throws IOException {
        long var2 = ChunkPos.asLong(var1.getRegionX(), var1.getRegionZ());
        RegionFile var4 = (RegionFile)this.regionCache.getAndMoveToFirst(var2);
-@@ -33,11 +36,11 @@
+@@ -33,11 +37,11 @@
           if (!this.folder.exists()) {
              this.folder.mkdirs();
           }
@@ -36,7 +44,27 @@
        }
     }
  
-@@ -102,14 +105,31 @@
+@@ -47,16 +51,16 @@
+       DataInputStream var3 = var2.getChunkDataInputStream(var1);
+       Throwable var4 = null;
+ 
+       CompoundTag var5;
+       try {
+-         if (var3 == null) {
+-            var5 = null;
++         if (var3 != null) {
++            var5 = NbtIo.read((DataInput)var3);
+             return var5;
+          }
+ 
+-         var5 = NbtIo.read(var3);
++         var5 = null;
+       } catch (Throwable var15) {
+          var4 = var15;
+          throw var15;
+       } finally {
+          if (var3 != null) {
+@@ -102,14 +106,31 @@
        }
  
     }

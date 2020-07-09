@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/LightningBolt.java
 +++ net/minecraft/world/entity/LightningBolt.java
-@@ -1,0 +1,126 @@
+@@ -1,0 +1,127 @@
 +package net.minecraft.world.entity;
 +
 +import java.util.Iterator;
@@ -11,6 +11,7 @@
 +import net.minecraft.nbt.CompoundTag;
 +import net.minecraft.network.protocol.Packet;
 +import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
++import net.minecraft.server.level.ServerLevel;
 +import net.minecraft.server.level.ServerPlayer;
 +import net.minecraft.sounds.SoundEvents;
 +import net.minecraft.sounds.SoundSource;
@@ -75,7 +76,7 @@
 +      }
 +
 +      if (this.life >= 0) {
-+         if (this.level.isClientSide) {
++         if (!(this.level instanceof ServerLevel)) {
 +            this.level.setSkyFlashTime(2);
 +         } else if (!this.visualOnly) {
 +            double var6 = 3.0D;
@@ -84,7 +85,7 @@
 +
 +            while(var4.hasNext()) {
 +               Entity var5 = (Entity)var4.next();
-+               var5.thunderHit(this);
++               var5.thunderHit((ServerLevel)this.level, this);
 +            }
 +
 +            if (this.cause != null) {

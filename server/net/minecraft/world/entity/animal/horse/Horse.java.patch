@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/animal/horse/Horse.java
 +++ net/minecraft/world/entity/animal/horse/Horse.java
-@@ -1,59 +1,59 @@
+@@ -1,59 +1,60 @@
  package net.minecraft.world.entity.animal.horse;
  
  import java.util.UUID;
@@ -10,6 +10,7 @@
  import net.minecraft.network.syncher.EntityDataAccessor;
  import net.minecraft.network.syncher.EntityDataSerializers;
  import net.minecraft.network.syncher.SynchedEntityData;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.sounds.SoundEvent;
  import net.minecraft.sounds.SoundEvents;
  import net.minecraft.world.Container;
@@ -32,7 +33,8 @@
  import net.minecraft.world.item.Items;
 -import net.minecraft.world.item.SpawnEggItem;
  import net.minecraft.world.level.Level;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.block.SoundType;
  
  public class Horse extends AbstractHorse {
@@ -70,7 +72,7 @@
        }
  
     }
-@@ -67,48 +67,57 @@
+@@ -67,48 +68,57 @@
        this.setDropChance(EquipmentSlot.CHEST, 0.0F);
     }
  
@@ -141,7 +143,7 @@
        }
  
     }
-@@ -129,95 +138,76 @@
+@@ -129,95 +139,76 @@
           this.playSound(SoundEvents.HORSE_BREATHE, var1.getVolume() * 0.6F, var1.getPitch());
        }
  
@@ -273,23 +275,40 @@
     public boolean canMate(Animal var1) {
        if (var1 == this) {
           return false;
-@@ -234,68 +224,65 @@
-          var2 = (AbstractHorse)EntityType.MULE.create(this.level);
+@@ -226,76 +217,74 @@
        } else {
-          Horse var3 = (Horse)var1;
-          var2 = (AbstractHorse)EntityType.HORSE.create(this.level);
-          int var5 = this.random.nextInt(9);
+          return this.canParent() && ((AbstractHorse)var1).canParent();
+       }
+    }
+ 
+-   public AgableMob getBreedOffspring(AgableMob var1) {
+-      AbstractHorse var2;
+-      if (var1 instanceof Donkey) {
+-         var2 = (AbstractHorse)EntityType.MULE.create(this.level);
++   public AgableMob getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      AbstractHorse var3;
++      if (var2 instanceof Donkey) {
++         var3 = (AbstractHorse)EntityType.MULE.create(var1);
+       } else {
+-         Horse var3 = (Horse)var1;
+-         var2 = (AbstractHorse)EntityType.HORSE.create(this.level);
+-         int var5 = this.random.nextInt(9);
 -         int var4;
-+         Variant var4;
-          if (var5 < 4) {
+-         if (var5 < 4) {
 -            var4 = this.getVariant() & 255;
-+            var4 = this.getVariant();
-          } else if (var5 < 8) {
+-         } else if (var5 < 8) {
 -            var4 = var3.getVariant() & 255;
-+            var4 = var3.getVariant();
++         Horse var4 = (Horse)var2;
++         var3 = (AbstractHorse)EntityType.HORSE.create(var1);
++         int var6 = this.random.nextInt(9);
++         Variant var5;
++         if (var6 < 4) {
++            var5 = this.getVariant();
++         } else if (var6 < 8) {
++            var5 = var4.getVariant();
           } else {
 -            var4 = this.random.nextInt(7);
-+            var4 = (Variant)Util.getRandom((Object[])Variant.values(), this.random);
++            var5 = (Variant)Util.getRandom((Object[])Variant.values(), this.random);
           }
  
 -         int var6 = this.random.nextInt(5);
@@ -297,23 +316,25 @@
 -            var4 |= this.getVariant() & '\uff00';
 -         } else if (var6 < 4) {
 -            var4 |= var3.getVariant() & '\uff00';
-+         int var7 = this.random.nextInt(5);
-+         Markings var6;
-+         if (var7 < 2) {
-+            var6 = this.getMarkings();
-+         } else if (var7 < 4) {
-+            var6 = var3.getMarkings();
++         int var8 = this.random.nextInt(5);
++         Markings var7;
++         if (var8 < 2) {
++            var7 = this.getMarkings();
++         } else if (var8 < 4) {
++            var7 = var4.getMarkings();
           } else {
 -            var4 |= this.random.nextInt(5) << 8 & '\uff00';
-+            var6 = (Markings)Util.getRandom((Object[])Markings.values(), this.random);
++            var7 = (Markings)Util.getRandom((Object[])Markings.values(), this.random);
           }
  
 -         ((Horse)var2).setVariant(var4);
-+         ((Horse)var2).setVariantAndMarkings(var4, var6);
++         ((Horse)var3).setVariantAndMarkings(var5, var7);
        }
  
-       this.setOffspringAttributes(var1, var2);
-       return var2;
+-      this.setOffspringAttributes(var1, var2);
+-      return var2;
++      this.setOffspringAttributes(var2, var3);
++      return var3;
     }
  
 -   public boolean wearsArmor() {
@@ -326,8 +347,9 @@
     }
  
     @Nullable
-    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 -      int var6;
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 +      Variant var6;
        if (var4 instanceof Horse.HorseGroupData) {
           var6 = ((Horse.HorseGroupData)var4).variant;
@@ -356,6 +378,7 @@
  
 -      public HorseGroupData(int var1) {
 +      public HorseGroupData(Variant var1) {
++         super(true);
           this.variant = var1;
        }
     }

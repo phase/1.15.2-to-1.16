@@ -1,9 +1,8 @@
 --- net/minecraft/world/level/block/entity/JigsawBlockEntity.java
 +++ net/minecraft/world/level/block/entity/JigsawBlockEntity.java
-@@ -1,71 +1,174 @@
+@@ -1,71 +1,160 @@
  package net.minecraft.world.level.block.entity;
  
-+import com.google.common.collect.ImmutableList;
 +import com.google.common.collect.Lists;
 +import java.util.ArrayList;
 +import java.util.Arrays;
@@ -23,11 +22,8 @@
 +import net.minecraft.world.level.block.Rotation;
 +import net.minecraft.world.level.block.state.BlockState;
 +import net.minecraft.world.level.chunk.ChunkGenerator;
-+import net.minecraft.world.level.levelgen.feature.StructurePieceType;
 +import net.minecraft.world.level.levelgen.feature.structures.JigsawPlacement;
 +import net.minecraft.world.level.levelgen.feature.structures.SinglePoolElement;
-+import net.minecraft.world.level.levelgen.feature.structures.StructurePoolElement;
-+import net.minecraft.world.level.levelgen.feature.structures.StructureTemplatePool;
 +import net.minecraft.world.level.levelgen.structure.BoundingBox;
 +import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
@@ -151,9 +147,9 @@
 +      ArrayList var9 = Lists.newArrayList();
 +      StructureTemplate var10 = new StructureTemplate();
 +      var10.fillFromWorld(var1, var8, new BlockPos(1, 1, 1), false, (Block)null);
-+      SinglePoolElement var11 = new SinglePoolElement(var10, ImmutableList.of(), StructureTemplatePool.Projection.RIGID);
-+      JigsawBlockEntity.RuntimePiece var12 = new JigsawBlockEntity.RuntimePiece(var5, var11, var8, 1, Rotation.NONE, new BoundingBox(var8, var8));
-+      JigsawPlacement.addPieces(var12, var2, JigsawBlockEntity.RuntimePiece::new, var4, var5, var9, var7);
++      SinglePoolElement var11 = new SinglePoolElement(var10);
++      PoolElementStructurePiece var12 = new PoolElementStructurePiece(var5, var11, var8, 1, Rotation.NONE, new BoundingBox(var8, var8));
++      JigsawPlacement.addPieces(var1.registryAccess(), var12, var2, PoolElementStructurePiece::new, var4, var5, var9, var7);
 +      Iterator var13 = var9.iterator();
 +
 +      while(var13.hasNext()) {
@@ -161,16 +157,6 @@
 +         var14.place(var1, var6, var4, var7, BoundingBox.infinite(), var8, var3);
 +      }
 +
-+   }
-+
-+   public static final class RuntimePiece extends PoolElementStructurePiece {
-+      public RuntimePiece(StructureManager var1, StructurePoolElement var2, BlockPos var3, int var4, Rotation var5, BoundingBox var6) {
-+         super(StructurePieceType.RUNTIME, var1, var2, var3, var4, var5, var6);
-+      }
-+
-+      public RuntimePiece(StructureManager var1, CompoundTag var2) {
-+         super(var1, var2, StructurePieceType.RUNTIME);
-+      }
 +   }
 +
 +   public static enum JointType implements StringRepresentable {

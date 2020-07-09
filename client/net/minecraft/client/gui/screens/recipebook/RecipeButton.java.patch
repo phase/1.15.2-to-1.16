@@ -21,7 +21,7 @@
  import net.minecraft.util.Mth;
  import net.minecraft.world.inventory.RecipeBookMenu;
  import net.minecraft.world.item.ItemStack;
-@@ -22,11 +27,11 @@
+@@ -22,18 +27,18 @@
     private float time;
     private float animationTime;
     private int currentIndex;
@@ -34,7 +34,15 @@
     public void init(RecipeCollection var1, RecipeBookPage var2) {
        this.collection = var1;
        this.menu = (RecipeBookMenu)var2.getMinecraft().player.containerMenu;
-@@ -52,49 +57,49 @@
+       this.book = var2.getRecipeBook();
+-      List var3 = var1.getRecipes(this.book.isFilteringCraftable(this.menu));
++      List var3 = var1.getRecipes(this.book.isFiltering(this.menu));
+       Iterator var4 = var3.iterator();
+ 
+       while(var4.hasNext()) {
+          Recipe var5 = (Recipe)var4.next();
+          if (this.book.willHighlight(var5)) {
+@@ -52,57 +57,57 @@
     public void setPosition(int var1, int var2) {
        this.x = var1;
        this.y = var2;
@@ -59,9 +67,10 @@
        }
  
 -      int var6 = 206;
-+      int var7 = 206;
-       if (this.collection.getRecipes(this.book.isFilteringCraftable(this.menu)).size() > 1) {
+-      if (this.collection.getRecipes(this.book.isFilteringCraftable(this.menu)).size() > 1) {
 -         var6 += 25;
++      int var7 = 206;
++      if (this.collection.getRecipes(this.book.isFiltering(this.menu)).size() > 1) {
 +         var7 += 25;
        }
  
@@ -106,6 +115,15 @@
  
     }
  
+    private List<Recipe<?>> getOrderedRecipes() {
+       List var1 = this.collection.getDisplayRecipes(true);
+-      if (!this.book.isFilteringCraftable(this.menu)) {
++      if (!this.book.isFiltering(this.menu)) {
+          var1.addAll(this.collection.getDisplayRecipes(false));
+       }
+ 
+       return var1;
+    }
 @@ -114,15 +119,15 @@
     public Recipe<?> getRecipe() {
        List var1 = this.getOrderedRecipes();
@@ -116,9 +134,10 @@
 +   public List<FormattedText> getTooltipText(Screen var1) {
        ItemStack var2 = ((Recipe)this.getOrderedRecipes().get(this.currentIndex)).getResultItem();
 -      List var3 = var1.getTooltipFromItem(var2);
-+      ArrayList var3 = Lists.newArrayList(var1.getTooltipFromItem(var2));
-       if (this.collection.getRecipes(this.book.isFilteringCraftable(this.menu)).size() > 1) {
+-      if (this.collection.getRecipes(this.book.isFilteringCraftable(this.menu)).size() > 1) {
 -         var3.add(I18n.get("gui.recipebook.moreRecipes"));
++      ArrayList var3 = Lists.newArrayList(var1.getTooltipFromItem(var2));
++      if (this.collection.getRecipes(this.book.isFiltering(this.menu)).size() > 1) {
 +         var3.add(new TranslatableComponent("gui.recipebook.moreRecipes"));
        }
  

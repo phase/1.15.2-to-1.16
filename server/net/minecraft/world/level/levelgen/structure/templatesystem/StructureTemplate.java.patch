@@ -20,7 +20,7 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.core.IdMapper;
-@@ -18,30 +23,35 @@
+@@ -18,30 +23,36 @@
  import net.minecraft.nbt.ListTag;
  import net.minecraft.nbt.NbtUtils;
  import net.minecraft.world.Clearable;
@@ -34,6 +34,7 @@
 +import net.minecraft.world.level.EmptyBlockGetter;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.LiquidBlockContainer;
@@ -57,7 +58,7 @@
     private String author;
  
     public StructureTemplate() {
-@@ -71,63 +81,88 @@
+@@ -71,63 +82,88 @@
           BlockPos var11 = new BlockPos(Math.max(var2.getX(), var6.getX()), Math.max(var2.getY(), var6.getY()), Math.max(var2.getZ(), var6.getZ()));
           this.size = var3;
           Iterator var12 = BlockPos.betweenClosed(var10, var11).iterator();
@@ -182,7 +183,7 @@
           var8 = new CompoundTag();
           var6.save(var8);
           if (var6 instanceof Painting) {
-@@ -144,27 +179,28 @@
+@@ -144,27 +180,28 @@
     }
  
     public List<StructureTemplate.StructureBlockInfo> filterBlocks(BlockPos var1, StructurePlaceSettings var2, Block var3, boolean var4) {
@@ -225,14 +226,14 @@
     }
  
     public BlockPos calculateConnectedPosition(StructurePlaceSettings var1, BlockPos var2, StructurePlaceSettings var3, BlockPos var4) {
-@@ -175,163 +211,167 @@
+@@ -175,163 +212,167 @@
  
     public static BlockPos calculateRelativePosition(StructurePlaceSettings var0, BlockPos var1) {
        return transform(var1, var0.getMirror(), var0.getRotation(), var0.getRotationPivot());
     }
  
 -   public void placeInWorldChunk(LevelAccessor var1, BlockPos var2, StructurePlaceSettings var3) {
-+   public void placeInWorldChunk(LevelAccessor var1, BlockPos var2, StructurePlaceSettings var3, Random var4) {
++   public void placeInWorldChunk(ServerLevelAccessor var1, BlockPos var2, StructurePlaceSettings var3, Random var4) {
        var3.updateBoundingBoxFromChunkPos();
 -      this.placeInWorld(var1, var2, var3);
 +      this.placeInWorld(var1, var2, var3, var4);
@@ -240,12 +241,12 @@
  
 -   public void placeInWorld(LevelAccessor var1, BlockPos var2, StructurePlaceSettings var3) {
 -      this.placeInWorld(var1, var2, var3, 2);
-+   public void placeInWorld(LevelAccessor var1, BlockPos var2, StructurePlaceSettings var3, Random var4) {
++   public void placeInWorld(ServerLevelAccessor var1, BlockPos var2, StructurePlaceSettings var3, Random var4) {
 +      this.placeInWorld(var1, var2, var2, var3, var4, 2);
     }
  
 -   public boolean placeInWorld(LevelAccessor var1, BlockPos var2, StructurePlaceSettings var3, int var4) {
-+   public boolean placeInWorld(LevelAccessor var1, BlockPos var2, BlockPos var3, StructurePlaceSettings var4, Random var5, int var6) {
++   public boolean placeInWorld(ServerLevelAccessor var1, BlockPos var2, BlockPos var3, StructurePlaceSettings var4, Random var5, int var6) {
        if (this.palettes.isEmpty()) {
           return false;
        } else {
@@ -496,7 +497,7 @@
                 }
              }
           } else {
-@@ -346,71 +386,74 @@
+@@ -346,76 +387,79 @@
           BlockPos var10 = var9.relative(var5x);
           BlockState var11 = var0.getBlockState(var9);
           BlockState var12 = var0.getBlockState(var10);
@@ -548,7 +549,7 @@
  
 -   private void placeEntities(LevelAccessor var1, BlockPos var2, Mirror var3, Rotation var4, BlockPos var5, @Nullable BoundingBox var6) {
 -      Iterator var7 = this.entityInfoList.iterator();
-+   private void placeEntities(LevelAccessor var1, BlockPos var2, Mirror var3, Rotation var4, BlockPos var5, @Nullable BoundingBox var6, boolean var7) {
++   private void placeEntities(ServerLevelAccessor var1, BlockPos var2, Mirror var3, Rotation var4, BlockPos var5, @Nullable BoundingBox var6, boolean var7) {
 +      Iterator var8 = this.entityInfoList.iterator();
  
        while(true) {
@@ -606,8 +607,14 @@
        }
     }
  
-    private static Optional<Entity> createEntityIgnoreException(LevelAccessor var0, CompoundTag var1) {
-@@ -459,11 +502,11 @@
+-   private static Optional<Entity> createEntityIgnoreException(LevelAccessor var0, CompoundTag var1) {
++   private static Optional<Entity> createEntityIgnoreException(ServerLevelAccessor var0, CompoundTag var1) {
+       try {
+          return EntityType.create(var1, var0.getLevel());
+       } catch (Exception var3) {
+          return Optional.empty();
+       }
+@@ -459,11 +503,11 @@
        default:
           return var7 ? new BlockPos(var4, var5, var6) : var0;
        }
@@ -620,7 +627,7 @@
        double var8 = var0.z;
        boolean var10 = true;
        switch(var1) {
-@@ -517,45 +560,46 @@
+@@ -517,45 +561,46 @@
  
        return var7;
     }
@@ -687,7 +694,7 @@
     private void mirrorAABB(Rotation var1, int var2, int var3, BoundingBox var4, Direction var5, Direction var6) {
        BlockPos var7 = BlockPos.ZERO;
        if (var1 != Rotation.CLOCKWISE_90 && var1 != Rotation.COUNTERCLOCKWISE_90) {
-@@ -583,11 +627,11 @@
+@@ -583,11 +628,11 @@
           for(int var4 = 1; var4 < this.palettes.size(); ++var4) {
              var2.add(new StructureTemplate.SimplePalette());
           }
@@ -700,7 +707,7 @@
              StructureTemplate.StructureBlockInfo var7 = (StructureTemplate.StructureBlockInfo)var5.get(var6);
              CompoundTag var8 = new CompoundTag();
              var8.put("pos", this.newIntegerList(var7.pos.getX(), var7.pos.getY(), var7.pos.getZ()));
-@@ -599,11 +643,11 @@
+@@ -599,11 +644,11 @@
  
              var14.add(var8);
  
@@ -713,7 +720,7 @@
  
           var1.put("blocks", var14);
           ListTag var17;
-@@ -692,36 +736,37 @@
+@@ -692,36 +737,37 @@
  
     }
  
@@ -769,7 +776,7 @@
     private ListTag newIntegerList(int... var1) {
        ListTag var2 = new ListTag();
        int[] var3 = var1;
-@@ -746,10 +791,32 @@
+@@ -746,10 +792,32 @@
        }
  
        return var2;

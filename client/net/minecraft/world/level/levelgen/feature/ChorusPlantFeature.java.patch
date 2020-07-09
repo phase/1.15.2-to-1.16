@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/ChorusPlantFeature.java
 +++ net/minecraft/world/level/levelgen/feature/ChorusPlantFeature.java
-@@ -1,26 +1,25 @@
+@@ -1,26 +1,24 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -9,7 +9,6 @@
 -import java.util.function.Function;
  import net.minecraft.core.BlockPos;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.ChorusFlowerBlock;
@@ -26,9 +25,9 @@
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
 -      if (var1.isEmptyBlock(var4.above()) && var1.getBlockState(var4).getBlock() == Blocks.END_STONE) {
 -         ChorusFlowerBlock.generatePlant(var1, var4.above(), var3, 8);
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      if (var1.isEmptyBlock(var5.above()) && var1.getBlockState(var5).is(Blocks.END_STONE)) {
-+         ChorusFlowerBlock.generatePlant(var1, var5.above(), var4, 8);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
++      if (var1.isEmptyBlock(var4) && var1.getBlockState(var4.below()).is(Blocks.END_STONE)) {
++         ChorusFlowerBlock.generatePlant(var1, var4, var3, 8);
           return true;
        } else {
           return false;

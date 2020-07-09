@@ -1,31 +1,25 @@
 --- net/minecraft/world/level/levelgen/feature/configurations/CountFeatureConfiguration.java
 +++ net/minecraft/world/level/levelgen/feature/configurations/CountFeatureConfiguration.java
-@@ -1,22 +1,18 @@
- package net.minecraft.world.level.levelgen.feature.configurations;
- 
+@@ -1,22 +1,0 @@
+-package net.minecraft.world.level.levelgen.feature.configurations;
+-
 -import com.google.common.collect.ImmutableMap;
 -import com.mojang.datafixers.Dynamic;
 -import com.mojang.datafixers.types.DynamicOps;
-+import com.mojang.serialization.Codec;
- 
- public class CountFeatureConfiguration implements FeatureConfiguration {
-+   public static final Codec<CountFeatureConfiguration> CODEC;
-    public final int count;
- 
-    public CountFeatureConfiguration(int var1) {
-       this.count = var1;
-    }
- 
+-
+-public class CountFeatureConfiguration implements FeatureConfiguration {
+-   public final int count;
+-
+-   public CountFeatureConfiguration(int var1) {
+-      this.count = var1;
+-   }
+-
 -   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
 -      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("count"), var1.createInt(this.count))));
-+   static {
-+      CODEC = Codec.INT.fieldOf("count").xmap(CountFeatureConfiguration::new, (var0) -> {
-+         return var0.count;
-+      }).codec();
-    }
+-   }
 -
 -   public static <T> CountFeatureConfiguration deserialize(Dynamic<T> var0) {
 -      int var1 = var0.get("count").asInt(0);
 -      return new CountFeatureConfiguration(var1);
 -   }
- }
+-}

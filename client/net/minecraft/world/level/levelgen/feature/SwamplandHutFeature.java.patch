@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/SwamplandHutFeature.java
 +++ net/minecraft/world/level/levelgen/feature/SwamplandHutFeature.java
-@@ -1,77 +1,51 @@
+@@ -1,77 +1,52 @@
  package net.minecraft.world.level.levelgen.feature;
  
  import com.google.common.collect.Lists;
@@ -9,6 +9,7 @@
  import java.util.List;
 -import java.util.function.Function;
 -import net.minecraft.core.BlockPos;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.world.entity.EntityType;
 -import net.minecraft.world.level.LevelAccessor;
  import net.minecraft.world.level.biome.Biome;
@@ -80,9 +81,9 @@
 -      public void generatePieces(ChunkGenerator<?> var1, StructureManager var2, int var3, int var4, Biome var5) {
 -         SwamplandHutPiece var6 = new SwamplandHutPiece(this.random, var3 * 16, var4 * 16);
 -         this.pieces.add(var6);
-+      public void generatePieces(ChunkGenerator var1, StructureManager var2, int var3, int var4, Biome var5, NoneFeatureConfiguration var6) {
-+         SwamplandHutPiece var7 = new SwamplandHutPiece(this.random, var3 * 16, var4 * 16);
-+         this.pieces.add(var7);
++      public void generatePieces(RegistryAccess var1, ChunkGenerator var2, StructureManager var3, int var4, int var5, Biome var6, NoneFeatureConfiguration var7) {
++         SwamplandHutPiece var8 = new SwamplandHutPiece(this.random, var4 * 16, var5 * 16);
++         this.pieces.add(var8);
           this.calculateBoundingBox();
        }
     }

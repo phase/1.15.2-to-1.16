@@ -75,7 +75,7 @@
           } else if (this.currentGoal == BoatGoals.GO_IN_BOAT_DIRECTION) {
              Direction var5 = this.following.getMotionDirection();
 -            BlockPos var4 = (new BlockPos(this.following)).relative(var5, 10);
-+            BlockPos var4 = this.following.blockPosition().relative(var5, 10);
++            BlockPos var4 = this.following.blockPosition().relative((Direction)var5, 10);
              this.mob.getNavigation().moveTo((double)var4.getX(), (double)(var4.getY() - 1), (double)var4.getZ(), 1.0D);
              if (this.mob.distanceTo(this.following) > 12.0F) {
                 this.timeToRecalcPath = 0;

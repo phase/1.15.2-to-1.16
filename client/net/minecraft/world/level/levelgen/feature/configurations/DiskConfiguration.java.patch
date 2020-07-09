@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/configurations/DiskConfiguration.java
 +++ net/minecraft/world/level/levelgen/feature/configurations/DiskConfiguration.java
-@@ -1,15 +1,24 @@
+@@ -1,36 +1,32 @@
  package net.minecraft.world.level.levelgen.feature.configurations;
  
 -import com.google.common.collect.ImmutableMap;
@@ -10,29 +10,34 @@
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
  import java.util.List;
 -import net.minecraft.world.level.block.Blocks;
++import net.minecraft.util.UniformInt;
  import net.minecraft.world.level.block.state.BlockState;
  
  public class DiskConfiguration implements FeatureConfiguration {
 +   public static final Codec<DiskConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
 +      return var0.group(BlockState.CODEC.fieldOf("state").forGetter((var0x) -> {
 +         return var0x.state;
-+      }), Codec.INT.fieldOf("radius").withDefault(0).forGetter((var0x) -> {
++      }), UniformInt.codec(0, 4, 4).fieldOf("radius").forGetter((var0x) -> {
 +         return var0x.radius;
-+      }), Codec.INT.fieldOf("y_size").withDefault(0).forGetter((var0x) -> {
-+         return var0x.ySize;
++      }), Codec.intRange(0, 4).fieldOf("half_height").forGetter((var0x) -> {
++         return var0x.halfHeight;
 +      }), BlockState.CODEC.listOf().fieldOf("targets").forGetter((var0x) -> {
 +         return var0x.targets;
 +      })).apply(var0, DiskConfiguration::new);
 +   });
     public final BlockState state;
-    public final int radius;
-    public final int ySize;
+-   public final int radius;
+-   public final int ySize;
++   public final UniformInt radius;
++   public final int halfHeight;
     public final List<BlockState> targets;
  
-@@ -17,20 +26,6 @@
+-   public DiskConfiguration(BlockState var1, int var2, int var3, List<BlockState> var4) {
++   public DiskConfiguration(BlockState var1, UniformInt var2, int var3, List<BlockState> var4) {
        this.state = var1;
        this.radius = var2;
-       this.ySize = var3;
+-      this.ySize = var3;
++      this.halfHeight = var3;
        this.targets = var4;
     }
 -

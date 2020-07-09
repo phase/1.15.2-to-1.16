@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/BambooFeature.java
 +++ net/minecraft/world/level/levelgen/feature/BambooFeature.java
-@@ -1,73 +1,72 @@
+@@ -1,36 +1,34 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -10,7 +10,6 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.BambooBlock;
  import net.minecraft.world.level.block.Blocks;
@@ -33,75 +32,14 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, ProbabilityFeatureConfiguration var5) {
--      int var6 = 0;
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, ProbabilityFeatureConfiguration var5) {
+       int var6 = 0;
 -      BlockPos.MutableBlockPos var7 = new BlockPos.MutableBlockPos(var4);
 -      BlockPos.MutableBlockPos var8 = new BlockPos.MutableBlockPos(var4);
--      if (var1.isEmptyBlock(var7)) {
--         if (Blocks.BAMBOO.defaultBlockState().canSurvive(var1, var7)) {
--            int var9 = var3.nextInt(12) + 5;
--            int var10;
--            if (var3.nextFloat() < var5.probability) {
--               var10 = var3.nextInt(4) + 1;
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, ProbabilityFeatureConfiguration var6) {
-+      int var7 = 0;
-+      BlockPos.MutableBlockPos var8 = var5.mutable();
-+      BlockPos.MutableBlockPos var9 = var5.mutable();
-+      if (var1.isEmptyBlock(var8)) {
-+         if (Blocks.BAMBOO.defaultBlockState().canSurvive(var1, var8)) {
-+            int var10 = var4.nextInt(12) + 5;
-+            int var11;
-+            if (var4.nextFloat() < var6.probability) {
-+               var11 = var4.nextInt(4) + 1;
- 
--               for(int var11 = var4.getX() - var10; var11 <= var4.getX() + var10; ++var11) {
--                  for(int var12 = var4.getZ() - var10; var12 <= var4.getZ() + var10; ++var12) {
--                     int var13 = var11 - var4.getX();
--                     int var14 = var12 - var4.getZ();
--                     if (var13 * var13 + var14 * var14 <= var10 * var10) {
--                        var8.set(var11, var1.getHeight(Heightmap.Types.WORLD_SURFACE, var11, var12) - 1, var12);
--                        if (isDirt(var1.getBlockState(var8).getBlock())) {
--                           var1.setBlock(var8, Blocks.PODZOL.defaultBlockState(), 2);
-+               for(int var12 = var5.getX() - var11; var12 <= var5.getX() + var11; ++var12) {
-+                  for(int var13 = var5.getZ() - var11; var13 <= var5.getZ() + var11; ++var13) {
-+                     int var14 = var12 - var5.getX();
-+                     int var15 = var13 - var5.getZ();
-+                     if (var14 * var14 + var15 * var15 <= var11 * var11) {
-+                        var9.set(var12, var1.getHeight(Heightmap.Types.WORLD_SURFACE, var12, var13) - 1, var13);
-+                        if (isDirt(var1.getBlockState(var9).getBlock())) {
-+                           var1.setBlock(var9, Blocks.PODZOL.defaultBlockState(), 2);
-                         }
-                      }
-                   }
-                }
-             }
- 
--            for(var10 = 0; var10 < var9 && var1.isEmptyBlock(var7); ++var10) {
--               var1.setBlock(var7, BAMBOO_TRUNK, 2);
--               var7.move(Direction.UP, 1);
-+            for(var11 = 0; var11 < var10 && var1.isEmptyBlock(var8); ++var11) {
-+               var1.setBlock(var8, BAMBOO_TRUNK, 2);
-+               var8.move(Direction.UP, 1);
-             }
- 
--            if (var7.getY() - var4.getY() >= 3) {
--               var1.setBlock(var7, BAMBOO_FINAL_LARGE, 2);
--               var1.setBlock(var7.move(Direction.DOWN, 1), BAMBOO_TOP_LARGE, 2);
--               var1.setBlock(var7.move(Direction.DOWN, 1), BAMBOO_TOP_SMALL, 2);
-+            if (var8.getY() - var5.getY() >= 3) {
-+               var1.setBlock(var8, BAMBOO_FINAL_LARGE, 2);
-+               var1.setBlock(var8.move(Direction.DOWN, 1), BAMBOO_TOP_LARGE, 2);
-+               var1.setBlock(var8.move(Direction.DOWN, 1), BAMBOO_TOP_SMALL, 2);
-             }
-          }
- 
--         ++var6;
-+         ++var7;
-       }
- 
--      return var6 > 0;
-+      return var7 > 0;
-    }
- 
-    static {
-       BAMBOO_TRUNK = (BlockState)((BlockState)((BlockState)Blocks.BAMBOO.defaultBlockState().setValue(BambooBlock.AGE, 1)).setValue(BambooBlock.LEAVES, BambooLeaves.NONE)).setValue(BambooBlock.STAGE, 0);
-       BAMBOO_FINAL_LARGE = (BlockState)((BlockState)BAMBOO_TRUNK.setValue(BambooBlock.LEAVES, BambooLeaves.LARGE)).setValue(BambooBlock.STAGE, 1);
++      BlockPos.MutableBlockPos var7 = var4.mutable();
++      BlockPos.MutableBlockPos var8 = var4.mutable();
+       if (var1.isEmptyBlock(var7)) {
+          if (Blocks.BAMBOO.defaultBlockState().canSurvive(var1, var7)) {
+             int var9 = var3.nextInt(12) + 5;
+             int var10;
+             if (var3.nextFloat() < var5.probability) {

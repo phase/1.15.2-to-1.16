@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/EndCrystalItem.java
 +++ net/minecraft/world/item/EndCrystalItem.java
-@@ -1,17 +1,17 @@
+@@ -1,17 +1,18 @@
  package net.minecraft.world.item;
  
  import java.util.List;
@@ -9,6 +9,7 @@
  import net.minecraft.world.InteractionResult;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.state.BlockState;
@@ -19,7 +20,7 @@
  public class EndCrystalItem extends Item {
     public EndCrystalItem(Item.Properties var1) {
        super(var1);
-@@ -19,11 +19,11 @@
+@@ -19,11 +20,11 @@
  
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();
@@ -32,7 +33,7 @@
           BlockPos var5 = var3.above();
           if (!var2.isEmptyBlock(var5)) {
              return InteractionResult.FAIL;
-@@ -33,22 +33,22 @@
+@@ -33,22 +34,22 @@
              double var10 = (double)var5.getZ();
              List var12 = var2.getEntities((Entity)null, new AABB(var6, var8, var10, var6 + 1.0D, var8 + 2.0D, var10 + 1.0D));
              if (!var12.isEmpty()) {

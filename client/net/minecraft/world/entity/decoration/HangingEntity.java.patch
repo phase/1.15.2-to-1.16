@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/decoration/HangingEntity.java
 +++ net/minecraft/world/entity/decoration/HangingEntity.java
-@@ -2,18 +2,17 @@
+@@ -2,18 +2,18 @@
  
  import java.util.function.Predicate;
  import javax.annotation.Nullable;
@@ -8,6 +8,7 @@
  import net.minecraft.core.Direction;
 -import net.minecraft.core.Vec3i;
  import net.minecraft.nbt.CompoundTag;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.util.Mth;
  import net.minecraft.world.damagesource.DamageSource;
  import net.minecraft.world.entity.Entity;
@@ -20,7 +21,7 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.DiodeBlock;
-@@ -88,16 +87,22 @@
+@@ -88,16 +88,22 @@
     private double offs(int var1) {
        return var1 % 32 == 0 ? 0.5D : 0.0D;
     }
@@ -48,7 +49,7 @@
     }
  
     public boolean survives() {
-@@ -112,11 +117,11 @@
+@@ -112,11 +118,11 @@
  
           for(int var6 = 0; var6 < var1; ++var6) {
              for(int var7 = 0; var7 < var2; ++var7) {
@@ -61,3 +62,16 @@
                    return false;
                 }
              }
+@@ -244,11 +250,11 @@
+ 
+    public float mirror(Mirror var1) {
+       return this.rotate(var1.getRotation(this.direction));
+    }
+ 
+-   public void thunderHit(LightningBolt var1) {
++   public void thunderHit(ServerLevel var1, LightningBolt var2) {
+    }
+ 
+    public void refreshDimensions() {
+    }
+ }

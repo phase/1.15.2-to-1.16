@@ -1,22 +1,29 @@
 --- net/minecraft/world/level/levelgen/placement/nether/ChanceRangeDecorator.java
 +++ net/minecraft/world/level/levelgen/placement/nether/ChanceRangeDecorator.java
-@@ -1,17 +1,16 @@
- package net.minecraft.world.level.levelgen.placement.nether;
- 
+@@ -1,26 +1,0 @@
+-package net.minecraft.world.level.levelgen.placement.nether;
+-
 -import com.mojang.datafixers.Dynamic;
-+import com.mojang.serialization.Codec;
- import java.util.Random;
+-import java.util.Random;
 -import java.util.function.Function;
- import java.util.stream.Stream;
- import net.minecraft.core.BlockPos;
- import net.minecraft.world.level.levelgen.feature.configurations.ChanceRangeDecoratorConfiguration;
- import net.minecraft.world.level.levelgen.placement.SimpleFeatureDecorator;
- 
- public class ChanceRangeDecorator extends SimpleFeatureDecorator<ChanceRangeDecoratorConfiguration> {
+-import java.util.stream.Stream;
+-import net.minecraft.core.BlockPos;
+-import net.minecraft.world.level.levelgen.feature.configurations.ChanceRangeDecoratorConfiguration;
+-import net.minecraft.world.level.levelgen.placement.SimpleFeatureDecorator;
+-
+-public class ChanceRangeDecorator extends SimpleFeatureDecorator<ChanceRangeDecoratorConfiguration> {
 -   public ChanceRangeDecorator(Function<Dynamic<?>, ? extends ChanceRangeDecoratorConfiguration> var1) {
-+   public ChanceRangeDecorator(Codec<ChanceRangeDecoratorConfiguration> var1) {
-       super(var1);
-    }
- 
-    public Stream<BlockPos> place(Random var1, ChanceRangeDecoratorConfiguration var2, BlockPos var3) {
-       if (var1.nextFloat() < var2.chance) {
+-      super(var1);
+-   }
+-
+-   public Stream<BlockPos> place(Random var1, ChanceRangeDecoratorConfiguration var2, BlockPos var3) {
+-      if (var1.nextFloat() < var2.chance) {
+-         int var4 = var1.nextInt(16) + var3.getX();
+-         int var5 = var1.nextInt(16) + var3.getZ();
+-         int var6 = var1.nextInt(var2.top - var2.topOffset) + var2.bottomOffset;
+-         return Stream.of(new BlockPos(var4, var6, var5));
+-      } else {
+-         return Stream.empty();
+-      }
+-   }
+-}

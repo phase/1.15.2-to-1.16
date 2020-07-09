@@ -1,19 +1,32 @@
 --- net/minecraft/world/item/BlockItem.java
 +++ net/minecraft/world/item/BlockItem.java
-@@ -31,11 +31,11 @@
+@@ -11,10 +11,12 @@
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.BlockPlaceContext;
++import net.minecraft.world.item.context.UseOnContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.SoundType;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+@@ -31,11 +33,11 @@
        this.block = var1;
     }
  
     public InteractionResult useOn(UseOnContext var1) {
        InteractionResult var2 = this.place(new BlockPlaceContext(var1));
 -      return var2 != InteractionResult.SUCCESS && this.isEdible() ? this.use(var1.level, var1.player, var1.hand).getResult() : var2;
-+      return !var2.consumesAction() && this.isEdible() ? this.use(var1.level, var1.player, var1.hand).getResult() : var2;
++      return !var2.consumesAction() && this.isEdible() ? this.use(var1.getLevel(), var1.getPlayer(), var1.getHand()).getResult() : var2;
     }
  
     public InteractionResult place(BlockPlaceContext var1) {
        if (!var1.canPlace()) {
           return InteractionResult.FAIL;
-@@ -65,12 +65,15 @@
+@@ -65,12 +67,15 @@
                    }
                 }
  
@@ -31,7 +44,7 @@
        }
     }
  
-@@ -156,11 +159,11 @@
+@@ -156,11 +161,11 @@
                 var7.merge(var5);
                 var7.putInt("x", var2.getX());
                 var7.putInt("y", var2.getY());

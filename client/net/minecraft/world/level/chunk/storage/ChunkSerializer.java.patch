@@ -25,6 +25,19 @@
  import net.minecraft.world.level.lighting.LevelLightEngine;
  import net.minecraft.world.level.material.Fluids;
  import org.apache.logging.log4j.LogManager;
+@@ -68,11 +69,11 @@
+       ChunkPos var8 = new ChunkPos(var7.getInt("xPos"), var7.getInt("zPos"));
+       if (!Objects.equals(var3, var8)) {
+          LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", var3, var3, var8);
+       }
+ 
+-      ChunkBiomeContainer var9 = new ChunkBiomeContainer(var3, var6, var7.contains("Biomes", 11) ? var7.getIntArray("Biomes") : null);
++      ChunkBiomeContainer var9 = new ChunkBiomeContainer(var0.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), var3, var6, var7.contains("Biomes", 11) ? var7.getIntArray("Biomes") : null);
+       UpgradeData var10 = var7.contains("UpgradeData", 10) ? new UpgradeData(var7.getCompound("UpgradeData")) : UpgradeData.EMPTY;
+       ProtoTickList var11 = new ProtoTickList((var0x) -> {
+          return var0x == null || var0x.defaultBlockState().isAir();
+       }, var3, var7.getList("ToBeTicked", 9));
+       ProtoTickList var12 = new ProtoTickList((var0x) -> {
 @@ -80,11 +81,11 @@
        }, var3, var7.getList("LiquidsToBeTicked", 9));
        boolean var13 = var7.getBoolean("isLightOn");
@@ -206,7 +219,7 @@
  
        var4.put("Heightmaps", var15);
        var4.put("Structures", packStructureData(var2, var1.getAllStarts(), var1.getAllReferences()));
-@@ -404,71 +408,72 @@
+@@ -404,71 +408,81 @@
              return var1x;
           });
           var1.setLastSaveHadEntities(true);
@@ -276,7 +289,16 @@
 -         var3.put(var6, StructureFeatureIO.loadStaticStart(var0, var1, var4.getCompound(var6)));
 +      while(var6.hasNext()) {
 +         String var7 = (String)var6.next();
-+         var4.put(StructureFeature.STRUCTURES_REGISTRY.get(var7.toLowerCase(Locale.ROOT)), StructureFeature.loadStaticStart(var0, var5.getCompound(var7), var2));
++         String var8 = var7.toLowerCase(Locale.ROOT);
++         StructureFeature var9 = (StructureFeature)StructureFeature.STRUCTURES_REGISTRY.get(var8);
++         if (var9 == null) {
++            LOGGER.error("Unknown structure start: {}", var8);
++         } else {
++            StructureStart var10 = StructureFeature.loadStaticStart(var0, var5.getCompound(var7), var2);
++            if (var10 != null) {
++               var4.put(var9, var10);
++            }
++         }
        }
  
 -      return var3;

@@ -1,6 +1,18 @@
 --- net/minecraft/world/item/ShovelItem.java
 +++ net/minecraft/world/item/ShovelItem.java
-@@ -23,13 +23,12 @@
+@@ -9,10 +9,11 @@
+ import net.minecraft.core.Direction;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.CampfireBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+@@ -23,13 +24,12 @@
  
     public ShovelItem(Tier var1, float var2, float var3, Item.Properties var4) {
        super(var2, var3, var1, DIGGABLES, var4);
@@ -16,7 +28,7 @@
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();
        BlockPos var3 = var1.getClickedPos();
-@@ -42,11 +41,15 @@
+@@ -42,11 +42,15 @@
           BlockState var7 = null;
           if (var6 != null && var2.getBlockState(var3.above()).isAir()) {
              var2.playSound(var5, var3, SoundEvents.SHOVEL_FLATTEN, SoundSource.BLOCKS, 1.0F, 1.0F);
@@ -33,7 +45,7 @@
  
           if (var7 != null) {
              if (!var2.isClientSide) {
-@@ -56,17 +59,17 @@
+@@ -56,17 +60,17 @@
                       var1x.broadcastBreakEvent(var1.getHand());
                    });
                 }

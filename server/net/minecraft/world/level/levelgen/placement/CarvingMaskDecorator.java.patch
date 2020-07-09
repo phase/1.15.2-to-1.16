@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/placement/CarvingMaskDecorator.java
 +++ net/minecraft/world/level/levelgen/placement/CarvingMaskDecorator.java
-@@ -1,30 +1,29 @@
+@@ -1,34 +1,28 @@
  package net.minecraft.world.level.levelgen.placement;
  
 -import com.mojang.datafixers.Dynamic;
@@ -12,11 +12,10 @@
  import java.util.stream.Stream;
  import net.minecraft.core.BlockPos;
  import net.minecraft.world.level.ChunkPos;
- import net.minecraft.world.level.LevelAccessor;
- import net.minecraft.world.level.chunk.ChunkAccess;
- import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.chunk.ChunkAccess;
+-import net.minecraft.world.level.chunk.ChunkGenerator;
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
-+import net.minecraft.world.level.chunk.ProtoChunk;
  
  public class CarvingMaskDecorator extends FeatureDecorator<CarvingMaskDecoratorConfiguration> {
 -   public CarvingMaskDecorator(Function<Dynamic<?>, ? extends CarvingMaskDecoratorConfiguration> var1) {
@@ -25,15 +24,22 @@
     }
  
 -   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, CarvingMaskDecoratorConfiguration var4, BlockPos var5) {
-+   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator var2, Random var3, CarvingMaskDecoratorConfiguration var4, BlockPos var5) {
-       ChunkAccess var6 = var1.getChunk(var5);
-       ChunkPos var7 = var6.getPos();
+-      ChunkAccess var6 = var1.getChunk(var5);
+-      ChunkPos var7 = var6.getPos();
 -      BitSet var8 = var6.getCarvingMask(var4.step);
 -      return IntStream.range(0, var8.length()).filter((var3x) -> {
-+      BitSet var8 = ((ProtoChunk)var6).getCarvingMask(var4.step);
-+      return var8 == null ? Stream.empty() : IntStream.range(0, var8.length()).filter((var3x) -> {
-          return var8.get(var3x) && var3.nextFloat() < var4.probability;
+-         return var8.get(var3x) && var3.nextFloat() < var4.probability;
++   public Stream<BlockPos> getPositions(DecorationContext var1, Random var2, CarvingMaskDecoratorConfiguration var3, BlockPos var4) {
++      ChunkPos var5 = new ChunkPos(var4);
++      BitSet var6 = var1.getCarvingMask(var5, var3.step);
++      return IntStream.range(0, var6.length()).filter((var3x) -> {
++         return var6.get(var3x) && var2.nextFloat() < var3.probability;
        }).mapToObj((var1x) -> {
           int var2 = var1x & 15;
           int var3 = var1x >> 4 & 15;
           int var4 = var1x >> 8;
+-         return new BlockPos(var7.getMinBlockX() + var2, var4, var7.getMinBlockZ() + var3);
++         return new BlockPos(var5.getMinBlockX() + var2, var4, var5.getMinBlockZ() + var3);
+       });
+    }
+ }

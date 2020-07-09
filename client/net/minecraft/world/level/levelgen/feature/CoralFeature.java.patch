@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/CoralFeature.java
 +++ net/minecraft/world/level/levelgen/feature/CoralFeature.java
-@@ -1,40 +1,40 @@
+@@ -1,40 +1,39 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -12,7 +12,6 @@
  import net.minecraft.core.Direction;
  import net.minecraft.tags.BlockTags;
  import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.BaseCoralWallFanBlock;
  import net.minecraft.world.level.block.Block;
@@ -30,11 +29,9 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
--      BlockState var6 = ((Block)BlockTags.CORAL_BLOCKS.getRandomElement(var3)).defaultBlockState();
--      return this.placeFeature(var1, var3, var4, var6);
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      BlockState var7 = ((Block)BlockTags.CORAL_BLOCKS.getRandomElement(var4)).defaultBlockState();
-+      return this.placeFeature(var1, var4, var5, var7);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
+       BlockState var6 = ((Block)BlockTags.CORAL_BLOCKS.getRandomElement(var3)).defaultBlockState();
+       return this.placeFeature(var1, var3, var4, var6);
     }
  
     protected abstract boolean placeFeature(LevelAccessor var1, Random var2, BlockPos var3, BlockState var4);
@@ -49,7 +46,7 @@
              var1.setBlock(var5, ((Block)BlockTags.CORALS.getRandomElement(var2)).defaultBlockState(), 2);
           } else if (var2.nextFloat() < 0.05F) {
              var1.setBlock(var5, (BlockState)Blocks.SEA_PICKLE.defaultBlockState().setValue(SeaPickleBlock.PICKLES, var2.nextInt(4) + 1), 2);
-@@ -44,11 +44,11 @@
+@@ -44,11 +43,11 @@
  
           while(var7.hasNext()) {
              Direction var8 = (Direction)var7.next();

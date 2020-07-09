@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/WrittenBookItem.java
 +++ net/minecraft/world/item/WrittenBookItem.java
-@@ -9,10 +9,11 @@
+@@ -9,18 +9,20 @@
  import net.minecraft.nbt.ListTag;
  import net.minecraft.nbt.StringTag;
  import net.minecraft.nbt.Tag;
@@ -12,7 +12,16 @@
  import net.minecraft.stats.Stats;
  import net.minecraft.util.StringUtil;
  import net.minecraft.world.InteractionHand;
-@@ -67,31 +68,31 @@
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.InteractionResultHolder;
+ import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.LecternBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+@@ -67,31 +69,31 @@
           String var6 = var5.getString("author");
           if (!StringUtil.isNullOrEmpty(var6)) {
              var3.add((new TranslatableComponent("book.byAuthor", new Object[]{var6})).withStyle(ChatFormatting.GRAY));
@@ -48,7 +57,7 @@
     public static boolean resolveBookComponents(ItemStack var0, @Nullable CommandSourceStack var1, @Nullable Player var2) {
        CompoundTag var3 = var0.getTag();
        if (var3 != null && !var3.getBoolean("resolved")) {
-@@ -104,11 +105,11 @@
+@@ -104,11 +106,11 @@
              for(int var5 = 0; var5 < var4.size(); ++var5) {
                 String var6 = var4.getString(var5);
  

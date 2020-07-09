@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/foliageplacers/SpruceFoliagePlacer.java
 +++ net/minecraft/world/level/levelgen/feature/foliageplacers/SpruceFoliagePlacer.java
-@@ -1,48 +1,59 @@
+@@ -1,48 +1,56 @@
  package net.minecraft.world.level.levelgen.feature.foliageplacers;
  
 -import com.mojang.datafixers.Dynamic;
@@ -9,6 +9,7 @@
  import java.util.Random;
  import java.util.Set;
  import net.minecraft.core.BlockPos;
++import net.minecraft.util.UniformInt;
  import net.minecraft.world.level.LevelSimulatedRW;
 -import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
 +import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
@@ -18,19 +19,15 @@
 -   public SpruceFoliagePlacer(int var1, int var2) {
 -      super(var1, var2, FoliagePlacerType.SPRUCE_FOLIAGE_PLACER);
 +   public static final Codec<SpruceFoliagePlacer> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return foliagePlacerParts(var0).and(var0.group(Codec.INT.fieldOf("trunk_height").forGetter((var0x) -> {
++      return foliagePlacerParts(var0).and(UniformInt.codec(0, 16, 8).fieldOf("trunk_height").forGetter((var0x) -> {
 +         return var0x.trunkHeight;
-+      }), Codec.INT.fieldOf("trunk_height_random").forGetter((var0x) -> {
-+         return var0x.trunkHeightRandom;
-+      }))).apply(var0, SpruceFoliagePlacer::new);
++      })).apply(var0, SpruceFoliagePlacer::new);
 +   });
-+   private final int trunkHeight;
-+   private final int trunkHeightRandom;
++   private final UniformInt trunkHeight;
 +
-+   public SpruceFoliagePlacer(int var1, int var2, int var3, int var4, int var5, int var6) {
-+      super(var1, var2, var3, var4);
-+      this.trunkHeight = var5;
-+      this.trunkHeightRandom = var6;
++   public SpruceFoliagePlacer(UniformInt var1, UniformInt var2, UniformInt var3) {
++      super(var1, var2);
++      this.trunkHeight = var3;
     }
  
 -   public <T> SpruceFoliagePlacer(Dynamic<T> var1) {
@@ -72,7 +69,7 @@
 -   public int foliageRadius(Random var1, int var2, int var3, SmallTreeConfiguration var4) {
 -      return this.radius + var1.nextInt(this.radiusRandom + 1);
 +   public int foliageHeight(Random var1, int var2, TreeConfiguration var3) {
-+      return Math.max(4, var2 - this.trunkHeight - var1.nextInt(this.trunkHeightRandom + 1));
++      return Math.max(4, var2 - this.trunkHeight.sample(var1));
     }
  
 -   protected boolean shouldSkipLocation(Random var1, int var2, int var3, int var4, int var5, int var6) {

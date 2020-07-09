@@ -10,7 +10,7 @@
  import java.util.List;
  import java.util.Map;
  import java.util.Random;
-@@ -13,58 +13,43 @@
+@@ -13,58 +13,44 @@
  import net.minecraft.core.NonNullList;
  import net.minecraft.core.Registry;
  import net.minecraft.nbt.CompoundTag;
@@ -33,6 +33,7 @@
  import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.food.FoodProperties;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.ClipContext;
  import net.minecraft.world.level.ItemLike;
  import net.minecraft.world.level.Level;
@@ -73,7 +74,7 @@
     private String descriptionId;
     @Nullable
     private final FoodProperties foodProperties;
-@@ -81,38 +66,22 @@
+@@ -81,38 +67,22 @@
     public static Item byBlock(Block var0) {
        return (Item)BY_BLOCK.getOrDefault(var0, Items.AIR);
     }
@@ -113,7 +114,7 @@
     }
  
     public boolean canAttackBlock(BlockState var1, Level var2, BlockPos var3, Player var4) {
-@@ -121,14 +90,10 @@
+@@ -121,14 +91,10 @@
  
     public Item asItem() {
        return this;
@@ -128,7 +129,7 @@
     }
  
     public float getDestroySpeed(ItemStack var1, BlockState var2) {
-@@ -171,20 +136,20 @@
+@@ -171,20 +137,20 @@
  
     public boolean mineBlock(ItemStack var1, Level var2, BlockState var3, BlockPos var4, LivingEntity var5) {
        return false;
@@ -153,7 +154,7 @@
     public String toString() {
        return Registry.ITEM.getKey(this).getPath();
     }
-@@ -245,11 +210,11 @@
+@@ -245,11 +211,11 @@
  
     public void appendHoverText(ItemStack var1, @Nullable Level var2, List<Component> var3, TooltipFlag var4) {
     }
@@ -166,7 +167,7 @@
     public boolean isFoil(ItemStack var1) {
        return var1.isEnchanted();
     }
-@@ -273,11 +238,11 @@
+@@ -273,11 +239,11 @@
  
     public boolean isEnchantable(ItemStack var1) {
        return this.getMaxStackSize() == 1 && this.canBeDepleted();
@@ -179,7 +180,7 @@
        Vec3 var5 = var1.getEyePosition(1.0F);
        float var6 = Mth.cos(-var4 * 0.017453292F - 3.1415927F);
        float var7 = Mth.sin(-var4 * 0.017453292F - 3.1415927F);
-@@ -313,12 +278,12 @@
+@@ -313,12 +279,12 @@
  
     public boolean isValidRepairItem(ItemStack var1, ItemStack var2) {
        return false;
@@ -194,7 +195,7 @@
     public boolean useOnRelease(ItemStack var1) {
        return var1.getItem() == Items.CROSSBOW;
     }
-@@ -346,17 +311,26 @@
+@@ -346,17 +312,26 @@
  
     public SoundEvent getEatingSound() {
        return SoundEvents.GENERIC_EAT;
@@ -221,7 +222,7 @@
           this.rarity = Rarity.COMMON;
        }
  
-@@ -396,7 +370,12 @@
+@@ -396,7 +371,12 @@
  
        public Item.Properties rarity(Rarity var1) {
           this.rarity = var1;

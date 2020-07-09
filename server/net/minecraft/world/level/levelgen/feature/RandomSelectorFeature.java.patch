@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/RandomSelectorFeature.java
 +++ net/minecraft/world/level/levelgen/feature/RandomSelectorFeature.java
-@@ -1,32 +1,31 @@
+@@ -1,29 +1,27 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -10,7 +10,6 @@
 -import java.util.function.Function;
  import net.minecraft.core.BlockPos;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.chunk.ChunkGenerator;
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
@@ -23,25 +22,16 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, RandomFeatureConfiguration var5) {
--      Iterator var6 = var5.features.iterator();
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, RandomFeatureConfiguration var6) {
-+      Iterator var7 = var6.features.iterator();
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, RandomFeatureConfiguration var5) {
+       Iterator var6 = var5.features.iterator();
  
--      WeightedConfiguredFeature var7;
-+      WeightedConfiguredFeature var8;
+       WeightedConfiguredFeature var7;
        do {
--         if (!var6.hasNext()) {
+          if (!var6.hasNext()) {
 -            return var5.defaultFeature.place(var1, var2, var3, var4);
-+         if (!var7.hasNext()) {
-+            return var6.defaultFeature.place(var1, var2, var3, var4, var5);
++            return ((ConfiguredFeature)var5.defaultFeature.get()).place(var1, var2, var3, var4);
           }
  
--         var7 = (WeightedConfiguredFeature)var6.next();
--      } while(var3.nextFloat() >= var7.chance);
-+         var8 = (WeightedConfiguredFeature)var7.next();
-+      } while(var4.nextFloat() >= var8.chance);
+          var7 = (WeightedConfiguredFeature)var6.next();
+       } while(var3.nextFloat() >= var7.chance);
  
--      return var7.place(var1, var2, var3, var4);
-+      return var8.place(var1, var2, var3, var4, var5);
-    }
- }

@@ -1,0 +1,27 @@
+--- net/minecraft/world/level/newbiome/layer/Layer.java
++++ net/minecraft/world/level/newbiome/layer/Layer.java
+@@ -1,10 +1,10 @@
+ package net.minecraft.world.level.newbiome.layer;
+ 
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+-import net.minecraft.core.Registry;
++import net.minecraft.data.BuiltinRegistries;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.newbiome.area.AreaFactory;
+ import net.minecraft.world.level.newbiome.area.LazyArea;
+ import org.apache.logging.log4j.LogManager;
+@@ -17,11 +17,11 @@
+    public Layer(AreaFactory<LazyArea> var1) {
+       this.area = (LazyArea)var1.make();
+    }
+ 
+    private Biome getBiome(int var1) {
+-      Biome var2 = (Biome)Registry.BIOME.byId(var1);
++      Biome var2 = (Biome)BuiltinRegistries.BIOME.byId(var1);
+       if (var2 == null) {
+          if (SharedConstants.IS_RUNNING_IN_IDE) {
+             throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Unknown biome id: " + var1));
+          } else {
+             LOGGER.warn((String)"Unknown biome id: ", (Object)var1);

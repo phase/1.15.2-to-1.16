@@ -1,11 +1,12 @@
 --- net/minecraft/world/level/levelgen/structure/OceanMonumentPieces.java
 +++ net/minecraft/world/level/levelgen/structure/OceanMonumentPieces.java
-@@ -15,10 +15,12 @@
+@@ -14,11 +14,12 @@
+ import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.entity.MobSpawnType;
  import net.minecraft.world.entity.SpawnGroupData;
  import net.minecraft.world.entity.monster.ElderGuardian;
  import net.minecraft.world.level.ChunkPos;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Block;
@@ -13,7 +14,7 @@
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.chunk.ChunkGenerator;
  import net.minecraft.world.level.levelgen.feature.StructurePieceType;
-@@ -217,52 +219,52 @@
+@@ -217,52 +218,52 @@
  
        public OceanMonumentPenthouse(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_PENTHOUSE, var2);
@@ -100,7 +101,7 @@
     }
  
     public static class OceanMonumentWingRoom extends OceanMonumentPieces.OceanMonumentPiece {
-@@ -275,99 +277,99 @@
+@@ -275,99 +276,99 @@
  
        public OceanMonumentWingRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_WING_ROOM, var2);
@@ -273,7 +274,7 @@
           return true;
        }
     }
-@@ -379,76 +381,76 @@
+@@ -379,76 +380,76 @@
  
        public OceanMonumentCoreRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_CORE_ROOM, var2);
@@ -405,7 +406,7 @@
     }
  
     public static class OceanMonumentDoubleYZRoom extends OceanMonumentPieces.OceanMonumentPiece {
-@@ -458,109 +460,109 @@
+@@ -458,109 +459,109 @@
  
        public OceanMonumentDoubleYZRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_DOUBLE_YZ_ROOM, var2);
@@ -577,7 +578,7 @@
           return true;
        }
     }
-@@ -572,109 +574,109 @@
+@@ -572,109 +573,109 @@
  
        public OceanMonumentDoubleXYRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_DOUBLE_XY_ROOM, var2);
@@ -753,7 +754,7 @@
           return true;
        }
     }
-@@ -686,84 +688,84 @@
+@@ -686,84 +687,84 @@
  
        public OceanMonumentDoubleZRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_DOUBLE_Z_ROOM, var2);
@@ -895,7 +896,7 @@
           return true;
        }
     }
-@@ -775,65 +777,65 @@
+@@ -775,65 +776,65 @@
  
        public OceanMonumentDoubleXRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_DOUBLE_X_ROOM, var2);
@@ -999,7 +1000,7 @@
           return true;
        }
     }
-@@ -845,76 +847,76 @@
+@@ -845,76 +846,76 @@
  
        public OceanMonumentDoubleYRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_DOUBLE_Y_ROOM, var2);
@@ -1124,7 +1125,7 @@
           return true;
        }
     }
-@@ -926,47 +928,47 @@
+@@ -926,47 +927,47 @@
  
        public OceanMonumentSimpleTopRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_SIMPLE_TOP_ROOM, var2);
@@ -1198,7 +1199,7 @@
           return true;
        }
     }
-@@ -981,158 +983,158 @@
+@@ -981,158 +982,158 @@
  
        public OceanMonumentSimpleRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_SIMPLE_ROOM, var2);
@@ -1457,7 +1458,7 @@
           return true;
        }
     }
-@@ -1144,30 +1146,30 @@
+@@ -1144,30 +1145,30 @@
  
        public OceanMonumentEntryRoom(StructureManager var1, CompoundTag var2) {
           super(StructurePieceType.OCEAN_MONUMENT_ENTRY_ROOM, var2);
@@ -1501,7 +1502,7 @@
           return true;
        }
     }
-@@ -1385,69 +1387,69 @@
+@@ -1385,76 +1386,76 @@
           var19.add(var17);
           var19.add(var18);
           return var19;
@@ -1607,7 +1608,141 @@
  
           return true;
        }
-@@ -1908,11 +1910,11 @@
+ 
+-      private void generateWing(boolean var1, int var2, LevelAccessor var3, Random var4, BoundingBox var5) {
++      private void generateWing(boolean var1, int var2, WorldGenLevel var3, Random var4, BoundingBox var5) {
+          boolean var6 = true;
+          if (this.chunkIntersects(var5, var2, 0, var2 + 23, 20)) {
+             this.generateBox(var3, var5, var2 + 0, 0, 0, var2 + 24, 0, 20, BASE_GRAY, BASE_GRAY, false);
+             this.generateWaterBox(var3, var5, var2 + 0, 1, 0, var2 + 24, 10, 20);
+ 
+@@ -1497,11 +1498,11 @@
+             this.generateBox(var3, var5, var2 + 12, 1, 11, var2 + 12, 7, 13, BASE_GRAY, BASE_GRAY, false);
+          }
+ 
+       }
+ 
+-      private void generateEntranceArchs(LevelAccessor var1, Random var2, BoundingBox var3) {
++      private void generateEntranceArchs(WorldGenLevel var1, Random var2, BoundingBox var3) {
+          if (this.chunkIntersects(var3, 22, 5, 35, 17)) {
+             this.generateWaterBox(var1, var3, 25, 0, 0, 32, 8, 20);
+ 
+             for(int var4 = 0; var4 < 4; ++var4) {
+                this.generateBox(var1, var3, 24, 2, 5 + var4 * 4, 24, 4, 5 + var4 * 4, BASE_LIGHT, BASE_LIGHT, false);
+@@ -1518,11 +1519,11 @@
+             }
+          }
+ 
+       }
+ 
+-      private void generateEntranceWall(LevelAccessor var1, Random var2, BoundingBox var3) {
++      private void generateEntranceWall(WorldGenLevel var1, Random var2, BoundingBox var3) {
+          if (this.chunkIntersects(var3, 15, 20, 42, 21)) {
+             this.generateBox(var1, var3, 15, 0, 21, 42, 0, 21, BASE_GRAY, BASE_GRAY, false);
+             this.generateWaterBox(var1, var3, 26, 1, 21, 31, 3, 21);
+             this.generateBox(var1, var3, 21, 12, 21, 36, 12, 21, BASE_GRAY, BASE_GRAY, false);
+             this.generateBox(var1, var3, 17, 11, 21, 40, 11, 21, BASE_GRAY, BASE_GRAY, false);
+@@ -1579,11 +1580,11 @@
+             this.generateWaterBox(var1, var3, 35, 1, 21, 35, 2, 21);
+          }
+ 
+       }
+ 
+-      private void generateRoofPiece(LevelAccessor var1, Random var2, BoundingBox var3) {
++      private void generateRoofPiece(WorldGenLevel var1, Random var2, BoundingBox var3) {
+          if (this.chunkIntersects(var3, 21, 21, 36, 36)) {
+             this.generateBox(var1, var3, 21, 0, 22, 36, 0, 36, BASE_GRAY, BASE_GRAY, false);
+             this.generateWaterBox(var1, var3, 21, 1, 22, 36, 23, 36);
+ 
+             for(int var4 = 0; var4 < 4; ++var4) {
+@@ -1616,11 +1617,11 @@
+             this.generateBox(var1, var3, 30, 21, 28, 30, 21, 29, BASE_GRAY, BASE_GRAY, false);
+          }
+ 
+       }
+ 
+-      private void generateLowerWall(LevelAccessor var1, Random var2, BoundingBox var3) {
++      private void generateLowerWall(WorldGenLevel var1, Random var2, BoundingBox var3) {
+          int var4;
+          if (this.chunkIntersects(var3, 0, 21, 6, 58)) {
+             this.generateBox(var1, var3, 0, 0, 21, 6, 0, 57, BASE_GRAY, BASE_GRAY, false);
+             this.generateWaterBox(var1, var3, 0, 1, 21, 6, 7, 57);
+             this.generateBox(var1, var3, 4, 4, 21, 6, 4, 53, BASE_GRAY, BASE_GRAY, false);
+@@ -1670,11 +1671,11 @@
+             }
+          }
+ 
+       }
+ 
+-      private void generateMiddleWall(LevelAccessor var1, Random var2, BoundingBox var3) {
++      private void generateMiddleWall(WorldGenLevel var1, Random var2, BoundingBox var3) {
+          int var4;
+          if (this.chunkIntersects(var3, 7, 21, 13, 50)) {
+             this.generateBox(var1, var3, 7, 0, 21, 13, 0, 50, BASE_GRAY, BASE_GRAY, false);
+             this.generateWaterBox(var1, var3, 7, 1, 21, 13, 10, 50);
+             this.generateBox(var1, var3, 11, 8, 21, 13, 8, 53, BASE_GRAY, BASE_GRAY, false);
+@@ -1731,11 +1732,11 @@
+             this.generateBox(var1, var3, 14, 8, 44, 43, 8, 53, BASE_GRAY, BASE_GRAY, false);
+          }
+ 
+       }
+ 
+-      private void generateUpperWall(LevelAccessor var1, Random var2, BoundingBox var3) {
++      private void generateUpperWall(WorldGenLevel var1, Random var2, BoundingBox var3) {
+          int var4;
+          if (this.chunkIntersects(var3, 14, 21, 20, 43)) {
+             this.generateBox(var1, var3, 14, 0, 21, 20, 0, 43, BASE_GRAY, BASE_GRAY, false);
+             this.generateWaterBox(var1, var3, 14, 1, 22, 20, 14, 43);
+             this.generateBox(var1, var3, 18, 12, 22, 20, 12, 39, BASE_GRAY, BASE_GRAY, false);
+@@ -1845,11 +1846,11 @@
+       }
+ 
+       protected void addAdditionalSaveData(CompoundTag var1) {
+       }
+ 
+-      protected void generateWaterBox(LevelAccessor var1, BoundingBox var2, int var3, int var4, int var5, int var6, int var7, int var8) {
++      protected void generateWaterBox(WorldGenLevel var1, BoundingBox var2, int var3, int var4, int var5, int var6, int var7, int var8) {
+          for(int var9 = var4; var9 <= var7; ++var9) {
+             for(int var10 = var3; var10 <= var6; ++var10) {
+                for(int var11 = var5; var11 <= var8; ++var11) {
+                   BlockState var12 = this.getBlock(var1, var10, var9, var11, var2);
+                   if (!FILL_KEEP.contains(var12.getBlock())) {
+@@ -1863,11 +1864,11 @@
+             }
+          }
+ 
+       }
+ 
+-      protected void generateDefaultFloor(LevelAccessor var1, BoundingBox var2, int var3, int var4, boolean var5) {
++      protected void generateDefaultFloor(WorldGenLevel var1, BoundingBox var2, int var3, int var4, boolean var5) {
+          if (var5) {
+             this.generateBox(var1, var2, var3 + 0, 0, var4 + 0, var3 + 2, 0, var4 + 8 - 1, BASE_GRAY, BASE_GRAY, false);
+             this.generateBox(var1, var2, var3 + 5, 0, var4 + 0, var3 + 8 - 1, 0, var4 + 8 - 1, BASE_GRAY, BASE_GRAY, false);
+             this.generateBox(var1, var2, var3 + 3, 0, var4 + 0, var3 + 4, 0, var4 + 2, BASE_GRAY, BASE_GRAY, false);
+             this.generateBox(var1, var2, var3 + 3, 0, var4 + 5, var3 + 4, 0, var4 + 8 - 1, BASE_GRAY, BASE_GRAY, false);
+@@ -1879,11 +1880,11 @@
+             this.generateBox(var1, var2, var3 + 0, 0, var4 + 0, var3 + 8 - 1, 0, var4 + 8 - 1, BASE_GRAY, BASE_GRAY, false);
+          }
+ 
+       }
+ 
+-      protected void generateBoxOnFillOnly(LevelAccessor var1, BoundingBox var2, int var3, int var4, int var5, int var6, int var7, int var8, BlockState var9) {
++      protected void generateBoxOnFillOnly(WorldGenLevel var1, BoundingBox var2, int var3, int var4, int var5, int var6, int var7, int var8, BlockState var9) {
+          for(int var10 = var4; var10 <= var7; ++var10) {
+             for(int var11 = var3; var11 <= var6; ++var11) {
+                for(int var12 = var5; var12 <= var8; ++var12) {
+                   if (this.getBlock(var1, var11, var10, var12, var2) == FILL_BLOCK) {
+                      this.placeBlock(var1, var9, var11, var10, var12, var2);
+@@ -1900,19 +1901,19 @@
+          int var8 = this.getWorldX(var4, var5);
+          int var9 = this.getWorldZ(var4, var5);
+          return var1.intersects(Math.min(var6, var8), Math.min(var7, var9), Math.max(var6, var8), Math.max(var7, var9));
+       }
+ 
+-      protected boolean spawnElder(LevelAccessor var1, BoundingBox var2, int var3, int var4, int var5) {
++      protected boolean spawnElder(WorldGenLevel var1, BoundingBox var2, int var3, int var4, int var5) {
+          int var6 = this.getWorldX(var3, var5);
+          int var7 = this.getWorldY(var4);
           int var8 = this.getWorldZ(var3, var5);
           if (var2.isInside(new BlockPos(var6, var7, var8))) {
              ElderGuardian var9 = (ElderGuardian)EntityType.ELDER_GUARDIAN.create(var1.getLevel());

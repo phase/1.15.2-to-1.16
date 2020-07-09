@@ -1,0 +1,15 @@
+--- net/minecraft/world/level/block/piston/PistonStructureResolver.java
++++ net/minecraft/world/level/block/piston/PistonStructureResolver.java
+@@ -29,11 +29,11 @@
+       if (var4) {
+          this.pushDirection = var3;
+          this.startPos = var2.relative(var3);
+       } else {
+          this.pushDirection = var3.getOpposite();
+-         this.startPos = var2.relative(var3, 2);
++         this.startPos = var2.relative((Direction)var3, 2);
+       }
+ 
+    }
+ 
+    public boolean resolve() {

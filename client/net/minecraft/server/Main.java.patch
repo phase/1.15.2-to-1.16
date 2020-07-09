@@ -1,6 +1,6 @@
 --- net/minecraft/server/Main.java
 +++ net/minecraft/server/Main.java
-@@ -1,0 +1,217 @@
+@@ -1,0 +1,216 @@
 +package net.minecraft.server;
 +
 +import com.google.common.collect.ImmutableSet;
@@ -38,7 +38,6 @@
 +import net.minecraft.server.dedicated.DedicatedServerSettings;
 +import net.minecraft.server.level.progress.LoggerChunkProgressListener;
 +import net.minecraft.server.packs.repository.FolderRepositorySource;
-+import net.minecraft.server.packs.repository.Pack;
 +import net.minecraft.server.packs.repository.PackRepository;
 +import net.minecraft.server.packs.repository.PackSource;
 +import net.minecraft.server.packs.repository.RepositorySource;
@@ -123,7 +122,7 @@
 +            LOGGER.warn("Safe mode active, only vanilla datapack will be loaded");
 +         }
 +
-+         PackRepository var31 = new PackRepository(Pack::new, new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var28.getLevelPath(LevelResource.DATAPACK_DIR).toFile(), PackSource.WORLD)});
++         PackRepository var31 = new PackRepository(new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var28.getLevelPath(LevelResource.DATAPACK_DIR).toFile(), PackSource.WORLD)});
 +         DataPackConfig var32 = MinecraftServer.configurePackRepository(var31, var29 == null ? DataPackConfig.DEFAULT : var29, var30);
 +         CompletableFuture var33 = ServerResources.loadResources(var31.openAllSelected(), Commands.CommandSelection.DEDICATED, var18.getProperties().functionPermissionLevel, Util.backgroundExecutor(), Runnable::run);
 +

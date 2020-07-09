@@ -19,7 +19,7 @@
 +         return var0x.seed;
 +      }), Codec.BOOL.optionalFieldOf("legacy_biome_init_layer", false, Lifecycle.stable()).forGetter((var0x) -> {
 +         return var0x.legacyBiomeInitLayer;
-+      }), Codec.BOOL.fieldOf("large_biomes").withDefault(false).stable().forGetter((var0x) -> {
++      }), Codec.BOOL.fieldOf("large_biomes").orElse(false).stable().forGetter((var0x) -> {
 +         return var0x.largeBiomes;
 +      })).apply(var0, var0.stable(OverworldBiomeSource::new));
 +   });

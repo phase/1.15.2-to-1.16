@@ -1,9 +1,13 @@
 --- net/minecraft/world/level/block/NoteBlock.java
 +++ net/minecraft/world/level/block/NoteBlock.java
-@@ -9,10 +9,11 @@
+@@ -6,13 +6,14 @@
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.stats.Stats;
+ import net.minecraft.world.InteractionHand;
  import net.minecraft.world.InteractionResult;
  import net.minecraft.world.entity.player.Player;
- import net.minecraft.world.item.BlockPlaceContext;
+-import net.minecraft.world.item.BlockPlaceContext;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.block.state.BlockBehaviour;

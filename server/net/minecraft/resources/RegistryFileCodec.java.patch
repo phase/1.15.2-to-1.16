@@ -12,14 +12,14 @@
 +import net.minecraft.core.Registry;
 +
 +public final class RegistryFileCodec<E> implements Codec<Supplier<E>> {
-+   private final ResourceKey<Registry<E>> registryKey;
++   private final ResourceKey<? extends Registry<E>> registryKey;
 +   private final MapCodec<E> elementCodec;
 +
-+   public static <E> RegistryFileCodec<E> create(ResourceKey<Registry<E>> var0, MapCodec<E> var1) {
++   public static <E> RegistryFileCodec<E> create(ResourceKey<? extends Registry<E>> var0, MapCodec<E> var1) {
 +      return new RegistryFileCodec(var0, var1);
 +   }
 +
-+   private RegistryFileCodec(ResourceKey<Registry<E>> var1, MapCodec<E> var2) {
++   private RegistryFileCodec(ResourceKey<? extends Registry<E>> var1, MapCodec<E> var2) {
 +      this.registryKey = var1;
 +      this.elementCodec = var2;
 +   }

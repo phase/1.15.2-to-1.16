@@ -1,7 +1,12 @@
 --- net/minecraft/world/entity/monster/Creeper.java
 +++ net/minecraft/world/entity/monster/Creeper.java
-@@ -8,16 +8,20 @@
+@@ -4,20 +4,25 @@
+ import java.util.Iterator;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.syncher.EntityDataAccessor;
+ import net.minecraft.network.syncher.EntityDataSerializers;
  import net.minecraft.network.syncher.SynchedEntityData;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.sounds.SoundEvent;
  import net.minecraft.sounds.SoundEvents;
  import net.minecraft.util.Mth;
@@ -21,7 +26,7 @@
  import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
  import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
  import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-@@ -25,11 +29,10 @@
+@@ -25,11 +30,10 @@
  import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
  import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
  import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -33,7 +38,7 @@
  import net.minecraft.world.item.Items;
  import net.minecraft.world.level.Explosion;
  import net.minecraft.world.level.GameRules;
-@@ -60,13 +63,12 @@
+@@ -60,13 +64,12 @@
        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal(this, Player.class, true));
        this.targetSelector.addGoal(2, new HurtByTargetGoal(this, new Class[0]));
@@ -49,9 +54,16 @@
     public int getMaxFallDistance() {
        return this.getTarget() == null ? 3 : 3 + (int)(this.getHealth() - 1.0F);
     }
-@@ -186,22 +188,22 @@
-    public void thunderHit(LightningBolt var1) {
-       super.thunderHit(var1);
+@@ -181,27 +184,27 @@
+ 
+    public void setSwellDir(int var1) {
+       this.entityData.set(DATA_SWELL_DIR, var1);
+    }
+ 
+-   public void thunderHit(LightningBolt var1) {
+-      super.thunderHit(var1);
++   public void thunderHit(ServerLevel var1, LightningBolt var2) {
++      super.thunderHit(var1, var2);
        this.entityData.set(DATA_IS_POWERED, true);
     }
  

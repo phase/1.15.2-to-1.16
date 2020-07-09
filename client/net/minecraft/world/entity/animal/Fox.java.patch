@@ -25,7 +25,7 @@
  import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
  import net.minecraft.world.entity.ai.goal.BreedGoal;
  import net.minecraft.world.entity.ai.goal.FleeSunGoal;
-@@ -62,11 +65,10 @@
+@@ -62,19 +65,18 @@
  import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
  import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
  import net.minecraft.world.entity.ai.targeting.TargetingConditions;
@@ -37,6 +37,15 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.ServerLevelAccessor;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.SweetBerryBushBlock;
 @@ -133,10 +135,13 @@
           return AVOID_PLAYERS.test(var1) && !this.trusts(var1.getUUID()) && !this.isDefending();
        }));
@@ -80,15 +89,20 @@
 +      return Mob.createMobAttributes().add(Attributes.MOVEMENT_SPEED, 0.30000001192092896D).add(Attributes.MAX_HEALTH, 10.0D).add(Attributes.FOLLOW_RANGE, 32.0D).add(Attributes.ATTACK_DAMAGE, 2.0D);
     }
  
-    public Fox getBreedOffspring(AgableMob var1) {
-       Fox var2 = (Fox)EntityType.FOX.create(this.level);
-       var2.setFoxType(this.random.nextBoolean() ? this.getFoxType() : ((Fox)var1).getFoxType());
-       return var2;
+-   public Fox getBreedOffspring(AgableMob var1) {
+-      Fox var2 = (Fox)EntityType.FOX.create(this.level);
+-      var2.setFoxType(this.random.nextBoolean() ? this.getFoxType() : ((Fox)var1).getFoxType());
+-      return var2;
++   public Fox getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      Fox var3 = (Fox)EntityType.FOX.create(var1);
++      var3.setFoxType(this.random.nextBoolean() ? this.getFoxType() : ((Fox)var2).getFoxType());
++      return var3;
     }
  
     @Nullable
-    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 -      Biome var6 = var1.getBiome(new BlockPos(this));
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 +      Biome var6 = var1.getBiome(this.blockPosition());
        Fox.Type var7 = Fox.Type.byBiome(var6);
        boolean var8 = false;
@@ -246,6 +260,19 @@
  
     class FoxStrollThroughVillageGoal extends StrollThroughVillageGoal {
        public FoxStrollThroughVillageGoal(int var2, int var3) {
+@@ -881,11 +893,11 @@
+ 
+    public static class FoxGroupData extends AgableMob.AgableMobGroupData {
+       public final Fox.Type type;
+ 
+       public FoxGroupData(Fox.Type var1) {
+-         this.setShouldSpawnBaby(false);
++         super(false);
+          this.type = var1;
+       }
+    }
+ 
+    public class FoxEatBerriesGoal extends MoveToBlockGoal {
 @@ -903,11 +915,11 @@
           return this.tryTicks % 100 == 0;
        }
@@ -311,6 +338,19 @@
              this.timestamp = this.trustedLastHurt.getLastHurtByMobTimestamp();
           }
  
+@@ -1178,11 +1190,11 @@
+          ((Fox)this.partner).clearStates();
+          super.start();
+       }
+ 
+       protected void breed() {
+-         Fox var1 = (Fox)this.animal.getBreedOffspring(this.partner);
++         Fox var1 = (Fox)this.animal.getBreedOffspring((ServerLevel)this.level, this.partner);
+          if (var1 != null) {
+             ServerPlayer var2 = this.animal.getLoveCause();
+             ServerPlayer var3 = this.partner.getLoveCause();
+             ServerPlayer var4 = var2;
+             if (var2 != null) {
 @@ -1198,11 +1210,10 @@
              if (var4 != null) {
                 var4.awardStat(Stats.ANIMALS_BRED);

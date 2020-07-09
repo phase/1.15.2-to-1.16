@@ -19,7 +19,7 @@
 -   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
 -      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("is_beached"), var1.createBoolean(this.isBeached))));
 +   static {
-+      CODEC = Codec.BOOL.fieldOf("is_beached").withDefault((Object)false).xmap(ShipwreckConfiguration::new, (var0) -> {
++      CODEC = Codec.BOOL.fieldOf("is_beached").orElse(false).xmap(ShipwreckConfiguration::new, (var0) -> {
 +         return var0.isBeached;
 +      }).codec();
     }

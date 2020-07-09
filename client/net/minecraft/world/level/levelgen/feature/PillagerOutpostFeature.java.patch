@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/PillagerOutpostFeature.java
 +++ net/minecraft/world/level/levelgen/feature/PillagerOutpostFeature.java
-@@ -1,89 +1,70 @@
+@@ -1,89 +1,49 @@
  package net.minecraft.world.level.levelgen.feature;
  
  import com.google.common.collect.Lists;
@@ -9,27 +9,29 @@
  import java.util.List;
 -import java.util.Random;
 -import java.util.function.Function;
- import net.minecraft.core.BlockPos;
+-import net.minecraft.core.BlockPos;
  import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.level.ChunkPos;
  import net.minecraft.world.level.biome.Biome;
 -import net.minecraft.world.level.biome.BiomeManager;
 +import net.minecraft.world.level.biome.BiomeSource;
  import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+-import net.minecraft.world.level.levelgen.structure.BeardedStructureStart;
+-import net.minecraft.world.level.levelgen.structure.BoundingBox;
+-import net.minecraft.world.level.levelgen.structure.PillagerOutpostPieces;
+-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 +import net.minecraft.world.level.levelgen.WorldgenRandom;
- import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
- import net.minecraft.world.level.levelgen.structure.BeardedStructureStart;
- import net.minecraft.world.level.levelgen.structure.BoundingBox;
- import net.minecraft.world.level.levelgen.structure.PillagerOutpostPieces;
- import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
++import net.minecraft.world.level.levelgen.feature.configurations.JigsawConfiguration;
  
 -public class PillagerOutpostFeature extends RandomScatteredFeature<NoneFeatureConfiguration> {
-+public class PillagerOutpostFeature extends StructureFeature<NoneFeatureConfiguration> {
++public class PillagerOutpostFeature extends JigsawFeature {
     private static final List<Biome.SpawnerData> OUTPOST_ENEMIES;
  
 -   public PillagerOutpostFeature(Function<Dynamic<?>, ? extends NoneFeatureConfiguration> var1) {
-+   public PillagerOutpostFeature(Codec<NoneFeatureConfiguration> var1) {
-       super(var1);
+-      super(var1);
++   public PillagerOutpostFeature(Codec<JigsawConfiguration> var1) {
++      super(var1, 0, true, true);
     }
  
 -   public String getFeatureName() {
@@ -61,7 +63,7 @@
 -                  if (Feature.VILLAGE.isFeatureChunk(var1, var2, var3, var10, var11, var1.getBiome(new BlockPos((var10 << 4) + 9, 0, (var11 << 4) + 9)))) {
 -                     return false;
 -                  }
-+   protected boolean isFeatureChunk(ChunkGenerator var1, BiomeSource var2, long var3, WorldgenRandom var5, int var6, int var7, Biome var8, ChunkPos var9, NoneFeatureConfiguration var10) {
++   protected boolean isFeatureChunk(ChunkGenerator var1, BiomeSource var2, long var3, WorldgenRandom var5, int var6, int var7, Biome var8, ChunkPos var9, JigsawConfiguration var10) {
 +      int var11 = var6 >> 4;
 +      int var12 = var7 >> 4;
 +      var5.setSeed((long)(var11 ^ var12 << 4) ^ var3);
@@ -87,10 +89,9 @@
     }
  
 -   public StructureFeature.StructureStartFactory getStartFactory() {
-+   public StructureFeature.StructureStartFactory<NoneFeatureConfiguration> getStartFactory() {
-       return PillagerOutpostFeature.FeatureStart::new;
-    }
- 
+-      return PillagerOutpostFeature.FeatureStart::new;
+-   }
+-
 -   protected int getRandomSalt() {
 -      return 165745296;
 -   }
@@ -98,21 +99,16 @@
     static {
        OUTPOST_ENEMIES = Lists.newArrayList(new Biome.SpawnerData[]{new Biome.SpawnerData(EntityType.PILLAGER, 1, 1, 1)});
     }
- 
+-
 -   public static class FeatureStart extends BeardedStructureStart {
 -      public FeatureStart(StructureFeature<?> var1, int var2, int var3, BoundingBox var4, int var5, long var6) {
-+   public static class FeatureStart extends BeardedStructureStart<NoneFeatureConfiguration> {
-+      public FeatureStart(StructureFeature<NoneFeatureConfiguration> var1, int var2, int var3, BoundingBox var4, int var5, long var6) {
-          super(var1, var2, var3, var4, var5, var6);
-       }
- 
+-         super(var1, var2, var3, var4, var5, var6);
+-      }
+-
 -      public void generatePieces(ChunkGenerator<?> var1, StructureManager var2, int var3, int var4, Biome var5) {
 -         BlockPos var6 = new BlockPos(var3 * 16, 90, var4 * 16);
 -         PillagerOutpostPieces.addPieces(var1, var2, var6, this.pieces, this.random);
-+      public void generatePieces(ChunkGenerator var1, StructureManager var2, int var3, int var4, Biome var5, NoneFeatureConfiguration var6) {
-+         BlockPos var7 = new BlockPos(var3 * 16, 0, var4 * 16);
-+         PillagerOutpostPieces.addPieces(var1, var2, var7, this.pieces, this.random);
-          this.calculateBoundingBox();
-       }
-    }
+-         this.calculateBoundingBox();
+-      }
+-   }
  }

@@ -1,6 +1,32 @@
 --- net/minecraft/world/level/dimension/end/EndDragonFight.java
 +++ net/minecraft/world/level/dimension/end/EndDragonFight.java
-@@ -76,52 +76,52 @@
+@@ -15,10 +15,11 @@
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
+ import net.minecraft.advancements.CriteriaTriggers;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
++import net.minecraft.data.worldgen.Features;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.IntTag;
+ import net.minecraft.nbt.ListTag;
+ import net.minecraft.nbt.NbtUtils;
+ import net.minecraft.network.chat.TranslatableComponent;
+@@ -48,13 +49,11 @@
+ import net.minecraft.world.level.chunk.ChunkAccess;
+ import net.minecraft.world.level.chunk.ChunkStatus;
+ import net.minecraft.world.level.chunk.LevelChunk;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.level.levelgen.feature.EndPodiumFeature;
+-import net.minecraft.world.level.levelgen.feature.Feature;
+ import net.minecraft.world.level.levelgen.feature.SpikeFeature;
+-import net.minecraft.world.level.levelgen.feature.configurations.EndGatewayConfiguration;
+ import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+ import net.minecraft.world.phys.AABB;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+@@ -76,52 +75,52 @@
     private BlockPos portalLocation;
     private DragonRespawnAnimation respawnStage;
     private int respawnTime;
@@ -69,14 +95,14 @@
        var1.putBoolean("DragonKilled", this.dragonKilled);
        var1.putBoolean("PreviouslyKilled", this.previouslyKilled);
        if (this.portalLocation != null) {
-@@ -386,21 +386,21 @@
+@@ -386,17 +385,17 @@
        }
     }
  
     private void spawnNewGateway(BlockPos var1) {
        this.level.levelEvent(3000, var1, 0);
 -      Feature.END_GATEWAY.configured(EndGatewayConfiguration.delayedExitSearch()).place(this.level, this.level.getChunkSource().getGenerator(), new Random(), var1);
-+      Feature.END_GATEWAY.configured(EndGatewayConfiguration.delayedExitSearch()).place(this.level, this.level.structureFeatureManager(), this.level.getChunkSource().getGenerator(), new Random(), var1);
++      Features.END_GATEWAY_DELAYED.place(this.level, this.level.getChunkSource().getGenerator(), new Random(), var1);
     }
  
     private void spawnExitPortal(boolean var1) {
@@ -87,14 +113,9 @@
           }
        }
  
--      var2.configured(FeatureConfiguration.NONE).place(this.level, this.level.getChunkSource().getGenerator(), new Random(), this.portalLocation);
-+      var2.configured(FeatureConfiguration.NONE).place(this.level, this.level.structureFeatureManager(), this.level.getChunkSource().getGenerator(), new Random(), this.portalLocation);
+       var2.configured(FeatureConfiguration.NONE).place(this.level, this.level.getChunkSource().getGenerator(), new Random(), this.portalLocation);
     }
- 
-    private EnderDragon createNewDragon() {
-       this.level.getChunkAt(new BlockPos(0, 128, 0));
-       EnderDragon var1 = (EnderDragon)EntityType.ENDER_DRAGON.create(this.level);
-@@ -435,11 +435,11 @@
+@@ -435,11 +434,11 @@
           this.spawnExitPortal(true);
        } else {
           this.updateCrystalCount();
@@ -107,7 +128,20 @@
  
     }
  
-@@ -488,11 +488,11 @@
+@@ -467,11 +466,11 @@
+          BlockPos var3 = var1.above(1);
+          Iterator var4 = Direction.Plane.HORIZONTAL.iterator();
+ 
+          while(var4.hasNext()) {
+             Direction var5 = (Direction)var4.next();
+-            List var6 = this.level.getEntitiesOfClass(EndCrystal.class, new AABB(var3.relative(var5, 2)));
++            List var6 = this.level.getEntitiesOfClass(EndCrystal.class, new AABB(var3.relative((Direction)var5, 2)));
+             if (var6.isEmpty()) {
+                return;
+             }
+ 
+             var7.addAll(var6);
+@@ -488,11 +487,11 @@
           for(BlockPattern.BlockPatternMatch var2 = this.findExitPortal(); var2 != null; var2 = this.findExitPortal()) {
              for(int var3 = 0; var3 < this.exitPortalPattern.getWidth(); ++var3) {
                 for(int var4 = 0; var4 < this.exitPortalPattern.getHeight(); ++var4) {

@@ -1,17 +1,15 @@
 --- net/minecraft/world/level/levelgen/placement/NoiseCountFactorDecoratorConfiguration.java
 +++ net/minecraft/world/level/levelgen/placement/NoiseCountFactorDecoratorConfiguration.java
-@@ -1,14 +1,27 @@
+@@ -1,33 +1,26 @@
  package net.minecraft.world.level.levelgen.placement;
  
 -import com.google.common.collect.ImmutableMap;
 -import com.mojang.datafixers.Dynamic;
 -import com.mojang.datafixers.types.DynamicOps;
+-import net.minecraft.world.level.levelgen.Heightmap;
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
- import net.minecraft.world.level.levelgen.Heightmap;
  import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
-+import org.apache.logging.log4j.LogManager;
-+import org.apache.logging.log4j.Logger;
  
  public class NoiseCountFactorDecoratorConfiguration implements DecoratorConfiguration {
 +   public static final Codec<NoiseCountFactorDecoratorConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
@@ -19,23 +17,21 @@
 +         return var0x.noiseToCountRatio;
 +      }), Codec.DOUBLE.fieldOf("noise_factor").forGetter((var0x) -> {
 +         return var0x.noiseFactor;
-+      }), Codec.DOUBLE.fieldOf("noise_offset").withDefault(0.0D).forGetter((var0x) -> {
++      }), Codec.DOUBLE.fieldOf("noise_offset").orElse(0.0D).forGetter((var0x) -> {
 +         return var0x.noiseOffset;
-+      }), Heightmap.Types.CODEC.fieldOf("heightmap").forGetter((var0x) -> {
-+         return var0x.heightmap;
 +      })).apply(var0, NoiseCountFactorDecoratorConfiguration::new);
 +   });
-+   private static final Logger LOGGER = LogManager.getLogger();
     public final int noiseToCountRatio;
     public final double noiseFactor;
     public final double noiseOffset;
-    public final Heightmap.Types heightmap;
+-   public final Heightmap.Types heightmap;
  
-@@ -16,18 +29,6 @@
+-   public NoiseCountFactorDecoratorConfiguration(int var1, double var2, double var4, Heightmap.Types var6) {
++   public NoiseCountFactorDecoratorConfiguration(int var1, double var2, double var4) {
        this.noiseToCountRatio = var1;
        this.noiseFactor = var2;
        this.noiseOffset = var4;
-       this.heightmap = var6;
+-      this.heightmap = var6;
     }
 -
 -   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {

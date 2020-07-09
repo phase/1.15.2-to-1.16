@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/CreateFlatWorldScreen.java
 +++ net/minecraft/client/gui/screens/CreateFlatWorldScreen.java
-@@ -1,116 +1,108 @@
+@@ -1,116 +1,109 @@
  package net.minecraft.client.gui.screens;
  
  import com.mojang.blaze3d.systems.RenderSystem;
@@ -13,7 +13,7 @@
  import net.minecraft.client.gui.chat.NarratorChatListener;
  import net.minecraft.client.gui.components.Button;
  import net.minecraft.client.gui.components.ObjectSelectionList;
--import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+ import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
  import net.minecraft.client.resources.language.I18n;
 -import net.minecraft.nbt.CompoundTag;
 -import net.minecraft.nbt.NbtOps;
@@ -35,7 +35,7 @@
 -   private FlatLevelGeneratorSettings generator = FlatLevelGeneratorSettings.getDefault();
 -   private String columnType;
 -   private String columnHeight;
-+   private final Screen parent;
++   protected final CreateWorldScreen parent;
 +   private final Consumer<FlatLevelGeneratorSettings> applySettings;
 +   private FlatLevelGeneratorSettings generator;
 +   private Component columnType;
@@ -45,7 +45,7 @@
  
 -   public CreateFlatWorldScreen(CreateWorldScreen var1, CompoundTag var2) {
 -      super(new TranslatableComponent("createWorld.customize.flat.title", new Object[0]));
-+   public CreateFlatWorldScreen(Screen var1, Consumer<FlatLevelGeneratorSettings> var2, FlatLevelGeneratorSettings var3) {
++   public CreateFlatWorldScreen(CreateWorldScreen var1, Consumer<FlatLevelGeneratorSettings> var2, FlatLevelGeneratorSettings var3) {
 +      super(new TranslatableComponent("createWorld.customize.flat.title"));
        this.parent = var1;
 -      this.loadLayers(var2);
@@ -152,7 +152,7 @@
     class DetailsList extends ObjectSelectionList<CreateFlatWorldScreen.DetailsList.Entry> {
        public DetailsList() {
           super(CreateFlatWorldScreen.this.minecraft, CreateFlatWorldScreen.this.width, CreateFlatWorldScreen.this.height, 43, CreateFlatWorldScreen.this.height - 60, 24);
-@@ -129,14 +121,10 @@
+@@ -129,14 +122,10 @@
              if (var3 != Items.AIR) {
                 NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.select", new Object[]{var3.getName(new ItemStack(var3))})).getString());
              }
@@ -167,7 +167,7 @@
  
        protected boolean isFocused() {
           return CreateFlatWorldScreen.this.getFocused() == this;
-@@ -163,62 +151,59 @@
+@@ -163,62 +152,59 @@
  
        class Entry extends ObjectSelectionList.Entry<CreateFlatWorldScreen.DetailsList.Entry> {
           private Entry() {

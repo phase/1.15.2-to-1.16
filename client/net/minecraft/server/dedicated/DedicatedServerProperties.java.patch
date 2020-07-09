@@ -31,7 +31,14 @@
     public final Boolean announcePlayerAchievements;
     public final boolean enableQuery;
     public final int queryPort;
-@@ -51,21 +47,23 @@
+@@ -45,27 +41,30 @@
+    public final boolean enableCommandBlock;
+    public final int spawnProtection;
+    public final int opPermissionLevel;
+    public final int functionPermissionLevel;
+    public final long maxTickTime;
++   public final int rateLimitPacketsPerSecond;
+    public final int viewDistance;
     public final int maxPlayers;
     public final int networkCompressionThreshold;
     public final boolean broadcastRconToOps;
@@ -58,7 +65,16 @@
           return Mth.clamp((var0 + 8) / 16 * 16, 64, 256);
        }, 256);
        this.announcePlayerAchievements = this.getLegacyBoolean("announce-player-achievements");
-@@ -95,12 +93,19 @@
+@@ -87,20 +86,28 @@
+       this.enableCommandBlock = this.get("enable-command-block", false);
+       this.spawnProtection = this.get("spawn-protection", 16);
+       this.opPermissionLevel = this.get("op-permission-level", 4);
+       this.functionPermissionLevel = this.get("function-permission-level", 2);
+       this.maxTickTime = this.get("max-tick-time", TimeUnit.MINUTES.toMillis(1L));
++      this.rateLimitPacketsPerSecond = this.get("rate-limit", 0);
+       this.viewDistance = this.get("view-distance", 10);
+       this.maxPlayers = this.get("max-players", 20);
+       this.networkCompressionThreshold = this.get("network-compression-threshold", 256);
        this.broadcastRconToOps = this.get("broadcast-rcon-to-ops", true);
        this.broadcastConsoleToOps = this.get("broadcast-console-to-ops", true);
        this.maxWorldSize = this.get("max-world-size", (var0) -> {

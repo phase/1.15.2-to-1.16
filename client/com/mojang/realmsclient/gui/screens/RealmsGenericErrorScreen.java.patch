@@ -12,6 +12,7 @@
 +import net.minecraft.client.resources.language.I18n;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.TextComponent;
++import net.minecraft.network.chat.TranslatableComponent;
 +import net.minecraft.realms.NarrationHelper;
  import net.minecraft.realms.RealmsScreen;
  
@@ -53,8 +54,7 @@
           String var2 = "mco.errorMessage." + var1.errorCode;
 -         String var3 = getLocalizedString(var2);
 -         this.line2 = var3.equals(var2) ? var1.errorMsg : var3;
-+         String var3 = I18n.get(var2);
-+         this.line2 = new TextComponent(var3.equals(var2) ? var1.errorMsg : var3);
++         this.line2 = (Component)(I18n.exists(var2) ? new TranslatableComponent(var2) : Component.nullToEmpty(var1.errorMsg));
        }
  
     }

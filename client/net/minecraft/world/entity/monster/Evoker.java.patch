@@ -1,6 +1,18 @@
 --- net/minecraft/world/entity/monster/Evoker.java
 +++ net/minecraft/world/entity/monster/Evoker.java
-@@ -14,10 +14,12 @@
+@@ -3,10 +3,11 @@
+ import java.util.List;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.nbt.CompoundTag;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.damagesource.DamageSource;
+ import net.minecraft.world.entity.Entity;
+@@ -14,10 +15,12 @@
  import net.minecraft.world.entity.LivingEntity;
  import net.minecraft.world.entity.Mob;
  import net.minecraft.world.entity.MobSpawnType;
@@ -13,7 +25,7 @@
  import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
  import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
  import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-@@ -58,15 +60,12 @@
+@@ -58,15 +61,12 @@
        this.targetSelector.addGoal(2, (new NearestAttackableTargetGoal(this, Player.class, true)).setUnseenMemoryTicks(300));
        this.targetSelector.addGoal(3, (new NearestAttackableTargetGoal(this, AbstractVillager.class, false)).setUnseenMemoryTicks(300));
        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, IronGolem.class, false));
@@ -31,7 +43,7 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
     }
-@@ -223,11 +222,11 @@
+@@ -223,14 +223,14 @@
           return 340;
        }
  
@@ -41,6 +53,10 @@
 +            BlockPos var2 = Evoker.this.blockPosition().offset(-2 + Evoker.this.random.nextInt(5), 1, -2 + Evoker.this.random.nextInt(5));
              Vex var3 = (Vex)EntityType.VEX.create(Evoker.this.level);
              var3.moveTo(var2, 0.0F, 0.0F);
-             var3.finalizeSpawn(Evoker.this.level, Evoker.this.level.getCurrentDifficultyAt(var2), MobSpawnType.MOB_SUMMONED, (SpawnGroupData)null, (CompoundTag)null);
+-            var3.finalizeSpawn(Evoker.this.level, Evoker.this.level.getCurrentDifficultyAt(var2), MobSpawnType.MOB_SUMMONED, (SpawnGroupData)null, (CompoundTag)null);
++            var3.finalizeSpawn((ServerLevel)Evoker.this.level, Evoker.this.level.getCurrentDifficultyAt(var2), MobSpawnType.MOB_SUMMONED, (SpawnGroupData)null, (CompoundTag)null);
              var3.setOwner(Evoker.this);
              var3.setBoundOrigin(var2);
+             var3.setLimitedLife(20 * (30 + Evoker.this.random.nextInt(90)));
+             Evoker.this.level.addFreshEntity(var3);
+          }

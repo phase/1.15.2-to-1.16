@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/structure/templatesystem/StructureManager.java
 +++ net/minecraft/world/level/levelgen/structure/templatesystem/StructureManager.java
-@@ -1,10 +1,9 @@
+@@ -1,15 +1,15 @@
  package net.minecraft.world.level.levelgen.structure.templatesystem;
  
  import com.google.common.collect.Maps;
@@ -11,7 +11,13 @@
  import java.io.FileOutputStream;
  import java.io.IOException;
  import java.io.InputStream;
-@@ -18,30 +17,29 @@
++import java.io.OutputStream;
+ import java.nio.file.Files;
+ import java.nio.file.InvalidPathException;
+ import java.nio.file.LinkOption;
+ import java.nio.file.Path;
+ import java.util.Map;
+@@ -18,30 +18,29 @@
  import net.minecraft.ResourceLocationException;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtIo;
@@ -49,7 +55,7 @@
     public StructureTemplate getOrCreate(ResourceLocation var1) {
        StructureTemplate var2 = this.get(var1);
        if (var2 == null) {
-@@ -59,19 +57,20 @@
+@@ -59,19 +58,20 @@
           return var2 != null ? var2 : this.loadFromResource(var1x);
        });
     }
@@ -71,3 +77,16 @@
           StructureTemplate var5;
           try {
              var5 = this.readStructure(var3.getInputStream());
+@@ -181,11 +181,11 @@
+             try {
+                FileOutputStream var6 = new FileOutputStream(var3.toFile());
+                Throwable var7 = null;
+ 
+                try {
+-                  NbtIo.writeCompressed(var5, var6);
++                  NbtIo.writeCompressed(var5, (OutputStream)var6);
+                } catch (Throwable var18) {
+                   var7 = var18;
+                   throw var18;
+                } finally {
+                   if (var6 != null) {

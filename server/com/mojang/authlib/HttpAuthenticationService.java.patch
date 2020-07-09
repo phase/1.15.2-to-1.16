@@ -1,0 +1,26 @@
+--- com/mojang/authlib/HttpAuthenticationService.java
++++ com/mojang/authlib/HttpAuthenticationService.java
+@@ -115,17 +115,17 @@
+             var3 = var2.getErrorStream();
+             if (var3 == null) {
+                LOGGER.debug((String)"Request failed", (Throwable)var10);
+                throw var10;
+             }
+-
+-            LOGGER.debug("Reading error page from " + var1);
+-            var5 = IOUtils.toString(var3, Charsets.UTF_8);
+-            LOGGER.debug("Successful read, server response was " + var2.getResponseCode());
+-            LOGGER.debug("Response: " + var5);
+-            var6 = var5;
+          }
++
++         LOGGER.debug("Reading error page from " + var1);
++         var5 = IOUtils.toString(var3, Charsets.UTF_8);
++         LOGGER.debug("Successful read, server response was " + var2.getResponseCode());
++         LOGGER.debug("Response: " + var5);
++         var6 = var5;
+       } finally {
+          IOUtils.closeQuietly(var3);
+       }
+ 
+       return var6;

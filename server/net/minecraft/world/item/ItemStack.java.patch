@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/ItemStack.java
 +++ net/minecraft/world/item/ItemStack.java
-@@ -3,29 +3,36 @@
+@@ -3,45 +3,53 @@
  import com.google.common.collect.HashMultimap;
  import com.google.common.collect.Multimap;
  import com.google.gson.JsonParseException;
@@ -37,7 +37,9 @@
  import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.sounds.SoundEvent;
  import net.minecraft.stats.Stats;
-@@ -34,13 +41,13 @@
+-import net.minecraft.tags.TagManager;
++import net.minecraft.tags.TagContainer;
+ import net.minecraft.world.InteractionHand;
  import net.minecraft.world.InteractionResult;
  import net.minecraft.world.InteractionResultHolder;
  import net.minecraft.world.entity.Entity;
@@ -48,11 +50,13 @@
  import net.minecraft.world.entity.decoration.ItemFrame;
 -import net.minecraft.world.entity.monster.SharedMonsterAttributes;
  import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
  import net.minecraft.world.item.enchantment.Enchantment;
  import net.minecraft.world.item.enchantment.EnchantmentHelper;
  import net.minecraft.world.item.enchantment.Enchantments;
-@@ -50,35 +57,46 @@
+ import net.minecraft.world.level.ItemLike;
+@@ -50,35 +58,46 @@
  import net.minecraft.world.level.block.state.pattern.BlockInWorld;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
@@ -107,7 +111,7 @@
        this.count = var2;
        if (this.item != null && this.item.canBeDepleted()) {
           this.setDamageValue(this.getDamageValue());
-@@ -145,11 +163,11 @@
+@@ -145,11 +164,11 @@
        if (var2 != null && !var2.abilities.mayBuild && !this.hasAdventureModePlaceTagForBlock(var1.getLevel().getTagManager(), var4)) {
           return InteractionResult.PASS;
        } else {
@@ -120,7 +124,7 @@
  
           return var6;
        }
-@@ -274,16 +292,16 @@
+@@ -274,16 +293,16 @@
           var4.awardStat(Stats.ITEM_USED.get(var5));
        }
  
@@ -141,7 +145,7 @@
     public ItemStack copy() {
        if (this.isEmpty()) {
           return EMPTY;
-@@ -456,11 +474,11 @@
+@@ -456,11 +475,11 @@
  
     public Component getHoverName() {
        CompoundTag var1 = this.getTagElement("display");
@@ -154,7 +158,23 @@
              }
  
              var1.remove("Name");
-@@ -543,80 +561,86 @@
+@@ -501,10 +520,15 @@
+    public boolean hasCustomHoverName() {
+       CompoundTag var1 = this.getTagElement("display");
+       return var1 != null && var1.contains("Name", 8);
+    }
+ 
++   public void hideTooltipPart(ItemStack.TooltipPart var1) {
++      CompoundTag var2 = this.getOrCreateTag();
++      var2.putInt("HideFlags", var2.getInt("HideFlags") | var1.getMask());
++   }
++
+    public boolean hasFoil() {
+       return this.getItem().isFoil(this);
+    }
+ 
+    public Rarity getRarity() {
+@@ -543,80 +567,86 @@
     public void addTagElement(String var1, Tag var2) {
        this.getOrCreateTag().put(var1, var2);
     }
@@ -259,7 +279,33 @@
  
        return var2;
     }
-@@ -725,6 +749,10 @@
+@@ -631,11 +661,11 @@
+       } else {
+          return false;
+       }
+    }
+ 
+-   public boolean hasAdventureModeBreakTagForBlock(TagManager var1, BlockInWorld var2) {
++   public boolean hasAdventureModeBreakTagForBlock(TagContainer var1, BlockInWorld var2) {
+       if (areSameBlocks(var2, this.cachedBreakBlock)) {
+          return this.cachedBreakBlockResult;
+       } else {
+          this.cachedBreakBlock = var2;
+          if (this.hasTag() && this.tag.contains("CanDestroy", 9)) {
+@@ -658,11 +688,11 @@
+          this.cachedBreakBlockResult = false;
+          return false;
+       }
+    }
+ 
+-   public boolean hasAdventureModePlaceTagForBlock(TagManager var1, BlockInWorld var2) {
++   public boolean hasAdventureModePlaceTagForBlock(TagContainer var1, BlockInWorld var2) {
+       if (areSameBlocks(var2, this.cachedPlaceBlock)) {
+          return this.cachedPlaceBlockResult;
+       } else {
+          this.cachedPlaceBlock = var2;
+          if (this.hasTag() && this.tag.contains("CanPlaceOn", 9)) {
+@@ -725,6 +755,29 @@
     }
  
     public SoundEvent getEatingSound() {
@@ -268,5 +314,24 @@
 +
 +   static {
 +      LORE_STYLE = Style.EMPTY.withColor(ChatFormatting.DARK_PURPLE).withItalic(true);
++   }
++
++   public static enum TooltipPart {
++      ENCHANTMENTS,
++      MODIFIERS,
++      UNBREAKABLE,
++      CAN_DESTROY,
++      CAN_PLACE,
++      ADDITIONAL,
++      DYE;
++
++      private int mask = 1 << this.ordinal();
++
++      private TooltipPart() {
++      }
++
++      public int getMask() {
++         return this.mask;
++      }
 +   }
  }

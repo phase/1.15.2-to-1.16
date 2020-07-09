@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/animal/Panda.java
 +++ net/minecraft/world/entity/animal/Panda.java
-@@ -7,11 +7,10 @@
+@@ -7,32 +7,35 @@
  import java.util.List;
  import java.util.Random;
  import java.util.function.Predicate;
@@ -12,7 +12,8 @@
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.network.syncher.EntityDataAccessor;
  import net.minecraft.network.syncher.EntityDataSerializers;
-@@ -19,20 +18,23 @@
+ import net.minecraft.network.syncher.SynchedEntityData;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.sounds.SoundEvent;
  import net.minecraft.sounds.SoundEvents;
  import net.minecraft.util.Mth;
@@ -36,7 +37,7 @@
  import net.minecraft.world.entity.ai.goal.BreedGoal;
  import net.minecraft.world.entity.ai.goal.FloatGoal;
  import net.minecraft.world.entity.ai.goal.FollowParentGoal;
-@@ -45,16 +47,14 @@
+@@ -45,20 +48,18 @@
  import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
  import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
  import net.minecraft.world.entity.ai.targeting.TargetingConditions;
@@ -51,9 +52,39 @@
  import net.minecraft.world.item.crafting.Ingredient;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.block.Blocks;
-@@ -257,14 +257,12 @@
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.phys.Vec3;
+ 
+ public class Panda extends Animal {
+@@ -227,18 +228,18 @@
+       this.setMainGene(Panda.Gene.byName(var1.getString("MainGene")));
+       this.setHiddenGene(Panda.Gene.byName(var1.getString("HiddenGene")));
+    }
+ 
+    @Nullable
+-   public AgableMob getBreedOffspring(AgableMob var1) {
+-      Panda var2 = (Panda)EntityType.PANDA.create(this.level);
+-      if (var1 instanceof Panda) {
+-         var2.setGeneFromParents(this, (Panda)var1);
++   public AgableMob getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      Panda var3 = (Panda)EntityType.PANDA.create(var1);
++      if (var2 instanceof Panda) {
++         var3.setGeneFromParents(this, (Panda)var2);
+       }
+ 
+-      var2.setAttributes();
+-      return var2;
++      var3.setAttributes();
++      return var3;
+    }
+ 
+    protected void registerGoals() {
+       this.goalSelector.addGoal(0, new FloatGoal(this));
+       this.goalSelector.addGoal(2, new Panda.PandaPanicGoal(this, 2.0D));
+@@ -257,14 +258,12 @@
        this.goalSelector.addGoal(13, new FollowParentGoal(this, 1.25D));
        this.goalSelector.addGoal(14, new WaterAvoidingRandomStrollGoal(this, 1.0D));
        this.targetSelector.addGoal(1, (new Panda.PandaHurtByTargetGoal(this, new Class[0])).setAlertOthers(new Class[0]));
@@ -70,7 +101,7 @@
     public Panda.Gene getVariant() {
        return Panda.Gene.getVariantFromGenes(this.getMainGene(), this.getHiddenGene());
     }
-@@ -489,10 +487,11 @@
+@@ -489,10 +488,11 @@
  
     }
  
@@ -82,6 +113,26 @@
           this.handDropChances[EquipmentSlot.MAINHAND.getIndex()] = 2.0F;
           this.take(var1, var2.getCount());
           var1.remove();
+@@ -504,17 +504,16 @@
+       this.sit(false);
+       return super.hurt(var1, var2);
+    }
+ 
+    @Nullable
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+       this.setMainGene(Panda.Gene.getRandom(this.random));
+       this.setHiddenGene(Panda.Gene.getRandom(this.random));
+       this.setAttributes();
+       if (var4 == null) {
+-         var4 = new AgableMob.AgableMobGroupData();
+-         ((AgableMob.AgableMobGroupData)var4).setBabySpawnChance(0.2F);
++         var4 = new AgableMob.AgableMobGroupData(0.2F);
+       }
+ 
+       return super.finalizeSpawn(var1, var2, var3, (SpawnGroupData)var4, var5);
+    }
+ 
 @@ -549,15 +548,15 @@
        return this.random.nextBoolean() ? this.getMainGene() : this.getHiddenGene();
     }

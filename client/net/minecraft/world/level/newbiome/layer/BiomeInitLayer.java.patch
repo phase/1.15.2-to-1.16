@@ -3,14 +3,15 @@
 @@ -1,9 +1,8 @@
  package net.minecraft.world.level.newbiome.layer;
  
- import net.minecraft.core.Registry;
+-import net.minecraft.core.Registry;
 -import net.minecraft.world.level.LevelType;
++import net.minecraft.data.BuiltinRegistries;
  import net.minecraft.world.level.biome.Biomes;
  import net.minecraft.world.level.newbiome.context.Context;
  import net.minecraft.world.level.newbiome.layer.traits.C0Transformer;
  
  public class BiomeInitLayer implements C0Transformer {
-@@ -26,58 +25,50 @@
+@@ -26,78 +25,70 @@
     private static final int[] LEGACY_WARM_BIOMES;
     private static final int[] WARM_BIOMES;
     private static final int[] MEDIUM_BIOMES;
@@ -95,4 +96,40 @@
     }
  
     static {
-       BIRCH_FOREST = Registry.BIOME.getId(Biomes.BIRCH_FOREST);
+-      BIRCH_FOREST = Registry.BIOME.getId(Biomes.BIRCH_FOREST);
+-      DESERT = Registry.BIOME.getId(Biomes.DESERT);
+-      MOUNTAINS = Registry.BIOME.getId(Biomes.MOUNTAINS);
+-      FOREST = Registry.BIOME.getId(Biomes.FOREST);
+-      SNOWY_TUNDRA = Registry.BIOME.getId(Biomes.SNOWY_TUNDRA);
+-      JUNGLE = Registry.BIOME.getId(Biomes.JUNGLE);
+-      BADLANDS_PLATEAU = Registry.BIOME.getId(Biomes.BADLANDS_PLATEAU);
+-      WOODED_BADLANDS_PLATEAU = Registry.BIOME.getId(Biomes.WOODED_BADLANDS_PLATEAU);
+-      MUSHROOM_FIELDS = Registry.BIOME.getId(Biomes.MUSHROOM_FIELDS);
+-      PLAINS = Registry.BIOME.getId(Biomes.PLAINS);
+-      GIANT_TREE_TAIGA = Registry.BIOME.getId(Biomes.GIANT_TREE_TAIGA);
+-      DARK_FOREST = Registry.BIOME.getId(Biomes.DARK_FOREST);
+-      SAVANNA = Registry.BIOME.getId(Biomes.SAVANNA);
+-      SWAMP = Registry.BIOME.getId(Biomes.SWAMP);
+-      TAIGA = Registry.BIOME.getId(Biomes.TAIGA);
+-      SNOWY_TAIGA = Registry.BIOME.getId(Biomes.SNOWY_TAIGA);
++      BIRCH_FOREST = BuiltinRegistries.BIOME.getId(Biomes.BIRCH_FOREST);
++      DESERT = BuiltinRegistries.BIOME.getId(Biomes.DESERT);
++      MOUNTAINS = BuiltinRegistries.BIOME.getId(Biomes.MOUNTAINS);
++      FOREST = BuiltinRegistries.BIOME.getId(Biomes.FOREST);
++      SNOWY_TUNDRA = BuiltinRegistries.BIOME.getId(Biomes.SNOWY_TUNDRA);
++      JUNGLE = BuiltinRegistries.BIOME.getId(Biomes.JUNGLE);
++      BADLANDS_PLATEAU = BuiltinRegistries.BIOME.getId(Biomes.BADLANDS_PLATEAU);
++      WOODED_BADLANDS_PLATEAU = BuiltinRegistries.BIOME.getId(Biomes.WOODED_BADLANDS_PLATEAU);
++      MUSHROOM_FIELDS = BuiltinRegistries.BIOME.getId(Biomes.MUSHROOM_FIELDS);
++      PLAINS = BuiltinRegistries.BIOME.getId(Biomes.PLAINS);
++      GIANT_TREE_TAIGA = BuiltinRegistries.BIOME.getId(Biomes.GIANT_TREE_TAIGA);
++      DARK_FOREST = BuiltinRegistries.BIOME.getId(Biomes.DARK_FOREST);
++      SAVANNA = BuiltinRegistries.BIOME.getId(Biomes.SAVANNA);
++      SWAMP = BuiltinRegistries.BIOME.getId(Biomes.SWAMP);
++      TAIGA = BuiltinRegistries.BIOME.getId(Biomes.TAIGA);
++      SNOWY_TAIGA = BuiltinRegistries.BIOME.getId(Biomes.SNOWY_TAIGA);
+       LEGACY_WARM_BIOMES = new int[]{DESERT, FOREST, MOUNTAINS, SWAMP, PLAINS, TAIGA};
+       WARM_BIOMES = new int[]{DESERT, DESERT, DESERT, SAVANNA, SAVANNA, PLAINS};
+       MEDIUM_BIOMES = new int[]{FOREST, DARK_FOREST, MOUNTAINS, PLAINS, BIRCH_FOREST, SWAMP};
+       COLD_BIOMES = new int[]{FOREST, MOUNTAINS, TAIGA, PLAINS};
+       ICE_BIOMES = new int[]{SNOWY_TUNDRA, SNOWY_TUNDRA, SNOWY_TUNDRA, SNOWY_TAIGA};

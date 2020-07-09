@@ -1,17 +1,15 @@
 --- net/minecraft/world/level/levelgen/feature/DeltaFeature.java
 +++ net/minecraft/world/level/levelgen/feature/DeltaFeature.java
-@@ -1,0 +1,115 @@
+@@ -1,0 +1,85 @@
 +package net.minecraft.world.level.levelgen.feature;
 +
 +import com.google.common.collect.ImmutableList;
 +import com.mojang.serialization.Codec;
 +import java.util.Iterator;
 +import java.util.Random;
-+import javax.annotation.Nullable;
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.core.Direction;
 +import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
 +import net.minecraft.world.level.block.Block;
 +import net.minecraft.world.level.block.Blocks;
@@ -23,60 +21,47 @@
 +   private static final ImmutableList<Block> CANNOT_REPLACE;
 +   private static final Direction[] DIRECTIONS;
 +
-+   private static int calculateRadius(Random var0, DeltaFeatureConfiguration var1) {
-+      return var1.minimumRadius + var0.nextInt(var1.maximumRadius - var1.minimumRadius + 1);
-+   }
-+
-+   private static int calculateRimSize(Random var0, DeltaFeatureConfiguration var1) {
-+      return var0.nextInt(var1.maximumRimSize + 1);
-+   }
-+
 +   public DeltaFeature(Codec<DeltaFeatureConfiguration> var1) {
 +      super(var1);
 +   }
 +
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, DeltaFeatureConfiguration var6) {
-+      BlockPos var7 = findDeltaLevel(var1, var5.mutable().clamp(Direction.Axis.Y, 1, var1.getMaxBuildHeight() - 1));
-+      if (var7 == null) {
-+         return false;
-+      } else {
-+         boolean var8 = false;
-+         boolean var9 = var4.nextDouble() < 0.9D;
-+         int var10 = var9 ? calculateRimSize(var4, var6) : 0;
-+         int var11 = var9 ? calculateRimSize(var4, var6) : 0;
-+         boolean var12 = var9 && var10 != 0 && var11 != 0;
-+         int var13 = calculateRadius(var4, var6);
-+         int var14 = calculateRadius(var4, var6);
-+         int var15 = Math.max(var13, var14);
-+         Iterator var16 = BlockPos.withinManhattan(var7, var13, 0, var14).iterator();
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, DeltaFeatureConfiguration var5) {
++      boolean var6 = false;
++      boolean var7 = var3.nextDouble() < 0.9D;
++      int var8 = var7 ? var5.rimSize().sample(var3) : 0;
++      int var9 = var7 ? var5.rimSize().sample(var3) : 0;
++      boolean var10 = var7 && var8 != 0 && var9 != 0;
++      int var11 = var5.size().sample(var3);
++      int var12 = var5.size().sample(var3);
++      int var13 = Math.max(var11, var12);
++      Iterator var14 = BlockPos.withinManhattan(var4, var11, 0, var12).iterator();
 +
-+         while(var16.hasNext()) {
-+            BlockPos var17 = (BlockPos)var16.next();
-+            if (var17.distManhattan(var7) > var15) {
-+               break;
-+            }
-+
-+            if (isClear(var1, var17, var6)) {
-+               if (var12) {
-+                  var8 = true;
-+                  this.setBlock(var1, var17, var6.rim);
-+               }
-+
-+               BlockPos var18 = var17.offset(var10, 0, var11);
-+               if (isClear(var1, var18, var6)) {
-+                  var8 = true;
-+                  this.setBlock(var1, var18, var6.contents);
-+               }
-+            }
++      while(var14.hasNext()) {
++         BlockPos var15 = (BlockPos)var14.next();
++         if (var15.distManhattan(var4) > var13) {
++            break;
 +         }
 +
-+         return var8;
++         if (isClear(var1, var15, var5)) {
++            if (var10) {
++               var6 = true;
++               this.setBlock(var1, var15, var5.rim());
++            }
++
++            BlockPos var16 = var15.offset(var8, 0, var9);
++            if (isClear(var1, var16, var5)) {
++               var6 = true;
++               this.setBlock(var1, var16, var5.contents());
++            }
++         }
 +      }
++
++      return var6;
 +   }
 +
 +   private static boolean isClear(LevelAccessor var0, BlockPos var1, DeltaFeatureConfiguration var2) {
 +      BlockState var3 = var0.getBlockState(var1);
-+      if (var3.is(var2.contents.getBlock())) {
++      if (var3.is(var2.contents().getBlock())) {
 +         return false;
 +      } else if (CANNOT_REPLACE.contains(var3.getBlock())) {
 +         return false;
@@ -94,21 +79,6 @@
 +
 +         return true;
 +      }
-+   }
-+
-+   @Nullable
-+   private static BlockPos findDeltaLevel(LevelAccessor var0, BlockPos.MutableBlockPos var1) {
-+      for(; var1.getY() > 1; var1.move(Direction.DOWN)) {
-+         if (var0.getBlockState(var1).isAir()) {
-+            BlockState var2 = var0.getBlockState(var1.move(Direction.DOWN));
-+            var1.move(Direction.UP);
-+            if (!var2.is(Blocks.LAVA) && !var2.is(Blocks.BEDROCK) && !var2.isAir()) {
-+               return var1;
-+            }
-+         }
-+      }
-+
-+      return null;
 +   }
 +
 +   static {

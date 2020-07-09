@@ -13,7 +13,7 @@
  
  public class ProbabilityFeatureConfiguration implements CarverConfiguration, FeatureConfiguration {
 +   public static final Codec<ProbabilityFeatureConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(Codec.FLOAT.fieldOf("probability").withDefault((Object)0.0F).forGetter((var0x) -> {
++      return var0.group(Codec.floatRange(0.0F, 1.0F).fieldOf("probability").forGetter((var0x) -> {
 +         return var0x.probability;
 +      })).apply(var0, (Function)(ProbabilityFeatureConfiguration::new));
 +   });

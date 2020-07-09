@@ -1,0 +1,13 @@
+--- net/minecraft/world/inventory/CraftingMenu.java
++++ net/minecraft/world/inventory/CraftingMenu.java
+@@ -164,6 +164,10 @@
+    }
+ 
+    public int getSize() {
+       return 10;
+    }
++
++   public RecipeBookType getRecipeBookType() {
++      return RecipeBookType.CRAFTING;
++   }
+ }

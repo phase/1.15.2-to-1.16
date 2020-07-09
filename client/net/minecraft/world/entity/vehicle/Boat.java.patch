@@ -354,7 +354,7 @@
              if (var4 == 0) {
                 var2 = 0.2F;
              } else {
-@@ -707,10 +631,45 @@
+@@ -707,10 +631,40 @@
           }
  
        }
@@ -367,27 +367,22 @@
 +      BlockPos var7 = new BlockPos(var3, this.getBoundingBox().maxY, var5);
 +      BlockPos var8 = var7.below();
 +      if (!this.level.isWaterAt(var8)) {
-+         UnmodifiableIterator var9 = var1.getDismountPoses().iterator();
++         double var9 = (double)var7.getY() + this.level.getBlockFloorHeight(var7);
++         double var11 = (double)var7.getY() + this.level.getBlockFloorHeight(var8);
++         UnmodifiableIterator var13 = var1.getDismountPoses().iterator();
 +
-+         while(var9.hasNext()) {
-+            Pose var10 = (Pose)var9.next();
-+            AABB var11 = var1.getLocalBoundsForPose(var10);
-+            double var12 = this.level.getRelativeFloorHeight(var7);
-+            if (DismountHelper.isFloorValid(var12)) {
-+               Vec3 var14 = new Vec3(var3, (double)var7.getY() + var12, var5);
-+               if (DismountHelper.canDismountTo(this.level, var1, var11.move(var14))) {
-+                  var1.setPose(var10);
-+                  return var14;
-+               }
++         while(var13.hasNext()) {
++            Pose var14 = (Pose)var13.next();
++            Vec3 var15 = DismountHelper.findDismountLocation(this.level, var3, var9, var5, var1, var14);
++            if (var15 != null) {
++               var1.setPose(var14);
++               return var15;
 +            }
 +
-+            double var17 = this.level.getRelativeFloorHeight(var8);
-+            if (DismountHelper.isFloorValid(var17)) {
-+               Vec3 var16 = new Vec3(var3, (double)var8.getY() + var17, var5);
-+               if (DismountHelper.canDismountTo(this.level, var1, var11.move(var16))) {
-+                  var1.setPose(var10);
-+                  return var16;
-+               }
++            Vec3 var16 = DismountHelper.findDismountLocation(this.level, var3, var11, var5, var1, var14);
++            if (var16 != null) {
++               var1.setPose(var14);
++               return var16;
 +            }
 +         }
 +      }
@@ -400,7 +395,7 @@
        float var2 = Mth.wrapDegrees(var1.yRot - this.yRot);
        float var3 = Mth.clamp(var2, -105.0F, 105.0F);
        var1.yRotO += var3 - var2;
-@@ -731,15 +690,21 @@
+@@ -731,15 +685,21 @@
           this.setType(Boat.Type.byName(var1.getString("Type")));
        }
  
@@ -425,7 +420,7 @@
  
     protected void checkFallDamage(double var1, boolean var3, BlockState var4, BlockPos var5) {
        this.lastYd = this.getDeltaMovement().y;
-@@ -766,11 +731,11 @@
+@@ -766,11 +726,11 @@
                    }
                 }
              }
@@ -438,7 +433,7 @@
  
        }
     }
-@@ -822,11 +787,11 @@
+@@ -822,11 +782,11 @@
     public Boat.Type getBoatType() {
        return Boat.Type.byId((Integer)this.entityData.get(DATA_ID_TYPE));
     }
@@ -451,7 +446,7 @@
     @Nullable
     public Entity getControllingPassenger() {
        List var1 = this.getPassengers();
-@@ -842,10 +807,14 @@
+@@ -842,10 +802,14 @@
  
     public Packet<?> getAddEntityPacket() {
        return new ClientboundAddEntityPacket(this);

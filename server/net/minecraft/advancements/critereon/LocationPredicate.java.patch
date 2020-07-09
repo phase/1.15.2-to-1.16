@@ -1,6 +1,6 @@
 --- net/minecraft/advancements/critereon/LocationPredicate.java
 +++ net/minecraft/advancements/critereon/LocationPredicate.java
-@@ -2,58 +2,67 @@
+@@ -2,58 +2,68 @@
  
  import com.google.gson.JsonElement;
  import com.google.gson.JsonNull;
@@ -11,6 +11,7 @@
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Registry;
++import net.minecraft.data.BuiltinRegistries;
 +import net.minecraft.resources.ResourceKey;
  import net.minecraft.resources.ResourceLocation;
  import net.minecraft.server.level.ServerLevel;
@@ -79,7 +80,7 @@
     public boolean matches(ServerLevel var1, double var2, double var4, double var6) {
        return this.matches(var1, (float)var2, (float)var4, (float)var6);
     }
-@@ -63,27 +72,27 @@
+@@ -63,27 +73,27 @@
           return false;
        } else if (!this.y.matches(var3)) {
           return false;
@@ -117,7 +118,7 @@
     }
  
     public JsonElement serializeToJson() {
-@@ -98,21 +107,30 @@
+@@ -98,21 +108,30 @@
              var2.add("z", this.z.serializeToJson());
              var1.add("position", var2);
           }
@@ -138,7 +139,8 @@
           }
  
           if (this.biome != null) {
-             var1.addProperty("biome", Registry.BIOME.getKey(this.biome).toString());
+-            var1.addProperty("biome", Registry.BIOME.getKey(this.biome).toString());
++            var1.addProperty("biome", BuiltinRegistries.BIOME.getKey(this.biome).toString());
           }
  
 +         if (this.smokey != null) {
@@ -150,7 +152,7 @@
           var1.add("fluid", this.fluid.serializeToJson());
           return var1;
        }
-@@ -123,31 +141,44 @@
+@@ -123,31 +142,44 @@
           JsonObject var1 = GsonHelper.convertToJsonObject(var0, "location");
           JsonObject var2 = GsonHelper.getAsJsonObject(var1, "position", new JsonObject());
           MinMaxBounds.Floats var3 = MinMaxBounds.Floats.fromJson(var2.get("x"));
@@ -175,7 +177,8 @@
           Biome var8 = null;
           if (var1.has("biome")) {
              ResourceLocation var9 = new ResourceLocation(GsonHelper.getAsString(var1, "biome"));
-             var8 = (Biome)Registry.BIOME.getOptional(var9).orElseThrow(() -> {
+-            var8 = (Biome)Registry.BIOME.getOptional(var9).orElseThrow(() -> {
++            var8 = (Biome)BuiltinRegistries.BIOME.getOptional(var9).orElseThrow(() -> {
                 return new JsonSyntaxException("Unknown biome '" + var9 + "'");
              });
           }
@@ -202,7 +205,7 @@
     public static class Builder {
        private MinMaxBounds.Floats x;
        private MinMaxBounds.Floats y;
-@@ -155,11 +186,13 @@
+@@ -155,11 +187,13 @@
        @Nullable
        private Biome biome;
        @Nullable
@@ -217,7 +220,7 @@
        private FluidPredicate fluid;
  
        public Builder() {
-@@ -178,10 +211,20 @@
+@@ -178,10 +212,20 @@
        public LocationPredicate.Builder setBiome(@Nullable Biome var1) {
           this.biome = var1;
           return this;

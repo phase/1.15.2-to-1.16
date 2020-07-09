@@ -1,0 +1,35 @@
+--- com/mojang/blaze3d/platform/TextureUtil.java
++++ com/mojang/blaze3d/platform/TextureUtil.java
+@@ -7,21 +7,31 @@
+ import java.nio.ByteBuffer;
+ import java.nio.IntBuffer;
+ import java.nio.channels.Channels;
+ import java.nio.channels.FileChannel;
+ import java.nio.channels.ReadableByteChannel;
++import java.util.concurrent.ThreadLocalRandom;
++import net.minecraft.SharedConstants;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.lwjgl.opengl.GL11;
+ import org.lwjgl.system.MemoryUtil;
+ 
+ public class TextureUtil {
+    private static final Logger LOGGER = LogManager.getLogger();
+ 
+    public static int generateTextureId() {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+-      return GlStateManager._genTexture();
++      if (SharedConstants.IS_RUNNING_IN_IDE) {
++         int[] var0 = new int[ThreadLocalRandom.current().nextInt(15) + 1];
++         GlStateManager._genTextures(var0);
++         int var1 = GlStateManager._genTexture();
++         GlStateManager._deleteTextures(var0);
++         return var1;
++      } else {
++         return GlStateManager._genTexture();
++      }
+    }
+ 
+    public static void releaseTextureId(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       GlStateManager._deleteTexture(var0);

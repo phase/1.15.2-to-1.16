@@ -13,3 +13,67 @@
     private final Map<ResourceLocation, AbstractTexture> byPath = Maps.newHashMap();
     private final Set<Tickable> tickableTextures = Sets.newHashSet();
     private final Map<String, Integer> prefixRegister = Maps.newHashMap();
+@@ -62,33 +62,45 @@
+    public void register(ResourceLocation var1, AbstractTexture var2) {
+       var2 = this.loadTexture(var1, var2);
+       AbstractTexture var3 = (AbstractTexture)this.byPath.put(var1, var2);
+       if (var3 != var2) {
+          if (var3 != null && var3 != MissingTextureAtlasSprite.getTexture()) {
+-            var3.releaseId();
+             this.tickableTextures.remove(var3);
++            this.safeClose(var1, var3);
+          }
+ 
+          if (var2 instanceof Tickable) {
+             this.tickableTextures.add((Tickable)var2);
+          }
+       }
+ 
+    }
+ 
++   private void safeClose(ResourceLocation var1, AbstractTexture var2) {
++      if (var2 != MissingTextureAtlasSprite.getTexture()) {
++         try {
++            var2.close();
++         } catch (Exception var4) {
++            LOGGER.warn("Failed to close texture {}", var1, var4);
++         }
++      }
++
++      var2.releaseId();
++   }
++
+    private AbstractTexture loadTexture(ResourceLocation var1, AbstractTexture var2) {
+       try {
+          var2.load(this.resourceManager);
+          return var2;
+-      } catch (IOException var7) {
++      } catch (IOException var6) {
+          if (var1 != INTENTIONAL_MISSING_TEXTURE) {
+-            LOGGER.warn("Failed to load texture: {}", var1, var7);
++            LOGGER.warn("Failed to load texture: {}", var1, var6);
+          }
+ 
+          return MissingTextureAtlasSprite.getTexture();
+-      } catch (Throwable var8) {
+-         CrashReport var4 = CrashReport.forThrowable(var8, "Registering texture");
++      } catch (Throwable var7) {
++         CrashReport var4 = CrashReport.forThrowable(var7, "Registering texture");
+          CrashReportCategory var5 = var4.addCategory("Resource location being registered");
+          var5.setDetail("Resource location", (Object)var1);
+          var5.setDetail("Texture object class", () -> {
+             return var2.getClass().getName();
+          });
+@@ -150,11 +162,11 @@
+       }
+ 
+    }
+ 
+    public void close() {
+-      this.byPath.values().forEach(AbstractTexture::releaseId);
++      this.byPath.forEach(this::safeClose);
+       this.byPath.clear();
+       this.tickableTextures.clear();
+       this.prefixRegister.clear();
+    }
+ 

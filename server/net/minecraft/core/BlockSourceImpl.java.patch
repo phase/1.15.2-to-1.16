@@ -1,0 +1,28 @@
+--- net/minecraft/core/BlockSourceImpl.java
++++ net/minecraft/core/BlockSourceImpl.java
+@@ -1,21 +1,21 @@
+ package net.minecraft.core;
+ 
+-import net.minecraft.world.level.Level;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class BlockSourceImpl implements BlockSource {
+-   private final Level level;
++   private final ServerLevel level;
+    private final BlockPos pos;
+ 
+-   public BlockSourceImpl(Level var1, BlockPos var2) {
++   public BlockSourceImpl(ServerLevel var1, BlockPos var2) {
+       this.level = var1;
+       this.pos = var2;
+    }
+ 
+-   public Level getLevel() {
++   public ServerLevel getLevel() {
+       return this.level;
+    }
+ 
+    public double x() {
+       return (double)this.pos.getX() + 0.5D;

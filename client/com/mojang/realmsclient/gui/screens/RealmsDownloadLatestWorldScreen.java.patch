@@ -52,7 +52,7 @@
 -   private volatile String errorMessage;
 -   private volatile String status;
 +   private volatile Component errorMessage;
-+   private volatile Component status;
++   private volatile Component status = new TranslatableComponent("mco.download.preparing");
     private volatile String progress;
     private volatile boolean cancelled;
     private volatile boolean showDots = true;
@@ -158,7 +158,7 @@
     }
  
     public boolean keyPressed(int var1, int var2, int var3) {
-@@ -123,147 +127,122 @@
+@@ -123,147 +127,126 @@
           return super.keyPressed(var1, var2, var3);
        }
     }
@@ -327,14 +327,14 @@
     private void downloadSave() {
        (new Thread(() -> {
           try {
--            try {
+             try {
 -               if (!downloadLock.tryLock(1L, TimeUnit.SECONDS)) {
--                  return;
--               }
--
++               if (!DOWNLOAD_LOCK.tryLock(1L, TimeUnit.SECONDS)) {
++                  this.status = new TranslatableComponent("mco.download.failed");
+                   return;
+                }
+ 
 -               this.status = getLocalizedString("mco.download.preparing");
-+            if (DOWNLOAD_LOCK.tryLock(1L, TimeUnit.SECONDS)) {
-+               this.status = new TranslatableComponent("mco.download.preparing");
                 if (this.cancelled) {
                    this.downloadCancelled();
                    return;
@@ -359,7 +359,7 @@
  
                    if (var1.isExtracting()) {
                       this.extracting = true;
-@@ -281,34 +260,36 @@
+@@ -281,34 +264,34 @@
                       LOGGER.error("Failed to check Realms backup download status");
                    }
                 }
@@ -370,35 +370,25 @@
 +               this.status = new TranslatableComponent("mco.download.done");
 +               this.cancelButton.setMessage(CommonComponents.GUI_DONE);
                 return;
--            } catch (InterruptedException var9) {
--               LOGGER.error("Could not acquire upload lock");
--            } catch (Exception var10) {
+             } catch (InterruptedException var9) {
+                LOGGER.error("Could not acquire upload lock");
+             } catch (Exception var10) {
 -               this.errorMessage = getLocalizedString("mco.download.failed");
--               var10.printStackTrace();
++               this.errorMessage = new TranslatableComponent("mco.download.failed");
+                var10.printStackTrace();
              }
--
-+         } catch (InterruptedException var9) {
-+            LOGGER.error("Could not acquire upload lock");
-+            return;
-+         } catch (Exception var10) {
-+            this.errorMessage = new TranslatableComponent("mco.download.failed");
-+            var10.printStackTrace();
-+            return;
+ 
           } finally {
 -            if (!downloadLock.isHeldByCurrentThread()) {
 +            if (!DOWNLOAD_LOCK.isHeldByCurrentThread()) {
                 return;
--            } else {
+             } else {
 -               downloadLock.unlock();
--               this.showDots = false;
--               this.finished = true;
++               DOWNLOAD_LOCK.unlock();
+                this.showDots = false;
+                this.finished = true;
              }
-+
-+            DOWNLOAD_LOCK.unlock();
-+            this.showDots = false;
-+            this.finished = true;
           }
-+
        })).start();
     }
  

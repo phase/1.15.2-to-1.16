@@ -572,10 +572,10 @@
 +   private static void deletePlayerTag(File var0) {
 +      if (var0.exists()) {
 +         try {
-+            CompoundTag var1 = NbtIo.readCompressed(new FileInputStream(var0));
++            CompoundTag var1 = NbtIo.readCompressed(var0);
 +            CompoundTag var2 = var1.getCompound("Data");
 +            var2.remove("Player");
-+            NbtIo.writeCompressed(var1, new FileOutputStream(var0));
++            NbtIo.writeCompressed(var1, var0);
 +         } catch (Exception var3) {
 +            var3.printStackTrace();
 +         }

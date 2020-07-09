@@ -62,7 +62,16 @@
     public void handle(ServerGamePacketListener var1) {
        var1.handleInteract(this);
     }
-@@ -83,10 +89,14 @@
+@@ -75,18 +81,23 @@
+ 
+    public ServerboundInteractPacket.Action getAction() {
+       return this.action;
+    }
+ 
++   @Nullable
+    public InteractionHand getHand() {
+       return this.hand;
+    }
  
     public Vec3 getLocation() {
        return this.location;

@@ -1,34 +1,35 @@
 --- net/minecraft/world/level/levelgen/placement/DepthAverageConfigation.java
 +++ net/minecraft/world/level/levelgen/placement/DepthAverageConfigation.java
-@@ -1,29 +1,27 @@
+@@ -1,29 +1,23 @@
  package net.minecraft.world.level.levelgen.placement;
  
 -import com.google.common.collect.ImmutableMap;
 -import com.mojang.datafixers.Dynamic;
 -import com.mojang.datafixers.types.DynamicOps;
-+import com.mojang.datafixers.util.Function3;
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
++import java.util.function.BiFunction;
  import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
  
  public class DepthAverageConfigation implements DecoratorConfiguration {
+-   public final int count;
 +   public static final Codec<DepthAverageConfigation> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(Codec.INT.fieldOf("count").forGetter((var0x) -> {
-+         return var0x.count;
-+      }), Codec.INT.fieldOf("baseline").forGetter((var0x) -> {
++      return var0.group(Codec.INT.fieldOf("baseline").forGetter((var0x) -> {
 +         return var0x.baseline;
 +      }), Codec.INT.fieldOf("spread").forGetter((var0x) -> {
 +         return var0x.spread;
-+      })).apply(var0, (Function3)(DepthAverageConfigation::new));
++      })).apply(var0, (BiFunction)(DepthAverageConfigation::new));
 +   });
-    public final int count;
     public final int baseline;
     public final int spread;
  
-    public DepthAverageConfigation(int var1, int var2, int var3) {
-       this.count = var1;
-       this.baseline = var2;
-       this.spread = var3;
+-   public DepthAverageConfigation(int var1, int var2, int var3) {
+-      this.count = var1;
+-      this.baseline = var2;
+-      this.spread = var3;
++   public DepthAverageConfigation(int var1, int var2) {
++      this.baseline = var1;
++      this.spread = var2;
     }
 -
 -   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {

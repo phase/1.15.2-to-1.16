@@ -1,0 +1,28 @@
+--- net/minecraft/server/level/DistanceManager.java
++++ net/minecraft/server/level/DistanceManager.java
+@@ -86,11 +86,11 @@
+    protected abstract ChunkHolder updateChunkScheduling(long var1, int var3, @Nullable ChunkHolder var4, int var5);
+ 
+    public boolean runAllUpdates(ChunkMap var1) {
+       this.naturalSpawnChunkCounter.runAllUpdates();
+       this.playerTicketManager.runAllUpdates();
+-      int var2 = Integer.MAX_VALUE - this.ticketTracker.runDistnaceUpdates(Integer.MAX_VALUE);
++      int var2 = Integer.MAX_VALUE - this.ticketTracker.runDistanceUpdates(Integer.MAX_VALUE);
+       boolean var3 = var2 != 0;
+       if (var3) {
+       }
+ 
+       if (!this.chunksToUpdateFutures.isEmpty()) {
+@@ -277,11 +277,11 @@
+             }
+ 
+          }
+       }
+ 
+-      public int runDistnaceUpdates(int var1) {
++      public int runDistanceUpdates(int var1) {
+          return this.runUpdates(var1);
+       }
+    }
+ 
+    class PlayerTicketTracker extends DistanceManager.FixedPlayerDistanceChunkTracker {

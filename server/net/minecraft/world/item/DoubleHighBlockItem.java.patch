@@ -1,0 +1,11 @@
+--- net/minecraft/world/item/DoubleHighBlockItem.java
++++ net/minecraft/world/item/DoubleHighBlockItem.java
+@@ -1,7 +1,8 @@
+ package net.minecraft.world.item;
+ 
++import net.minecraft.world.item.context.BlockPlaceContext;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+ public class DoubleHighBlockItem extends BlockItem {

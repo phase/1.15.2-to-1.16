@@ -22,55 +22,55 @@
        }));
        private final String name;
  
-@@ -19,22 +23,34 @@
+@@ -19,31 +23,32 @@
        }
  
        public String getName() {
           return this.name;
        }
-+
+-   }
+ 
+-   public static enum Decoration {
+-      RAW_GENERATION("raw_generation"),
+-      LOCAL_MODIFICATIONS("local_modifications"),
+-      UNDERGROUND_STRUCTURES("underground_structures"),
+-      SURFACE_STRUCTURES("surface_structures"),
+-      UNDERGROUND_ORES("underground_ores"),
+-      UNDERGROUND_DECORATION("underground_decoration"),
+-      VEGETAL_DECORATION("vegetal_decoration"),
+-      TOP_LAYER_MODIFICATION("top_layer_modification");
+-
+-      private static final Map<String, GenerationStep.Decoration> BY_NAME = (Map)Arrays.stream(values()).collect(Collectors.toMap(GenerationStep.Decoration::getName, (var0) -> {
+-         return var0;
+-      }));
+-      private final String name;
+-
+-      private Decoration(String var3) {
+-         this.name = var3;
 +      @Nullable
 +      public static GenerationStep.Carving byName(String var0) {
 +         return (GenerationStep.Carving)BY_NAME.get(var0);
-+      }
-+
-+      public String getSerializedName() {
-+         return this.name;
-+      }
-    }
- 
--   public static enum Decoration {
-+   public static enum Decoration implements StringRepresentable {
-       RAW_GENERATION("raw_generation"),
-+      LAKES("lakes"),
-       LOCAL_MODIFICATIONS("local_modifications"),
-       UNDERGROUND_STRUCTURES("underground_structures"),
-       SURFACE_STRUCTURES("surface_structures"),
-+      STRONGHOLDS("strongholds"),
-       UNDERGROUND_ORES("underground_ores"),
-       UNDERGROUND_DECORATION("underground_decoration"),
-       VEGETAL_DECORATION("vegetal_decoration"),
-       TOP_LAYER_MODIFICATION("top_layer_modification");
- 
-+      public static final Codec<GenerationStep.Decoration> CODEC = StringRepresentable.fromEnum(GenerationStep.Decoration::values, GenerationStep.Decoration::byName);
-       private static final Map<String, GenerationStep.Decoration> BY_NAME = (Map)Arrays.stream(values()).collect(Collectors.toMap(GenerationStep.Decoration::getName, (var0) -> {
-          return var0;
-       }));
-       private final String name;
- 
-@@ -43,7 +59,15 @@
        }
  
-       public String getName() {
+-      public String getName() {
++      public String getSerializedName() {
           return this.name;
        }
-+
-+      public static GenerationStep.Decoration byName(String var0) {
-+         return (GenerationStep.Decoration)BY_NAME.get(var0);
-+      }
-+
-+      public String getSerializedName() {
-+         return this.name;
-+      }
     }
++
++   public static enum Decoration {
++      RAW_GENERATION,
++      LAKES,
++      LOCAL_MODIFICATIONS,
++      UNDERGROUND_STRUCTURES,
++      SURFACE_STRUCTURES,
++      STRONGHOLDS,
++      UNDERGROUND_ORES,
++      UNDERGROUND_DECORATION,
++      VEGETAL_DECORATION,
++      TOP_LAYER_MODIFICATION;
++
++      private Decoration() {
++      }
++   }
  }

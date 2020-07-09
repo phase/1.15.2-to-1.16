@@ -28,7 +28,7 @@
  import net.minecraft.world.entity.ai.control.LookControl;
  import net.minecraft.world.entity.ai.control.MoveControl;
  import net.minecraft.world.entity.ai.goal.Goal;
-@@ -40,20 +44,23 @@
+@@ -40,26 +44,30 @@
  import net.minecraft.world.entity.ai.sensing.Sensing;
  import net.minecraft.world.entity.decoration.HangingEntity;
  import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
@@ -53,7 +53,14 @@
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
-@@ -101,12 +108,12 @@
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.ServerLevelAccessor;
+ import net.minecraft.world.level.block.AbstractSkullBlock;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.material.Fluid;
+ import net.minecraft.world.level.pathfinder.BlockPathTypes;
+ import net.minecraft.world.level.storage.loot.LootContext;
+@@ -101,12 +109,12 @@
        this.armorItems = NonNullList.withSize(4, ItemStack.EMPTY);
        this.armorDropChances = new float[4];
        this.pathfindingMalus = Maps.newEnumMap(BlockPathTypes.class);
@@ -68,7 +75,7 @@
        this.jumpControl = new JumpControl(this);
        this.bodyRotationControl = this.createBodyControl();
        this.navigation = this.createNavigation(var2);
-@@ -120,29 +127,42 @@
+@@ -120,29 +128,42 @@
     }
  
     protected void registerGoals() {
@@ -117,7 +124,7 @@
     }
  
     public LookControl getLookControl() {
-@@ -186,10 +206,14 @@
+@@ -186,10 +207,14 @@
  
     public boolean canAttackType(EntityType<?> var1) {
        return var1 != EntityType.GHAST;
@@ -132,7 +139,7 @@
  
     protected void defineSynchedData() {
        super.defineSynchedData();
-@@ -470,93 +494,150 @@
+@@ -470,93 +495,150 @@
           List var1 = this.level.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(1.0D, 0.0D, 1.0D));
           Iterator var2 = var1.iterator();
  
@@ -332,7 +339,7 @@
     protected boolean shouldDespawnInPeaceful() {
        return false;
     }
-@@ -566,17 +647,21 @@
+@@ -566,17 +648,21 @@
           this.remove();
        } else if (!this.isPersistenceRequired() && !this.requiresCustomPersistence()) {
           Player var1 = this.level.getNearestPlayer(this, -1.0D);
@@ -357,20 +364,22 @@
           }
  
        } else {
-@@ -898,11 +983,11 @@
+@@ -897,12 +983,12 @@
+       }
  
     }
  
     @Nullable
-    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 -      this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).addModifier(new AttributeModifier("Random spawn bonus", this.random.nextGaussian() * 0.05D, AttributeModifier.Operation.MULTIPLY_BASE));
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 +      this.getAttribute(Attributes.FOLLOW_RANGE).addPermanentModifier(new AttributeModifier("Random spawn bonus", this.random.nextGaussian() * 0.05D, AttributeModifier.Operation.MULTIPLY_BASE));
        if (this.random.nextFloat() < 0.05F) {
           this.setLeftHanded(true);
        } else {
           this.setLeftHanded(false);
        }
-@@ -944,34 +1029,67 @@
+@@ -944,34 +1030,67 @@
  
     public boolean isPersistenceRequired() {
        return this.persistenceRequired;
@@ -419,9 +428,9 @@
 +         }
 +
 +         if (var3.getItem() instanceof SpawnEggItem) {
-+            if (!this.level.isClientSide) {
++            if (this.level instanceof ServerLevel) {
 +               SpawnEggItem var6 = (SpawnEggItem)var3.getItem();
-+               Optional var5 = var6.spawnOffspringFromSpawnEgg(var1, this, this.getType(), this.level, this.position(), var3);
++               Optional var5 = var6.spawnOffspringFromSpawnEgg(var1, this, this.getType(), (ServerLevel)this.level, this.position(), var3);
 +               var5.ifPresent((var2x) -> {
 +                  this.onOffspringSpawnedFromEgg(var1, var2x);
 +               });
@@ -450,7 +459,7 @@
     public boolean isWithinRestriction(BlockPos var1) {
        if (this.restrictRadius == -1.0F) {
           return true;
-@@ -995,10 +1113,49 @@
+@@ -995,10 +1114,49 @@
  
     public boolean hasRestriction() {
        return this.restrictRadius != -1.0F;
@@ -500,7 +509,7 @@
           this.restoreLeashFromSave();
        }
  
-@@ -1016,10 +1173,11 @@
+@@ -1016,10 +1174,11 @@
           if (!(this.leashHolder instanceof Player)) {
              this.leashHolder.forcedLoading = false;
           }
@@ -512,7 +521,7 @@
           }
  
           if (!this.level.isClientSide && var1 && this.level instanceof ServerLevel) {
-@@ -1046,10 +1204,11 @@
+@@ -1046,10 +1205,11 @@
        return this.leashHolder;
     }
  
@@ -524,7 +533,7 @@
           this.leashHolder.forcedLoading = true;
        }
  
-@@ -1073,23 +1232,26 @@
+@@ -1073,23 +1233,26 @@
     }
  
     private void restoreLeashFromSave() {
@@ -558,7 +567,7 @@
     }
  
     public boolean setSlot(int var1, ItemStack var2) {
-@@ -1158,21 +1320,24 @@
+@@ -1158,21 +1321,24 @@
  
     public boolean isAggressive() {
        return ((Byte)this.entityData.get(DATA_MOB_FLAGS_ID) & 4) != 0;
@@ -585,7 +594,7 @@
           var3 += (float)EnchantmentHelper.getKnockbackBonus(this);
        }
  
-@@ -1182,34 +1347,37 @@
+@@ -1182,34 +1348,37 @@
        }
  
        boolean var5 = var1.hurt(DamageSource.mobAttack(this), var2);
@@ -633,7 +642,7 @@
           float var1 = this.getBrightness();
           BlockPos var2 = this.getVehicle() instanceof Boat ? (new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ())).above() : new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ());
           if (var1 > 0.5F && this.random.nextFloat() * 30.0F < (var1 - 0.4F) * 2.0F && this.level.canSeeSky(var2)) {
-@@ -1227,12 +1395,13 @@
+@@ -1227,12 +1396,13 @@
           this.setDeltaMovement(this.getDeltaMovement().add(0.0D, 0.3D, 0.0D));
        }
  

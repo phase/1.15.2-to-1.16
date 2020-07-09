@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/BasaltColumnsFeature.java
 +++ net/minecraft/world/level/levelgen/feature/BasaltColumnsFeature.java
-@@ -1,0 +1,137 @@
+@@ -1,0 +1,135 @@
 +package net.minecraft.world.level.levelgen.feature;
 +
 +import com.google.common.collect.ImmutableList;
@@ -11,7 +11,6 @@
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.core.Direction;
 +import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
 +import net.minecraft.world.level.block.Block;
 +import net.minecraft.world.level.block.Blocks;
@@ -26,28 +25,27 @@
 +      super(var1);
 +   }
 +
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, ColumnFeatureConfiguration var6) {
-+      int var7 = var3.getSeaLevel();
-+      BlockPos var8 = findSurface(var1, var7, var5.mutable().clamp(Direction.Axis.Y, 1, var1.getMaxBuildHeight() - 1), Integer.MAX_VALUE);
-+      if (var8 == null) {
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, ColumnFeatureConfiguration var5) {
++      int var6 = var2.getSeaLevel();
++      if (!canPlaceAt(var1, var6, var4.mutable())) {
 +         return false;
 +      } else {
-+         int var9 = calculateHeight(var4, var6);
-+         boolean var10 = var4.nextFloat() < 0.9F;
-+         int var11 = Math.min(var9, var10 ? 5 : 8);
-+         int var12 = var10 ? 50 : 15;
-+         boolean var13 = false;
-+         Iterator var14 = BlockPos.randomBetweenClosed(var4, var12, var8.getX() - var11, var8.getY(), var8.getZ() - var11, var8.getX() + var11, var8.getY(), var8.getZ() + var11).iterator();
++         int var7 = var5.height().sample(var3);
++         boolean var8 = var3.nextFloat() < 0.9F;
++         int var9 = Math.min(var7, var8 ? 5 : 8);
++         int var10 = var8 ? 50 : 15;
++         boolean var11 = false;
++         Iterator var12 = BlockPos.randomBetweenClosed(var3, var10, var4.getX() - var9, var4.getY(), var4.getZ() - var9, var4.getX() + var9, var4.getY(), var4.getZ() + var9).iterator();
 +
-+         while(var14.hasNext()) {
-+            BlockPos var15 = (BlockPos)var14.next();
-+            int var16 = var9 - var15.distManhattan(var8);
-+            if (var16 >= 0) {
-+               var13 |= this.placeColumn(var1, var7, var15, var16, calculateReach(var4, var6));
++         while(var12.hasNext()) {
++            BlockPos var13 = (BlockPos)var12.next();
++            int var14 = var7 - var13.distManhattan(var4);
++            if (var14 >= 0) {
++               var11 |= this.placeColumn(var1, var6, var13, var14, var5.reach().sample(var3));
 +            }
 +         }
 +
-+         return var13;
++         return var11;
 +      }
 +   }
 +
@@ -88,18 +86,26 @@
 +
 +   @Nullable
 +   private static BlockPos findSurface(LevelAccessor var0, int var1, BlockPos.MutableBlockPos var2, int var3) {
-+      for(; var2.getY() > 1 && var3 > 0; var2.move(Direction.DOWN)) {
++      while(var2.getY() > 1 && var3 > 0) {
 +         --var3;
-+         if (isAirOrLavaOcean(var0, var1, var2)) {
-+            BlockState var4 = var0.getBlockState(var2.move(Direction.DOWN));
-+            var2.move(Direction.UP);
-+            if (!var4.isAir() && !CANNOT_PLACE_ON.contains(var4.getBlock())) {
-+               return var2;
-+            }
++         if (canPlaceAt(var0, var1, var2)) {
++            return var2;
 +         }
++
++         var2.move(Direction.DOWN);
 +      }
 +
 +      return null;
++   }
++
++   private static boolean canPlaceAt(LevelAccessor var0, int var1, BlockPos.MutableBlockPos var2) {
++      if (!isAirOrLavaOcean(var0, var1, var2)) {
++         return false;
++      } else {
++         BlockState var3 = var0.getBlockState(var2.move(Direction.DOWN));
++         var2.move(Direction.UP);
++         return !var3.isAir() && !CANNOT_PLACE_ON.contains(var3.getBlock());
++      }
 +   }
 +
 +   @Nullable
@@ -119,14 +125,6 @@
 +      }
 +
 +      return null;
-+   }
-+
-+   private static int calculateHeight(Random var0, ColumnFeatureConfiguration var1) {
-+      return var1.minimumHeight + var0.nextInt(var1.maximumHeight - var1.minimumHeight + 1);
-+   }
-+
-+   private static int calculateReach(Random var0, ColumnFeatureConfiguration var1) {
-+      return var1.minimumReach + var0.nextInt(var1.maximumReach - var1.minimumReach + 1);
 +   }
 +
 +   private static boolean isAirOrLavaOcean(LevelAccessor var0, int var1, BlockPos var2) {

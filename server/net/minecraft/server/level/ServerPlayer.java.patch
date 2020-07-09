@@ -1,6 +1,6 @@
 --- net/minecraft/server/level/ServerPlayer.java
 +++ net/minecraft/server/level/ServerPlayer.java
-@@ -1,31 +1,36 @@
+@@ -1,31 +1,38 @@
  package net.minecraft.server.level;
  
  import com.google.common.collect.Lists;
@@ -11,10 +11,12 @@
  import java.util.Collection;
  import java.util.Iterator;
  import java.util.List;
++import java.util.Optional;
  import java.util.OptionalInt;
  import java.util.Random;
 +import java.util.UUID;
  import javax.annotation.Nullable;
++import net.minecraft.BlockUtil;
  import net.minecraft.ChatFormatting;
  import net.minecraft.CrashReport;
  import net.minecraft.CrashReportCategory;
@@ -37,7 +39,7 @@
  import net.minecraft.network.protocol.Packet;
  import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
  import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
-@@ -56,10 +61,11 @@
+@@ -56,10 +63,11 @@
  import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
  import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
  import net.minecraft.network.protocol.game.ClientboundSoundPacket;
@@ -49,7 +51,7 @@
  import net.minecraft.server.PlayerAdvancements;
  import net.minecraft.server.network.ServerGamePacketListenerImpl;
  import net.minecraft.server.players.PlayerList;
-@@ -79,12 +85,15 @@
+@@ -79,12 +87,15 @@
  import net.minecraft.world.effect.MobEffectInstance;
  import net.minecraft.world.effect.MobEffects;
  import net.minecraft.world.entity.Entity;
@@ -65,21 +67,23 @@
  import net.minecraft.world.entity.projectile.AbstractArrow;
  import net.minecraft.world.inventory.AbstractContainerMenu;
  import net.minecraft.world.inventory.ContainerListener;
-@@ -100,28 +109,30 @@
+@@ -100,28 +111,32 @@
  import net.minecraft.world.item.crafting.Recipe;
  import net.minecraft.world.item.trading.MerchantOffers;
  import net.minecraft.world.level.ChunkPos;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.GameType;
--import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.Level;
 +import net.minecraft.world.level.biome.BiomeManager;
+ import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.block.HorizontalDirectionalBlock;
++import net.minecraft.world.level.block.NetherPortalBlock;
  import net.minecraft.world.level.block.entity.BlockEntity;
  import net.minecraft.world.level.block.entity.CommandBlockEntity;
  import net.minecraft.world.level.block.entity.SignBlockEntity;
  import net.minecraft.world.level.block.state.BlockState;
- import net.minecraft.world.level.dimension.DimensionType;
+-import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.portal.PortalInfo;
  import net.minecraft.world.level.storage.LevelData;
 +import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
@@ -98,7 +102,7 @@
     public final ServerPlayerGameMode gameMode;
     private final List<Integer> entitiesToRemove = Lists.newLinkedList();
     private final PlayerAdvancements advancements;
-@@ -141,37 +152,41 @@
+@@ -141,37 +156,41 @@
     private boolean canChatColor = true;
     private long lastActionTime = Util.getMillis();
     private Entity camera;
@@ -144,7 +148,7 @@
           if (var4 < var3) {
              var3 = var4;
           }
-@@ -188,11 +203,11 @@
+@@ -188,11 +207,11 @@
  
           for(int var12 = 0; var12 < var9; ++var12) {
              int var13 = (var11 + var10 * var12) % var9;
@@ -157,7 +161,7 @@
                 if (var1.noCollision(this)) {
                    break;
                 }
-@@ -214,35 +229,47 @@
+@@ -214,35 +233,47 @@
  
     public void readAdditionalSaveData(CompoundTag var1) {
        super.readAdditionalSaveData(var1);
@@ -208,7 +212,7 @@
           CompoundTag var2 = new CompoundTag();
           var2.putDouble("x", this.enteredNetherPosition.x);
           var2.putDouble("y", this.enteredNetherPosition.y);
-@@ -260,10 +287,24 @@
+@@ -260,10 +291,24 @@
           var4.put("Entity", var5);
           var1.put("RootVehicle", var4);
        }
@@ -233,7 +237,7 @@
     public void setExperiencePoints(int var1) {
        float var2 = (float)this.getXpNeededForNextLevel();
        float var3 = (var2 - 1.0F) / var2;
-@@ -356,11 +397,11 @@
+@@ -356,11 +401,11 @@
        this.advancements.flushDirty(this);
     }
  
@@ -246,7 +250,7 @@
  
           for(int var1 = 0; var1 < this.inventory.getContainerSize(); ++var1) {
              ItemStack var5 = this.inventory.getItem(var1);
-@@ -439,12 +480,12 @@
+@@ -439,12 +484,12 @@
           this.connection.send(new ClientboundPlayerCombatPacket(this.getCombatTracker(), ClientboundPlayerCombatPacket.Event.ENTITY_DIED, var3), (var2x) -> {
              if (!var2x.isSuccess()) {
                 boolean var3x = true;
@@ -261,7 +265,7 @@
              }
  
           });
-@@ -454,17 +495,21 @@
+@@ -454,17 +499,21 @@
                 this.server.getPlayerList().broadcastToTeam(this, var3);
              } else if (var4.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OWN_TEAM) {
                 this.server.getPlayerList().broadcastToAllExceptTeam(this, var3);
@@ -284,7 +288,7 @@
        }
  
        this.getScoreboard().forAllObjectives(ObjectiveCriteria.DEATH_COUNT, this.getScoreboardName(), Score::increment);
-@@ -482,10 +527,19 @@
+@@ -482,10 +531,19 @@
        this.clearFire();
        this.setSharedFlag(0, false);
        this.getCombatTracker().recheckStatus();
@@ -304,13 +308,24 @@
           super.awardKillScore(var1, var2, var3);
           this.increaseScore(var2);
           String var4 = this.getScoreboardName();
-@@ -550,108 +604,100 @@
+@@ -550,127 +608,119 @@
     private boolean isPvpAllowed() {
        return this.server.isPvpAllowed();
     }
  
     @Nullable
 -   public Entity changeDimension(DimensionType var1) {
++   protected PortalInfo findDimensionEntryPoint(ServerLevel var1) {
++      PortalInfo var2 = super.findDimensionEntryPoint(var1);
++      if (var2 != null && this.level.dimension() == Level.OVERWORLD && var1.dimension() == Level.END) {
++         Vec3 var3 = var2.pos.add(0.0D, -1.0D, 0.0D);
++         return new PortalInfo(var3, Vec3.ZERO, 90.0F, 0.0F);
++      } else {
++         return var2;
++      }
++   }
++
++   @Nullable
 +   public Entity changeDimension(ServerLevel var1) {
        this.isChangingDimension = true;
 -      DimensionType var2 = this.dimension;
@@ -368,24 +383,13 @@
 -            var14 = 90.0F;
 -            var13 = 0.0F;
 -         }
-+         double var6 = this.getX();
-+         double var8 = this.getY();
-+         double var10 = this.getZ();
-+         float var12 = this.xRot;
-+         float var13 = this.yRot;
-+         float var14 = var13;
-+         var2.getProfiler().push("moving");
-+         double var17;
-+         if (var1.dimension() == Level.END) {
-+            BlockPos var15 = ServerLevel.END_SPAWN_POINT;
-+            var6 = (double)var15.getX();
-+            var8 = (double)var15.getY();
-+            var10 = (double)var15.getZ();
-+            var13 = 90.0F;
-+            var12 = 0.0F;
-+         } else {
++         PortalInfo var6 = this.findDimensionEntryPoint(var1);
++         if (var6 != null) {
++            var2.getProfiler().push("moving");
 +            if (var3 == Level.OVERWORLD && var1.dimension() == Level.NETHER) {
 +               this.enteredNetherPosition = this.position();
++            } else if (var1.dimension() == Level.END) {
++               this.createEndPlatform(var1, new BlockPos(var6.pos));
 +            }
  
 -         this.moveTo(var7, var9, var11, var14, var13);
@@ -404,7 +408,20 @@
 -            int var28 = Mth.floor(this.getZ());
 -            boolean var29 = true;
 -            boolean var30 = false;
--
++            var2.getProfiler().pop();
++            var2.getProfiler().push("placing");
++            this.setLevel(var1);
++            var1.addDuringPortalTeleport(this);
++            this.triggerDimensionChangeTriggers(var2);
++            this.setRot(var6.yRot, var6.xRot);
++            this.moveTo(var6.pos.x, var6.pos.y, var6.pos.z);
++            var2.getProfiler().pop();
++            this.gameMode.setLevel(var1);
++            this.connection.send(new ClientboundPlayerAbilitiesPacket(this.abilities));
++            var5.sendLevelInfo(this, var1);
++            var5.sendAllPlayerInfo(this);
++            Iterator var7 = this.getActiveEffects().iterator();
+ 
 -            for(int var31 = -2; var31 <= 2; ++var31) {
 -               for(int var32 = -2; var32 <= 2; ++var32) {
 -                  for(int var33 = -1; var33 < 3; ++var33) {
@@ -415,42 +432,20 @@
 -                     var4.setBlockAndUpdate(new BlockPos(var34, var35, var36), var37 ? Blocks.OBSIDIAN.defaultBlockState() : Blocks.AIR.defaultBlockState());
 -                  }
 -               }
-+            DimensionType var28 = var2.dimensionType();
-+            DimensionType var16 = var1.dimensionType();
-+            var17 = 8.0D;
-+            if (!var28.shrunk() && var16.shrunk()) {
-+               var6 /= 8.0D;
-+               var10 /= 8.0D;
-+            } else if (var28.shrunk() && !var16.shrunk()) {
-+               var6 *= 8.0D;
-+               var10 *= 8.0D;
++            while(var7.hasNext()) {
++               MobEffectInstance var8 = (MobEffectInstance)var7.next();
++               this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), var8));
              }
-+         }
  
 -            this.moveTo((double)var26, (double)var27, (double)var28, var14, 0.0F);
-+         this.moveTo(var6, var8, var10, var13, var12);
-+         var2.getProfiler().pop();
-+         var2.getProfiler().push("placing");
-+         double var29 = Math.min(-2.9999872E7D, var1.getWorldBorder().getMinX() + 16.0D);
-+         var17 = Math.min(-2.9999872E7D, var1.getWorldBorder().getMinZ() + 16.0D);
-+         double var19 = Math.min(2.9999872E7D, var1.getWorldBorder().getMaxX() - 16.0D);
-+         double var21 = Math.min(2.9999872E7D, var1.getWorldBorder().getMaxZ() - 16.0D);
-+         var6 = Mth.clamp(var6, var29, var19);
-+         var10 = Mth.clamp(var10, var17, var21);
-+         this.moveTo(var6, var8, var10, var13, var12);
-+         if (var1.dimension() == Level.END) {
-+            int var23 = Mth.floor(this.getX());
-+            int var24 = Mth.floor(this.getY()) - 1;
-+            int var25 = Mth.floor(this.getZ());
-+            ServerLevel.makeObsidianPlatform(var1);
-+            this.moveTo((double)var23, (double)var24, (double)var25, var13, 0.0F);
-             this.setDeltaMovement(Vec3.ZERO);
+-            this.setDeltaMovement(Vec3.ZERO);
 -         } else if (!var4.getPortalForcer().findAndMoveToPortal(this, var17)) {
 -            var4.getPortalForcer().createPortal(this);
 -            var4.getPortalForcer().findAndMoveToPortal(this, var17);
-+         } else if (!var1.getPortalForcer().findAndMoveToPortal(this, var14)) {
-+            var1.getPortalForcer().createPortal(this);
-+            var1.getPortalForcer().findAndMoveToPortal(this, var14);
++            this.connection.send(new ClientboundLevelEventPacket(1032, BlockPos.ZERO, 0, false));
++            this.lastSentExp = -1;
++            this.lastSentHealth = -1.0F;
++            this.lastSentFood = -1;
           }
  
 -         var3.getProfiler().pop();
@@ -459,33 +454,48 @@
 -         this.triggerDimensionChangeTriggers(var3);
 -         this.connection.teleport(this.getX(), this.getY(), this.getZ(), var14, var13);
 -         this.gameMode.setLevel(var4);
-+         var2.getProfiler().pop();
-+         this.setLevel(var1);
-+         var1.addDuringPortalTeleport(this);
-+         this.triggerDimensionChangeTriggers(var2);
-+         this.connection.teleport(this.getX(), this.getY(), this.getZ(), var13, var12);
-+         this.gameMode.setLevel(var1);
-          this.connection.send(new ClientboundPlayerAbilitiesPacket(this.abilities));
+-         this.connection.send(new ClientboundPlayerAbilitiesPacket(this.abilities));
 -         var6.sendLevelInfo(this, var4);
 -         var6.sendAllPlayerInfo(this);
 -         Iterator var39 = this.getActiveEffects().iterator();
-+         var5.sendLevelInfo(this, var1);
-+         var5.sendAllPlayerInfo(this);
-+         Iterator var26 = this.getActiveEffects().iterator();
++         return this;
++      }
++   }
  
 -         while(var39.hasNext()) {
 -            MobEffectInstance var40 = (MobEffectInstance)var39.next();
 -            this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), var40));
-+         while(var26.hasNext()) {
-+            MobEffectInstance var27 = (MobEffectInstance)var26.next();
-+            this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), var27));
++   private void createEndPlatform(ServerLevel var1, BlockPos var2) {
++      BlockPos.MutableBlockPos var3 = var2.mutable();
++
++      for(int var4 = -2; var4 <= 2; ++var4) {
++         for(int var5 = -2; var5 <= 2; ++var5) {
++            for(int var6 = -1; var6 < 3; ++var6) {
++               BlockState var7 = var6 == -1 ? Blocks.OBSIDIAN.defaultBlockState() : Blocks.AIR.defaultBlockState();
++               var1.setBlockAndUpdate(var3.set(var2).move(var5, var6, var4), var7);
++            }
           }
++      }
  
-          this.connection.send(new ClientboundLevelEventPacket(1032, BlockPos.ZERO, 0, false));
-          this.lastSentExp = -1;
-          this.lastSentHealth = -1.0F;
-@@ -659,18 +705,18 @@
-          return this;
+-         this.connection.send(new ClientboundLevelEventPacket(1032, BlockPos.ZERO, 0, false));
+-         this.lastSentExp = -1;
+-         this.lastSentHealth = -1.0F;
+-         this.lastSentFood = -1;
+-         return this;
++   }
++
++   protected Optional<BlockUtil.FoundRectangle> getExitPortal(ServerLevel var1, BlockPos var2, boolean var3) {
++      Optional var4 = super.getExitPortal(var1, var2, var3);
++      if (var4.isPresent()) {
++         return var4;
++      } else {
++         Direction.Axis var5 = (Direction.Axis)this.level.getBlockState(this.portalEntrancePos).getOptionalValue(NetherPortalBlock.AXIS).orElse(Direction.Axis.X);
++         Optional var6 = var1.getPortalForcer().createPortal(var2, var5);
++         if (!var6.isPresent()) {
++            LOGGER.error("Unable to create a portal, likely target out of worldborder");
++         }
++
++         return var6;
        }
     }
  
@@ -507,7 +517,7 @@
  
     }
  
-@@ -696,16 +742,67 @@
+@@ -696,16 +746,67 @@
        super.take(var1, var2);
        this.containerMenu.broadcastChanges();
     }
@@ -579,7 +589,7 @@
           this.getLevel().getChunkSource().broadcastAndSend(this, new ClientboundAnimatePacket(this, 2));
        }
  
-@@ -755,12 +852,11 @@
+@@ -755,12 +856,11 @@
     }
  
     public void doCheckFallDamage(double var1, boolean var3) {
@@ -593,7 +603,7 @@
  
     public void openTextEdit(SignBlockEntity var1) {
        var1.setAllowedPlayerEditor(this);
-@@ -781,11 +877,11 @@
+@@ -781,11 +881,11 @@
  
           this.nextContainerCounter();
           AbstractContainerMenu var2 = var1.createMenu(this.containerCounter, this.inventory, this);
@@ -606,7 +616,7 @@
              return OptionalInt.empty();
           } else {
              this.connection.send(new ClientboundOpenScreenPacket(var2.containerId, var2.getType(), var1.getDisplayName()));
-@@ -829,11 +925,11 @@
+@@ -829,11 +929,11 @@
     }
  
     public void slotChanged(AbstractContainerMenu var1, int var2, ItemStack var3) {
@@ -619,7 +629,7 @@
           if (!this.ignoreSlotUpdateHack) {
              this.connection.send(new ClientboundContainerSetSlotPacket(var1.containerId, var2, var3));
           }
-@@ -939,11 +1035,11 @@
+@@ -939,11 +1039,11 @@
     public void resetSentInfo() {
        this.lastSentHealth = -1.0E8F;
     }
@@ -632,20 +642,37 @@
     protected void completeUsingItem() {
        if (!this.useItem.isEmpty() && this.isUsingItem()) {
           this.connection.send(new ClientboundEntityEventPacket(this, (byte)9));
-@@ -1026,11 +1122,11 @@
+@@ -970,13 +1070,11 @@
+          this.foodData = var1.foodData;
+          this.experienceLevel = var1.experienceLevel;
+          this.totalExperience = var1.totalExperience;
+          this.experienceProgress = var1.experienceProgress;
+          this.setScore(var1.getScore());
+-         this.portalEntranceBlock = var1.portalEntranceBlock;
+-         this.portalEntranceOffset = var1.portalEntranceOffset;
+-         this.portalEntranceForwards = var1.portalEntranceForwards;
++         this.portalEntrancePos = var1.portalEntrancePos;
+       } else if (this.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) || var1.isSpectator()) {
+          this.inventory.replaceWith(var1.inventory);
+          this.experienceLevel = var1.experienceLevel;
+          this.totalExperience = var1.totalExperience;
+          this.experienceProgress = var1.experienceProgress;
+@@ -1026,12 +1124,12 @@
  
     public void teleportTo(double var1, double var3, double var5) {
        this.connection.teleport(var1, var3, var5, this.yRot, this.xRot);
     }
  
 -   public void forceMove(double var1, double var3, double var5) {
+-      this.connection.teleport(var1, var3, var5, this.yRot, this.xRot);
 +   public void moveTo(double var1, double var3, double var5) {
-       this.connection.teleport(var1, var3, var5, this.yRot, this.xRot);
++      this.teleportTo(var1, var3, var5);
        this.connection.resetPosition();
     }
  
     public void crit(Entity var1) {
-@@ -1052,11 +1148,11 @@
+       this.getLevel().getChunkSource().broadcastAndSend(this, new ClientboundAnimatePacket(var1, 4));
+@@ -1052,11 +1150,11 @@
        return (ServerLevel)this.level;
     }
  
@@ -658,7 +685,7 @@
           this.stopRiding();
        } else {
           this.setCamera(this);
-@@ -1072,21 +1168,21 @@
+@@ -1072,21 +1170,21 @@
  
     public boolean isCreative() {
        return this.gameMode.getGameModeForPlayer() == GameType.CREATIVE;
@@ -689,7 +716,7 @@
        });
     }
  
-@@ -1096,11 +1192,10 @@
+@@ -1096,11 +1194,10 @@
        var1 = var1.substring(0, var1.indexOf(":"));
        return var1;
     }
@@ -701,7 +728,24 @@
        this.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, (byte)var1.getModelCustomisation());
        this.getEntityData().set(DATA_PLAYER_MAIN_HAND, (byte)(var1.getMainHand() == HumanoidArm.LEFT ? 0 : 1));
     }
-@@ -1213,13 +1308,12 @@
+@@ -1164,13 +1261,13 @@
+          this.teleportTo(this.camera.getX(), this.camera.getY(), this.camera.getZ());
+       }
+ 
+    }
+ 
+-   protected void processDimensionDelay() {
+-      if (this.changingDimensionDelay > 0 && !this.isChangingDimension) {
+-         --this.changingDimensionDelay;
++   protected void processPortalCooldown() {
++      if (!this.isChangingDimension) {
++         super.processPortalCooldown();
+       }
+ 
+    }
+ 
+    public void attack(Entity var1) {
+@@ -1213,13 +1310,12 @@
        this.stopRiding();
        if (var1 == this.level) {
           this.connection.teleport(var2, var4, var6, var8, var9);
@@ -716,7 +760,7 @@
           var10.removePlayerImmediately(this);
           this.removed = false;
           this.moveTo(var2, var4, var6, var8, var9);
-@@ -1232,10 +1326,41 @@
+@@ -1232,10 +1328,41 @@
           this.server.getPlayerList().sendAllPlayerInfo(this);
        }
  

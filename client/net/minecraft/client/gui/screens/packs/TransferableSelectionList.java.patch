@@ -68,7 +68,7 @@
 +            GuiComponent.fill(var1, var4 - 1, var3 - 1, var4 + var5 - 9, var3 + var6 + 1, -8978432);
 +         }
 +
-+         this.pack.bindIcon(this.minecraft.getTextureManager());
++         this.minecraft.getTextureManager().bind(this.pack.getIconTexture());
 +         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 +         GuiComponent.blit(var1, var4, var3, 0.0F, 0.0F, 32, 32, 32, 32);
 +         Component var12 = this.pack.getTitle();

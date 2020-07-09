@@ -1,6 +1,6 @@
 --- net/minecraft/server/packs/repository/PackRepository.java
 +++ net/minecraft/server/packs/repository/PackRepository.java
-@@ -1,107 +1,109 @@
+@@ -1,107 +1,115 @@
  package net.minecraft.server.packs.repository;
  
  import com.google.common.base.Functions;
@@ -30,18 +30,24 @@
 -   private final Map<String, T> available = Maps.newLinkedHashMap();
 -   private final List<T> selected = Lists.newLinkedList();
 -   private final UnopenedPack.UnopenedPackConstructor<T> constructor;
-+public class PackRepository<T extends Pack> implements AutoCloseable {
++public class PackRepository implements AutoCloseable {
 +   private final Set<RepositorySource> sources;
-+   private Map<String, T> available = ImmutableMap.of();
-+   private List<T> selected = ImmutableList.of();
-+   private final Pack.PackConstructor<T> constructor;
++   private Map<String, Pack> available;
++   private List<Pack> selected;
++   private final Pack.PackConstructor constructor;
  
 -   public PackRepository(UnopenedPack.UnopenedPackConstructor<T> var1) {
-+   public PackRepository(Pack.PackConstructor<T> var1, RepositorySource... var2) {
++   public PackRepository(Pack.PackConstructor var1, RepositorySource... var2) {
++      this.available = ImmutableMap.of();
++      this.selected = ImmutableList.of();
        this.constructor = var1;
 +      this.sources = ImmutableSet.copyOf(var2);
     }
  
++   public PackRepository(RepositorySource... var1) {
++      this(Pack::new, var1);
++   }
++
     public void reload() {
 +      List var1 = (List)this.selected.stream().map(Pack::getId).collect(ImmutableList.toImmutableList());
        this.close();
@@ -52,7 +58,7 @@
 +      this.selected = this.rebuildSelected(var1);
 +   }
 +
-+   private Map<String, T> discoverAvailable() {
++   private Map<String, Pack> discoverAvailable() {
 +      TreeMap var1 = Maps.newTreeMap();
        Iterator var2 = this.sources.iterator();
  
@@ -96,7 +102,7 @@
 -      this.selected.clear();
 -      this.selected.addAll(var1);
 -      Iterator var2 = this.available.values().iterator();
-+   private List<T> rebuildSelected(Collection<String> var1) {
++   private List<Pack> rebuildSelected(Collection<String> var1) {
 +      List var2 = (List)this.getAvailablePacks(var1).collect(Collectors.toList());
 +      Iterator var3 = this.available.values().iterator();
  
@@ -115,7 +121,7 @@
     }
  
 -   public Collection<T> getAvailable() {
-+   private Stream<T> getAvailablePacks(Collection<String> var1) {
++   private Stream<Pack> getAvailablePacks(Collection<String> var1) {
 +      Stream var10000 = var1.stream();
 +      Map var10001 = this.available;
 +      var10001.getClass();
@@ -126,7 +132,7 @@
 +      return this.available.keySet();
 +   }
 +
-+   public Collection<T> getAvailablePacks() {
++   public Collection<Pack> getAvailablePacks() {
        return this.available.values();
     }
  
@@ -139,13 +145,14 @@
     }
  
 -   public Collection<T> getSelected() {
-+   public Collection<T> getSelectedPacks() {
++   public Collection<Pack> getSelectedPacks() {
        return this.selected;
     }
  
     @Nullable
-    public T getPack(String var1) {
+-   public T getPack(String var1) {
 -      return (UnopenedPack)this.available.get(var1);
++   public Pack getPack(String var1) {
 +      return (Pack)this.available.get(var1);
     }
  

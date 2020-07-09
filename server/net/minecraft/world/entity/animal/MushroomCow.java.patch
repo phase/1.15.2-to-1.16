@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/animal/MushroomCow.java
 +++ net/minecraft/world/entity/animal/MushroomCow.java
-@@ -1,54 +1,63 @@
+@@ -1,75 +1,83 @@
  package net.minecraft.world.entity.animal;
  
 +import java.util.Optional;
@@ -65,10 +65,20 @@
 +      return var1.getBlockState(var3.below()).is(Blocks.MYCELIUM) && var1.getRawBrightness(var3, 0) > 8;
     }
  
-    public void thunderHit(LightningBolt var1) {
-       UUID var2 = var1.getUUID();
-       if (!var2.equals(this.lastLightningBoltUUID)) {
-@@ -62,14 +71,13 @@
+-   public void thunderHit(LightningBolt var1) {
+-      UUID var2 = var1.getUUID();
+-      if (!var2.equals(this.lastLightningBoltUUID)) {
++   public void thunderHit(ServerLevel var1, LightningBolt var2) {
++      UUID var3 = var2.getUUID();
++      if (!var3.equals(this.lastLightningBoltUUID)) {
+          this.setMushroomType(this.getMushroomType() == MushroomCow.MushroomType.RED ? MushroomCow.MushroomType.BROWN : MushroomCow.MushroomType.RED);
+-         this.lastLightningBoltUUID = var2;
++         this.lastLightningBoltUUID = var3;
+          this.playSound(SoundEvents.MOOSHROOM_CONVERT, 2.0F, 1.0F);
+       }
+ 
+    }
+ 
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_TYPE, MushroomCow.MushroomType.RED.type);
@@ -98,7 +108,7 @@
 -         }
 -
 -         SoundEvent var6;
-+         ItemStack var11 = ItemUtils.createBucketResult(var3, var1, var9);
++         ItemStack var11 = ItemUtils.createFilledResult(var3, var1, var9, false);
 +         var1.setItemInHand(var2, var11);
 +         SoundEvent var7;
           if (var10) {
@@ -238,7 +248,7 @@
        var1.putString("Type", this.getMushroomType().type);
        if (this.effect != null) {
           var1.putByte("EffectId", (byte)MobEffect.getId(this.effect));
-@@ -176,13 +192,21 @@
+@@ -176,27 +192,35 @@
           this.effectDuration = var1.getInt("EffectDuration");
        }
  
@@ -263,3 +273,21 @@
     private void setMushroomType(MushroomCow.MushroomType var1) {
        this.entityData.set(DATA_TYPE, var1.type);
     }
+ 
+    public MushroomCow.MushroomType getMushroomType() {
+       return MushroomCow.MushroomType.byType((String)this.entityData.get(DATA_TYPE));
+    }
+ 
+-   public MushroomCow getBreedOffspring(AgableMob var1) {
+-      MushroomCow var2 = (MushroomCow)EntityType.MOOSHROOM.create(this.level);
+-      var2.setMushroomType(this.getOffspringType((MushroomCow)var1));
+-      return var2;
++   public MushroomCow getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      MushroomCow var3 = (MushroomCow)EntityType.MOOSHROOM.create(var1);
++      var3.setMushroomType(this.getOffspringType((MushroomCow)var2));
++      return var3;
+    }
+ 
+    private MushroomCow.MushroomType getOffspringType(MushroomCow var1) {
+       MushroomCow.MushroomType var2 = this.getMushroomType();
+       MushroomCow.MushroomType var3 = var1.getMushroomType();

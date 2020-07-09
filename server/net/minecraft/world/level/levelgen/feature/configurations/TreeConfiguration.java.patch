@@ -37,9 +37,9 @@
 +         return var0x.minimumSize;
 +      }), TreeDecorator.CODEC.listOf().fieldOf("decorators").forGetter((var0x) -> {
 +         return var0x.decorators;
-+      }), Codec.INT.fieldOf("max_water_depth").withDefault((int)0).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("max_water_depth").orElse(0).forGetter((var0x) -> {
 +         return var0x.maxWaterDepth;
-+      }), Codec.BOOL.fieldOf("ignore_vines").withDefault((Object)false).forGetter((var0x) -> {
++      }), Codec.BOOL.fieldOf("ignore_vines").orElse(false).forGetter((var0x) -> {
 +         return var0x.ignoreVines;
 +      }), Heightmap.Types.CODEC.fieldOf("heightmap").forGetter((var0x) -> {
 +         return var0x.heightmap;

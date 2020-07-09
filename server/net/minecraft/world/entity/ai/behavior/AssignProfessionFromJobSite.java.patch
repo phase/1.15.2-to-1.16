@@ -11,7 +11,7 @@
  import net.minecraft.server.MinecraftServer;
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-@@ -10,25 +12,32 @@
+@@ -10,25 +12,33 @@
  import net.minecraft.world.entity.npc.Villager;
  import net.minecraft.world.entity.npc.VillagerProfession;
  
@@ -38,6 +38,7 @@
 +      GlobalPos var5 = (GlobalPos)var2.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE).get();
 +      var2.getBrain().eraseMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
 +      var2.getBrain().setMemory(MemoryModuleType.JOB_SITE, (Object)var5);
++      var1.broadcastEntityEvent(var2, (byte)14);
 +      if (var2.getVillagerData().getProfession() == VillagerProfession.NONE) {
 +         MinecraftServer var6 = var1.getServer();
 +         Optional.ofNullable(var6.getLevel(var5.dimension())).flatMap((var1x) -> {

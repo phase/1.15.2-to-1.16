@@ -126,7 +126,7 @@
 -                     return Pair.of(var8, var1);
 -                  });
 +      protected Codec<Pair<K, ?>> buildCodec() {
-+         return (new KeyDispatchCodec(this.name, this.keyType.codec(), (var0) -> {
++         return KeyDispatchCodec.unsafe(this.name, this.keyType.codec(), (var0) -> {
 +            return DataResult.success(var0.getFirst());
 +         }, (var1) -> {
 +            return this.getCodec(var1).map((var1x) -> {
@@ -138,7 +138,7 @@
 -
 -         return Pair.of(var2, Optional.empty());
 +            });
-+         }, this::encoder)).codec();
++         }, this::encoder).codec();
        }
  
 -      public <T> T write(DynamicOps<T> var1, T var2, Pair<K, ?> var3) {

@@ -283,7 +283,55 @@
     private static FloatBuffer getBuffer(float var0, float var1, float var2, float var3) {
        FLOAT_ARG_BUFFER.clear();
        FLOAT_ARG_BUFFER.put(var0).put(var1).put(var2).put(var3);
-@@ -1065,36 +1042,21 @@
+@@ -950,10 +927,15 @@
+    public static int _genTexture() {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       return GL11.glGenTextures();
+    }
+ 
++   public static void _genTextures(int[] var0) {
++      RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
++      GL11.glGenTextures(var0);
++   }
++
+    public static void _deleteTexture(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       GL11.glDeleteTextures(var0);
+       GlStateManager.TextureState[] var1 = TEXTURES;
+       int var2 = var1.length;
+@@ -965,10 +947,31 @@
+          }
+       }
+ 
+    }
+ 
++   public static void _deleteTextures(int[] var0) {
++      RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
++      GlStateManager.TextureState[] var1 = TEXTURES;
++      int var2 = var1.length;
++
++      for(int var3 = 0; var3 < var2; ++var3) {
++         GlStateManager.TextureState var4 = var1[var3];
++         int[] var5 = var0;
++         int var6 = var0.length;
++
++         for(int var7 = 0; var7 < var6; ++var7) {
++            int var8 = var5[var7];
++            if (var4.binding == var8) {
++               var4.binding = -1;
++            }
++         }
++      }
++
++      GL11.glDeleteTextures(var0);
++   }
++
+    public static void _bindTexture(int var0) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+       if (var0 != TEXTURES[activeTexture].binding) {
+          TEXTURES[activeTexture].binding = var0;
+          GL11.glBindTexture(3553, var0);
+@@ -1065,36 +1068,21 @@
  
     }
  
@@ -323,7 +371,7 @@
     public static void _clear(int var0, boolean var1) {
        RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
        GL11.glClear(var0);
-@@ -1295,10 +1257,14 @@
+@@ -1295,10 +1283,14 @@
     public static int _getInteger(int var0) {
        RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
        return GL11.glGetInteger(var0);
@@ -338,7 +386,7 @@
        CONSTANT_COLOR(32769),
        DST_ALPHA(772),
        DST_COLOR(774),
-@@ -1474,21 +1440,10 @@
+@@ -1474,21 +1466,10 @@
           this.func = 519;
           this.mask = -1;
        }
@@ -360,7 +408,7 @@
        public int op;
  
        private ColorLogicState() {
-@@ -1596,10 +1551,19 @@
+@@ -1596,10 +1577,19 @@
        private TextureState() {
           this.enable = new GlStateManager.BooleanState(3553);
        }

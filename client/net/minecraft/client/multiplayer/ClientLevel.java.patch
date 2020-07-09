@@ -9,7 +9,7 @@
  import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
  import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
-@@ -11,20 +10,22 @@
+@@ -11,161 +10,173 @@
  import java.util.Iterator;
  import java.util.List;
  import java.util.Map;
@@ -32,7 +32,9 @@
  import net.minecraft.client.resources.sounds.SimpleSoundInstance;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Cursor3D;
-@@ -33,139 +34,148 @@
+ import net.minecraft.core.Direction;
+ import net.minecraft.core.Registry;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.core.particles.ParticleOptions;
  import net.minecraft.core.particles.ParticleTypes;
  import net.minecraft.nbt.CompoundTag;
@@ -44,7 +46,8 @@
 -import net.minecraft.sounds.SoundEvents;
  import net.minecraft.sounds.SoundSource;
  import net.minecraft.tags.BlockTags;
- import net.minecraft.tags.TagManager;
+-import net.minecraft.tags.TagManager;
++import net.minecraft.tags.TagContainer;
  import net.minecraft.util.Mth;
  import net.minecraft.util.profiling.ProfilerFiller;
 +import net.minecraft.world.Difficulty;
@@ -117,11 +120,11 @@
 -      });
 +   public ClientLevel(ClientPacketListener var1, ClientLevel.ClientLevelData var2, ResourceKey<Level> var3, ResourceKey<DimensionType> var4, DimensionType var5, int var6, Supplier<ProfilerFiller> var7, LevelRenderer var8, boolean var9, long var10) {
 +      super(var2, var3, var4, var5, var7, true, var9, var10);
-+      this.chunkSource = new ClientChunkCache(this, var6);
-+      this.clientLevelData = var2;
        this.connection = var1;
 -      this.levelRenderer = var6;
 -      this.setSpawnPos(new BlockPos(8, 64, 8));
++      this.chunkSource = new ClientChunkCache(this, var6);
++      this.clientLevelData = var2;
 +      this.levelRenderer = var8;
 +      this.effects = DimensionSpecialEffects.forType(var1.registryAccess().dimensionTypes().getResourceKey(var5));
 +      this.setDefaultSpawnPos(new BlockPos(8, 64, 8));
@@ -229,7 +232,7 @@
           var1.xRotO = var1.xRot;
           if (var1.inChunk || var1.isSpectator()) {
              ++var1.tickCount;
-@@ -214,28 +224,34 @@
+@@ -214,28 +225,34 @@
        } else {
           var2.stopRiding();
        }
@@ -279,7 +282,7 @@
     public void unload(LevelChunk var1) {
        this.blockEntitiesToUnload.addAll(var1.getBlockEntities().values());
        this.chunkSource.getLightEngine().enableLightSources(var1.getPos(), false);
-@@ -255,38 +271,14 @@
+@@ -255,38 +272,14 @@
  
     public boolean hasChunk(int var1, int var2) {
        return true;
@@ -318,7 +321,7 @@
        this.players.add(var2);
     }
  
-@@ -341,11 +333,11 @@
+@@ -341,11 +334,11 @@
     public void setKnownState(BlockPos var1, BlockState var2) {
        this.setBlock(var1, var2, 19);
     }
@@ -331,7 +334,7 @@
     public void animateTick(int var1, int var2, int var3) {
        boolean var4 = true;
        Random var5 = new Random();
-@@ -387,14 +379,23 @@
+@@ -387,14 +380,23 @@
              BlockPos var15 = var7.below();
              this.trySpawnDripParticles(var15, this.getBlockState(var15), var13, var14);
           }
@@ -356,7 +359,7 @@
     private void trySpawnDripParticles(BlockPos var1, BlockState var2, ParticleOptions var3, boolean var4) {
        if (var2.getFluidState().isEmpty()) {
           VoxelShape var5 = var2.getCollisionShape(this, var1);
-@@ -472,11 +473,11 @@
+@@ -472,11 +474,11 @@
        this.playLocalSound((double)var1.getX() + 0.5D, (double)var1.getY() + 0.5D, (double)var1.getZ() + 0.5D, var2, var3, var4, var5, var6);
     }
  
@@ -369,7 +372,7 @@
           this.minecraft.getSoundManager().playDelayed(var14, (int)(var15 * 20.0D));
        } else {
           this.minecraft.getSoundManager().play(var14);
-@@ -498,31 +499,20 @@
+@@ -498,31 +500,20 @@
  
     public void setScoreboard(Scoreboard var1) {
        this.scoreboard = var1;
@@ -402,7 +405,27 @@
     @Nullable
     public MapItemSavedData getMapData(String var1) {
        return (MapItemSavedData)this.mapData.get(var1);
-@@ -690,34 +680,47 @@
+@@ -538,14 +529,18 @@
+ 
+    public Scoreboard getScoreboard() {
+       return this.scoreboard;
+    }
+ 
+-   public TagManager getTagManager() {
++   public TagContainer getTagManager() {
+       return this.connection.getTags();
+    }
+ 
++   public RegistryAccess registryAccess() {
++      return this.connection.registryAccess();
++   }
++
+    public void sendBlockUpdated(BlockPos var1, BlockState var2, BlockState var3, int var4) {
+       this.levelRenderer.blockChanged(this, var1, var2, var3, var4);
+    }
+ 
+    public void setBlocksDirty(BlockPos var1, BlockState var2, BlockState var3) {
+@@ -690,34 +685,47 @@
        }
  
        return new Vec3((double)var4, (double)var5, (double)var6);
@@ -459,7 +482,7 @@
        return var3.getColor(var1, () -> {
           return this.calculateBlockTint(var1, var2);
        });
-@@ -743,6 +746,142 @@
+@@ -743,6 +751,142 @@
           }
  
           return (var5 / var4 & 255) << 16 | (var6 / var4 & 255) << 8 | var7 / var4 & 255;

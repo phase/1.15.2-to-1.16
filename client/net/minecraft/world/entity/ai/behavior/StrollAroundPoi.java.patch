@@ -10,8 +10,21 @@
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.PathfinderMob;
  import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-@@ -22,11 +21,11 @@
-       this.maxDistanceFromPoi = var2;
+@@ -13,27 +12,29 @@
+ 
+ public class StrollAroundPoi extends Behavior<PathfinderMob> {
+    private final MemoryModuleType<GlobalPos> memoryType;
+    private long nextOkStartTime;
+    private final int maxDistanceFromPoi;
++   private float speedModifier;
+ 
+-   public StrollAroundPoi(MemoryModuleType<GlobalPos> var1, int var2) {
++   public StrollAroundPoi(MemoryModuleType<GlobalPos> var1, float var2, int var3) {
+       super(ImmutableMap.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED, var1, MemoryStatus.VALUE_PRESENT));
+       this.memoryType = var1;
+-      this.maxDistanceFromPoi = var2;
++      this.speedModifier = var2;
++      this.maxDistanceFromPoi = var3;
     }
  
     protected boolean checkExtraStartConditions(ServerLevel var1, PathfinderMob var2) {
@@ -23,3 +36,12 @@
     protected void start(ServerLevel var1, PathfinderMob var2, long var3) {
        if (var3 > this.nextOkStartTime) {
           Optional var5 = Optional.ofNullable(RandomPos.getLandPos(var2, 8, 6));
+-         var2.getBrain().setMemory(MemoryModuleType.WALK_TARGET, var5.map((var0) -> {
+-            return new WalkTarget(var0, 0.4F, 1);
++         var2.getBrain().setMemory(MemoryModuleType.WALK_TARGET, var5.map((var1x) -> {
++            return new WalkTarget(var1x, this.speedModifier, 1);
+          }));
+          this.nextOkStartTime = var3 + 180L;
+       }
+ 
+    }

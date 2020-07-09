@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/EndIslandFeature.java
 +++ net/minecraft/world/level/levelgen/feature/EndIslandFeature.java
-@@ -1,36 +1,35 @@
+@@ -1,24 +1,22 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -10,7 +10,6 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.util.Mth;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -24,28 +23,9 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
--      float var6 = (float)(var3.nextInt(3) + 4);
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      float var7 = (float)(var4.nextInt(3) + 4);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
+       float var6 = (float)(var3.nextInt(3) + 4);
  
--      for(int var7 = 0; var6 > 0.5F; --var7) {
--         for(int var8 = Mth.floor(-var6); var8 <= Mth.ceil(var6); ++var8) {
--            for(int var9 = Mth.floor(-var6); var9 <= Mth.ceil(var6); ++var9) {
--               if ((float)(var8 * var8 + var9 * var9) <= (var6 + 1.0F) * (var6 + 1.0F)) {
--                  this.setBlock(var1, var4.offset(var8, var7, var9), Blocks.END_STONE.defaultBlockState());
-+      for(int var8 = 0; var7 > 0.5F; --var8) {
-+         for(int var9 = Mth.floor(-var7); var9 <= Mth.ceil(var7); ++var9) {
-+            for(int var10 = Mth.floor(-var7); var10 <= Mth.ceil(var7); ++var10) {
-+               if ((float)(var9 * var9 + var10 * var10) <= (var7 + 1.0F) * (var7 + 1.0F)) {
-+                  this.setBlock(var1, var5.offset(var9, var8, var10), Blocks.END_STONE.defaultBlockState());
-                }
-             }
-          }
- 
--         var6 = (float)((double)var6 - ((double)var3.nextInt(2) + 0.5D));
-+         var7 = (float)((double)var7 - ((double)var4.nextInt(2) + 0.5D));
-       }
- 
-       return true;
-    }
- }
+       for(int var7 = 0; var6 > 0.5F; --var7) {
+          for(int var8 = Mth.floor(-var6); var8 <= Mth.ceil(var6); ++var8) {
+             for(int var9 = Mth.floor(-var6); var9 <= Mth.ceil(var6); ++var9) {

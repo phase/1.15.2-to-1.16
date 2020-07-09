@@ -10,6 +10,19 @@
  import net.minecraft.client.ClientRecipeBook;
  import net.minecraft.client.Minecraft;
  import net.minecraft.client.RecipeBookCategories;
+@@ -28,11 +29,11 @@
+       if (var1.player.containerMenu instanceof RecipeBookMenu) {
+          Iterator var4 = var3.iterator();
+ 
+          while(var4.hasNext()) {
+             RecipeCollection var5 = (RecipeCollection)var4.next();
+-            Iterator var6 = var5.getRecipes(var2.isFilteringCraftable((RecipeBookMenu)var1.player.containerMenu)).iterator();
++            Iterator var6 = var5.getRecipes(var2.isFiltering((RecipeBookMenu)var1.player.containerMenu)).iterator();
+ 
+             while(var6.hasNext()) {
+                Recipe var7 = (Recipe)var6.next();
+                if (var2.willHighlight(var7)) {
+                   this.animationTime = 15.0F;
 @@ -42,56 +43,56 @@
           }
  

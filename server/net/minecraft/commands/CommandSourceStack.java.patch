@@ -1,6 +1,6 @@
 --- net/minecraft/commands/CommandSourceStack.java
 +++ net/minecraft/commands/CommandSourceStack.java
-@@ -7,33 +7,38 @@
+@@ -7,33 +7,39 @@
  import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
  import com.mojang.brigadier.suggestion.Suggestions;
  import com.mojang.brigadier.suggestion.SuggestionsBuilder;
@@ -15,6 +15,7 @@
 +import net.minecraft.Util;
  import net.minecraft.commands.arguments.EntityAnchorArgument;
  import net.minecraft.core.Registry;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.MutableComponent;
  import net.minecraft.network.chat.TextComponent;
@@ -41,7 +42,7 @@
     private final ServerLevel level;
     private final int permissionLevel;
     private final String textName;
-@@ -175,41 +180,41 @@
+@@ -175,41 +181,41 @@
        return this.anchor;
     }
  
@@ -88,7 +89,7 @@
     }
  
     public void onCommandComplete(CommandContext<CommandSourceStack> var1, boolean var2, int var3) {
-@@ -236,6 +241,10 @@
+@@ -236,6 +242,14 @@
     }
  
     public CompletableFuture<Suggestions> customSuggestion(CommandContext<SharedSuggestionProvider> var1, SuggestionsBuilder var2) {
@@ -97,5 +98,9 @@
 +
 +   public Set<ResourceKey<Level>> levels() {
 +      return this.server.levelKeys();
++   }
++
++   public RegistryAccess registryAccess() {
++      return this.server.registryAccess();
 +   }
  }

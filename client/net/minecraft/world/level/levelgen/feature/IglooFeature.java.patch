@@ -1,12 +1,13 @@
 --- net/minecraft/world/level/levelgen/feature/IglooFeature.java
 +++ net/minecraft/world/level/levelgen/feature/IglooFeature.java
-@@ -1,51 +1,37 @@
+@@ -1,51 +1,38 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
 -import java.util.function.Function;
 +import com.mojang.serialization.Codec;
  import net.minecraft.core.BlockPos;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.block.Rotation;
  import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -49,14 +50,16 @@
  
 -      public void generatePieces(ChunkGenerator<?> var1, StructureManager var2, int var3, int var4, Biome var5) {
 -         NoneFeatureConfiguration var6 = (NoneFeatureConfiguration)var1.getStructureConfiguration(var5, Feature.IGLOO);
-+      public void generatePieces(ChunkGenerator var1, StructureManager var2, int var3, int var4, Biome var5, NoneFeatureConfiguration var6) {
-          int var7 = var3 * 16;
+-         int var7 = var3 * 16;
++      public void generatePieces(RegistryAccess var1, ChunkGenerator var2, StructureManager var3, int var4, int var5, Biome var6, NoneFeatureConfiguration var7) {
           int var8 = var4 * 16;
-          BlockPos var9 = new BlockPos(var7, 90, var8);
+-         BlockPos var9 = new BlockPos(var7, 90, var8);
 -         Rotation var10 = Rotation.values()[this.random.nextInt(Rotation.values().length)];
 -         IglooPieces.addPieces(var2, var9, var10, this.pieces, this.random, var6);
-+         Rotation var10 = Rotation.getRandom(this.random);
-+         IglooPieces.addPieces(var2, var9, var10, this.pieces, this.random);
++         int var9 = var5 * 16;
++         BlockPos var10 = new BlockPos(var8, 90, var9);
++         Rotation var11 = Rotation.getRandom(this.random);
++         IglooPieces.addPieces(var3, var10, var11, this.pieces, this.random);
           this.calculateBoundingBox();
        }
     }

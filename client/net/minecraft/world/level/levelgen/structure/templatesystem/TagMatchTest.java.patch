@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/structure/templatesystem/TagMatchTest.java
 +++ net/minecraft/world/level/levelgen/structure/templatesystem/TagMatchTest.java
-@@ -1,35 +1,33 @@
+@@ -1,35 +1,29 @@
  package net.minecraft.world.level.levelgen.structure.templatesystem;
  
 -import com.google.common.collect.ImmutableMap;
@@ -16,7 +16,11 @@
  import net.minecraft.world.level.block.state.BlockState;
  
  public class TagMatchTest extends RuleTest {
-+   public static final Codec<TagMatchTest> CODEC;
++   public static final Codec<TagMatchTest> CODEC = Tag.codec(() -> {
++      return SerializationTags.getInstance().getBlocks();
++   }).fieldOf("tag").xmap(TagMatchTest::new, (var0) -> {
++      return var0.tag;
++   }).codec();
     private final Tag<Block> tag;
  
     public TagMatchTest(Tag<Block> var1) {
@@ -35,14 +39,8 @@
 +   protected RuleTestType<?> getType() {
        return RuleTestType.TAG_TEST;
     }
- 
+-
 -   protected <T> Dynamic<T> getDynamic(DynamicOps<T> var1) {
 -      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("tag"), var1.createString(this.tag.getId().toString()))));
-+   static {
-+      SerializationTags var10000 = SerializationTags.getInstance();
-+      var10000.getClass();
-+      CODEC = Tag.codec(var10000::getBlocks).fieldOf("tag").xmap(TagMatchTest::new, (var0) -> {
-+         return var0.tag;
-+      }).codec();
-    }
+-   }
  }

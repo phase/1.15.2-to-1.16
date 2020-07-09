@@ -35,7 +35,7 @@
 +   private final PackSource packSource;
 +
 +   @Nullable
-+   public static <T extends Pack> T create(String var0, boolean var1, Supplier<PackResources> var2, Pack.PackConstructor<T> var3, Pack.Position var4, PackSource var5) {
++   public static Pack create(String var0, boolean var1, Supplier<PackResources> var2, Pack.PackConstructor var3, Pack.Position var4, PackSource var5) {
 +      try {
 +         PackResources var6 = (PackResources)var2.get();
 +         Throwable var7 = null;
@@ -166,7 +166,7 @@
 +      private Position() {
 +      }
 +
-+      public <T, P extends Pack> int insert(List<T> var1, T var2, Function<T, P> var3, boolean var4) {
++      public <T> int insert(List<T> var1, T var2, Function<T, Pack> var3, boolean var4) {
 +         Pack.Position var5 = var4 ? this.opposite() : this;
 +         int var6;
 +         Pack var7;
@@ -199,8 +199,8 @@
 +   }
 +
 +   @FunctionalInterface
-+   public interface PackConstructor<T extends Pack> {
++   public interface PackConstructor {
 +      @Nullable
-+      T create(String var1, boolean var2, Supplier<PackResources> var3, PackResources var4, PackMetadataSection var5, Pack.Position var6, PackSource var7);
++      Pack create(String var1, boolean var2, Supplier<PackResources> var3, PackResources var4, PackMetadataSection var5, Pack.Position var6, PackSource var7);
 +   }
 +}

@@ -12,7 +12,7 @@
  import net.minecraft.network.syncher.SynchedEntityData;
  import net.minecraft.resources.ResourceLocation;
  import net.minecraft.sounds.SoundEvent;
-@@ -24,19 +25,20 @@
+@@ -24,19 +25,21 @@
  import net.minecraft.world.entity.LivingEntity;
  import net.minecraft.world.entity.Mob;
  import net.minecraft.world.entity.MobSpawnType;
@@ -28,13 +28,14 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
 -import net.minecraft.world.level.LevelType;
++import net.minecraft.world.level.ServerLevelAccessor;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.biome.Biomes;
  import net.minecraft.world.level.levelgen.WorldgenRandom;
  import net.minecraft.world.level.storage.loot.BuiltInLootTables;
  import net.minecraft.world.phys.Vec3;
-@@ -67,22 +69,17 @@
+@@ -67,22 +70,17 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(ID_SIZE, 1);
@@ -60,7 +61,7 @@
        }
  
        this.xpReward = var1;
-@@ -179,29 +176,31 @@
+@@ -179,29 +177,31 @@
        return super.getType();
     }
  
@@ -107,7 +108,7 @@
  
        super.remove();
     }
-@@ -239,11 +238,11 @@
+@@ -239,11 +239,11 @@
     protected boolean isDealsDamage() {
        return !this.isTiny() && this.isEffectiveAi();
     }
@@ -120,7 +121,7 @@
     protected SoundEvent getHurtSound(DamageSource var1) {
        return this.isTiny() ? SoundEvents.SLIME_HURT_SMALL : SoundEvents.SLIME_HURT;
     }
-@@ -259,28 +258,28 @@
+@@ -259,28 +259,28 @@
     protected ResourceLocation getDefaultLootTable() {
        return this.getSize() == 1 ? this.getType().getDefaultLootTable() : BuiltInLootTables.EMPTY;
     }
@@ -163,7 +164,19 @@
     protected float getSoundVolume() {
        return 0.4F * (float)this.getSize();
     }
-@@ -309,10 +308,15 @@
+@@ -298,21 +298,26 @@
+       this.setDeltaMovement(var1.x, (double)this.getJumpPower(), var1.z);
+       this.hasImpulse = true;
+    }
+ 
+    @Nullable
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+       int var6 = this.random.nextInt(3);
+       if (var6 < 2 && this.random.nextFloat() < 0.5F * var2.getSpecialMultiplier()) {
+          ++var6;
+       }
+ 
        int var7 = 1 << var6;
        this.setSize(var7, true);
        return super.finalizeSpawn(var1, var2, var3, var4, var5);
@@ -179,7 +192,7 @@
     }
  
     public EntityDimensions getDimensions(Pose var1) {
-@@ -458,29 +462,29 @@
+@@ -458,29 +463,29 @@
           this.mob.yBodyRot = this.mob.yRot;
           if (this.operation != MoveControl.Operation.MOVE_TO) {
              this.mob.setZza(0.0F);

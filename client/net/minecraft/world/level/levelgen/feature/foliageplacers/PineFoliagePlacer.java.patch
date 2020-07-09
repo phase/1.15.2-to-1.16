@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/foliageplacers/PineFoliagePlacer.java
 +++ net/minecraft/world/level/levelgen/feature/foliageplacers/PineFoliagePlacer.java
-@@ -1,44 +1,58 @@
+@@ -1,44 +1,55 @@
  package net.minecraft.world.level.levelgen.feature.foliageplacers;
  
 -import com.mojang.datafixers.Dynamic;
@@ -9,6 +9,7 @@
  import java.util.Random;
  import java.util.Set;
  import net.minecraft.core.BlockPos;
++import net.minecraft.util.UniformInt;
  import net.minecraft.world.level.LevelSimulatedRW;
 -import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
 +import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
@@ -18,19 +19,15 @@
 -   public PineFoliagePlacer(int var1, int var2) {
 -      super(var1, var2, FoliagePlacerType.PINE_FOLIAGE_PLACER);
 +   public static final Codec<PineFoliagePlacer> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return foliagePlacerParts(var0).and(var0.group(Codec.INT.fieldOf("height").forGetter((var0x) -> {
++      return foliagePlacerParts(var0).and(UniformInt.codec(0, 16, 8).fieldOf("height").forGetter((var0x) -> {
 +         return var0x.height;
-+      }), Codec.INT.fieldOf("height_random").forGetter((var0x) -> {
-+         return var0x.heightRandom;
-+      }))).apply(var0, PineFoliagePlacer::new);
++      })).apply(var0, PineFoliagePlacer::new);
 +   });
-+   private final int height;
-+   private final int heightRandom;
++   private final UniformInt height;
 +
-+   public PineFoliagePlacer(int var1, int var2, int var3, int var4, int var5, int var6) {
-+      super(var1, var2, var3, var4);
-+      this.height = var5;
-+      this.heightRandom = var6;
++   public PineFoliagePlacer(UniformInt var1, UniformInt var2, UniformInt var3) {
++      super(var1, var2);
++      this.height = var3;
     }
  
 -   public <T> PineFoliagePlacer(Dynamic<T> var1) {
@@ -70,7 +67,7 @@
 -   protected boolean shouldSkipLocation(Random var1, int var2, int var3, int var4, int var5, int var6) {
 -      return Math.abs(var3) == var6 && Math.abs(var5) == var6 && var6 > 0;
 +   public int foliageHeight(Random var1, int var2, TreeConfiguration var3) {
-+      return this.height + var1.nextInt(this.heightRandom + 1);
++      return this.height.sample(var1);
     }
  
 -   public int getTreeRadiusForHeight(int var1, int var2, int var3, int var4) {

@@ -16,7 +16,7 @@
           } else {
              if (var6.getType() == HitResult.Type.BLOCK) {
                 BlockPos var7 = ((BlockHitResult)var6).getBlockPos();
-@@ -44,11 +44,11 @@
+@@ -44,28 +44,19 @@
                    return InteractionResultHolder.pass(var5);
                 }
  
@@ -29,3 +29,21 @@
  
              return InteractionResultHolder.pass(var5);
           }
+       }
+    }
+ 
+    protected ItemStack turnBottleIntoItem(ItemStack var1, Player var2, ItemStack var3) {
+-      var1.shrink(1);
+       var2.awardStat(Stats.ITEM_USED.get(this));
+-      if (var1.isEmpty()) {
+-         return var3;
+-      } else {
+-         if (!var2.inventory.add(var3)) {
+-            var2.drop(var3, false);
+-         }
+-
+-         return var1;
+-      }
++      return ItemUtils.createFilledResult(var1, var2, var3);
+    }
+ }

@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/recipebook/BlastingRecipeBookComponent.java
 +++ net/minecraft/client/gui/screens/recipebook/BlastingRecipeBookComponent.java
-@@ -1,8 +1,10 @@
+@@ -1,34 +1,20 @@
  package net.minecraft.client.gui.screens.recipebook;
  
  import java.util.Set;
@@ -11,18 +11,31 @@
  
  public class BlastingRecipeBookComponent extends AbstractFurnaceRecipeBookComponent {
     public BlastingRecipeBookComponent() {
-@@ -22,12 +24,12 @@
- 
-    protected void setGuiOpen(boolean var1) {
-       this.book.setBlastingFurnaceGuiOpen(var1);
     }
  
--   protected String getRecipeFilterName() {
--      return "gui.recipebook.toggleRecipes.blastable";
+-   protected boolean getFilteringCraftable() {
+-      return this.book.isBlastingFurnaceFilteringCraftable();
 +   protected Component getRecipeFilterName() {
 +      return new TranslatableComponent("gui.recipebook.toggleRecipes.blastable");
     }
  
+-   protected void setFilteringCraftable(boolean var1) {
+-      this.book.setBlastingFurnaceFilteringCraftable(var1);
+-   }
+-
+-   protected boolean isGuiOpen() {
+-      return this.book.isBlastingFurnaceGuiOpen();
+-   }
+-
+-   protected void setGuiOpen(boolean var1) {
+-      this.book.setBlastingFurnaceGuiOpen(var1);
+-   }
+-
+-   protected String getRecipeFilterName() {
+-      return "gui.recipebook.toggleRecipes.blastable";
+-   }
+-
     protected Set<Item> getFuelItems() {
        return AbstractFurnaceBlockEntity.getFuel().keySet();
     }
+ }

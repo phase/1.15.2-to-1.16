@@ -19,7 +19,7 @@
 +         return var0x.hatState;
 +      }), BlockState.CODEC.fieldOf("decor_state").forGetter((var0x) -> {
 +         return var0x.decorState;
-+      }), Codec.BOOL.fieldOf("planted").withDefault(false).forGetter((var0x) -> {
++      }), Codec.BOOL.fieldOf("planted").orElse(false).forGetter((var0x) -> {
 +         return var0x.planted;
 +      })).apply(var0, HugeFungusConfiguration::new);
 +   });

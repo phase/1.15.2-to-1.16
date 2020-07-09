@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/configurations/RandomFeatureConfiguration.java
 +++ net/minecraft/world/level/levelgen/feature/configurations/RandomFeatureConfiguration.java
-@@ -1,32 +1,24 @@
+@@ -1,32 +1,31 @@
  package net.minecraft.world.level.levelgen.feature.configurations;
  
 -import com.google.common.collect.ImmutableMap;
@@ -9,10 +9,13 @@
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
  import java.util.List;
++import java.util.function.Supplier;
  import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
  import net.minecraft.world.level.levelgen.feature.WeightedConfiguredFeature;
  
  public class RandomFeatureConfiguration implements FeatureConfiguration {
+-   public final List<WeightedConfiguredFeature<?>> features;
+-   public final ConfiguredFeature<?, ?> defaultFeature;
 +   public static final Codec<RandomFeatureConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
 +      return var0.apply2(RandomFeatureConfiguration::new, WeightedConfiguredFeature.CODEC.listOf().fieldOf("features").forGetter((var0x) -> {
 +         return var0x.features;
@@ -20,10 +23,17 @@
 +         return var0x.defaultFeature;
 +      }));
 +   });
-    public final List<WeightedConfiguredFeature<?>> features;
-    public final ConfiguredFeature<?, ?> defaultFeature;
++   public final List<WeightedConfiguredFeature> features;
++   public final Supplier<ConfiguredFeature<?, ?>> defaultFeature;
  
-    public RandomFeatureConfiguration(List<WeightedConfiguredFeature<?>> var1, ConfiguredFeature<?, ?> var2) {
+-   public RandomFeatureConfiguration(List<WeightedConfiguredFeature<?>> var1, ConfiguredFeature<?, ?> var2) {
++   public RandomFeatureConfiguration(List<WeightedConfiguredFeature> var1, ConfiguredFeature<?, ?> var2) {
++      this(var1, () -> {
++         return var2;
++      });
++   }
++
++   private RandomFeatureConfiguration(List<WeightedConfiguredFeature> var1, Supplier<ConfiguredFeature<?, ?>> var2) {
        this.features = var1;
        this.defaultFeature = var2;
     }

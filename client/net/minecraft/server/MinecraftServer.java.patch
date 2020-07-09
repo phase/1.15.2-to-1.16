@@ -24,7 +24,7 @@
  import java.io.File;
  import java.io.IOException;
  import java.io.UnsupportedEncodingException;
-@@ -26,256 +25,264 @@
+@@ -26,256 +25,263 @@
  import java.net.URLEncoder;
  import java.nio.ByteBuffer;
  import java.nio.charset.StandardCharsets;
@@ -76,6 +76,7 @@
 +import net.minecraft.core.MappedRegistry;
  import net.minecraft.core.Registry;
 +import net.minecraft.core.RegistryAccess;
++import net.minecraft.data.worldgen.Features;
  import net.minecraft.gametest.framework.GameTestTicker;
  import net.minecraft.network.chat.Component;
  import net.minecraft.network.chat.TextComponent;
@@ -110,8 +111,9 @@
  import net.minecraft.server.players.PlayerList;
  import net.minecraft.server.players.ServerOpListEntry;
  import net.minecraft.server.players.UserWhiteList;
+-import net.minecraft.tags.TagManager;
 +import net.minecraft.tags.BlockTags;
- import net.minecraft.tags.TagManager;
++import net.minecraft.tags.TagContainer;
  import net.minecraft.util.FrameTimer;
  import net.minecraft.util.Mth;
  import net.minecraft.util.ProgressListener;
@@ -156,8 +158,6 @@
 +import net.minecraft.world.level.levelgen.PhantomSpawner;
 +import net.minecraft.world.level.levelgen.WorldGenSettings;
 +import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-+import net.minecraft.world.level.levelgen.feature.Feature;
-+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
  import net.minecraft.world.level.saveddata.SaveDataDirtyRunnable;
  import net.minecraft.world.level.storage.CommandStorage;
@@ -192,7 +192,7 @@
 -   private final File universe;
     private final List<Runnable> tickables = Lists.newArrayList();
 -   private final GameProfiler profiler = new GameProfiler(this::getTickCount);
-+   private ContinuousProfiler continousProfiler;
++   private final ContinuousProfiler continousProfiler;
 +   private ProfilerFiller profiler;
     private final ServerConnectionListener connection;
 -   protected final ChunkProgressListenerFactory progressListenerFactory;
@@ -269,7 +269,7 @@
 -   private final Commands commands;
 -   private final RecipeManager recipes;
 -   private final TagManager tags;
-+   private final PackRepository<Pack> packRepository;
++   private final PackRepository packRepository;
     private final ServerScoreboard scoreboard;
     @Nullable
     private CommandStorage commandStorage;
@@ -306,7 +306,7 @@
 +      return var3;
 +   }
 +
-+   public MinecraftServer(Thread var1, RegistryAccess.RegistryHolder var2, LevelStorageSource.LevelStorageAccess var3, WorldData var4, PackRepository<Pack> var5, Proxy var6, DataFixer var7, ServerResources var8, MinecraftSessionService var9, GameProfileRepository var10, GameProfileCache var11, ChunkProgressListenerFactory var12) {
++   public MinecraftServer(Thread var1, RegistryAccess.RegistryHolder var2, LevelStorageSource.LevelStorageAccess var3, WorldData var4, PackRepository var5, Proxy var6, DataFixer var7, ServerResources var8, MinecraftSessionService var9, GameProfileRepository var10, GameProfileCache var11, ChunkProgressListenerFactory var12) {
        super("Server");
 -      this.resources = new SimpleReloadableResourceManager(PackType.SERVER_DATA, this.serverThread);
 -      this.packRepository = new PackRepository(UnopenedPack::new);
@@ -388,7 +388,7 @@
              public void progressStartNoAbort(Component var1) {
              }
  
-@@ -296,171 +303,175 @@
+@@ -296,171 +302,175 @@
              public void progressStage(Component var1) {
              }
           });
@@ -657,8 +657,8 @@
 +         }
 +
 +         if (var2) {
-+            ConfiguredFeature var21 = Feature.BONUS_CHEST.configured(FeatureConfiguration.NONE);
-+            var21.place(var0, var0.structureFeatureManager(), var5, var0.random, new BlockPos(var1.getXSpawn(), var1.getYSpawn(), var1.getZSpawn()));
++            ConfiguredFeature var21 = Features.BONUS_CHEST;
++            var21.place(var0, var5, var0.random, new BlockPos(var1.getXSpawn(), var1.getYSpawn(), var1.getZSpawn()));
 +         }
 +
        }
@@ -690,7 +690,7 @@
        ServerChunkCache var4 = var2.getChunkSource();
        var4.getLightEngine().setTaskPerBatch(500);
        this.nextTickTime = Util.getMillis();
-@@ -471,59 +482,61 @@
+@@ -471,59 +481,61 @@
           this.waitUntilNextTick();
        }
  
@@ -774,7 +774,7 @@
     public abstract int getFunctionCompilationLevel();
  
     public abstract boolean shouldRconBroadcast();
-@@ -532,25 +545,21 @@
+@@ -532,25 +544,21 @@
        boolean var4 = false;
  
        for(Iterator var5 = this.getAllLevels().iterator(); var5.hasNext(); var4 = true) {
@@ -807,7 +807,7 @@
  
     public void close() {
        this.stopServer();
-@@ -585,20 +594,28 @@
+@@ -585,20 +593,28 @@
        while(var1.hasNext()) {
           var2 = (ServerLevel)var1.next();
           if (var2 != null) {
@@ -838,7 +838,7 @@
     public String getLocalIp() {
        return this.localIp;
     }
-@@ -621,11 +638,11 @@
+@@ -621,11 +637,11 @@
           }
        }
  
@@ -851,7 +851,7 @@
              this.nextTickTime = Util.getMillis();
              this.status.setDescription(new TextComponent(this.motd));
              this.status.setVersion(new ServerStatus.Version(SharedConstants.getCurrentVersion().getName(), SharedConstants.getCurrentVersion().getProtocolVersion()));
-@@ -639,24 +656,22 @@
+@@ -639,24 +655,22 @@
                    this.nextTickTime += var46 * 50L;
                    this.lastOverloadWarning = this.nextTickTime;
                 }
@@ -879,7 +879,7 @@
           } else {
              this.onServerCrash((CrashReport)null);
           }
-@@ -738,14 +753,14 @@
+@@ -738,14 +752,14 @@
     protected void doRunTask(TickTask var1) {
        this.getProfiler().incrementCounter("runTask");
        super.doRunTask(var1);
@@ -896,7 +896,7 @@
        if (var2.isFile()) {
           ByteBuf var3 = Unpooled.buffer();
  
-@@ -769,11 +784,11 @@
+@@ -769,11 +783,11 @@
        this.hasWorldScreenshot = this.hasWorldScreenshot || this.getWorldScreenshotFile().isFile();
        return this.hasWorldScreenshot;
     }
@@ -909,7 +909,7 @@
     public File getServerDirectory() {
        return new File(".");
     }
-@@ -833,41 +848,18 @@
+@@ -833,41 +847,18 @@
        this.profiler.push("commandFunctions");
        this.getFunctions().tick();
        this.profiler.popPush("levels");
@@ -955,7 +955,7 @@
  
           this.profiler.push("tick");
  
-@@ -880,128 +872,59 @@
+@@ -880,128 +871,59 @@
           }
  
           this.profiler.pop();
@@ -1107,7 +1107,7 @@
     public Iterable<ServerLevel> getAllLevels() {
        return this.levels.values();
     }
-@@ -1020,25 +943,10 @@
+@@ -1020,25 +942,10 @@
  
     public String[] getPlayerNames() {
        return this.playerList.getPlayerNamesArray();
@@ -1133,7 +1133,7 @@
     }
  
     public CrashReport fillReport(CrashReport var1) {
-@@ -1048,14 +956,14 @@
+@@ -1048,14 +955,14 @@
           });
        }
  
@@ -1150,7 +1150,7 @@
              }
  
              var1.append(var3.getId());
-@@ -1075,15 +983,11 @@
+@@ -1075,15 +982,11 @@
        return var1;
     }
  
@@ -1167,7 +1167,7 @@
  
     public KeyPair getKeyPair() {
        return this.keyPair;
-@@ -1107,92 +1011,58 @@
+@@ -1107,92 +1010,58 @@
  
     public boolean isSingleplayer() {
        return this.singleplayerName != null;
@@ -1278,7 +1278,7 @@
     }
  
     public String getResourcePackHash() {
-@@ -1208,11 +1078,11 @@
+@@ -1208,11 +1077,11 @@
        var1.setDynamicData("whitelist_enabled", false);
        var1.setDynamicData("whitelist_count", 0);
        if (this.playerList != null) {
@@ -1291,7 +1291,7 @@
        var1.setDynamicData("uses_auth", this.onlineMode);
        var1.setDynamicData("gui_state", this.hasGui() ? "enabled" : "disabled");
        var1.setDynamicData("run_time", (Util.getMillis() - var1.getStartupTime()) / 60L * 1000L);
-@@ -1221,17 +1091,14 @@
+@@ -1221,17 +1090,14 @@
        Iterator var3 = this.getAllLevels().iterator();
  
        while(var3.hasNext()) {
@@ -1312,7 +1312,20 @@
              ++var2;
           }
        }
-@@ -1255,28 +1122,20 @@
+@@ -1239,10 +1105,12 @@
+       var1.setDynamicData("worlds", var2);
+    }
+ 
+    public abstract boolean isDedicatedServer();
+ 
++   public abstract int getRateLimitPacketsPerSecond();
++
+    public boolean usesAuthentication() {
+       return this.onlineMode;
+    }
+ 
+    public void setUsesAuthentication(boolean var1) {
+@@ -1255,28 +1123,20 @@
  
     public void setPreventProxyConnections(boolean var1) {
        this.preventProxyConnections = var1;
@@ -1345,7 +1358,7 @@
     }
  
     public void setPvpAllowed(boolean var1) {
-@@ -1321,18 +1180,12 @@
+@@ -1321,18 +1181,12 @@
        this.playerList = var1;
     }
  
@@ -1366,7 +1379,7 @@
     @Nullable
     public ServerConnectionListener getConnection() {
        return this.connection;
-@@ -1350,23 +1203,19 @@
+@@ -1350,23 +1204,19 @@
  
     public int getTickCount() {
        return this.tickCount;
@@ -1391,7 +1404,7 @@
  
     public void setForceGameType(boolean var1) {
        this.forceGameType = var1;
-@@ -1374,10 +1223,14 @@
+@@ -1374,10 +1224,14 @@
  
     public boolean getForceGameType() {
        return this.forceGameType;
@@ -1406,7 +1419,7 @@
     }
  
     public void setPlayerIdleTimeout(int var1) {
-@@ -1431,103 +1284,119 @@
+@@ -1431,103 +1285,119 @@
     public int getSpawnRadius(@Nullable ServerLevel var1) {
        return var1 != null ? var1.getGameRules().getInt(GameRules.RULE_SPAWN_RADIUS) : 10;
     }
@@ -1457,7 +1470,7 @@
 -   private void updateSelectedPacks(LevelData var1) {
 -      ArrayList var2 = Lists.newArrayList(this.packRepository.getSelected());
 -      Iterator var3 = this.packRepository.getAvailable().iterator();
-+   public static DataPackConfig configurePackRepository(PackRepository<Pack> var0, DataPackConfig var1, boolean var2) {
++   public static DataPackConfig configurePackRepository(PackRepository var0, DataPackConfig var1, boolean var2) {
 +      var0.reload();
 +      if (var2) {
 +         var0.setSelected(Collections.singleton("vanilla"));
@@ -1525,7 +1538,7 @@
 +      }
     }
  
-+   private static DataPackConfig getSelectedPacks(PackRepository<?> var0) {
++   private static DataPackConfig getSelectedPacks(PackRepository var0) {
 +      Collection var1 = var0.getSelectedIds();
 +      ImmutableList var2 = ImmutableList.copyOf(var1);
 +      List var3 = (List)var0.getAvailableIds().stream().filter((var1x) -> {
@@ -1565,7 +1578,7 @@
 -   }
 -
 -   public PackRepository<UnopenedPack> getPackRepository() {
-+   public PackRepository<Pack> getPackRepository() {
++   public PackRepository getPackRepository() {
        return this.packRepository;
     }
  
@@ -1583,7 +1596,7 @@
     public boolean acceptsSuccess() {
        return true;
     }
-@@ -1535,15 +1404,15 @@
+@@ -1535,15 +1405,15 @@
     public boolean acceptsFailure() {
        return true;
     }
@@ -1593,15 +1606,16 @@
 +      return this.resources.getRecipeManager();
     }
  
-    public TagManager getTags() {
+-   public TagManager getTags() {
 -      return this.tags;
++   public TagContainer getTags() {
 +      return this.resources.getTags();
     }
  
     public ServerScoreboard getScoreboard() {
        return this.scoreboard;
     }
-@@ -1555,19 +1424,19 @@
+@@ -1555,19 +1425,19 @@
           return this.commandStorage;
        }
     }
@@ -1624,7 +1638,7 @@
     public CustomBossEvents getCustomBossEvents() {
        return this.customBossEvents;
     }
-@@ -1603,27 +1472,23 @@
+@@ -1603,27 +1473,23 @@
  
     public FrameTimer getFrameTimer() {
        return this.frameTimer;
@@ -1654,7 +1668,7 @@
           ((ServerLevel)var4.getValue()).saveDebugReport(var6);
        }
  
-@@ -1797,14 +1662,56 @@
+@@ -1797,14 +1663,60 @@
  
        }
  
@@ -1707,6 +1721,10 @@
 +
 +   public WorldData getWorldData() {
 +      return this.worldData;
++   }
++
++   public RegistryAccess registryAccess() {
++      return this.registryHolder;
 +   }
 +
     static {

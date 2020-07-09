@@ -1,11 +1,15 @@
 --- net/minecraft/world/level/block/grower/JungleTreeGrower.java
 +++ net/minecraft/world/level/block/grower/JungleTreeGrower.java
-@@ -4,22 +4,21 @@
+@@ -1,25 +1,22 @@
+ package net.minecraft.world.level.block.grower;
+ 
+ import java.util.Random;
  import javax.annotation.Nullable;
- import net.minecraft.world.level.biome.BiomeDefaultFeatures;
+-import net.minecraft.world.level.biome.BiomeDefaultFeatures;
++import net.minecraft.data.worldgen.Features;
  import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
- import net.minecraft.world.level.levelgen.feature.Feature;
- import net.minecraft.world.level.levelgen.feature.TreeFeature;
+-import net.minecraft.world.level.levelgen.feature.Feature;
+-import net.minecraft.world.level.levelgen.feature.TreeFeature;
 -import net.minecraft.world.level.levelgen.feature.configurations.MegaTreeConfiguration;
 -import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
 +import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
@@ -18,13 +22,13 @@
 -   protected ConfiguredFeature<SmallTreeConfiguration, ?> getConfiguredFeature(Random var1, boolean var2) {
 -      return (new TreeFeature(SmallTreeConfiguration::deserialize)).configured(BiomeDefaultFeatures.JUNGLE_TREE_NOVINE_CONFIG);
 +   protected ConfiguredFeature<TreeConfiguration, ?> getConfiguredFeature(Random var1, boolean var2) {
-+      return (new TreeFeature(TreeConfiguration.CODEC)).configured(BiomeDefaultFeatures.JUNGLE_TREE_NOVINE_CONFIG);
++      return Features.JUNGLE_TREE_NO_VINE;
     }
  
     @Nullable
 -   protected ConfiguredFeature<MegaTreeConfiguration, ?> getConfiguredMegaFeature(Random var1) {
 -      return Feature.MEGA_JUNGLE_TREE.configured(BiomeDefaultFeatures.MEGA_JUNGLE_TREE_CONFIG);
 +   protected ConfiguredFeature<TreeConfiguration, ?> getConfiguredMegaFeature(Random var1) {
-+      return Feature.TREE.configured(BiomeDefaultFeatures.MEGA_JUNGLE_TREE_CONFIG);
++      return Features.MEGA_JUNGLE_TREE;
     }
  }

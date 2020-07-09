@@ -12,7 +12,19 @@
  import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
  import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
  import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
-@@ -67,11 +68,11 @@
+@@ -39,10 +40,11 @@
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.ServerLevelAccessor;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.pathfinder.BlockPathTypes;
+ import net.minecraft.world.level.pathfinder.Path;
+@@ -67,28 +69,28 @@
        this.goalSelector.addGoal(2, new Drowned.DrownedTridentAttackGoal(this, 1.0D, 40, 10.0F));
        this.goalSelector.addGoal(2, new Drowned.DrownedAttackGoal(this, 1.0D, false));
        this.goalSelector.addGoal(5, new Drowned.DrownedGoToBeachGoal(this, 1.0D));
@@ -25,7 +37,26 @@
        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, IronGolem.class, true));
        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal(this, Turtle.class, 10, true, false, Turtle.BABY_ON_LAND_SELECTOR));
     }
-@@ -138,21 +139,21 @@
+ 
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+       var4 = super.finalizeSpawn(var1, var2, var3, var4, var5);
+       if (this.getItemBySlot(EquipmentSlot.OFFHAND).isEmpty() && this.random.nextFloat() < 0.03F) {
+          this.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.NAUTILUS_SHELL));
+          this.handDropChances[EquipmentSlot.OFFHAND.getIndex()] = 2.0F;
+       }
+ 
+       return var4;
+    }
+ 
+-   public static boolean checkDrownedSpawnRules(EntityType<Drowned> var0, LevelAccessor var1, MobSpawnType var2, BlockPos var3, Random var4) {
++   public static boolean checkDrownedSpawnRules(EntityType<Drowned> var0, ServerLevelAccessor var1, MobSpawnType var2, BlockPos var3, Random var4) {
+       Biome var5 = var1.getBiome(var3);
+       boolean var6 = var1.getDifficulty() != Difficulty.PEACEFUL && isDarkEnoughToSpawn(var1, var3, var4) && (var2 == MobSpawnType.SPAWNER || var1.getFluidState(var3).is(FluidTags.WATER));
+       if (var5 != Biomes.RIVER && var5 != Biomes.FROZEN_RIVER) {
+          return var4.nextInt(40) == 0 && isDeepEnoughToSpawn(var1, var3) && var6;
+       } else {
+@@ -138,21 +140,21 @@
           }
        }
  
@@ -49,7 +80,7 @@
  
     protected boolean convertsInWater() {
        return false;
-@@ -168,11 +169,11 @@
+@@ -168,11 +170,11 @@
        } else {
           return false;
        }
@@ -62,7 +93,7 @@
  
     private boolean wantsToSwim() {
        if (this.searchingForLand) {
-@@ -263,11 +264,11 @@
+@@ -263,11 +265,11 @@
              double var8 = (double)Mth.sqrt(var2 * var2 + var4 * var4 + var6 * var6);
              var4 /= var8;
              float var10 = (float)(Mth.atan2(var6, var2) * 57.2957763671875D) - 90.0F;
@@ -75,7 +106,7 @@
              this.drowned.setDeltaMovement(this.drowned.getDeltaMovement().add((double)var12 * var2 * 0.005D, (double)var12 * var4 * 0.1D, (double)var12 * var6 * 0.005D));
           } else {
              if (!this.drowned.onGround) {
-@@ -339,16 +340,16 @@
+@@ -339,16 +341,16 @@
        }
  
        @Nullable

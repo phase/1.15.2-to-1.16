@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/npc/CatSpawner.java
 +++ net/minecraft/world/entity/npc/CatSpawner.java
-@@ -11,17 +11,18 @@
+@@ -11,17 +11,17 @@
  import net.minecraft.world.entity.SpawnGroupData;
  import net.minecraft.world.entity.SpawnPlacements;
  import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -8,7 +8,7 @@
  import net.minecraft.world.entity.animal.Cat;
 +import net.minecraft.world.level.CustomSpawner;
  import net.minecraft.world.level.GameRules;
- import net.minecraft.world.level.Level;
+-import net.minecraft.world.level.Level;
  import net.minecraft.world.level.NaturalSpawner;
 -import net.minecraft.world.level.levelgen.feature.Feature;
 +import net.minecraft.world.level.levelgen.feature.StructureFeature;
@@ -21,7 +21,7 @@
     public CatSpawner() {
     }
  
-@@ -37,20 +38,20 @@
+@@ -37,20 +37,20 @@
                 return 0;
              } else {
                 Random var5 = var1.random;
@@ -45,3 +45,23 @@
                    }
  
                    return 0;
+@@ -72,17 +72,17 @@
+       }
+ 
+       return 0;
+    }
+ 
+-   private int spawnInHut(Level var1, BlockPos var2) {
++   private int spawnInHut(ServerLevel var1, BlockPos var2) {
+       boolean var3 = true;
+       List var4 = var1.getEntitiesOfClass(Cat.class, (new AABB(var2)).inflate(16.0D, 8.0D, 16.0D));
+       return var4.size() < 1 ? this.spawnCat(var2, var1) : 0;
+    }
+ 
+-   private int spawnCat(BlockPos var1, Level var2) {
++   private int spawnCat(BlockPos var1, ServerLevel var2) {
+       Cat var3 = (Cat)EntityType.CAT.create(var2);
+       if (var3 == null) {
+          return 0;
+       } else {
+          var3.finalizeSpawn(var2, var2.getCurrentDifficultyAt(var1), MobSpawnType.NATURAL, (SpawnGroupData)null, (CompoundTag)null);

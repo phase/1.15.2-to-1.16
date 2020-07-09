@@ -1,29 +1,29 @@
 --- net/minecraft/world/level/levelgen/placement/CountHeight64Decorator.java
 +++ net/minecraft/world/level/levelgen/placement/CountHeight64Decorator.java
-@@ -1,23 +1,21 @@
- package net.minecraft.world.level.levelgen.placement;
- 
+@@ -1,26 +1,0 @@
+-package net.minecraft.world.level.levelgen.placement;
+-
 -import com.mojang.datafixers.Dynamic;
-+import com.mojang.serialization.Codec;
- import java.util.Random;
+-import java.util.Random;
 -import java.util.function.Function;
- import java.util.stream.IntStream;
- import java.util.stream.Stream;
- import net.minecraft.core.BlockPos;
- import net.minecraft.world.level.LevelAccessor;
- import net.minecraft.world.level.chunk.ChunkGenerator;
+-import java.util.stream.IntStream;
+-import java.util.stream.Stream;
+-import net.minecraft.core.BlockPos;
+-import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.chunk.ChunkGenerator;
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
- 
- public class CountHeight64Decorator extends FeatureDecorator<FrequencyDecoratorConfiguration> {
+-
+-public class CountHeight64Decorator extends FeatureDecorator<FrequencyDecoratorConfiguration> {
 -   public CountHeight64Decorator(Function<Dynamic<?>, ? extends FrequencyDecoratorConfiguration> var1) {
-+   public CountHeight64Decorator(Codec<FrequencyDecoratorConfiguration> var1) {
-       super(var1);
-    }
- 
+-      super(var1);
+-   }
+-
 -   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, FrequencyDecoratorConfiguration var4, BlockPos var5) {
-+   public Stream<BlockPos> getPositions(LevelAccessor var1, ChunkGenerator var2, Random var3, FrequencyDecoratorConfiguration var4, BlockPos var5) {
-       return IntStream.range(0, var4.count).mapToObj((var2x) -> {
-          int var3x = var3.nextInt(16) + var5.getX();
-          int var4 = var3.nextInt(16) + var5.getZ();
-          boolean var5x = true;
-          return new BlockPos(var3x, 64, var4);
+-      return IntStream.range(0, var4.count).mapToObj((var2x) -> {
+-         int var3x = var3.nextInt(16) + var5.getX();
+-         int var4 = var3.nextInt(16) + var5.getZ();
+-         boolean var5x = true;
+-         return new BlockPos(var3x, 64, var4);
+-      });
+-   }
+-}

@@ -1,10 +1,12 @@
 --- net/minecraft/world/level/block/SnowyDirtBlock.java
 +++ net/minecraft/world/level/block/SnowyDirtBlock.java
-@@ -2,35 +2,31 @@
+@@ -1,36 +1,32 @@
+ package net.minecraft.world.level.block;
  
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
- import net.minecraft.world.item.BlockPlaceContext;
+-import net.minecraft.world.item.BlockPlaceContext;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.block.state.BlockBehaviour;
  import net.minecraft.world.level.block.state.BlockState;

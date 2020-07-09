@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/dimension/DimensionType.java
 +++ net/minecraft/world/level/dimension/DimensionType.java
-@@ -1,101 +1,265 @@
+@@ -1,101 +1,266 @@
  package net.minecraft.world.level.dimension;
  
 -import com.mojang.datafixers.Dynamic;
@@ -20,13 +20,13 @@
 +import net.minecraft.core.MappedRegistry;
  import net.minecraft.core.Registry;
 +import net.minecraft.core.RegistryAccess;
++import net.minecraft.core.WritableRegistry;
 +import net.minecraft.resources.RegistryFileCodec;
 +import net.minecraft.resources.ResourceKey;
  import net.minecraft.resources.ResourceLocation;
 -import net.minecraft.util.Serializable;
 +import net.minecraft.tags.BlockTags;
 +import net.minecraft.tags.Tag;
-+import net.minecraft.util.Codecs;
 +import net.minecraft.util.Mth;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.biome.BiomeZoomer;
@@ -56,7 +56,7 @@
 +         return var0x.isPresent() ? Optional.of(var0x.getAsLong()) : Optional.empty();
 +      }).forGetter((var0x) -> {
 +         return var0x.fixedTime;
-+      }), Codec.BOOL.fieldOf("has_skylight").forGetter(DimensionType::hasSkyLight), Codec.BOOL.fieldOf("has_ceiling").forGetter(DimensionType::hasCeiling), Codec.BOOL.fieldOf("ultrawarm").forGetter(DimensionType::ultraWarm), Codec.BOOL.fieldOf("natural").forGetter(DimensionType::natural), Codec.BOOL.fieldOf("shrunk").forGetter(DimensionType::shrunk), Codec.BOOL.fieldOf("piglin_safe").forGetter(DimensionType::piglinSafe), Codec.BOOL.fieldOf("bed_works").forGetter(DimensionType::bedWorks), Codec.BOOL.fieldOf("respawn_anchor_works").forGetter(DimensionType::respawnAnchorWorks), Codec.BOOL.fieldOf("has_raids").forGetter(DimensionType::hasRaids), Codecs.intRange(0, 256).fieldOf("logical_height").forGetter(DimensionType::logicalHeight), ResourceLocation.CODEC.fieldOf("infiniburn").forGetter((var0x) -> {
++      }), Codec.BOOL.fieldOf("has_skylight").forGetter(DimensionType::hasSkyLight), Codec.BOOL.fieldOf("has_ceiling").forGetter(DimensionType::hasCeiling), Codec.BOOL.fieldOf("ultrawarm").forGetter(DimensionType::ultraWarm), Codec.BOOL.fieldOf("natural").forGetter(DimensionType::natural), Codec.BOOL.fieldOf("shrunk").forGetter(DimensionType::shrunk), Codec.BOOL.fieldOf("piglin_safe").forGetter(DimensionType::piglinSafe), Codec.BOOL.fieldOf("bed_works").forGetter(DimensionType::bedWorks), Codec.BOOL.fieldOf("respawn_anchor_works").forGetter(DimensionType::respawnAnchorWorks), Codec.BOOL.fieldOf("has_raids").forGetter(DimensionType::hasRaids), Codec.intRange(0, 256).fieldOf("logical_height").forGetter(DimensionType::logicalHeight), ResourceLocation.CODEC.fieldOf("infiniburn").forGetter((var0x) -> {
 +         return var0x.infiniburn;
 +      }), Codec.FLOAT.fieldOf("ambient_light").forGetter((var0x) -> {
 +         return var0x.ambientLight;
@@ -173,10 +173,11 @@
 -   public File getStorageFolder(File var1) {
 -      return this.folder.isEmpty() ? var1 : new File(var1, this.folder);
 +   public static RegistryAccess.RegistryHolder registerBuiltin(RegistryAccess.RegistryHolder var0) {
-+      var0.registerDimension(OVERWORLD_LOCATION, DEFAULT_OVERWORLD);
-+      var0.registerDimension(OVERWORLD_CAVES_LOCATION, DEFAULT_OVERWORLD_CAVES);
-+      var0.registerDimension(NETHER_LOCATION, DEFAULT_NETHER);
-+      var0.registerDimension(END_LOCATION, DEFAULT_END);
++      WritableRegistry var1 = var0.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
++      var1.register(OVERWORLD_LOCATION, DEFAULT_OVERWORLD);
++      var1.register(OVERWORLD_CAVES_LOCATION, DEFAULT_OVERWORLD_CAVES);
++      var1.register(NETHER_LOCATION, DEFAULT_NETHER);
++      var1.register(END_LOCATION, DEFAULT_END);
 +      return var0;
     }
  

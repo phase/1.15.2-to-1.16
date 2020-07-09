@@ -1,0 +1,38 @@
+--- net/minecraft/world/item/FishBucketItem.java
++++ net/minecraft/world/item/FishBucketItem.java
+@@ -1,9 +1,10 @@
+ package net.minecraft.world.item;
+ 
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.EntityType;
+ import net.minecraft.world.entity.MobSpawnType;
+@@ -20,21 +21,21 @@
+       super(var2, var3);
+       this.type = var1;
+    }
+ 
+    public void checkExtraContent(Level var1, ItemStack var2, BlockPos var3) {
+-      if (!var1.isClientSide) {
+-         this.spawn(var1, var2, var3);
++      if (var1 instanceof ServerLevel) {
++         this.spawn((ServerLevel)var1, var2, var3);
+       }
+ 
+    }
+ 
+    protected void playEmptySound(@Nullable Player var1, LevelAccessor var2, BlockPos var3) {
+       var2.playSound(var1, var3, SoundEvents.BUCKET_EMPTY_FISH, SoundSource.NEUTRAL, 1.0F, 1.0F);
+    }
+ 
+-   private void spawn(Level var1, ItemStack var2, BlockPos var3) {
++   private void spawn(ServerLevel var1, ItemStack var2, BlockPos var3) {
+       Entity var4 = this.type.spawn(var1, var2, (Player)null, var3, MobSpawnType.BUCKET, true, false);
+       if (var4 != null) {
+          ((AbstractFish)var4).setFromBucket(true);
+       }
+ 

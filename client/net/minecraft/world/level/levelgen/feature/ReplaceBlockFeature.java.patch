@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/ReplaceBlockFeature.java
 +++ net/minecraft/world/level/levelgen/feature/ReplaceBlockFeature.java
-@@ -1,24 +1,23 @@
+@@ -1,23 +1,21 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -9,7 +9,6 @@
 -import java.util.function.Function;
  import net.minecraft.core.BlockPos;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.chunk.ChunkGenerator;
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
@@ -23,12 +22,10 @@
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, ReplaceBlockConfiguration var5) {
 -      if (var1.getBlockState(var4).getBlock() == var5.target.getBlock()) {
--         var1.setBlock(var4, var5.state, 2);
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, ReplaceBlockConfiguration var6) {
-+      if (var1.getBlockState(var5).is(var6.target.getBlock())) {
-+         var1.setBlock(var5, var6.state, 2);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, ReplaceBlockConfiguration var5) {
++      if (var1.getBlockState(var4).is(var5.target.getBlock())) {
+          var1.setBlock(var4, var5.state, 2);
        }
  
        return true;
     }
- }

@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/animal/horse/AbstractHorse.java
 +++ net/minecraft/world/entity/animal/horse/AbstractHorse.java
-@@ -1,74 +1,81 @@
+@@ -1,74 +1,82 @@
  package net.minecraft.world.entity.animal.horse;
  
 +import com.google.common.collect.UnmodifiableIterator;
@@ -18,6 +18,7 @@
  import net.minecraft.network.syncher.EntityDataAccessor;
  import net.minecraft.network.syncher.EntityDataSerializers;
  import net.minecraft.network.syncher.SynchedEntityData;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.server.players.OldUsersConverter;
  import net.minecraft.sounds.SoundEvent;
@@ -69,7 +70,8 @@
 +import net.minecraft.world.item.crafting.Ingredient;
  import net.minecraft.world.item.enchantment.EnchantmentHelper;
  import net.minecraft.world.level.Level;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.SoundType;
  import net.minecraft.world.level.block.state.BlockState;
@@ -89,7 +91,7 @@
     private int eatingCounter;
     private int mouthCounter;
     private int standCounter;
-@@ -152,14 +159,10 @@
+@@ -152,14 +160,10 @@
  
     public void setIsJumping(boolean var1) {
        this.isJumping = var1;
@@ -104,7 +106,7 @@
           this.setEating(false);
        }
  
-@@ -179,14 +182,26 @@
+@@ -179,14 +183,26 @@
  
     public void setBred(boolean var1) {
        this.setFlag(8, var1);
@@ -133,7 +135,7 @@
     }
  
     public void setTemper(int var1) {
-@@ -197,23 +212,21 @@
+@@ -197,23 +213,21 @@
        int var2 = Mth.clamp(this.getTemper() + var1, 0, this.getMaxTemper());
        this.setTemper(var2);
        return var2;
@@ -161,7 +163,7 @@
     }
  
     public boolean causeFallDamage(float var1, float var2) {
-@@ -262,33 +275,38 @@
+@@ -262,33 +276,38 @@
              }
           }
        }
@@ -205,7 +207,7 @@
     }
  
     @Nullable
-@@ -307,29 +325,21 @@
+@@ -307,29 +326,21 @@
        }
  
        return null;
@@ -236,7 +238,7 @@
  
           if (this.isVehicle() && this.canGallop) {
              ++this.gallopSoundCounter;
-@@ -349,15 +359,12 @@
+@@ -349,15 +360,12 @@
  
     protected void playGallopSound(SoundType var1) {
        this.playSound(SoundEvents.HORSE_GALLOP, var1.getVolume() * 0.15F, var1.getPitch());
@@ -254,7 +256,7 @@
     public int getMaxSpawnClusterSize() {
        return 6;
     }
-@@ -379,10 +386,23 @@
+@@ -379,10 +387,23 @@
           var1.openHorseInventory(this, this.inventory);
        }
  
@@ -278,7 +280,7 @@
        float var4 = 0.0F;
        short var5 = 0;
        byte var6 = 0;
-@@ -404,19 +424,19 @@
+@@ -404,19 +425,19 @@
           var6 = 3;
        } else if (var7 == Items.GOLDEN_CARROT) {
           var4 = 4.0F;
@@ -300,7 +302,7 @@
           }
        }
  
-@@ -462,11 +482,11 @@
+@@ -462,11 +483,11 @@
     protected boolean isImmobile() {
        return super.isImmobile() && this.isVehicle() && this.isSaddled() || this.isEating() || this.isStanding();
     }
@@ -313,7 +315,7 @@
     private void moveTail() {
        this.tailCounter = 1;
     }
-@@ -494,11 +514,11 @@
+@@ -494,11 +515,11 @@
           if (this.random.nextInt(900) == 0 && this.deathTime == 0) {
              this.heal(1.0F);
           }
@@ -326,7 +328,7 @@
  
              if (this.isEating() && ++this.eatingCounter > 50) {
                 this.eatingCounter = 0;
-@@ -618,14 +638,16 @@
+@@ -618,14 +639,16 @@
        }
  
     }
@@ -347,7 +349,7 @@
     }
  
     public boolean tameWithName(Player var1) {
-@@ -659,14 +681,13 @@
+@@ -659,14 +682,13 @@
              if (this.onGround && this.playerJumpPendingScale == 0.0F && this.isStanding() && !this.allowStandSliding) {
                 var3 = 0.0F;
                 var4 = 0.0F;
@@ -364,7 +366,7 @@
                 } else {
                    var7 = var5;
                 }
-@@ -677,39 +698,29 @@
+@@ -677,39 +699,29 @@
                 this.hasImpulse = true;
                 if (var4 > 0.0F) {
                    float var10 = Mth.sin(this.yRot * 0.017453292F);
@@ -406,7 +408,7 @@
              super.travel(var1);
           }
        }
-@@ -724,11 +735,11 @@
+@@ -724,11 +736,11 @@
        var1.putBoolean("EatingHaystack", this.isEating());
        var1.putBoolean("Bred", this.isBred());
        var1.putInt("Temper", this.getTemper());
@@ -419,7 +421,7 @@
        if (!this.inventory.getItem(0).isEmpty()) {
           var1.put("SaddleItem", this.inventory.getItem(0).save(new CompoundTag()));
        }
-@@ -739,35 +750,30 @@
+@@ -739,35 +751,30 @@
        super.readAdditionalSaveData(var1);
        this.setEating(var1.getBoolean("EatingHaystack"));
        this.setBred(var1.getBoolean("Bred"));
@@ -461,8 +463,14 @@
     public boolean canMate(Animal var1) {
        return false;
     }
-@@ -780,16 +786,16 @@
-    public AgableMob getBreedOffspring(AgableMob var1) {
+@@ -775,21 +782,21 @@
+    protected boolean canParent() {
+       return !this.isVehicle() && !this.isPassenger() && this.isTamed() && !this.isBaby() && this.getHealth() >= this.getMaxHealth() && this.isInLove();
+    }
+ 
+    @Nullable
+-   public AgableMob getBreedOffspring(AgableMob var1) {
++   public AgableMob getBreedOffspring(ServerLevel var1, AgableMob var2) {
        return null;
     }
  
@@ -484,7 +492,7 @@
     public boolean canBeControlledByRider() {
        return this.getControllingPassenger() instanceof LivingEntity;
     }
-@@ -829,10 +835,11 @@
+@@ -829,10 +836,11 @@
     }
  
     public void handleStartJump(int var1) {
@@ -496,7 +504,7 @@
     public void handleStopJump() {
     }
  
-@@ -869,11 +876,11 @@
+@@ -869,11 +877,11 @@
        if (this.standAnimO > 0.0F) {
           float var6 = Mth.sin(this.yBodyRot * 0.017453292F);
           float var3 = Mth.cos(this.yBodyRot * 0.017453292F);
@@ -509,7 +517,7 @@
           }
        }
  
-@@ -889,34 +896,38 @@
+@@ -889,34 +897,38 @@
  
     protected double generateRandomSpeed() {
        return (0.44999998807907104D + this.random.nextDouble() * 0.3D + this.random.nextDouble() * 0.3D + this.random.nextDouble() * 0.3D) * 0.25D;
@@ -552,12 +560,13 @@
              return false;
           }
        } else {
-@@ -934,21 +945,75 @@
+@@ -934,21 +946,74 @@
     public Entity getControllingPassenger() {
        return this.getPassengers().isEmpty() ? null : (Entity)this.getPassengers().get(0);
     }
  
     @Nullable
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
 +   private Vec3 getDismountLocationInDirection(Vec3 var1, LivingEntity var2) {
 +      double var3 = this.getX() + var1.x;
 +      double var5 = this.getBoundingBox().minY;
@@ -571,12 +580,12 @@
 +         double var12 = this.getBoundingBox().maxY + 0.75D;
 +
 +         while(true) {
-+            double var14 = this.level.getRelativeFloorHeight(var9);
++            double var14 = this.level.getBlockFloorHeight(var9);
 +            if ((double)var9.getY() + var14 > var12) {
 +               break;
 +            }
 +
-+            if (DismountHelper.isFloorValid(var14)) {
++            if (DismountHelper.isBlockFloorValid(var14)) {
 +               AABB var16 = var2.getLocalBoundsForPose(var11);
 +               Vec3 var17 = new Vec3(var3, (double)var9.getY() + var14, var7);
 +               if (DismountHelper.canDismountTo(this.level, var2, var16.move(var17))) {
@@ -611,10 +620,11 @@
 +   }
 +
 +   @Nullable
-    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
        if (var4 == null) {
-          var4 = new AgableMob.AgableMobGroupData();
-          ((AgableMob.AgableMobGroupData)var4).setBabySpawnChance(0.2F);
+-         var4 = new AgableMob.AgableMobGroupData();
+-         ((AgableMob.AgableMobGroupData)var4).setBabySpawnChance(0.2F);
++         var4 = new AgableMob.AgableMobGroupData(0.2F);
        }
  
 +      this.randomizeAttributes();

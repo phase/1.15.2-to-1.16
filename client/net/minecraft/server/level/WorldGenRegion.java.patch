@@ -1,12 +1,17 @@
 --- net/minecraft/server/level/WorldGenRegion.java
 +++ net/minecraft/server/level/WorldGenRegion.java
-@@ -5,22 +5,23 @@
+@@ -2,25 +2,28 @@
+ 
+ import java.util.Collections;
+ import java.util.List;
  import java.util.Random;
  import java.util.function.Predicate;
++import java.util.stream.Stream;
  import javax.annotation.Nullable;
  import net.minecraft.Util;
  import net.minecraft.core.BlockPos;
 +import net.minecraft.core.Direction;
++import net.minecraft.core.SectionPos;
  import net.minecraft.core.particles.ParticleOptions;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.sounds.SoundEvent;
@@ -25,7 +30,7 @@
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.EntityBlock;
-@@ -28,41 +29,40 @@
+@@ -28,41 +31,42 @@
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.border.WorldBorder;
  import net.minecraft.world.level.chunk.ChunkAccess;
@@ -35,6 +40,8 @@
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
 +import net.minecraft.world.level.dimension.DimensionType;
  import net.minecraft.world.level.levelgen.Heightmap;
++import net.minecraft.world.level.levelgen.feature.StructureFeature;
++import net.minecraft.world.level.levelgen.structure.StructureStart;
  import net.minecraft.world.level.lighting.LevelLightEngine;
  import net.minecraft.world.level.material.Fluid;
  import net.minecraft.world.level.material.FluidState;
@@ -72,7 +79,7 @@
        int var3 = Mth.floor(Math.sqrt((double)var2.size()));
        if (var3 * var3 != var2.size()) {
           throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Cache size is not a square."));
-@@ -72,16 +72,16 @@
+@@ -72,16 +76,16 @@
           this.x = var4.x;
           this.z = var4.z;
           this.size = var3;
@@ -93,7 +100,7 @@
  
     public int getCenterX() {
        return this.x;
-@@ -97,40 +97,35 @@
+@@ -97,40 +101,35 @@
  
     @Nullable
     public ChunkAccess getChunk(int var1, int var2, ChunkStatus var3, boolean var4) {
@@ -139,7 +146,7 @@
     public BlockState getBlockState(BlockPos var1) {
        return this.getChunk(var1.getX() >> 4, var1.getZ() >> 4).getBlockState(var1);
     }
-@@ -154,25 +149,29 @@
+@@ -154,25 +153,29 @@
  
     public Biome getUncachedNoiseBiome(int var1, int var2, int var3) {
        return this.level.getUncachedNoiseBiome(var1, var2, var3);
@@ -175,7 +182,7 @@
  
     @Nullable
     public BlockEntity getBlockEntity(BlockPos var1) {
-@@ -180,57 +179,58 @@
+@@ -180,57 +183,58 @@
        BlockEntity var3 = var2.getBlockEntity(var1);
        if (var3 != null) {
           return var3;
@@ -256,7 +263,7 @@
        if (var2.hasPostProcess(this, var1)) {
           this.markPosForPostprocessing(var1);
        }
-@@ -293,20 +293,17 @@
+@@ -293,20 +297,17 @@
     public TickList<Fluid> getLiquidTicks() {
        return this.liquidTicks;
     }
@@ -278,7 +285,7 @@
     }
  
     public void playSound(@Nullable Player var1, BlockPos var2, SoundEvent var3, SoundSource var4, float var5, float var6) {
-@@ -316,18 +313,14 @@
+@@ -316,18 +317,14 @@
     }
  
     public void levelEvent(@Nullable Player var1, int var2, BlockPos var3, int var4) {
@@ -299,3 +306,14 @@
     }
  
     public <T extends Entity> List<T> getEntitiesOfClass(Class<? extends T> var1, AABB var2, @Nullable Predicate<? super T> var3) {
+@@ -339,6 +336,10 @@
+    }
+ 
+    public List<Player> players() {
+       return Collections.emptyList();
+    }
++
++   public Stream<? extends StructureStart<?>> startsForFeature(SectionPos var1, StructureFeature<?> var2) {
++      return this.level.startsForFeature(var1, var2);
++   }
+ }

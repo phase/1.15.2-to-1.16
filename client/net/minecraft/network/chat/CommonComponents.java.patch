@@ -1,6 +1,6 @@
 --- net/minecraft/network/chat/CommonComponents.java
 +++ net/minecraft/network/chat/CommonComponents.java
-@@ -1,0 +1,16 @@
+@@ -1,0 +1,20 @@
 +package net.minecraft.network.chat;
 +
 +public class CommonComponents {
@@ -15,5 +15,9 @@
 +
 +   public static Component optionStatus(boolean var0) {
 +      return var0 ? OPTION_ON : OPTION_OFF;
++   }
++
++   public static MutableComponent optionStatus(Component var0, boolean var1) {
++      return new TranslatableComponent(var1 ? "options.on.composed" : "options.off.composed", new Object[]{var0});
 +   }
 +}

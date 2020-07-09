@@ -1,6 +1,18 @@
 --- net/minecraft/world/entity/animal/horse/Llama.java
 +++ net/minecraft/world/entity/animal/horse/Llama.java
-@@ -19,10 +19,12 @@
+@@ -6,10 +6,11 @@
+ import net.minecraft.core.particles.ParticleTypes;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.syncher.EntityDataAccessor;
+ import net.minecraft.network.syncher.EntityDataSerializers;
+ import net.minecraft.network.syncher.SynchedEntityData;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.tags.ItemTags;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.Container;
+@@ -19,10 +20,12 @@
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.entity.LivingEntity;
@@ -13,7 +25,7 @@
  import net.minecraft.world.entity.ai.goal.FollowParentGoal;
  import net.minecraft.world.entity.ai.goal.LlamaFollowCaravanGoal;
  import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-@@ -34,25 +36,26 @@
+@@ -34,25 +37,26 @@
  import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
  import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
  import net.minecraft.world.entity.animal.Animal;
@@ -28,7 +40,8 @@
  import net.minecraft.world.item.Items;
 +import net.minecraft.world.item.crafting.Ingredient;
  import net.minecraft.world.level.Level;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.WoolCarpetBlock;
@@ -41,7 +54,7 @@
     private static final EntityDataAccessor<Integer> DATA_VARIANT_ID;
     private boolean didSpit;
     @Nullable
-@@ -93,11 +96,11 @@
+@@ -93,11 +97,11 @@
        this.setVariant(var1.getInt("Variant"));
        if (var1.contains("DecorItem", 10)) {
           this.inventory.setItem(1, ItemStack.of(var1.getCompound("DecorItem")));
@@ -54,7 +67,7 @@
     protected void registerGoals() {
        this.goalSelector.addGoal(0, new FloatGoal(this));
        this.goalSelector.addGoal(1, new RunAroundLikeCrazyGoal(this, 1.2D));
-@@ -111,13 +114,12 @@
+@@ -111,13 +115,12 @@
        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
        this.targetSelector.addGoal(1, new Llama.LlamaHurtByTargetGoal(this));
        this.targetSelector.addGoal(2, new Llama.LlamaAttackWolfGoal(this));
@@ -70,7 +83,7 @@
     protected void defineSynchedData() {
        super.defineSynchedData();
        this.entityData.define(DATA_STRENGTH_ID, 0);
-@@ -140,22 +142,26 @@
+@@ -140,22 +143,26 @@
     public void positionRider(Entity var1) {
        if (this.hasPassenger(var1)) {
           float var2 = Mth.cos(this.yBodyRot * 0.017453292F);
@@ -99,7 +112,7 @@
        byte var4 = 0;
        float var5 = 0.0F;
        boolean var6 = false;
-@@ -194,18 +200,21 @@
+@@ -194,22 +201,25 @@
              this.modifyTemper(var4);
           }
        }
@@ -121,9 +134,14 @@
     }
  
     @Nullable
-    public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
        this.setRandomStrength();
-@@ -235,10 +244,15 @@
+       int var6;
+       if (var4 instanceof Llama.LlamaGroupData) {
+          var6 = ((Llama.LlamaGroupData)var4).variant;
+       } else {
+@@ -235,10 +245,15 @@
  
     protected SoundEvent getDeathSound() {
        return SoundEvents.LLAMA_DEATH;
@@ -139,7 +157,7 @@
     }
  
     protected void playChestEquipsSound() {
-@@ -255,20 +269,24 @@
+@@ -255,20 +270,24 @@
  
     public int getInventoryColumns() {
        return this.getStrength();
@@ -166,7 +184,7 @@
  
     public void containerChanged(Container var1) {
        DyeColor var2 = this.getSwag();
-@@ -278,13 +296,13 @@
+@@ -278,13 +297,13 @@
           this.playSound(SoundEvents.LLAMA_SWAG, 0.5F, 1.0F);
        }
  
@@ -182,7 +200,39 @@
     }
  
     private void setSwag(@Nullable DyeColor var1) {
-@@ -334,11 +352,14 @@
+@@ -309,22 +328,22 @@
+ 
+    public boolean canMate(Animal var1) {
+       return var1 != this && var1 instanceof Llama && this.canParent() && ((Llama)var1).canParent();
+    }
+ 
+-   public Llama getBreedOffspring(AgableMob var1) {
+-      Llama var2 = this.makeBabyLlama();
+-      this.setOffspringAttributes(var1, var2);
+-      Llama var3 = (Llama)var1;
+-      int var4 = this.random.nextInt(Math.max(this.getStrength(), var3.getStrength())) + 1;
++   public Llama getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      Llama var3 = this.makeBabyLlama();
++      this.setOffspringAttributes(var2, var3);
++      Llama var4 = (Llama)var2;
++      int var5 = this.random.nextInt(Math.max(this.getStrength(), var4.getStrength())) + 1;
+       if (this.random.nextFloat() < 0.03F) {
+-         ++var4;
++         ++var5;
+       }
+ 
+-      var2.setStrength(var4);
+-      var2.setVariant(this.random.nextBoolean() ? this.getVariant() : var3.getVariant());
+-      return var2;
++      var3.setStrength(var5);
++      var3.setVariant(this.random.nextBoolean() ? this.getVariant() : var4.getVariant());
++      return var3;
+    }
+ 
+    protected Llama makeBabyLlama() {
+       return (Llama)EntityType.LLAMA.create(this.level);
+    }
+@@ -334,11 +353,14 @@
        double var3 = var1.getX() - this.getX();
        double var5 = var1.getY(0.3333333333333333D) - var2.getY();
        double var7 = var1.getZ() - this.getZ();
@@ -198,7 +248,7 @@
     }
  
     private void setDidSpit(boolean var1) {
-@@ -411,10 +432,11 @@
+@@ -411,10 +433,11 @@
     public void performRangedAttack(LivingEntity var1, float var2) {
        this.spit(var1);
     }
@@ -210,3 +260,14 @@
        DATA_VARIANT_ID = SynchedEntityData.defineId(Llama.class, EntityDataSerializers.INT);
     }
  
+@@ -450,9 +473,10 @@
+ 
+    static class LlamaGroupData extends AgableMob.AgableMobGroupData {
+       public final int variant;
+ 
+       private LlamaGroupData(int var1) {
++         super(true);
+          this.variant = var1;
+       }
+    }
+ }

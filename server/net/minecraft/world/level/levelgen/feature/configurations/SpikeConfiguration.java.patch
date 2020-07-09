@@ -19,7 +19,7 @@
  
  public class SpikeConfiguration implements FeatureConfiguration {
 +   public static final Codec<SpikeConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(Codec.BOOL.fieldOf("crystal_invulnerable").withDefault((Object)false).forGetter((var0x) -> {
++      return var0.group(Codec.BOOL.fieldOf("crystal_invulnerable").orElse(false).forGetter((var0x) -> {
 +         return var0x.crystalInvulnerable;
 +      }), SpikeFeature.EndSpike.CODEC.listOf().fieldOf("spikes").forGetter((var0x) -> {
 +         return var0x.spikes;

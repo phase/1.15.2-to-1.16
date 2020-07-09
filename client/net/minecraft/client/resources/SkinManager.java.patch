@@ -1,0 +1,86 @@
+--- net/minecraft/client/resources/SkinManager.java
++++ net/minecraft/client/resources/SkinManager.java
+@@ -2,21 +2,25 @@
+ 
+ import com.google.common.cache.CacheBuilder;
+ import com.google.common.cache.CacheLoader;
+ import com.google.common.cache.LoadingCache;
+ import com.google.common.collect.ImmutableList;
++import com.google.common.collect.ImmutableMap;
++import com.google.common.collect.Iterables;
+ import com.google.common.collect.Maps;
+ import com.google.common.hash.Hashing;
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.authlib.minecraft.InsecureTextureException;
+ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+ import com.mojang.authlib.minecraft.MinecraftSessionService;
+ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
++import com.mojang.authlib.properties.Property;
+ import com.mojang.blaze3d.systems.RenderSystem;
+ import java.io.File;
+ import java.util.HashMap;
+ import java.util.Map;
++import java.util.UUID;
+ import java.util.concurrent.TimeUnit;
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.texture.AbstractTexture;
+@@ -26,32 +30,35 @@
+ 
+ public class SkinManager {
+    private final TextureManager textureManager;
+    private final File skinsDirectory;
+    private final MinecraftSessionService sessionService;
+-   private final LoadingCache<GameProfile, Map<Type, MinecraftProfileTexture>> insecureSkinCache;
++   private final LoadingCache<String, Map<Type, MinecraftProfileTexture>> insecureSkinCache;
+ 
+-   public SkinManager(TextureManager var1, File var2, MinecraftSessionService var3) {
++   public SkinManager(TextureManager var1, File var2, final MinecraftSessionService var3) {
+       this.textureManager = var1;
+       this.skinsDirectory = var2;
+       this.sessionService = var3;
+-      this.insecureSkinCache = CacheBuilder.newBuilder().expireAfterAccess(15L, TimeUnit.SECONDS).build(new CacheLoader<GameProfile, Map<Type, MinecraftProfileTexture>>() {
+-         public Map<Type, MinecraftProfileTexture> load(GameProfile var1) throws Exception {
++      this.insecureSkinCache = CacheBuilder.newBuilder().expireAfterAccess(15L, TimeUnit.SECONDS).build(new CacheLoader<String, Map<Type, MinecraftProfileTexture>>() {
++         public Map<Type, MinecraftProfileTexture> load(String var1) {
++            GameProfile var2 = new GameProfile((UUID)null, "dummy_mcdummyface");
++            var2.getProperties().put("textures", new Property("textures", var1, ""));
++
+             try {
+-               return Minecraft.getInstance().getMinecraftSessionService().getTextures(var1, false);
+-            } catch (Throwable var3) {
+-               return Maps.newHashMap();
++               return var3.getTextures(var2, false);
++            } catch (Throwable var4) {
++               return ImmutableMap.of();
+             }
+          }
+       });
+    }
+ 
+    public ResourceLocation registerTexture(MinecraftProfileTexture var1, Type var2) {
+       return this.registerTexture(var1, var2, (SkinManager.SkinTextureCallback)null);
+    }
+ 
+-   public ResourceLocation registerTexture(MinecraftProfileTexture var1, Type var2, @Nullable SkinManager.SkinTextureCallback var3) {
++   private ResourceLocation registerTexture(MinecraftProfileTexture var1, Type var2, @Nullable SkinManager.SkinTextureCallback var3) {
+       String var4 = Hashing.sha1().hashUnencodedChars(var1.getHash()).toString();
+       ResourceLocation var5 = new ResourceLocation("skins/" + var4);
+       AbstractTexture var6 = this.textureManager.getTexture(var5);
+       if (var6 != null) {
+          if (var3 != null) {
+@@ -109,11 +116,12 @@
+       };
+       Util.backgroundExecutor().execute(var4);
+    }
+ 
+    public Map<Type, MinecraftProfileTexture> getInsecureSkinInformation(GameProfile var1) {
+-      return (Map)this.insecureSkinCache.getUnchecked(var1);
++      Property var2 = (Property)Iterables.getFirst(var1.getProperties().get("textures"), (Object)null);
++      return (Map)(var2 == null ? ImmutableMap.of() : (Map)this.insecureSkinCache.getUnchecked(var2.getValue()));
+    }
+ 
+    public interface SkinTextureCallback {
+       void onSkinTextureAvailable(Type var1, ResourceLocation var2, MinecraftProfileTexture var3);
+    }

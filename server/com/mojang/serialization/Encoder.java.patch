@@ -79,7 +79,7 @@
 +         }
 +
 +         public String toString() {
-+            return "EmptyEncoder[" + var0 + "]";
++            return "ErrorEncoder[" + var0 + "]";
 +         }
 +      };
 +   }

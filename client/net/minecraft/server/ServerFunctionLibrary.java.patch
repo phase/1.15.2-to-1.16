@@ -1,6 +1,6 @@
 --- net/minecraft/server/ServerFunctionLibrary.java
 +++ net/minecraft/server/ServerFunctionLibrary.java
-@@ -1,0 +1,145 @@
+@@ -1,0 +1,147 @@
 +package net.minecraft.server;
 +
 +import com.google.common.collect.ImmutableMap;
@@ -29,6 +29,7 @@
 +import net.minecraft.server.packs.resources.ResourceManager;
 +import net.minecraft.tags.Tag;
 +import net.minecraft.tags.TagCollection;
++import net.minecraft.tags.TagLoader;
 +import net.minecraft.util.profiling.ProfilerFiller;
 +import net.minecraft.world.entity.Entity;
 +import net.minecraft.world.phys.Vec2;
@@ -42,7 +43,8 @@
 +   private static final int PATH_PREFIX_LENGTH = "functions/".length();
 +   private static final int PATH_SUFFIX_LENGTH = ".mcfunction".length();
 +   private volatile Map<ResourceLocation, CommandFunction> functions = ImmutableMap.of();
-+   private final TagCollection<CommandFunction> tags = new TagCollection(this::getFunction, "tags/functions", "function");
++   private final TagLoader<CommandFunction> tagsLoader = new TagLoader(this::getFunction, "tags/functions", "function");
++   private volatile TagCollection<CommandFunction> tags = TagCollection.empty();
 +   private final int functionCompilationLevel;
 +   private final CommandDispatcher<CommandSourceStack> dispatcher;
 +
@@ -68,7 +70,7 @@
 +   }
 +
 +   public CompletableFuture<Void> reload(PreparableReloadListener.PreparationBarrier var1, ResourceManager var2, ProfilerFiller var3, ProfilerFiller var4, Executor var5, Executor var6) {
-+      CompletableFuture var7 = this.tags.prepare(var2, var5);
++      CompletableFuture var7 = this.tagsLoader.prepare(var2, var5);
 +      CompletableFuture var8 = CompletableFuture.supplyAsync(() -> {
 +         return var2.listResources("functions", (var0) -> {
 +            return var0.endsWith(".mcfunction");
@@ -110,7 +112,7 @@
 +            }).join();
 +         });
 +         this.functions = var3.build();
-+         this.tags.load((Map)var1x.getFirst());
++         this.tags = this.tagsLoader.load((Map)var1x.getFirst());
 +      }, var6);
 +   }
 +

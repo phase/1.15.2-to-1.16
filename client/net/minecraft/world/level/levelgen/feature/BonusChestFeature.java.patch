@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/BonusChestFeature.java
 +++ net/minecraft/world/level/levelgen/feature/BonusChestFeature.java
-@@ -1,61 +1,60 @@
+@@ -1,34 +1,32 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -16,7 +16,6 @@
  import net.minecraft.core.Direction;
  import net.minecraft.world.level.ChunkPos;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
@@ -34,60 +33,9 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
--      ChunkPos var6 = new ChunkPos(var4);
--      List var7 = (List)IntStream.rangeClosed(var6.getMinBlockX(), var6.getMaxBlockX()).boxed().collect(Collectors.toList());
--      Collections.shuffle(var7, var3);
--      List var8 = (List)IntStream.rangeClosed(var6.getMinBlockZ(), var6.getMaxBlockZ()).boxed().collect(Collectors.toList());
--      Collections.shuffle(var8, var3);
--      BlockPos.MutableBlockPos var9 = new BlockPos.MutableBlockPos();
--      Iterator var10 = var7.iterator();
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      ChunkPos var7 = new ChunkPos(var5);
-+      List var8 = (List)IntStream.rangeClosed(var7.getMinBlockX(), var7.getMaxBlockX()).boxed().collect(Collectors.toList());
-+      Collections.shuffle(var8, var4);
-+      List var9 = (List)IntStream.rangeClosed(var7.getMinBlockZ(), var7.getMaxBlockZ()).boxed().collect(Collectors.toList());
-+      Collections.shuffle(var9, var4);
-+      BlockPos.MutableBlockPos var10 = new BlockPos.MutableBlockPos();
-+      Iterator var11 = var8.iterator();
- 
--      while(var10.hasNext()) {
--         Integer var11 = (Integer)var10.next();
--         Iterator var12 = var8.iterator();
-+      while(var11.hasNext()) {
-+         Integer var12 = (Integer)var11.next();
-+         Iterator var13 = var9.iterator();
- 
--         while(var12.hasNext()) {
--            Integer var13 = (Integer)var12.next();
--            var9.set(var11, 0, var13);
--            BlockPos var14 = var1.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, var9);
--            if (var1.isEmptyBlock(var14) || var1.getBlockState(var14).getCollisionShape(var1, var14).isEmpty()) {
--               var1.setBlock(var14, Blocks.CHEST.defaultBlockState(), 2);
--               RandomizableContainerBlockEntity.setLootTable(var1, var3, var14, BuiltInLootTables.SPAWN_BONUS_CHEST);
--               BlockState var15 = Blocks.TORCH.defaultBlockState();
--               Iterator var16 = Direction.Plane.HORIZONTAL.iterator();
-+         while(var13.hasNext()) {
-+            Integer var14 = (Integer)var13.next();
-+            var10.set(var12, 0, var14);
-+            BlockPos var15 = var1.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, var10);
-+            if (var1.isEmptyBlock(var15) || var1.getBlockState(var15).getCollisionShape(var1, var15).isEmpty()) {
-+               var1.setBlock(var15, Blocks.CHEST.defaultBlockState(), 2);
-+               RandomizableContainerBlockEntity.setLootTable(var1, var4, var15, BuiltInLootTables.SPAWN_BONUS_CHEST);
-+               BlockState var16 = Blocks.TORCH.defaultBlockState();
-+               Iterator var17 = Direction.Plane.HORIZONTAL.iterator();
- 
--               while(var16.hasNext()) {
--                  Direction var17 = (Direction)var16.next();
--                  BlockPos var18 = var14.relative(var17);
--                  if (var15.canSurvive(var1, var18)) {
--                     var1.setBlock(var18, var15, 2);
-+               while(var17.hasNext()) {
-+                  Direction var18 = (Direction)var17.next();
-+                  BlockPos var19 = var15.relative(var18);
-+                  if (var16.canSurvive(var1, var19)) {
-+                     var1.setBlock(var19, var16, 2);
-                   }
-                }
- 
-                return true;
-             }
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
+       ChunkPos var6 = new ChunkPos(var4);
+       List var7 = (List)IntStream.rangeClosed(var6.getMinBlockX(), var6.getMaxBlockX()).boxed().collect(Collectors.toList());
+       Collections.shuffle(var7, var3);
+       List var8 = (List)IntStream.rangeClosed(var6.getMinBlockZ(), var6.getMaxBlockZ()).boxed().collect(Collectors.toList());
+       Collections.shuffle(var8, var3);

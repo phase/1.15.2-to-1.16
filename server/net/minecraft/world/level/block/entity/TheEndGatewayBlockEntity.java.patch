@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java
 +++ net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java
-@@ -2,24 +2,26 @@
+@@ -2,27 +2,30 @@
  
  import java.util.Iterator;
  import java.util.List;
@@ -8,6 +8,7 @@
  import javax.annotation.Nullable;
 +import net.minecraft.advancements.CriteriaTriggers;
  import net.minecraft.core.BlockPos;
++import net.minecraft.data.worldgen.Features;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtUtils;
  import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -15,6 +16,7 @@
 +import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.util.Mth;
  import net.minecraft.world.entity.Entity;
++import net.minecraft.world.entity.EntitySelector;
 +import net.minecraft.world.entity.projectile.ThrownEnderpearl;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.ChunkPos;
@@ -25,10 +27,13 @@
 -import net.minecraft.world.level.dimension.end.TheEndDimension;
  import net.minecraft.world.level.levelgen.feature.Feature;
  import net.minecraft.world.level.levelgen.feature.configurations.EndGatewayConfiguration;
- import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
-@@ -50,18 +52,18 @@
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+@@ -50,30 +53,30 @@
        }
  
        return var1;
@@ -53,11 +58,12 @@
     public void tick() {
        boolean var1 = this.isSpawning();
        boolean var2 = this.isCoolingDown();
-@@ -69,11 +71,11 @@
+       ++this.age;
        if (var2) {
           --this.teleportCooldown;
        } else if (!this.level.isClientSide) {
-          List var3 = this.level.getEntitiesOfClass(Entity.class, new AABB(this.getBlockPos()));
+-         List var3 = this.level.getEntitiesOfClass(Entity.class, new AABB(this.getBlockPos()));
++         List var3 = this.level.getEntitiesOfClass(Entity.class, new AABB(this.getBlockPos()), TheEndGatewayBlockEntity::canEntityTeleport);
           if (!var3.isEmpty()) {
 -            this.teleportEntity(((Entity)var3.get(0)).getRootVehicle());
 +            this.teleportEntity((Entity)var3.get(this.level.random.nextInt(var3.size())));
@@ -66,7 +72,22 @@
           if (this.age % 2400L == 0L) {
              this.triggerCooldown();
           }
-@@ -121,17 +123,34 @@
+@@ -83,10 +86,14 @@
+          this.setChanged();
+       }
+ 
+    }
+ 
++   public static boolean canEntityTeleport(Entity var0) {
++      return EntitySelector.NO_SPECTATORS.test(var0) && !var0.getRootVehicle().isOnPortalCooldown();
++   }
++
+    public boolean isSpawning() {
+       return this.age < 200L;
+    }
+ 
+    public boolean isCoolingDown() {
+@@ -121,25 +128,43 @@
     }
  
     public void teleportEntity(Entity var1) {
@@ -97,26 +118,36 @@
 +               var3 = var1.getRootVehicle();
 +            }
 +
++            var3.setPortalCooldown();
 +            var3.teleportToWithTicket((double)var2.getX() + 0.5D, (double)var2.getY(), (double)var2.getZ() + 0.5D);
           }
  
           this.triggerCooldown();
        }
     }
-@@ -159,11 +178,11 @@
+ 
+    private BlockPos findExitPosition() {
+-      BlockPos var1 = findTallestBlock(this.level, this.exitPortal, 5, false);
++      BlockPos var1 = findTallestBlock(this.level, this.exitPortal.offset(0, 2, 0), 5, false);
+       LOGGER.debug((String)"Best exit position for portal at {} is {}", (Object)this.exitPortal, (Object)var1);
+       return var1.above();
+    }
+ 
+    private void findExitPortal(ServerLevel var1) {
+@@ -159,11 +184,11 @@
        LevelChunk var5 = getChunk(var1, var3);
        this.exitPortal = findValidSpawnInChunk(var5);
        if (this.exitPortal == null) {
           this.exitPortal = new BlockPos(var3.x + 0.5D, 75.0D, var3.z + 0.5D);
           LOGGER.debug((String)"Failed to find suitable block, settling on {}", (Object)this.exitPortal);
 -         Feature.END_ISLAND.configured(FeatureConfiguration.NONE).place(var1, var1.getChunkSource().getGenerator(), new Random(this.exitPortal.asLong()), this.exitPortal);
-+         Feature.END_ISLAND.configured(FeatureConfiguration.NONE).place(var1, var1.structureFeatureManager(), var1.getChunkSource().getGenerator(), new Random(this.exitPortal.asLong()), this.exitPortal);
++         Features.END_ISLAND.place(var1, var1.getChunkSource().getGenerator(), new Random(this.exitPortal.asLong()), this.exitPortal);
        } else {
           LOGGER.debug((String)"Found block at {}", (Object)this.exitPortal);
        }
  
        this.exitPortal = findTallestBlock(var1, this.exitPortal, 16, true);
-@@ -180,11 +199,11 @@
+@@ -180,11 +205,11 @@
           for(int var6 = -var2; var6 <= var2; ++var6) {
              if (var5 != 0 || var6 != 0 || var3) {
                 for(int var7 = 255; var7 > (var4 == null ? 0 : var4.getY()); --var7) {
@@ -129,7 +160,7 @@
                    }
                 }
              }
-@@ -224,11 +243,11 @@
+@@ -224,11 +249,11 @@
  
                       var9 = (BlockPos)var8.next();
                       var10 = var0.getBlockState(var9);
@@ -142,16 +173,3 @@
  
              var13 = var9.distSqr(0.0D, 0.0D, 0.0D, true);
           } while(var5 != null && var13 >= var6);
-@@ -237,11 +256,11 @@
-          var6 = var13;
-       }
-    }
- 
-    private void createExitPortal(ServerLevel var1, BlockPos var2) {
--      Feature.END_GATEWAY.configured(EndGatewayConfiguration.knownExit(this.getBlockPos(), false)).place(var1, var1.getChunkSource().getGenerator(), new Random(), var2);
-+      Feature.END_GATEWAY.configured(EndGatewayConfiguration.knownExit(this.getBlockPos(), false)).place(var1, var1.structureFeatureManager(), var1.getChunkSource().getGenerator(), new Random(), var2);
-    }
- 
-    public void setExitPosition(BlockPos var1, boolean var2) {
-       this.exactTeleport = var2;
-       this.exitPortal = var1;

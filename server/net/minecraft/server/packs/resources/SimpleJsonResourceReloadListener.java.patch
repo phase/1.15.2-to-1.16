@@ -44,7 +44,7 @@
  
                    try {
 -                     JsonObject var15 = (JsonObject)GsonHelper.fromJson(this.gson, (Reader)var13, (Class)JsonObject.class);
-+                     JsonElement var15 = (JsonElement)GsonHelper.fromJson(this.gson, (Reader)var13, (Class)JsonElement.class);
++                     JsonElement var15 = (JsonElement)GsonHelper.fromJson(this.gson, (Reader)var13, JsonElement.class);
                       if (var15 != null) {
 -                        JsonObject var16 = (JsonObject)var3.put(var8, var15);
 +                        JsonElement var16 = (JsonElement)var3.put(var8, var15);

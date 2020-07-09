@@ -1,22 +1,118 @@
 --- net/minecraft/server/level/ChunkHolder.java
 +++ net/minecraft/server/level/ChunkHolder.java
-@@ -46,11 +46,10 @@
+@@ -1,33 +1,37 @@
+ package net.minecraft.server.level;
+ 
+ import com.mojang.datafixers.util.Either;
++import it.unimi.dsi.fastutil.shorts.ShortArraySet;
++import it.unimi.dsi.fastutil.shorts.ShortSet;
+ import java.util.List;
+ import java.util.Optional;
+ import java.util.concurrent.CompletableFuture;
+ import java.util.concurrent.atomic.AtomicReferenceArray;
+ import java.util.function.IntConsumer;
+ import java.util.function.IntSupplier;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.SectionPos;
+ import net.minecraft.network.protocol.Packet;
+ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+ import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
+-import net.minecraft.network.protocol.game.ClientboundChunkBlocksUpdatePacket;
+-import net.minecraft.network.protocol.game.ClientboundLevelChunkPacket;
+ import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
++import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.LightLayer;
+ import net.minecraft.world.level.block.entity.BlockEntity;
++import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+ import net.minecraft.world.level.chunk.ChunkStatus;
+ import net.minecraft.world.level.chunk.ImposterProtoChunk;
+ import net.minecraft.world.level.chunk.LevelChunk;
++import net.minecraft.world.level.chunk.LevelChunkSection;
+ import net.minecraft.world.level.chunk.ProtoChunk;
+ import net.minecraft.world.level.lighting.LevelLightEngine;
+ 
+ public class ChunkHolder {
+    public static final Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> UNLOADED_CHUNK;
+@@ -43,14 +47,12 @@
+    private CompletableFuture<ChunkAccess> chunkToSave;
+    private int oldTicketLevel;
+    private int ticketLevel;
     private int queueLevel;
     private final ChunkPos pos;
-    private final short[] changedBlocks;
-    private int changes;
-    private int changedSectionFilter;
+-   private final short[] changedBlocks;
+-   private int changes;
+-   private int changedSectionFilter;
 -   private int sectionsToForceSendLightFor;
++   private boolean hasChangedSections;
++   private final ShortSet[] changedBlocksPerSection;
     private int blockChangedLightSectionFilter;
     private int skyChangedLightSectionFilter;
     private final LevelLightEngine lightEngine;
     private final ChunkHolder.LevelChangeListener onLevelChange;
     private final ChunkHolder.PlayerProvider playerProvider;
-@@ -167,29 +166,18 @@
+@@ -60,11 +62,11 @@
+       this.futures = new AtomicReferenceArray(CHUNK_STATUSES.size());
+       this.fullChunkFuture = UNLOADED_LEVEL_CHUNK_FUTURE;
+       this.tickingChunkFuture = UNLOADED_LEVEL_CHUNK_FUTURE;
+       this.entityTickingChunkFuture = UNLOADED_LEVEL_CHUNK_FUTURE;
+       this.chunkToSave = CompletableFuture.completedFuture((Object)null);
+-      this.changedBlocks = new short[64];
++      this.changedBlocksPerSection = new ShortSet[16];
+       this.pos = var1;
+       this.lightEngine = var3;
+       this.onLevelChange = var4;
+       this.playerProvider = var5;
+       this.oldTicketLevel = ChunkMap.MAX_CHUNK_DISTANCE + 1;
+@@ -132,26 +134,20 @@
+ 
+    public CompletableFuture<ChunkAccess> getChunkToSave() {
+       return this.chunkToSave;
+    }
+ 
+-   public void blockChanged(int var1, int var2, int var3) {
+-      LevelChunk var4 = this.getTickingChunk();
+-      if (var4 != null) {
+-         this.changedSectionFilter |= 1 << (var2 >> 4);
+-         if (this.changes < 64) {
+-            short var5 = (short)(var1 << 12 | var3 << 8 | var2);
+-
+-            for(int var6 = 0; var6 < this.changes; ++var6) {
+-               if (this.changedBlocks[var6] == var5) {
+-                  return;
+-               }
+-            }
+-
+-            this.changedBlocks[this.changes++] = var5;
++   public void blockChanged(BlockPos var1) {
++      LevelChunk var2 = this.getTickingChunk();
++      if (var2 != null) {
++         byte var3 = (byte)SectionPos.blockToSectionCoord(var1.getY());
++         if (this.changedBlocksPerSection[var3] == null) {
++            this.hasChangedSections = true;
++            this.changedBlocksPerSection[var3] = new ShortArraySet();
+          }
+ 
++         this.changedBlocksPerSection[var3].add(SectionPos.sectionRelativePos(var1));
+       }
+    }
+ 
+    public void sectionLightChanged(LightLayer var1, int var2) {
+       LevelChunk var3 = this.getTickingChunk();
+@@ -165,62 +161,51 @@
+ 
+       }
     }
  
     public void broadcastChanges(LevelChunk var1) {
-       if (this.changes != 0 || this.skyChangedLightSectionFilter != 0 || this.blockChangedLightSectionFilter != 0) {
+-      if (this.changes != 0 || this.skyChangedLightSectionFilter != 0 || this.blockChangedLightSectionFilter != 0) {
++      if (this.hasChangedSections || this.skyChangedLightSectionFilter != 0 || this.blockChangedLightSectionFilter != 0) {
           Level var2 = var1.getLevel();
 -         if (this.changes == 64) {
 -            this.sectionsToForceSendLightFor = -1;
@@ -24,7 +120,7 @@
 -
 -         int var3;
 -         int var4;
--         if (this.skyChangedLightSectionFilter != 0 || this.blockChangedLightSectionFilter != 0) {
+          if (this.skyChangedLightSectionFilter != 0 || this.blockChangedLightSectionFilter != 0) {
 -            this.broadcast(new ClientboundLightUpdatePacket(var1.getPos(), this.lightEngine, this.skyChangedLightSectionFilter & ~this.sectionsToForceSendLightFor, this.blockChangedLightSectionFilter & ~this.sectionsToForceSendLightFor), true);
 -            var3 = this.skyChangedLightSectionFilter & this.sectionsToForceSendLightFor;
 -            var4 = this.blockChangedLightSectionFilter & this.sectionsToForceSendLightFor;
@@ -32,30 +128,71 @@
 -               this.broadcast(new ClientboundLightUpdatePacket(var1.getPos(), this.lightEngine, var3, var4), false);
 -            }
 -
-+         if (this.changes < 64 && (this.skyChangedLightSectionFilter != 0 || this.blockChangedLightSectionFilter != 0)) {
 +            this.broadcast(new ClientboundLightUpdatePacket(var1.getPos(), this.lightEngine, this.skyChangedLightSectionFilter, this.blockChangedLightSectionFilter, false), true);
              this.skyChangedLightSectionFilter = 0;
              this.blockChangedLightSectionFilter = 0;
 -            this.sectionsToForceSendLightFor &= ~(this.skyChangedLightSectionFilter & this.blockChangedLightSectionFilter);
           }
  
-+         int var3;
-+         int var4;
-          int var5;
-          if (this.changes == 1) {
-             var3 = (this.changedBlocks[0] >> 12 & 15) + this.pos.x * 16;
-             var4 = this.changedBlocks[0] & 255;
-             var5 = (this.changedBlocks[0] >> 8 & 15) + this.pos.z * 16;
-@@ -197,11 +185,11 @@
-             this.broadcast(new ClientboundBlockUpdatePacket(var2, var6), false);
-             if (var2.getBlockState(var6).getBlock().isEntityBlock()) {
-                this.broadcastBlockEntity(var2, var6);
-             }
-          } else if (this.changes == 64) {
+-         int var5;
+-         if (this.changes == 1) {
+-            var3 = (this.changedBlocks[0] >> 12 & 15) + this.pos.x * 16;
+-            var4 = this.changedBlocks[0] & 255;
+-            var5 = (this.changedBlocks[0] >> 8 & 15) + this.pos.z * 16;
+-            BlockPos var6 = new BlockPos(var3, var4, var5);
+-            this.broadcast(new ClientboundBlockUpdatePacket(var2, var6), false);
+-            if (var2.getBlockState(var6).getBlock().isEntityBlock()) {
+-               this.broadcastBlockEntity(var2, var6);
+-            }
+-         } else if (this.changes == 64) {
 -            this.broadcast(new ClientboundLevelChunkPacket(var1, this.changedSectionFilter), false);
-+            this.broadcast(new ClientboundLevelChunkPacket(var1, this.changedSectionFilter, false), false);
-          } else if (this.changes != 0) {
-             this.broadcast(new ClientboundChunkBlocksUpdatePacket(this.changes, this.changedBlocks, var1), false);
+-         } else if (this.changes != 0) {
+-            this.broadcast(new ClientboundChunkBlocksUpdatePacket(this.changes, this.changedBlocks, var1), false);
+-
+-            for(var3 = 0; var3 < this.changes; ++var3) {
+-               var4 = (this.changedBlocks[var3] >> 12 & 15) + this.pos.x * 16;
+-               var5 = this.changedBlocks[var3] & 255;
+-               int var8 = (this.changedBlocks[var3] >> 8 & 15) + this.pos.z * 16;
+-               BlockPos var7 = new BlockPos(var4, var5, var8);
+-               if (var2.getBlockState(var7).getBlock().isEntityBlock()) {
+-                  this.broadcastBlockEntity(var2, var7);
++         for(int var3 = 0; var3 < this.changedBlocksPerSection.length; ++var3) {
++            ShortSet var4 = this.changedBlocksPerSection[var3];
++            if (var4 != null) {
++               SectionPos var5 = SectionPos.of(var1.getPos(), var3);
++               if (var4.size() == 1) {
++                  BlockPos var6 = var5.relativeToBlockPos(var4.iterator().nextShort());
++                  BlockState var7 = var2.getBlockState(var6);
++                  this.broadcast(new ClientboundBlockUpdatePacket(var6, var7), false);
++                  this.broadcastBlockEntityIfNeeded(var2, var6, var7);
++               } else {
++                  LevelChunkSection var8 = var1.getSections()[var5.getY()];
++                  ClientboundSectionBlocksUpdatePacket var9 = new ClientboundSectionBlocksUpdatePacket(var5, var4, var8);
++                  this.broadcast(var9, false);
++                  var9.runUpdates((var2x, var3x) -> {
++                     this.broadcastBlockEntityIfNeeded(var2, var2x, var3x);
++                  });
+                }
++
++               this.changedBlocksPerSection[var3] = null;
+             }
+          }
  
-             for(var3 = 0; var3 < this.changes; ++var3) {
-                var4 = (this.changedBlocks[var3] >> 12 & 15) + this.pos.x * 16;
+-         this.changes = 0;
+-         this.changedSectionFilter = 0;
++         this.hasChangedSections = false;
+       }
+    }
+ 
++   private void broadcastBlockEntityIfNeeded(Level var1, BlockPos var2, BlockState var3) {
++      if (var3.getBlock().isEntityBlock()) {
++         this.broadcastBlockEntity(var1, var2);
++      }
++
++   }
++
+    private void broadcastBlockEntity(Level var1, BlockPos var2) {
+       BlockEntity var3 = var1.getBlockEntity(var2);
+       if (var3 != null) {
+          ClientboundBlockEntityDataPacket var4 = var3.getUpdatePacket();
+          if (var4 != null) {

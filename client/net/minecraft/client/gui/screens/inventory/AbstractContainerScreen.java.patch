@@ -371,32 +371,37 @@
     }
  
     public boolean mouseDragged(double var1, double var3, int var5, double var6, double var8) {
-@@ -509,30 +546,34 @@
+@@ -502,23 +539,18 @@
+       }
+ 
+       this.minecraft.gameMode.handleInventoryMouseClick(this.menu.containerId, var2, var3, var4, this.minecraft.player);
     }
  
+-   public boolean shouldCloseOnEsc() {
+-      return false;
+-   }
+-
     public boolean keyPressed(int var1, int var2, int var3) {
        if (super.keyPressed(var1, var2, var3)) {
           return true;
--      } else {
++      } else if (this.minecraft.options.keyInventory.matches(var1, var2)) {
++         this.onClose();
++         return true;
+       } else {
 -         if (var1 == 256 || this.minecraft.options.keyInventory.matches(var1, var2)) {
 -            this.minecraft.player.closeContainer();
 -         }
 -
 -         this.checkNumkeyPressed(var1, var2);
-+      } else if (var1 != 256 && !this.minecraft.options.keyInventory.matches(var1, var2)) {
 +         this.checkHotbarKeyPressed(var1, var2);
           if (this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
              if (this.minecraft.options.keyPickItem.matches(var1, var2)) {
                 this.slotClicked(this.hoveredSlot, this.hoveredSlot.index, 0, ClickType.CLONE);
              } else if (this.minecraft.options.keyDrop.matches(var1, var2)) {
                 this.slotClicked(this.hoveredSlot, this.hoveredSlot.index, hasControlDown() ? 1 : 0, ClickType.THROW);
-             }
-          }
+@@ -527,12 +559,17 @@
  
           return true;
-+      } else {
-+         this.minecraft.player.closeContainer();
-+         return true;
        }
     }
  
@@ -413,3 +418,15 @@
                 this.slotClicked(this.hoveredSlot, this.hoveredSlot.index, var3, ClickType.SWAP);
                 return true;
              }
+@@ -561,6 +598,11 @@
+    }
+ 
+    public T getMenu() {
+       return this.menu;
+    }
++
++   public void onClose() {
++      this.minecraft.player.closeContainer();
++      super.onClose();
++   }
+ }

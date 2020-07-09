@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/recipebook/SmokingRecipeBookComponent.java
 +++ net/minecraft/client/gui/screens/recipebook/SmokingRecipeBookComponent.java
-@@ -1,8 +1,10 @@
+@@ -1,34 +1,20 @@
  package net.minecraft.client.gui.screens.recipebook;
  
  import java.util.Set;
@@ -11,18 +11,31 @@
  
  public class SmokingRecipeBookComponent extends AbstractFurnaceRecipeBookComponent {
     public SmokingRecipeBookComponent() {
-@@ -22,12 +24,12 @@
- 
-    protected void setGuiOpen(boolean var1) {
-       this.book.setSmokerGuiOpen(var1);
     }
  
--   protected String getRecipeFilterName() {
--      return "gui.recipebook.toggleRecipes.smokable";
+-   protected boolean getFilteringCraftable() {
+-      return this.book.isSmokerFilteringCraftable();
 +   protected Component getRecipeFilterName() {
 +      return new TranslatableComponent("gui.recipebook.toggleRecipes.smokable");
     }
  
+-   protected void setFilteringCraftable(boolean var1) {
+-      this.book.setSmokerFilteringCraftable(var1);
+-   }
+-
+-   protected boolean isGuiOpen() {
+-      return this.book.isSmokerGuiOpen();
+-   }
+-
+-   protected void setGuiOpen(boolean var1) {
+-      this.book.setSmokerGuiOpen(var1);
+-   }
+-
+-   protected String getRecipeFilterName() {
+-      return "gui.recipebook.toggleRecipes.smokable";
+-   }
+-
     protected Set<Item> getFuelItems() {
        return AbstractFurnaceBlockEntity.getFuel().keySet();
     }
+ }

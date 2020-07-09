@@ -1,15 +1,16 @@
 --- net/minecraft/world/level/levelgen/feature/foliageplacers/AcaciaFoliagePlacer.java
 +++ net/minecraft/world/level/levelgen/feature/foliageplacers/AcaciaFoliagePlacer.java
-@@ -1,51 +1,45 @@
+@@ -1,51 +1,46 @@
  package net.minecraft.world.level.levelgen.feature.foliageplacers;
  
 -import com.mojang.datafixers.Dynamic;
-+import com.mojang.datafixers.util.Function4;
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
  import java.util.Random;
  import java.util.Set;
++import java.util.function.BiFunction;
  import net.minecraft.core.BlockPos;
++import net.minecraft.util.UniformInt;
  import net.minecraft.world.level.LevelSimulatedRW;
 -import net.minecraft.world.level.levelgen.feature.configurations.SmallTreeConfiguration;
 +import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
@@ -20,13 +21,13 @@
 -      super(var1, var2, FoliagePlacerType.ACACIA_FOLIAGE_PLACER);
 -   }
 +   public static final Codec<AcaciaFoliagePlacer> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return foliagePlacerParts(var0).apply(var0, (Function4)(AcaciaFoliagePlacer::new));
++      return foliagePlacerParts(var0).apply(var0, (BiFunction)(AcaciaFoliagePlacer::new));
 +   });
  
 -   public <T> AcaciaFoliagePlacer(Dynamic<T> var1) {
 -      this(var1.get("radius").asInt(0), var1.get("radius_random").asInt(0));
-+   public AcaciaFoliagePlacer(int var1, int var2, int var3, int var4) {
-+      super(var1, var2, var3, var4);
++   public AcaciaFoliagePlacer(UniformInt var1, UniformInt var2) {
++      super(var1, var2);
     }
  
 -   public void createFoliage(LevelSimulatedRW var1, Random var2, SmallTreeConfiguration var3, int var4, int var5, int var6, BlockPos var7, Set<BlockPos> var8) {

@@ -1,6 +1,15 @@
 --- net/minecraft/world/level/ChunkPos.java
 +++ net/minecraft/world/level/ChunkPos.java
-@@ -99,11 +99,11 @@
+@@ -90,20 +90,16 @@
+ 
+    public int getRegionLocalZ() {
+       return this.z & 31;
+    }
+ 
+-   public BlockPos getBlockAt(int var1, int var2, int var3) {
+-      return new BlockPos((this.x << 4) + var1, var2, (this.z << 4) + var3);
+-   }
+-
     public String toString() {
        return "[" + this.x + ", " + this.z + "]";
     }

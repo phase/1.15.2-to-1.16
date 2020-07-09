@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/WeepingVinesFeature.java
 +++ net/minecraft/world/level/levelgen/feature/WeepingVinesFeature.java
-@@ -1,0 +1,112 @@
+@@ -1,0 +1,111 @@
 +package net.minecraft.world.level.levelgen.feature;
 +
 +import com.mojang.serialization.Codec;
@@ -9,7 +9,6 @@
 +import net.minecraft.core.Direction;
 +import net.minecraft.util.Mth;
 +import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
 +import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.block.GrowingPlantHeadBlock;
@@ -24,16 +23,16 @@
 +      super(var1);
 +   }
 +
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      if (!var1.isEmptyBlock(var5)) {
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
++      if (!var1.isEmptyBlock(var4)) {
 +         return false;
 +      } else {
-+         BlockState var7 = var1.getBlockState(var5.above());
-+         if (!var7.is(Blocks.NETHERRACK) && !var7.is(Blocks.NETHER_WART_BLOCK)) {
++         BlockState var6 = var1.getBlockState(var4.above());
++         if (!var6.is(Blocks.NETHERRACK) && !var6.is(Blocks.NETHER_WART_BLOCK)) {
 +            return false;
 +         } else {
-+            this.placeRoofNetherWart(var1, var4, var5);
-+            this.placeRoofWeepingVines(var1, var4, var5);
++            this.placeRoofNetherWart(var1, var3, var4);
++            this.placeRoofWeepingVines(var1, var3, var4);
 +            return true;
 +         }
 +      }

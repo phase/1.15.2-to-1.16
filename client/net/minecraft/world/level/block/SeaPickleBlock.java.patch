@@ -7,7 +7,8 @@
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.tags.BlockTags;
 -import net.minecraft.tags.FluidTags;
- import net.minecraft.world.item.BlockPlaceContext;
+-import net.minecraft.world.item.BlockPlaceContext;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
@@ -26,7 +27,7 @@
  
  public class SeaPickleBlock extends BushBlock implements BonemealableBlock, SimpleWaterloggedBlock {
     public static final IntegerProperty PICKLES;
-@@ -28,33 +29,29 @@
+@@ -28,37 +29,33 @@
     protected static final VoxelShape ONE_AABB;
     protected static final VoxelShape TWO_AABB;
     protected static final VoxelShape THREE_AABB;
@@ -63,8 +64,13 @@
     }
  
     protected boolean mayPlaceOn(BlockState var1, BlockGetter var2, BlockPos var3) {
-       return !var1.getCollisionShape(var2, var3).getFaceShape(Direction.UP).isEmpty();
+-      return !var1.getCollisionShape(var2, var3).getFaceShape(Direction.UP).isEmpty();
++      return !var1.getCollisionShape(var2, var3).getFaceShape(Direction.UP).isEmpty() || var1.isFaceSturdy(var2, var3, Direction.UP);
     }
+ 
+    public boolean canSurvive(BlockState var1, LevelReader var2, BlockPos var3) {
+       BlockPos var4 = var3.below();
+       return this.mayPlaceOn(var2.getBlockState(var4), var2, var4);
 @@ -109,11 +106,11 @@
     public boolean isBonemealSuccess(Level var1, Random var2, BlockPos var3, BlockState var4) {
        return true;

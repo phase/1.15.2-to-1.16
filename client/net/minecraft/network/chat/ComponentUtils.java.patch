@@ -61,7 +61,7 @@
           return new TextComponent(var0.getName());
        } else {
           return var0.getId() != null ? new TextComponent(var0.getId().toString()) : new TextComponent("(unknown)");
-@@ -53,43 +70,43 @@
+@@ -53,44 +70,44 @@
        });
     }
  
@@ -104,9 +104,11 @@
     }
  
 -   public static Component wrapInSquareBrackets(Component var0) {
+-      return (new TextComponent("[")).append(var0).append("]");
 +   public static MutableComponent wrapInSquareBrackets(Component var0) {
-       return (new TextComponent("[")).append(var0).append("]");
++      return new TranslatableComponent("chat.square_brackets", new Object[]{var0});
     }
  
     public static Component fromMessage(Message var0) {
        return (Component)(var0 instanceof Component ? (Component)var0 : new TextComponent(var0.getString()));
+    }

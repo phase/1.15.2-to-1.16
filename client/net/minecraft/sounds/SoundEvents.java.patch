@@ -364,7 +364,7 @@
     public static final SoundEvent NOTE_BLOCK_BELL = register("block.note_block.bell");
     public static final SoundEvent NOTE_BLOCK_CHIME = register("block.note_block.chime");
     public static final SoundEvent NOTE_BLOCK_FLUTE = register("block.note_block.flute");
-@@ -472,14 +583,16 @@
+@@ -472,14 +583,17 @@
     public static final SoundEvent PARROT_IMITATE_ENDER_DRAGON = register("entity.parrot.imitate.ender_dragon");
     public static final SoundEvent PARROT_IMITATE_ENDERMITE = register("entity.parrot.imitate.endermite");
     public static final SoundEvent PARROT_IMITATE_EVOKER = register("entity.parrot.imitate.evoker");
@@ -376,12 +376,13 @@
     public static final SoundEvent PARROT_IMITATE_MAGMA_CUBE = register("entity.parrot.imitate.magma_cube");
     public static final SoundEvent PARROT_IMITATE_PHANTOM = register("entity.parrot.imitate.phantom");
 +   public static final SoundEvent PARROT_IMITATE_PIGLIN = register("entity.parrot.imitate.piglin");
++   public static final SoundEvent PARROT_IMITATE_PIGLIN_BRUTE = register("entity.parrot.imitate.piglin_brute");
     public static final SoundEvent PARROT_IMITATE_PILLAGER = register("entity.parrot.imitate.pillager");
     public static final SoundEvent PARROT_IMITATE_RAVAGER = register("entity.parrot.imitate.ravager");
     public static final SoundEvent PARROT_IMITATE_SHULKER = register("entity.parrot.imitate.shulker");
     public static final SoundEvent PARROT_IMITATE_SILVERFISH = register("entity.parrot.imitate.silverfish");
     public static final SoundEvent PARROT_IMITATE_SKELETON = register("entity.parrot.imitate.skeleton");
-@@ -489,10 +602,11 @@
+@@ -489,10 +603,11 @@
     public static final SoundEvent PARROT_IMITATE_VEX = register("entity.parrot.imitate.vex");
     public static final SoundEvent PARROT_IMITATE_VINDICATOR = register("entity.parrot.imitate.vindicator");
     public static final SoundEvent PARROT_IMITATE_WITCH = register("entity.parrot.imitate.witch");
@@ -393,7 +394,7 @@
     public static final SoundEvent PARROT_STEP = register("entity.parrot.step");
     public static final SoundEvent PHANTOM_AMBIENT = register("entity.phantom.ambient");
     public static final SoundEvent PHANTOM_BITE = register("entity.phantom.bite");
-@@ -503,10 +617,20 @@
+@@ -503,10 +618,26 @@
     public static final SoundEvent PIG_AMBIENT = register("entity.pig.ambient");
     public static final SoundEvent PIG_DEATH = register("entity.pig.death");
     public static final SoundEvent PIG_HURT = register("entity.pig.hurt");
@@ -409,12 +410,18 @@
 +   public static final SoundEvent PIGLIN_RETREAT = register("entity.piglin.retreat");
 +   public static final SoundEvent PIGLIN_STEP = register("entity.piglin.step");
 +   public static final SoundEvent PIGLIN_CONVERTED_TO_ZOMBIFIED = register("entity.piglin.converted_to_zombified");
++   public static final SoundEvent PIGLIN_BRUTE_AMBIENT = register("entity.piglin_brute.ambient");
++   public static final SoundEvent PIGLIN_BRUTE_ANGRY = register("entity.piglin_brute.angry");
++   public static final SoundEvent PIGLIN_BRUTE_DEATH = register("entity.piglin_brute.death");
++   public static final SoundEvent PIGLIN_BRUTE_HURT = register("entity.piglin_brute.hurt");
++   public static final SoundEvent PIGLIN_BRUTE_STEP = register("entity.piglin_brute.step");
++   public static final SoundEvent PIGLIN_BRUTE_CONVERTED_TO_ZOMBIFIED = register("entity.piglin_brute.converted_to_zombified");
     public static final SoundEvent PILLAGER_AMBIENT = register("entity.pillager.ambient");
     public static final SoundEvent PILLAGER_CELEBRATE = register("entity.pillager.celebrate");
     public static final SoundEvent PILLAGER_DEATH = register("entity.pillager.death");
     public static final SoundEvent PILLAGER_HURT = register("entity.pillager.hurt");
     public static final SoundEvent PISTON_CONTRACT = register("block.piston.contract");
-@@ -551,23 +675,33 @@
+@@ -551,23 +682,33 @@
     public static final SoundEvent RABBIT_ATTACK = register("entity.rabbit.attack");
     public static final SoundEvent RABBIT_DEATH = register("entity.rabbit.death");
     public static final SoundEvent RABBIT_HURT = register("entity.rabbit.hurt");
@@ -460,7 +467,7 @@
     public static final SoundEvent SALMON_FLOP = register("entity.salmon.flop");
     public static final SoundEvent SALMON_HURT = register("entity.salmon.hurt");
     public static final SoundEvent SAND_BREAK = register("block.sand.break");
-@@ -585,10 +719,15 @@
+@@ -585,10 +726,15 @@
     public static final SoundEvent SHEEP_HURT = register("entity.sheep.hurt");
     public static final SoundEvent SHEEP_SHEAR = register("entity.sheep.shear");
     public static final SoundEvent SHEEP_STEP = register("entity.sheep.step");
@@ -476,7 +483,7 @@
     public static final SoundEvent SHULKER_BOX_CLOSE = register("block.shulker_box.close");
     public static final SoundEvent SHULKER_BOX_OPEN = register("block.shulker_box.open");
     public static final SoundEvent SHULKER_BULLET_HIT = register("entity.shulker_bullet.hit");
-@@ -625,25 +764,44 @@
+@@ -625,25 +771,44 @@
     public static final SoundEvent SLIME_BLOCK_BREAK = register("block.slime_block.break");
     public static final SoundEvent SLIME_BLOCK_FALL = register("block.slime_block.fall");
     public static final SoundEvent SLIME_BLOCK_HIT = register("block.slime_block.hit");
@@ -524,7 +531,7 @@
     public static final SoundEvent SNOW_STEP = register("block.snow.step");
     public static final SoundEvent SPIDER_AMBIENT = register("entity.spider.ambient");
     public static final SoundEvent SPIDER_DEATH = register("entity.spider.death");
-@@ -737,10 +895,11 @@
+@@ -737,10 +902,11 @@
     public static final SoundEvent VILLAGER_WORK_WEAPONSMITH = register("entity.villager.work_weaponsmith");
     public static final SoundEvent VINDICATOR_AMBIENT = register("entity.vindicator.ambient");
     public static final SoundEvent VINDICATOR_CELEBRATE = register("entity.vindicator.celebrate");
@@ -536,7 +543,7 @@
     public static final SoundEvent WANDERING_TRADER_DEATH = register("entity.wandering_trader.death");
     public static final SoundEvent WANDERING_TRADER_DISAPPEARED = register("entity.wandering_trader.disappeared");
     public static final SoundEvent WANDERING_TRADER_DRINK_MILK = register("entity.wandering_trader.drink_milk");
-@@ -751,10 +910,15 @@
+@@ -751,10 +917,15 @@
     public static final SoundEvent WANDERING_TRADER_TRADE = register("entity.wandering_trader.trade");
     public static final SoundEvent WANDERING_TRADER_YES = register("entity.wandering_trader.yes");
     public static final SoundEvent WATER_AMBIENT = register("block.water.ambient");
@@ -552,7 +559,7 @@
     public static final SoundEvent WITCH_DEATH = register("entity.witch.death");
     public static final SoundEvent WITCH_DRINK = register("entity.witch.drink");
     public static final SoundEvent WITCH_HURT = register("entity.witch.hurt");
-@@ -789,10 +953,21 @@
+@@ -789,10 +960,21 @@
     public static final SoundEvent WOOD_HIT = register("block.wood.hit");
     public static final SoundEvent WOOD_PLACE = register("block.wood.place");
     public static final SoundEvent WOODEN_PRESSURE_PLATE_CLICK_OFF = register("block.wooden_pressure_plate.click_off");
@@ -574,7 +581,7 @@
     public static final SoundEvent ZOMBIE_ATTACK_IRON_DOOR = register("entity.zombie.attack_iron_door");
     public static final SoundEvent ZOMBIE_BREAK_WOODEN_DOOR = register("entity.zombie.break_wooden_door");
     public static final SoundEvent ZOMBIE_CONVERTED_TO_DROWNED = register("entity.zombie.converted_to_drowned");
-@@ -801,14 +976,14 @@
+@@ -801,14 +983,14 @@
     public static final SoundEvent ZOMBIE_HORSE_AMBIENT = register("entity.zombie_horse.ambient");
     public static final SoundEvent ZOMBIE_HORSE_DEATH = register("entity.zombie_horse.death");
     public static final SoundEvent ZOMBIE_HORSE_HURT = register("entity.zombie_horse.hurt");

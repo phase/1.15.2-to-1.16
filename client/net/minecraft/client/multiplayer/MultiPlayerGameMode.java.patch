@@ -1,5 +1,18 @@
 --- net/minecraft/client/multiplayer/MultiPlayerGameMode.java
 +++ net/minecraft/client/multiplayer/MultiPlayerGameMode.java
+@@ -28,11 +28,11 @@
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.animal.horse.AbstractHorse;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.inventory.ClickType;
+ import net.minecraft.world.item.ItemStack;
+-import net.minecraft.world.item.UseOnContext;
++import net.minecraft.world.item.context.UseOnContext;
+ import net.minecraft.world.item.crafting.Recipe;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.CommandBlock;
 @@ -57,33 +57,36 @@
     private float destroyProgress;
     private float destroyTicks;

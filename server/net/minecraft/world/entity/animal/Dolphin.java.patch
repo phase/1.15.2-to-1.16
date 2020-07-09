@@ -25,7 +25,7 @@
  import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
  import net.minecraft.world.entity.ai.goal.BreathAirGoal;
  import net.minecraft.world.entity.ai.goal.DolphinJumpGoal;
-@@ -48,23 +51,23 @@
+@@ -48,23 +51,24 @@
  import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
  import net.minecraft.world.entity.ai.targeting.TargetingConditions;
  import net.minecraft.world.entity.ai.util.RandomPos;
@@ -36,6 +36,7 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.biome.Biomes;
 +import net.minecraft.world.level.levelgen.feature.StructureFeature;
  import net.minecraft.world.level.pathfinder.PathComputationType;
@@ -51,7 +52,20 @@
  
     public Dolphin(EntityType<? extends Dolphin> var1, Level var2) {
        super(var1, var2);
-@@ -102,22 +105,22 @@
+@@ -72,11 +76,11 @@
+       this.lookControl = new DolphinLookControl(this, 10);
+       this.setCanPickUpLoot(true);
+    }
+ 
+    @Nullable
+-   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
+       this.setAirSupply(this.getMaxAirSupply());
+       this.xRot = 0.0F;
+       return super.finalizeSpawn(var1, var2, var3, var4, var5);
+    }
+ 
+@@ -102,22 +106,22 @@
     public void setGotFish(boolean var1) {
        this.entityData.set(GOT_FISH, var1);
     }
@@ -77,7 +91,7 @@
     public void addAdditionalSaveData(CompoundTag var1) {
        super.addAdditionalSaveData(var1);
        var1.putInt("TreasurePosX", this.getTreasurePos().getX());
-@@ -151,24 +154,20 @@
+@@ -151,24 +155,20 @@
        this.goalSelector.addGoal(8, new FollowBoatGoal(this));
        this.goalSelector.addGoal(9, new AvoidEntityGoal(this, Guardian.class, 8.0F, 1.0D, 1.0D));
        this.targetSelector.addGoal(1, (new HurtByTargetGoal(this, new Class[]{Guardian.class})).setAlertOthers());
@@ -105,7 +119,7 @@
           this.playSound(SoundEvents.DOLPHIN_ATTACK, 1.0F, 1.0F);
        }
  
-@@ -210,10 +209,11 @@
+@@ -210,10 +210,11 @@
  
     protected void pickUpItem(ItemEntity var1) {
        if (this.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()) {
@@ -117,7 +131,7 @@
              this.take(var1, var2.getCount());
              var1.remove();
           }
-@@ -221,11 +221,13 @@
+@@ -221,11 +222,13 @@
  
     }
  
@@ -132,7 +146,7 @@
           } else {
              this.setMoisntessLevel(this.getMoistnessLevel() - 1);
              if (this.getMoistnessLevel() <= 0) {
-@@ -253,11 +255,11 @@
+@@ -253,11 +256,11 @@
           }
  
        }
@@ -145,7 +159,7 @@
           if (!this.level.isClientSide) {
              this.playSound(SoundEvents.DOLPHIN_EAT, 1.0F, 1.0F);
           }
-@@ -265,11 +267,11 @@
+@@ -265,11 +268,11 @@
           this.setGotFish(true);
           if (!var1.abilities.instabuild) {
              var3.shrink(1);
@@ -158,7 +172,7 @@
        }
     }
  
-@@ -323,11 +325,11 @@
+@@ -323,11 +326,11 @@
     }
  
     static {
@@ -171,7 +185,7 @@
           return !var0.hasPickUpDelay() && var0.isAlive() && var0.isInWater();
        };
     }
-@@ -357,21 +359,22 @@
+@@ -357,21 +360,22 @@
        public void start() {
           if (this.dolphin.level instanceof ServerLevel) {
              ServerLevel var1 = (ServerLevel)this.dolphin.level;
@@ -199,7 +213,7 @@
              }
  
              var1.broadcastEntityEvent(this.dolphin, (byte)38);
-@@ -387,11 +390,11 @@
+@@ -387,11 +391,11 @@
        }
  
        public void tick() {
@@ -212,7 +226,7 @@
                 var3 = RandomPos.getPosTowards(this.dolphin, 8, 4, var2);
              }
  
-@@ -428,11 +431,15 @@
+@@ -428,11 +432,15 @@
           this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
        }
  
@@ -229,7 +243,7 @@
        public boolean canContinueToUse() {
           return this.player != null && this.player.isSwimming() && this.dolphin.distanceToSqr(this.player) < 256.0D;
        }
-@@ -546,11 +553,11 @@
+@@ -546,11 +554,11 @@
              } else {
                 float var9 = (float)(Mth.atan2(var5, var1) * 57.2957763671875D) - 90.0F;
                 this.dolphin.yRot = this.rotlerp(this.dolphin.yRot, var9, 10.0F);

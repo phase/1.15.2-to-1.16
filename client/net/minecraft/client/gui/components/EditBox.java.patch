@@ -16,7 +16,7 @@
  import java.util.function.Predicate;
  import javax.annotation.Nullable;
  import net.minecraft.SharedConstants;
-@@ -15,11 +16,13 @@
+@@ -15,11 +16,14 @@
  import net.minecraft.client.Minecraft;
  import net.minecraft.client.gui.Font;
  import net.minecraft.client.gui.GuiComponent;
@@ -24,6 +24,7 @@
  import net.minecraft.client.gui.screens.Screen;
 -import net.minecraft.client.resources.language.I18n;
 +import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.FormattedText;
 +import net.minecraft.network.chat.MutableComponent;
 +import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.util.Mth;
@@ -31,11 +32,14 @@
  public class EditBox extends AbstractWidget implements Widget, GuiEventListener {
     private final Font font;
     private String value;
-@@ -37,24 +40,24 @@
+@@ -35,28 +39,28 @@
+    private int textColor;
+    private int textColorUneditable;
     private String suggestion;
     private Consumer<String> responder;
     private Predicate<String> filter;
-    private BiFunction<String, Integer, String> formatter;
+-   private BiFunction<String, Integer, String> formatter;
++   private BiFunction<String, Integer, FormattedText> formatter;
  
 -   public EditBox(Font var1, int var2, int var3, int var4, int var5, String var6) {
 +   public EditBox(Font var1, int var2, int var3, int var4, int var5, Component var6) {
@@ -55,11 +59,23 @@
 -      this.filter = Predicates.alwaysTrue();
 +      this.filter = Objects::nonNull;
        this.formatter = (var0, var1x) -> {
-          return var0;
+-         return var0;
++         return FormattedText.of(var0);
        };
        this.font = var1;
        if (var6 != null) {
-@@ -73,13 +76,13 @@
+          this.setValue(var6.getValue());
+       }
+@@ -65,21 +69,21 @@
+ 
+    public void setResponder(Consumer<String> var1) {
+       this.responder = var1;
+    }
+ 
+-   public void setFormatter(BiFunction<String, Integer, String> var1) {
++   public void setFormatter(BiFunction<String, Integer, FormattedText> var1) {
+       this.formatter = var1;
+    }
  
     public void tick() {
        ++this.frame;
@@ -76,7 +92,7 @@
     public void setValue(String var1) {
        if (this.filter.test(var1)) {
           if (var1.length() > this.maxLength) {
-@@ -107,35 +110,24 @@
+@@ -107,35 +111,24 @@
     public void setFilter(Predicate<String> var1) {
        this.filter = var1;
     }
@@ -124,7 +140,7 @@
        }
     }
  
-@@ -169,29 +161,19 @@
+@@ -169,29 +162,19 @@
     public void deleteChars(int var1) {
        if (!this.value.isEmpty()) {
           if (this.highlightPos != this.cursorPos) {
@@ -162,7 +178,7 @@
        }
     }
  
-@@ -232,13 +214,17 @@
+@@ -232,13 +215,17 @@
  
        return var4;
     }
@@ -181,7 +197,7 @@
        if (!this.shiftPressed) {
           this.setHighlightPos(this.cursorPos);
        }
-@@ -366,12 +352,12 @@
+@@ -366,12 +353,12 @@
              int var7 = Mth.floor(var1) - this.x;
              if (this.bordered) {
                 var7 -= 4;
@@ -196,7 +212,7 @@
              return false;
           }
        }
-@@ -379,73 +365,76 @@
+@@ -379,73 +366,76 @@
  
     public void setFocus(boolean var1) {
        super.setFocused(var1);
@@ -243,7 +259,7 @@
 -            var12 = this.font.drawShadow((String)this.formatter.apply(var13, this.displayPos), (float)var10, (float)var11, var4);
 +         if (!var8.isEmpty()) {
 +            String var14 = var9 ? var8.substring(0, var6) : var8;
-+            var13 = this.font.drawShadow(var1, (String)this.formatter.apply(var14, this.displayPos), (float)var11, (float)var12, var5);
++            var13 = this.font.drawShadow(var1, (FormattedText)this.formatter.apply(var14, this.displayPos), (float)var11, (float)var12, var5);
           }
  
 -         boolean var16 = this.cursorPos < this.value.length() || this.value.length() >= this.getMaxLength();
@@ -265,7 +281,7 @@
 -         if (!var7.isEmpty() && var8 && var5 < var7.length()) {
 -            this.font.drawShadow((String)this.formatter.apply(var7.substring(var5), this.cursorPos), (float)var12, (float)var11, var4);
 +         if (!var8.isEmpty() && var9 && var6 < var8.length()) {
-+            this.font.drawShadow(var1, (String)this.formatter.apply(var8.substring(var6), this.cursorPos), (float)var13, (float)var12, var5);
++            this.font.drawShadow(var1, (FormattedText)this.formatter.apply(var8.substring(var6), this.cursorPos), (float)var13, (float)var12, var5);
           }
  
 -         if (!var16 && this.suggestion != null) {
@@ -314,7 +330,7 @@
        }
     }
  
-@@ -554,14 +543,14 @@
+@@ -554,14 +544,14 @@
           if (this.displayPos > var2) {
              this.displayPos = var2;
           }

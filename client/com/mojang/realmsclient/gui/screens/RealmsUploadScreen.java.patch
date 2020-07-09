@@ -59,7 +59,7 @@
 -   private volatile String errorMessage;
 -   private volatile String status;
 +   private volatile Component[] errorMessage;
-+   private volatile Component status;
++   private volatile Component status = new TranslatableComponent("mco.upload.preparing");
     private volatile String progress;
     private volatile boolean cancelled;
     private volatile boolean uploadFinished;
@@ -154,7 +154,7 @@
     public boolean keyPressed(int var1, int var2, int var3) {
        if (var1 == 256) {
           if (this.showDots) {
-@@ -121,231 +126,197 @@
+@@ -121,168 +126,129 @@
        } else {
           return super.keyPressed(var1, var2, var3);
        }
@@ -367,63 +367,30 @@
  
           try {
 -            if (!uploadLock.tryLock(1L, TimeUnit.SECONDS)) {
--               return;
--            }
-+            try {
-+               if (!UPLOAD_LOCK.tryLock(1L, TimeUnit.SECONDS)) {
-+                  return;
-+               }
++            if (!UPLOAD_LOCK.tryLock(1L, TimeUnit.SECONDS)) {
++               this.status = new TranslatableComponent("mco.upload.close.failure");
+                return;
+             }
  
 -            this.status = getLocalizedString("mco.upload.preparing");
--            UploadInfo var5 = null;
--            int var6 = 0;
-+               this.status = new TranslatableComponent("mco.upload.preparing");
-+               UploadInfo var5 = null;
-+               int var6 = 0;
+             UploadInfo var5 = null;
+             int var6 = 0;
  
--            while(var6 < 20) {
--               try {
--                  if (this.cancelled) {
--                     this.uploadCancelled();
--                     return;
-+               while(var6 < 20) {
-+                  try {
-+                     if (this.cancelled) {
-+                        this.uploadCancelled();
-+                        return;
-+                     }
-+
-+                     var5 = var2.upload(var3, UploadTokenCache.get(var3));
-+                     break;
-+                  } catch (RetryCallException var20) {
-+                     Thread.sleep((long)(var20.delaySeconds * 1000));
-+                     ++var6;
-                   }
-+               }
- 
--                  var5 = var2.upload(var3, UploadTokenCache.get(var3));
--                  break;
--               } catch (RetryCallException var20) {
--                  Thread.sleep((long)(var20.delaySeconds * 1000));
--                  ++var6;
-+               if (var5 == null) {
-+                  this.status = new TranslatableComponent("mco.upload.close.failure");
-+                  return;
+             while(var6 < 20) {
+                try {
+@@ -298,54 +264,54 @@
+                   ++var6;
                 }
--            }
+             }
  
--            if (var5 == null) {
+             if (var5 == null) {
 -               this.status = getLocalizedString("mco.upload.close.failure");
--               return;
--            }
-+               UploadTokenCache.put(var3, var5.getToken());
-+               if (!var5.isWorldClosed()) {
-+                  this.status = new TranslatableComponent("mco.upload.close.failure");
-+                  return;
-+               }
++               this.status = new TranslatableComponent("mco.upload.close.failure");
+                return;
+             }
  
--            UploadTokenCache.put(var3, var5.getToken());
--            if (var5.isWorldClosed()) {
+             UploadTokenCache.put(var3, var5.getToken());
+             if (var5.isWorldClosed()) {
                 if (this.cancelled) {
                    this.uploadCancelled();
                    return;
@@ -480,30 +447,25 @@
                 });
  
                 while(!var7.isFinished()) {
-@@ -361,44 +332,43 @@
-                      LOGGER.error("Failed to check Realms file upload status");
-                   }
+@@ -363,27 +329,27 @@
                 }
  
                 return;
-+            } catch (IOException var21) {
-+               this.setErrorMessage(new TranslatableComponent("mco.upload.failed", new Object[]{var21.getMessage()}));
-+            } catch (RealmsServiceException var22) {
-+               this.setErrorMessage(new TranslatableComponent("mco.upload.failed", new Object[]{var22.toString()}));
-+            } catch (InterruptedException var23) {
-+               LOGGER.error("Could not acquire upload lock");
              }
  
 -            this.status = getLocalizedString("mco.upload.close.failure");
--         } catch (IOException var21) {
++            this.status = new TranslatableComponent("mco.upload.close.failure");
+          } catch (IOException var21) {
 -            this.errorMessage = getLocalizedString("mco.upload.failed", new Object[]{var21.getMessage()});
--            return;
--         } catch (RealmsServiceException var22) {
++            this.setErrorMessage(new TranslatableComponent("mco.upload.failed", new Object[]{var21.getMessage()}));
+             return;
+          } catch (RealmsServiceException var22) {
 -            this.errorMessage = getLocalizedString("mco.upload.failed", new Object[]{var22.toString()});
--            return;
--         } catch (InterruptedException var23) {
--            LOGGER.error("Could not acquire upload lock");
--            return;
++            this.setErrorMessage(new TranslatableComponent("mco.upload.failed", new Object[]{var22.toString()}));
+             return;
+          } catch (InterruptedException var23) {
+             LOGGER.error("Could not acquire upload lock");
+             return;
           } finally {
              this.uploadFinished = true;
 -            if (uploadLock.isHeldByCurrentThread()) {
@@ -520,13 +482,9 @@
                    var1.delete();
                 }
  
-+            } else {
-+               return;
-             }
--
--            return;
+@@ -393,12 +359,16 @@
           }
--
+ 
        })).start();
     }
  

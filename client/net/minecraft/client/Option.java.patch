@@ -1,6 +1,6 @@
 --- net/minecraft/client/Option.java
 +++ net/minecraft/client/Option.java
-@@ -1,13 +1,23 @@
+@@ -1,13 +1,22 @@
  package net.minecraft.client;
  
 +import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -18,7 +18,6 @@
 +import net.minecraft.network.chat.CommonComponents;
 +import net.minecraft.network.chat.Component;
 +import net.minecraft.network.chat.FormattedText;
-+import net.minecraft.network.chat.MutableComponent;
 +import net.minecraft.network.chat.TextComponent;
 +import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.util.Mth;
@@ -26,17 +25,17 @@
  
  public abstract class Option {
     public static final ProgressOption BIOME_BLEND_RADIUS = new ProgressOption("options.biomeBlendRadius", 0.0D, 7.0D, 1.0F, (var0) -> {
-@@ -15,112 +25,127 @@
+@@ -15,112 +24,121 @@
     }, (var0, var1) -> {
        var0.biomeBlendRadius = Mth.clamp((int)var1, 0, 7);
        Minecraft.getInstance().levelRenderer.allChanged();
     }, (var0, var1) -> {
        double var2 = var1.get(var0);
 -      String var4 = var1.getCaption();
-+      MutableComponent var4 = var1.createCaption();
-       int var5 = (int)var2 * 2 + 1;
+-      int var5 = (int)var2 * 2 + 1;
 -      return var4 + I18n.get("options.biomeBlendRadius." + var5);
-+      return var4.append((Component)(new TranslatableComponent("options.biomeBlendRadius." + var5)));
++      int var4 = (int)var2 * 2 + 1;
++      return var1.genericValueLabel(new TranslatableComponent("options.biomeBlendRadius." + var4));
     });
     public static final ProgressOption CHAT_HEIGHT_FOCUSED = new ProgressOption("options.chat.height.focused", 0.0D, 1.0D, 0.0F, (var0) -> {
        return var0.chatHeightFocused;
@@ -46,7 +45,7 @@
     }, (var0, var1) -> {
        double var2 = var1.toPct(var1.get(var0));
 -      return var1.getCaption() + ChatComponent.getHeight(var2) + "px";
-+      return var1.createCaption().append(ChatComponent.getHeight(var2) + "px");
++      return var1.pixelValueLabel(ChatComponent.getHeight(var2));
     });
     public static final ProgressOption CHAT_HEIGHT_UNFOCUSED = new ProgressOption("options.chat.height.unfocused", 0.0D, 1.0D, 0.0F, (var0) -> {
        return var0.chatHeightUnfocused;
@@ -56,7 +55,7 @@
     }, (var0, var1) -> {
        double var2 = var1.toPct(var1.get(var0));
 -      return var1.getCaption() + ChatComponent.getHeight(var2) + "px";
-+      return var1.createCaption().append(ChatComponent.getHeight(var2) + "px");
++      return var1.pixelValueLabel(ChatComponent.getHeight(var2));
     });
     public static final ProgressOption CHAT_OPACITY = new ProgressOption("options.chat.opacity", 0.0D, 1.0D, 0.0F, (var0) -> {
        return var0.chatOpacity;
@@ -66,7 +65,7 @@
     }, (var0, var1) -> {
        double var2 = var1.toPct(var1.get(var0));
 -      return var1.getCaption() + (int)(var2 * 90.0D + 10.0D) + "%";
-+      return var1.createCaption().append((int)(var2 * 90.0D + 10.0D) + "%");
++      return var1.percentValueLabel(var2 * 0.9D + 0.1D);
     });
     public static final ProgressOption CHAT_SCALE = new ProgressOption("options.chat.scale", 0.0D, 1.0D, 0.0F, (var0) -> {
        return var0.chatScale;
@@ -77,8 +76,7 @@
        double var2 = var1.toPct(var1.get(var0));
 -      String var4 = var1.getCaption();
 -      return var2 == 0.0D ? var4 + I18n.get("options.off") : var4 + (int)(var2 * 100.0D) + "%";
-+      MutableComponent var4 = var1.createCaption();
-+      return var2 == 0.0D ? var4.append(CommonComponents.OPTION_OFF) : var4.append((int)(var2 * 100.0D) + "%");
++      return (Component)(var2 == 0.0D ? CommonComponents.optionStatus(var1.getCaption(), false) : var1.percentValueLabel(var2));
     });
     public static final ProgressOption CHAT_WIDTH = new ProgressOption("options.chat.width", 0.0D, 1.0D, 0.0F, (var0) -> {
        return var0.chatWidth;
@@ -88,14 +86,14 @@
     }, (var0, var1) -> {
        double var2 = var1.toPct(var1.get(var0));
 -      return var1.getCaption() + ChatComponent.getWidth(var2) + "px";
-+      return var1.createCaption().append(ChatComponent.getWidth(var2) + "px");
++      return var1.pixelValueLabel(ChatComponent.getWidth(var2));
     });
 +   public static final ProgressOption CHAT_LINE_SPACING = new ProgressOption("options.chat.line_spacing", 0.0D, 1.0D, 0.0F, (var0) -> {
 +      return var0.chatLineSpacing;
 +   }, (var0, var1) -> {
 +      var0.chatLineSpacing = var1;
 +   }, (var0, var1) -> {
-+      return var1.createCaption().append((int)(var1.toPct(var1.get(var0)) * 100.0D) + "%");
++      return var1.percentValueLabel(var1.toPct(var1.get(var0)));
 +   });
 +   public static final ProgressOption CHAT_DELAY = new ProgressOption("options.chat.delay_instant", 0.0D, 6.0D, 0.1F, (var0) -> {
 +      return var0.chatDelay;
@@ -112,13 +110,12 @@
     }, (var0, var1) -> {
        double var2 = var1.get(var0);
 -      String var4 = var1.getCaption();
-+      MutableComponent var4 = var1.createCaption();
        if (var2 == 70.0D) {
 -         return var4 + I18n.get("options.fov.min");
-+         return var4.append((Component)(new TranslatableComponent("options.fov.min")));
++         return var1.genericValueLabel(new TranslatableComponent("options.fov.min"));
        } else {
 -         return var2 == var1.getMaxValue() ? var4 + I18n.get("options.fov.max") : var4 + (int)var2;
-+         return var2 == var1.getMaxValue() ? var4.append((Component)(new TranslatableComponent("options.fov.max"))) : var4.append(Integer.toString((int)var2));
++         return var2 == var1.getMaxValue() ? var1.genericValueLabel(new TranslatableComponent("options.fov.max")) : var1.genericValueLabel((int)var2);
        }
     });
     public static final ProgressOption FRAMERATE_LIMIT = new ProgressOption("options.framerateLimit", 10.0D, 260.0D, 10.0F, (var0) -> {
@@ -130,8 +127,7 @@
        double var2 = var1.get(var0);
 -      String var4 = var1.getCaption();
 -      return var2 == var1.getMaxValue() ? var4 + I18n.get("options.framerateLimit.max") : var4 + I18n.get("options.framerate", (int)var2);
-+      MutableComponent var4 = var1.createCaption();
-+      return var2 == var1.getMaxValue() ? var4.append((Component)(new TranslatableComponent("options.framerateLimit.max"))) : var4.append((Component)(new TranslatableComponent("options.framerate", new Object[]{(int)var2})));
++      return var2 == var1.getMaxValue() ? var1.genericValueLabel(new TranslatableComponent("options.framerateLimit.max")) : var1.genericValueLabel(new TranslatableComponent("options.framerate", new Object[]{(int)var2}));
     });
     public static final ProgressOption GAMMA = new ProgressOption("options.gamma", 0.0D, 1.0D, 0.0F, (var0) -> {
        return var0.gamma;
@@ -140,13 +136,12 @@
     }, (var0, var1) -> {
        double var2 = var1.toPct(var1.get(var0));
 -      String var4 = var1.getCaption();
-+      MutableComponent var4 = var1.createCaption();
        if (var2 == 0.0D) {
 -         return var4 + I18n.get("options.gamma.min");
-+         return var4.append((Component)(new TranslatableComponent("options.gamma.min")));
++         return var1.genericValueLabel(new TranslatableComponent("options.gamma.min"));
        } else {
 -         return var2 == 1.0D ? var4 + I18n.get("options.gamma.max") : var4 + "+" + (int)(var2 * 100.0D) + "%";
-+         return var2 == 1.0D ? var4.append((Component)(new TranslatableComponent("options.gamma.max"))) : var4.append("+" + (int)(var2 * 100.0D) + "%");
++         return var2 == 1.0D ? var1.genericValueLabel(new TranslatableComponent("options.gamma.max")) : var1.percentAddValueLabel((int)(var2 * 100.0D));
        }
     });
     public static final ProgressOption MIPMAP_LEVELS = new ProgressOption("options.mipmapLevels", 0.0D, 4.0D, 1.0F, (var0) -> {
@@ -157,8 +152,7 @@
        double var2 = var1.get(var0);
 -      String var4 = var1.getCaption();
 -      return var2 == 0.0D ? var4 + I18n.get("options.off") : var4 + (int)var2;
-+      MutableComponent var4 = var1.createCaption();
-+      return var2 == 0.0D ? var4.append(CommonComponents.OPTION_OFF) : var4.append(Integer.toString((int)var2));
++      return (Component)(var2 == 0.0D ? CommonComponents.optionStatus(var1.getCaption(), false) : var1.genericValueLabel((int)var2));
     });
     public static final ProgressOption MOUSE_WHEEL_SENSITIVITY = new LogaritmicProgressOption("options.mouseWheelSensitivity", 0.01D, 10.0D, 0.01F, (var0) -> {
        return var0.mouseWheelSensitivity;
@@ -167,20 +161,20 @@
     }, (var0, var1) -> {
        double var2 = var1.toPct(var1.get(var0));
 -      return var1.getCaption() + String.format("%.2f", var1.toValue(var2));
-+      return var1.createCaption().append(String.format("%.2f", var1.toValue(var2)));
++      return var1.genericValueLabel(new TextComponent(String.format("%.2f", var1.toValue(var2))));
     });
     public static final BooleanOption RAW_MOUSE_INPUT = new BooleanOption("options.rawMouseInput", (var0) -> {
        return var0.rawMouseInput;
     }, (var0, var1) -> {
        var0.rawMouseInput = var1;
-@@ -135,211 +160,293 @@
+@@ -135,211 +153,311 @@
     }, (var0, var1) -> {
        var0.renderDistance = (int)var1;
        Minecraft.getInstance().levelRenderer.needsUpdate();
     }, (var0, var1) -> {
        double var2 = var1.get(var0);
 -      return var1.getCaption() + I18n.get("options.chunks", (int)var2);
-+      return var1.createCaption().append((Component)(new TranslatableComponent("options.chunks", new Object[]{(int)var2})));
++      return var1.genericValueLabel(new TranslatableComponent("options.chunks", new Object[]{(int)var2}));
     });
 +   public static final ProgressOption ENTITY_DISTANCE_SCALING = new ProgressOption("options.entityDistanceScaling", 0.5D, 5.0D, 0.25F, (var0) -> {
 +      return (double)var0.entityDistanceScaling;
@@ -188,7 +182,7 @@
 +      var0.entityDistanceScaling = (float)var1;
 +   }, (var0, var1) -> {
 +      double var2 = var1.get(var0);
-+      return var1.createCaption().append((Component)(new TranslatableComponent("options.entityDistancePercent", new Object[]{(int)(var2 * 100.0D)})));
++      return var1.percentValueLabel(var2);
 +   });
     public static final ProgressOption SENSITIVITY = new ProgressOption("options.sensitivity", 0.0D, 1.0D, 0.0F, (var0) -> {
        return var0.sensitivity;
@@ -197,13 +191,12 @@
     }, (var0, var1) -> {
        double var2 = var1.toPct(var1.get(var0));
 -      String var4 = var1.getCaption();
-+      MutableComponent var4 = var1.createCaption();
        if (var2 == 0.0D) {
 -         return var4 + I18n.get("options.sensitivity.min");
-+         return var4.append((Component)(new TranslatableComponent("options.sensitivity.min")));
++         return var1.genericValueLabel(new TranslatableComponent("options.sensitivity.min"));
        } else {
 -         return var2 == 1.0D ? var4 + I18n.get("options.sensitivity.max") : var4 + (int)(var2 * 200.0D) + "%";
-+         return var2 == 1.0D ? var4.append((Component)(new TranslatableComponent("options.sensitivity.max"))) : var4.append((int)(var2 * 200.0D) + "%");
++         return var2 == 1.0D ? var1.genericValueLabel(new TranslatableComponent("options.sensitivity.max")) : var1.percentValueLabel(2.0D * var2);
        }
     });
     public static final ProgressOption TEXT_BACKGROUND_OPACITY = new ProgressOption("options.accessibility.text_background_opacity", 0.0D, 1.0D, 0.0F, (var0) -> {
@@ -213,26 +206,26 @@
        Minecraft.getInstance().gui.getChat().rescaleChat();
     }, (var0, var1) -> {
 -      return var1.getCaption() + (int)(var1.toPct(var1.get(var0)) * 100.0D) + "%";
-+      return var1.createCaption().append((int)(var1.toPct(var1.get(var0)) * 100.0D) + "%");
++      return var1.percentValueLabel(var1.toPct(var1.get(var0)));
     });
     public static final CycleOption AMBIENT_OCCLUSION = new CycleOption("options.ao", (var0, var1) -> {
        var0.ambientOcclusion = AmbientOcclusionStatus.byId(var0.ambientOcclusion.getId() + var1);
        Minecraft.getInstance().levelRenderer.allChanged();
     }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.ambientOcclusion.getKey());
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.ambientOcclusion.getKey())));
++      return var1.genericValueLabel(new TranslatableComponent(var0.ambientOcclusion.getKey()));
     });
     public static final CycleOption ATTACK_INDICATOR = new CycleOption("options.attackIndicator", (var0, var1) -> {
        var0.attackIndicator = AttackIndicatorStatus.byId(var0.attackIndicator.getId() + var1);
     }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.attackIndicator.getKey());
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.attackIndicator.getKey())));
++      return var1.genericValueLabel(new TranslatableComponent(var0.attackIndicator.getKey()));
     });
     public static final CycleOption CHAT_VISIBILITY = new CycleOption("options.chat.visibility", (var0, var1) -> {
        var0.chatVisibility = ChatVisiblity.byId((var0.chatVisibility.getId() + var1) % 3);
     }, (var0, var1) -> {
 -      return var1.getCaption() + I18n.get(var0.chatVisibility.getKey());
-+      return var1.createCaption().append((Component)(new TranslatableComponent(var0.chatVisibility.getKey())));
++      return var1.genericValueLabel(new TranslatableComponent(var0.chatVisibility.getKey()));
     });
 -   public static final CycleOption GRAPHICS = new CycleOption("options.graphics", (var0, var1) -> {
 -      var0.fancyGraphics = !var0.fancyGraphics;
@@ -256,7 +249,38 @@
 -      } else {
 -         var0.narratorStatus = NarratorStatus.OFF;
 -      }
--
++   private static final Component GRAPHICS_TOOLTIP_FAST = new TranslatableComponent("options.graphics.fast.tooltip");
++   private static final Component GRAPHICS_TOOLTIP_FABULOUS;
++   private static final Component GRAPHICS_TOOLTIP_FANCY;
++   public static final CycleOption GRAPHICS;
++   public static final CycleOption GUI_SCALE;
++   public static final CycleOption MAIN_HAND;
++   public static final CycleOption NARRATOR;
++   public static final CycleOption PARTICLES;
++   public static final CycleOption RENDER_CLOUDS;
++   public static final CycleOption TEXT_BACKGROUND;
++   public static final BooleanOption AUTO_JUMP;
++   public static final BooleanOption AUTO_SUGGESTIONS;
++   public static final BooleanOption CHAT_COLOR;
++   public static final BooleanOption CHAT_LINKS;
++   public static final BooleanOption CHAT_LINKS_PROMPT;
++   public static final BooleanOption DISCRETE_MOUSE_SCROLL;
++   public static final BooleanOption ENABLE_VSYNC;
++   public static final BooleanOption ENTITY_SHADOWS;
++   public static final BooleanOption FORCE_UNICODE_FONT;
++   public static final BooleanOption INVERT_MOUSE;
++   public static final BooleanOption REALMS_NOTIFICATIONS;
++   public static final BooleanOption REDUCED_DEBUG_INFO;
++   public static final BooleanOption SHOW_SUBTITLES;
++   public static final BooleanOption SNOOPER_ENABLED;
++   public static final CycleOption TOGGLE_CROUCH;
++   public static final CycleOption TOGGLE_SPRINT;
++   public static final BooleanOption TOUCHSCREEN;
++   public static final BooleanOption USE_FULLSCREEN;
++   public static final BooleanOption VIEW_BOBBING;
++   private final Component caption;
++   private Optional<List<FormattedText>> toolTip;
+ 
 -      NarratorChatListener.INSTANCE.updateNarratorStatus(var0.narratorStatus);
 -   }, (var0, var1) -> {
 -      return NarratorChatListener.INSTANCE.isActive() ? var1.getCaption() + I18n.get(var0.narratorStatus.getKey()) : var1.getCaption() + I18n.get("options.narrator.notavailable");
@@ -313,7 +337,11 @@
 -      if (Minecraft.getInstance().getWindow() != null) {
 -         Minecraft.getInstance().getWindow().updateVsync(var0.enableVsync);
 -      }
--
++   public Option(String var1) {
++      this.caption = new TranslatableComponent(var1);
++      this.toolTip = Optional.empty();
++   }
+ 
 -   });
 -   public static final BooleanOption ENTITY_SHADOWS = new BooleanOption("options.entityShadows", (var0) -> {
 -      return var0.entityShadows;
@@ -328,7 +356,8 @@
 -      if (var2.getFontManager() != null) {
 -         var2.getFontManager().setForceUnicode(var0.forceUnicodeFont, Util.backgroundExecutor(), var2);
 -      }
--
++   public abstract AbstractWidget createButton(Options var1, int var2, int var3, int var4);
+ 
 -   });
 -   public static final BooleanOption INVERT_MOUSE = new BooleanOption("options.invertMouse", (var0) -> {
 -      return var0.invertYMouse;
@@ -353,7 +382,10 @@
 -   public static final BooleanOption SNOOPER_ENABLED = new BooleanOption("options.snooper", (var0) -> {
 -      if (var0.snooperEnabled) {
 -      }
--
++   protected Component getCaption() {
++      return this.caption;
++   }
+ 
 -      return false;
 -   }, (var0, var1) -> {
 -      var0.snooperEnabled = var1;
@@ -382,64 +414,44 @@
 -         var2.getWindow().toggleFullScreen();
 -         var0.fullscreen = var2.getWindow().isFullscreen();
 -      }
--
++   public void setTooltip(List<FormattedText> var1) {
++      this.toolTip = Optional.of(var1);
++   }
+ 
 -   });
 -   public static final BooleanOption VIEW_BOBBING = new BooleanOption("options.viewBobbing", (var0) -> {
 -      return var0.bobView;
 -   }, (var0, var1) -> {
 -      var0.bobView = var1;
 -   });
-+   private static final Component GRAPHICS_TOOLTIP_FAST = new TranslatableComponent("options.graphics.fast.tooltip");
-+   private static final Component GRAPHICS_TOOLTIP_FABULOUS;
-+   private static final Component GRAPHICS_TOOLTIP_FANCY;
-+   public static final CycleOption GRAPHICS;
-+   public static final CycleOption GUI_SCALE;
-+   public static final CycleOption MAIN_HAND;
-+   public static final CycleOption NARRATOR;
-+   public static final CycleOption PARTICLES;
-+   public static final CycleOption RENDER_CLOUDS;
-+   public static final CycleOption TEXT_BACKGROUND;
-+   public static final BooleanOption AUTO_JUMP;
-+   public static final BooleanOption AUTO_SUGGESTIONS;
-+   public static final BooleanOption CHAT_COLOR;
-+   public static final BooleanOption CHAT_LINKS;
-+   public static final BooleanOption CHAT_LINKS_PROMPT;
-+   public static final BooleanOption DISCRETE_MOUSE_SCROLL;
-+   public static final BooleanOption ENABLE_VSYNC;
-+   public static final BooleanOption ENTITY_SHADOWS;
-+   public static final BooleanOption FORCE_UNICODE_FONT;
-+   public static final BooleanOption INVERT_MOUSE;
-+   public static final BooleanOption REALMS_NOTIFICATIONS;
-+   public static final BooleanOption REDUCED_DEBUG_INFO;
-+   public static final BooleanOption SHOW_SUBTITLES;
-+   public static final BooleanOption SNOOPER_ENABLED;
-+   public static final CycleOption TOGGLE_CROUCH;
-+   public static final CycleOption TOGGLE_SPRINT;
-+   public static final BooleanOption TOUCHSCREEN;
-+   public static final BooleanOption USE_FULLSCREEN;
-+   public static final BooleanOption VIEW_BOBBING;
-    private final String captionId;
-+   private Optional<List<FormattedText>> toolTip;
+-   private final String captionId;
++   public Optional<List<FormattedText>> getTooltip() {
++      return this.toolTip;
++   }
  
-    public Option(String var1) {
-       this.captionId = var1;
-+      this.toolTip = Optional.empty();
+-   public Option(String var1) {
+-      this.captionId = var1;
++   protected Component pixelValueLabel(int var1) {
++      return new TranslatableComponent("options.pixel_value", new Object[]{this.getCaption(), var1});
     }
  
-    public abstract AbstractWidget createButton(Options var1, int var2, int var3, int var4);
+-   public abstract AbstractWidget createButton(Options var1, int var2, int var3, int var4);
++   protected Component percentValueLabel(double var1) {
++      return new TranslatableComponent("options.percent_value", new Object[]{this.getCaption(), (int)(var1 * 100.0D)});
++   }
  
 -   public String getCaption() {
 -      return I18n.get(this.captionId) + ": ";
-+   public MutableComponent createCaption() {
-+      return (new TranslatableComponent(this.captionId)).append(": ");
++   protected Component percentAddValueLabel(int var1) {
++      return new TranslatableComponent("options.percent_add_value", new Object[]{this.getCaption(), var1});
     }
 +
-+   public void setTooltip(List<FormattedText> var1) {
-+      this.toolTip = Optional.of(var1);
++   protected Component genericValueLabel(Component var1) {
++      return new TranslatableComponent("options.generic_value", new Object[]{this.getCaption(), var1});
 +   }
 +
-+   public Optional<List<FormattedText>> getTooltip() {
-+      return this.toolTip;
++   protected Component genericValueLabel(int var1) {
++      return this.genericValueLabel(new TextComponent(Integer.toString(var1)));
 +   }
 +
 +   static {
@@ -471,18 +483,17 @@
 +         }
 +
 +         TranslatableComponent var2 = new TranslatableComponent(var0.graphicsMode.getKey());
-+         return var0.graphicsMode == GraphicsStatus.FABULOUS ? var1.createCaption().append((Component)(new TextComponent("")).append(var2).withStyle(ChatFormatting.ITALIC)) : var1.createCaption().append((Component)var2);
++         return var0.graphicsMode == GraphicsStatus.FABULOUS ? var1.genericValueLabel(var2.withStyle(ChatFormatting.ITALIC)) : var1.genericValueLabel(var2);
 +      });
 +      GUI_SCALE = new CycleOption("options.guiScale", (var0, var1) -> {
 +         var0.guiScale = Integer.remainderUnsigned(var0.guiScale + var1, Minecraft.getInstance().getWindow().calculateScale(0, Minecraft.getInstance().isEnforceUnicode()) + 1);
 +      }, (var0, var1) -> {
-+         MutableComponent var2 = var1.createCaption();
-+         return var0.guiScale == 0 ? var2.append((Component)(new TranslatableComponent("options.guiScale.auto"))) : var2.append(Integer.toString(var0.guiScale));
++         return var0.guiScale == 0 ? var1.genericValueLabel(new TranslatableComponent("options.guiScale.auto")) : var1.genericValueLabel(var0.guiScale);
 +      });
 +      MAIN_HAND = new CycleOption("options.mainHand", (var0, var1) -> {
 +         var0.mainHand = var0.mainHand.getOpposite();
 +      }, (var0, var1) -> {
-+         return var1.createCaption().append(var0.mainHand.getName());
++         return var1.genericValueLabel(var0.mainHand.getName());
 +      });
 +      NARRATOR = new CycleOption("options.narrator", (var0, var1) -> {
 +         if (NarratorChatListener.INSTANCE.isActive()) {
@@ -493,12 +504,12 @@
 +
 +         NarratorChatListener.INSTANCE.updateNarratorStatus(var0.narratorStatus);
 +      }, (var0, var1) -> {
-+         return NarratorChatListener.INSTANCE.isActive() ? var1.createCaption().append(var0.narratorStatus.getName()) : var1.createCaption().append((Component)(new TranslatableComponent("options.narrator.notavailable")));
++         return NarratorChatListener.INSTANCE.isActive() ? var1.genericValueLabel(var0.narratorStatus.getName()) : var1.genericValueLabel(new TranslatableComponent("options.narrator.notavailable"));
 +      });
 +      PARTICLES = new CycleOption("options.particles", (var0, var1) -> {
 +         var0.particles = ParticleStatus.byId(var0.particles.getId() + var1);
 +      }, (var0, var1) -> {
-+         return var1.createCaption().append((Component)(new TranslatableComponent(var0.particles.getKey())));
++         return var1.genericValueLabel(new TranslatableComponent(var0.particles.getKey()));
 +      });
 +      RENDER_CLOUDS = new CycleOption("options.renderClouds", (var0, var1) -> {
 +         var0.renderClouds = CloudStatus.byId(var0.renderClouds.getId() + var1);
@@ -510,12 +521,12 @@
 +         }
 +
 +      }, (var0, var1) -> {
-+         return var1.createCaption().append((Component)(new TranslatableComponent(var0.renderClouds.getKey())));
++         return var1.genericValueLabel(new TranslatableComponent(var0.renderClouds.getKey()));
 +      });
 +      TEXT_BACKGROUND = new CycleOption("options.accessibility.text_background", (var0, var1) -> {
 +         var0.backgroundForChatOnly = !var0.backgroundForChatOnly;
 +      }, (var0, var1) -> {
-+         return var1.createCaption().append((Component)(new TranslatableComponent(var0.backgroundForChatOnly ? "options.accessibility.text_background.chat" : "options.accessibility.text_background.everywhere")));
++         return var1.genericValueLabel(new TranslatableComponent(var0.backgroundForChatOnly ? "options.accessibility.text_background.chat" : "options.accessibility.text_background.everywhere"));
 +      });
 +      AUTO_JUMP = new BooleanOption("options.autoJump", (var0) -> {
 +         return var0.autoJump;
@@ -602,12 +613,12 @@
 +      TOGGLE_CROUCH = new CycleOption("key.sneak", (var0, var1) -> {
 +         var0.toggleCrouch = !var0.toggleCrouch;
 +      }, (var0, var1) -> {
-+         return var1.createCaption().append((Component)(new TranslatableComponent(var0.toggleCrouch ? "options.key.toggle" : "options.key.hold")));
++         return var1.genericValueLabel(new TranslatableComponent(var0.toggleCrouch ? "options.key.toggle" : "options.key.hold"));
 +      });
 +      TOGGLE_SPRINT = new CycleOption("key.sprint", (var0, var1) -> {
 +         var0.toggleSprint = !var0.toggleSprint;
 +      }, (var0, var1) -> {
-+         return var1.createCaption().append((Component)(new TranslatableComponent(var0.toggleSprint ? "options.key.toggle" : "options.key.hold")));
++         return var1.genericValueLabel(new TranslatableComponent(var0.toggleSprint ? "options.key.toggle" : "options.key.hold"));
 +      });
 +      TOUCHSCREEN = new BooleanOption("options.touchscreen", (var0) -> {
 +         return var0.touchscreen;

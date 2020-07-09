@@ -310,7 +310,7 @@
           return super.mobInteract(var1, var2);
        }
     }
-@@ -389,24 +376,31 @@
+@@ -389,41 +376,48 @@
  
     public int getMaxSpawnClusterSize() {
        return 8;
@@ -351,6 +351,30 @@
     }
  
     public void setCollarColor(DyeColor var1) {
+       this.entityData.set(DATA_COLLAR_COLOR, var1.getId());
+    }
+ 
+-   public Wolf getBreedOffspring(AgableMob var1) {
+-      Wolf var2 = (Wolf)EntityType.WOLF.create(this.level);
+-      UUID var3 = this.getOwnerUUID();
+-      if (var3 != null) {
+-         var2.setOwnerUUID(var3);
+-         var2.setTame(true);
++   public Wolf getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      Wolf var3 = (Wolf)EntityType.WOLF.create(var1);
++      UUID var4 = this.getOwnerUUID();
++      if (var4 != null) {
++         var3.setOwnerUUID(var4);
++         var3.setTame(true);
+       }
+ 
+-      return var2;
++      return var3;
+    }
+ 
+    public void setIsInterested(boolean var1) {
+       this.entityData.set(DATA_INTERESTED_ID, var1);
+    }
 @@ -437,11 +431,11 @@
           return false;
        } else {

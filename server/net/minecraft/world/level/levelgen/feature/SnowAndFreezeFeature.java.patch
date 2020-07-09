@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/SnowAndFreezeFeature.java
 +++ net/minecraft/world/level/levelgen/feature/SnowAndFreezeFeature.java
-@@ -1,49 +1,47 @@
+@@ -1,39 +1,36 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -11,7 +11,6 @@
  import net.minecraft.core.Direction;
 -import net.minecraft.core.Vec3i;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.block.Blocks;
@@ -29,45 +28,20 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
--      BlockPos.MutableBlockPos var6 = new BlockPos.MutableBlockPos();
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
+       BlockPos.MutableBlockPos var6 = new BlockPos.MutableBlockPos();
        BlockPos.MutableBlockPos var7 = new BlockPos.MutableBlockPos();
-+      BlockPos.MutableBlockPos var8 = new BlockPos.MutableBlockPos();
  
--      for(int var8 = 0; var8 < 16; ++var8) {
--         for(int var9 = 0; var9 < 16; ++var9) {
--            int var10 = var4.getX() + var8;
--            int var11 = var4.getZ() + var9;
--            int var12 = var1.getHeight(Heightmap.Types.MOTION_BLOCKING, var10, var11);
--            var6.set(var10, var12, var11);
+       for(int var8 = 0; var8 < 16; ++var8) {
+          for(int var9 = 0; var9 < 16; ++var9) {
+             int var10 = var4.getX() + var8;
+             int var11 = var4.getZ() + var9;
+             int var12 = var1.getHeight(Heightmap.Types.MOTION_BLOCKING, var10, var11);
+             var6.set(var10, var12, var11);
 -            var7.set((Vec3i)var6).move(Direction.DOWN, 1);
--            Biome var13 = var1.getBiome(var6);
--            if (var13.shouldFreeze(var1, var7, false)) {
--               var1.setBlock(var7, Blocks.ICE.defaultBlockState(), 2);
-+      for(int var9 = 0; var9 < 16; ++var9) {
-+         for(int var10 = 0; var10 < 16; ++var10) {
-+            int var11 = var5.getX() + var9;
-+            int var12 = var5.getZ() + var10;
-+            int var13 = var1.getHeight(Heightmap.Types.MOTION_BLOCKING, var11, var12);
-+            var7.set(var11, var13, var12);
-+            var8.set(var7).move(Direction.DOWN, 1);
-+            Biome var14 = var1.getBiome(var7);
-+            if (var14.shouldFreeze(var1, var8, false)) {
-+               var1.setBlock(var8, Blocks.ICE.defaultBlockState(), 2);
++            var7.set(var6).move(Direction.DOWN, 1);
+             Biome var13 = var1.getBiome(var6);
+             if (var13.shouldFreeze(var1, var7, false)) {
+                var1.setBlock(var7, Blocks.ICE.defaultBlockState(), 2);
              }
- 
--            if (var13.shouldSnow(var1, var6)) {
--               var1.setBlock(var6, Blocks.SNOW.defaultBlockState(), 2);
--               BlockState var14 = var1.getBlockState(var7);
--               if (var14.hasProperty(SnowyDirtBlock.SNOWY)) {
--                  var1.setBlock(var7, (BlockState)var14.setValue(SnowyDirtBlock.SNOWY, true), 2);
-+            if (var14.shouldSnow(var1, var7)) {
-+               var1.setBlock(var7, Blocks.SNOW.defaultBlockState(), 2);
-+               BlockState var15 = var1.getBlockState(var8);
-+               if (var15.hasProperty(SnowyDirtBlock.SNOWY)) {
-+                  var1.setBlock(var8, (BlockState)var15.setValue(SnowyDirtBlock.SNOWY, true), 2);
-                }
-             }
-          }
-       }
  

@@ -23,6 +23,6 @@
 -   public String getMessage(Options var1) {
 -      return this.getCaption() + I18n.get(this.get(var1) ? "options.on" : "options.off");
 +   public Component getMessage(Options var1) {
-+      return this.createCaption().append(CommonComponents.optionStatus(this.get(var1)));
++      return CommonComponents.optionStatus(this.getCaption(), this.get(var1));
     }
  }

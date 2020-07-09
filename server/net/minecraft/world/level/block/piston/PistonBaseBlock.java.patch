@@ -1,6 +1,17 @@
 --- net/minecraft/world/level/block/piston/PistonBaseBlock.java
 +++ net/minecraft/world/level/block/piston/PistonBaseBlock.java
-@@ -22,10 +22,11 @@
+@@ -12,20 +12,21 @@
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.player.Player;
+-import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.context.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.DirectionalBlock;
  import net.minecraft.world.level.block.Mirror;
@@ -62,10 +73,14 @@
           }
  
        }
-@@ -117,11 +110,11 @@
+@@ -114,14 +107,14 @@
+       if (var5 && !(Boolean)var3.getValue(EXTENDED)) {
+          if ((new PistonStructureResolver(var1, var2, var4, true)).resolve()) {
+             var1.blockEvent(var2, this, 0, var4.get3DDataValue());
           }
        } else if (!var5 && (Boolean)var3.getValue(EXTENDED)) {
-          BlockPos var6 = var2.relative(var4, 2);
+-         BlockPos var6 = var2.relative(var4, 2);
++         BlockPos var6 = var2.relative((Direction)var4, 2);
           BlockState var7 = var1.getBlockState(var6);
           byte var8 = 1;
 -         if (var7.getBlock() == Blocks.MOVING_PISTON && var7.getValue(FACING) == var4) {

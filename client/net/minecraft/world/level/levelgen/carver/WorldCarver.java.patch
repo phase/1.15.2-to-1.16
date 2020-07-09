@@ -59,13 +59,13 @@
        this.liquids = ImmutableSet.of(Fluids.WATER);
 -      this.configurationFactory = var1;
        this.genHeight = var2;
-+      this.configuredCodec = var1.fieldOf("config").xmap((var1x) -> {
-+         return new ConfiguredWorldCarver(this, var1x);
-+      }, (var0) -> {
-+         return var0.config;
-+      }).codec();
++      this.configuredCodec = var1.fieldOf("config").xmap(this::configured, ConfiguredWorldCarver::config).codec();
     }
  
++   public ConfiguredWorldCarver<C> configured(C var1) {
++      return new ConfiguredWorldCarver(this, var1);
++   }
++
 +   public Codec<ConfiguredWorldCarver<C>> configuredCodec() {
 +      return this.configuredCodec;
 +   }

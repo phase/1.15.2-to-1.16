@@ -12,8 +12,9 @@
  import java.util.Set;
  import net.minecraft.core.BlockPos;
 -import net.minecraft.core.Registry;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
  import net.minecraft.world.level.LevelSimulatedRW;
++import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.VineBlock;
  import net.minecraft.world.level.block.state.properties.BooleanProperty;
 -import net.minecraft.world.level.levelgen.feature.AbstractTreeFeature;
@@ -36,7 +37,8 @@
 +      return TreeDecoratorType.LEAVE_VINE;
     }
  
-    public void place(LevelAccessor var1, Random var2, List<BlockPos> var3, List<BlockPos> var4, Set<BlockPos> var5, BoundingBox var6) {
+-   public void place(LevelAccessor var1, Random var2, List<BlockPos> var3, List<BlockPos> var4, Set<BlockPos> var5, BoundingBox var6) {
++   public void place(WorldGenLevel var1, Random var2, List<BlockPos> var3, List<BlockPos> var4, Set<BlockPos> var5, BoundingBox var6) {
        var4.forEach((var5x) -> {
           BlockPos var6x;
           if (var2.nextInt(4) == 0) {

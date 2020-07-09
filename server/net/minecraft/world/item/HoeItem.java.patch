@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/HoeItem.java
 +++ net/minecraft/world/item/HoeItem.java
-@@ -1,33 +1,29 @@
+@@ -1,33 +1,30 @@
  package net.minecraft.world.item;
  
  import com.google.common.collect.ImmutableMap;
@@ -19,6 +19,7 @@
 -import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 -import net.minecraft.world.entity.monster.SharedMonsterAttributes;
  import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
@@ -40,7 +41,7 @@
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();
        BlockPos var3 = var1.getClickedPos();
-@@ -43,33 +39,17 @@
+@@ -43,33 +40,17 @@
                       var1x.broadcastBreakEvent(var1.getHand());
                    });
                 }

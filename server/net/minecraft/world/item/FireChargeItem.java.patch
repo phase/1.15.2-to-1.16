@@ -1,10 +1,12 @@
 --- net/minecraft/world/item/FireChargeItem.java
 +++ net/minecraft/world/item/FireChargeItem.java
-@@ -4,13 +4,12 @@
+@@ -3,14 +3,14 @@
+ import net.minecraft.core.BlockPos;
  import net.minecraft.sounds.SoundEvents;
  import net.minecraft.sounds.SoundSource;
  import net.minecraft.world.InteractionResult;
  import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.Level;
 -import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.block.BaseFireBlock;
@@ -15,7 +17,7 @@
  public class FireChargeItem extends Item {
     public FireChargeItem(Item.Properties var1) {
        super(var1);
-@@ -19,28 +18,26 @@
+@@ -19,28 +19,26 @@
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();
        BlockPos var3 = var1.getClickedPos();
@@ -34,7 +36,7 @@
        } else {
           var3 = var3.relative(var1.getClickedFace());
 -         if (var2.getBlockState(var3).isAir()) {
-+         if (BaseFireBlock.canBePlacedAt(var2, var3)) {
++         if (BaseFireBlock.canBePlacedAt(var2, var3, var1.getHorizontalDirection())) {
              this.playSound(var2, var3);
 -            var2.setBlockAndUpdate(var3, ((FireBlock)Blocks.FIRE).getStateForPlacement(var2, var3));
 +            var2.setBlockAndUpdate(var3, BaseFireBlock.getState(var2, var3));

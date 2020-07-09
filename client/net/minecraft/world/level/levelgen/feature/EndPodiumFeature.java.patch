@@ -1,13 +1,12 @@
 --- net/minecraft/world/level/levelgen/feature/EndPodiumFeature.java
 +++ net/minecraft/world/level/levelgen/feature/EndPodiumFeature.java
-@@ -2,68 +2,68 @@
+@@ -2,28 +2,27 @@
  
  import java.util.Iterator;
  import java.util.Random;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.WallTorchBlock;
@@ -27,74 +26,9 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
--      Iterator var6 = BlockPos.betweenClosed(new BlockPos(var4.getX() - 4, var4.getY() - 1, var4.getZ() - 4), new BlockPos(var4.getX() + 4, var4.getY() + 32, var4.getZ() + 4)).iterator();
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      Iterator var7 = BlockPos.betweenClosed(new BlockPos(var5.getX() - 4, var5.getY() - 1, var5.getZ() - 4), new BlockPos(var5.getX() + 4, var5.getY() + 32, var5.getZ() + 4)).iterator();
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
+       Iterator var6 = BlockPos.betweenClosed(new BlockPos(var4.getX() - 4, var4.getY() - 1, var4.getZ() - 4), new BlockPos(var4.getX() + 4, var4.getY() + 32, var4.getZ() + 4)).iterator();
  
        while(true) {
--         BlockPos var7;
--         boolean var8;
-+         BlockPos var8;
-+         boolean var9;
-          do {
--            if (!var6.hasNext()) {
--               for(int var9 = 0; var9 < 4; ++var9) {
--                  this.setBlock(var1, var4.above(var9), Blocks.BEDROCK.defaultBlockState());
-+            if (!var7.hasNext()) {
-+               for(int var10 = 0; var10 < 4; ++var10) {
-+                  this.setBlock(var1, var5.above(var10), Blocks.BEDROCK.defaultBlockState());
-                }
- 
--               BlockPos var10 = var4.above(2);
--               Iterator var11 = Direction.Plane.HORIZONTAL.iterator();
-+               BlockPos var11 = var5.above(2);
-+               Iterator var12 = Direction.Plane.HORIZONTAL.iterator();
- 
--               while(var11.hasNext()) {
--                  Direction var12 = (Direction)var11.next();
--                  this.setBlock(var1, var10.relative(var12), (BlockState)Blocks.WALL_TORCH.defaultBlockState().setValue(WallTorchBlock.FACING, var12));
-+               while(var12.hasNext()) {
-+                  Direction var13 = (Direction)var12.next();
-+                  this.setBlock(var1, var11.relative(var13), (BlockState)Blocks.WALL_TORCH.defaultBlockState().setValue(WallTorchBlock.FACING, var13));
-                }
- 
-                return true;
-             }
- 
--            var7 = (BlockPos)var6.next();
--            var8 = var7.closerThan(var4, 2.5D);
--         } while(!var8 && !var7.closerThan(var4, 3.5D));
-+            var8 = (BlockPos)var7.next();
-+            var9 = var8.closerThan(var5, 2.5D);
-+         } while(!var9 && !var8.closerThan(var5, 3.5D));
- 
--         if (var7.getY() < var4.getY()) {
--            if (var8) {
--               this.setBlock(var1, var7, Blocks.BEDROCK.defaultBlockState());
--            } else if (var7.getY() < var4.getY()) {
--               this.setBlock(var1, var7, Blocks.END_STONE.defaultBlockState());
-+         if (var8.getY() < var5.getY()) {
-+            if (var9) {
-+               this.setBlock(var1, var8, Blocks.BEDROCK.defaultBlockState());
-+            } else if (var8.getY() < var5.getY()) {
-+               this.setBlock(var1, var8, Blocks.END_STONE.defaultBlockState());
-             }
--         } else if (var7.getY() > var4.getY()) {
--            this.setBlock(var1, var7, Blocks.AIR.defaultBlockState());
--         } else if (!var8) {
--            this.setBlock(var1, var7, Blocks.BEDROCK.defaultBlockState());
-+         } else if (var8.getY() > var5.getY()) {
-+            this.setBlock(var1, var8, Blocks.AIR.defaultBlockState());
-+         } else if (!var9) {
-+            this.setBlock(var1, var8, Blocks.BEDROCK.defaultBlockState());
-          } else if (this.active) {
--            this.setBlock(var1, new BlockPos(var7), Blocks.END_PORTAL.defaultBlockState());
-+            this.setBlock(var1, new BlockPos(var8), Blocks.END_PORTAL.defaultBlockState());
-          } else {
--            this.setBlock(var1, new BlockPos(var7), Blocks.AIR.defaultBlockState());
-+            this.setBlock(var1, new BlockPos(var8), Blocks.AIR.defaultBlockState());
-          }
-       }
-    }
- 
-    static {
+          BlockPos var7;
+          boolean var8;

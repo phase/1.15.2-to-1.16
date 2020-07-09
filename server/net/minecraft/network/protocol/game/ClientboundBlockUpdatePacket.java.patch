@@ -1,0 +1,22 @@
+--- net/minecraft/network/protocol/game/ClientboundBlockUpdatePacket.java
++++ net/minecraft/network/protocol/game/ClientboundBlockUpdatePacket.java
+@@ -13,13 +13,17 @@
+    private BlockState blockState;
+ 
+    public ClientboundBlockUpdatePacket() {
+    }
+ 
++   public ClientboundBlockUpdatePacket(BlockPos var1, BlockState var2) {
++      this.pos = var1;
++      this.blockState = var2;
++   }
++
+    public ClientboundBlockUpdatePacket(BlockGetter var1, BlockPos var2) {
+-      this.pos = var2;
+-      this.blockState = var1.getBlockState(var2);
++      this(var2, var1.getBlockState(var2));
+    }
+ 
+    public void read(FriendlyByteBuf var1) throws IOException {
+       this.pos = var1.readBlockPos();
+       this.blockState = (BlockState)Block.BLOCK_STATE_REGISTRY.byId(var1.readVarInt());

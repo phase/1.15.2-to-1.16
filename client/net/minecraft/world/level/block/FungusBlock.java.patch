@@ -31,7 +31,7 @@
 +   }
 +
 +   protected boolean mayPlaceOn(BlockState var1, BlockGetter var2, BlockPos var3) {
-+      return var1.is(BlockTags.NYLIUM) || var1.is(Blocks.SOUL_SOIL) || super.mayPlaceOn(var1, var2, var3);
++      return var1.is(BlockTags.NYLIUM) || var1.is(Blocks.MYCELIUM) || var1.is(Blocks.SOUL_SOIL) || super.mayPlaceOn(var1, var2, var3);
 +   }
 +
 +   public boolean isValidBonemealTarget(BlockGetter var1, BlockPos var2, BlockState var3, boolean var4) {
@@ -45,6 +45,6 @@
 +   }
 +
 +   public void performBonemeal(ServerLevel var1, Random var2, BlockPos var3, BlockState var4) {
-+      ((ConfiguredFeature)this.feature.get()).place(var1, var1.structureFeatureManager(), var1.getChunkSource().getGenerator(), var2, var3);
++      ((ConfiguredFeature)this.feature.get()).place(var1, var1.getChunkSource().getGenerator(), var2, var3);
 +   }
 +}

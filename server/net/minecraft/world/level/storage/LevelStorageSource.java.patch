@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/storage/LevelStorageSource.java
 +++ net/minecraft/world/level/storage/LevelStorageSource.java
-@@ -1,31 +1,56 @@
+@@ -1,31 +1,54 @@
  package net.minecraft.world.level.storage;
  
 +import com.google.common.collect.ImmutableList;
@@ -13,8 +13,7 @@
 +import com.mojang.serialization.DynamicOps;
 +import com.mojang.serialization.Lifecycle;
  import java.io.File;
- import java.io.FileInputStream;
-+import java.io.FileOutputStream;
+-import java.io.FileInputStream;
  import java.io.IOException;
  import java.nio.file.Files;
  import java.nio.file.LinkOption;
@@ -59,7 +58,7 @@
     private final DataFixer fixerUpper;
  
     public LevelStorageSource(Path var1, Path var2, DataFixer var3) {
-@@ -39,73 +64,226 @@
+@@ -39,73 +62,226 @@
  
        this.baseDir = var1;
        this.backupDir = var2;
@@ -147,7 +146,8 @@
 -   public static LevelData getLevelData(File var0, DataFixer var1) {
 +   private static DataPackConfig getDataPacks(File var0, DataFixer var1) {
        try {
-          CompoundTag var2 = NbtIo.readCompressed(new FileInputStream(var0));
+-         CompoundTag var2 = NbtIo.readCompressed(new FileInputStream(var0));
++         CompoundTag var2 = NbtIo.readCompressed(var0);
           CompoundTag var3 = var2.getCompound("Data");
 -         CompoundTag var4 = var3.contains("Player", 10) ? var3.getCompound("Player") : null;
           var3.remove("Player");
@@ -167,7 +167,7 @@
 +   private static BiFunction<File, DataFixer, PrimaryLevelData> getLevelData(DynamicOps<Tag> var0, DataPackConfig var1) {
 +      return (var2, var3) -> {
 +         try {
-+            CompoundTag var4 = NbtIo.readCompressed(new FileInputStream(var2));
++            CompoundTag var4 = NbtIo.readCompressed(var2);
 +            CompoundTag var5 = var4.getCompound("Data");
 +            CompoundTag var6 = var5.contains("Player", 10) ? var5.getCompound("Player") : null;
 +            var5.remove("Player");
@@ -187,7 +187,7 @@
 +   private BiFunction<File, DataFixer, LevelSummary> levelSummaryReader(File var1, boolean var2) {
 +      return (var3, var4) -> {
 +         try {
-+            CompoundTag var5 = NbtIo.readCompressed(new FileInputStream(var3));
++            CompoundTag var5 = NbtIo.readCompressed(var3);
 +            CompoundTag var6 = var5.getCompound("Data");
 +            var6.remove("Player");
 +            int var7 = var6.contains("DataVersion", 99) ? var6.getInt("DataVersion") : -1;
@@ -298,7 +298,7 @@
 +
 +         try {
 +            File var7 = File.createTempFile("level", ".dat", var4);
-+            NbtIo.writeCompressed(var6, new FileOutputStream(var7));
++            NbtIo.writeCompressed(var6, var7);
 +            File var8 = new File(var4, "level.dat_old");
 +            File var9 = new File(var4, "level.dat");
 +            Util.safeReplaceFile(var9, var7, var8);

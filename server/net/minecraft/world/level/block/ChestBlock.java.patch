@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/ChestBlock.java
 +++ net/minecraft/world/level/block/ChestBlock.java
-@@ -19,10 +19,11 @@
+@@ -19,22 +19,24 @@
  import net.minecraft.world.InteractionHand;
  import net.minecraft.world.InteractionResult;
  import net.minecraft.world.MenuProvider;
@@ -11,8 +11,10 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.inventory.AbstractContainerMenu;
  import net.minecraft.world.inventory.ChestMenu;
- import net.minecraft.world.item.BlockPlaceContext;
-@@ -31,10 +32,11 @@
+-import net.minecraft.world.item.BlockPlaceContext;
+ import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.context.BlockPlaceContext;
+ import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
  import net.minecraft.world.level.block.entity.BlockEntity;

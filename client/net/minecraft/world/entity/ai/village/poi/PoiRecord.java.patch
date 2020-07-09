@@ -27,7 +27,7 @@
 +            return var0x.pos;
 +         }), Registry.POINT_OF_INTEREST_TYPE.fieldOf("type").forGetter((var0x) -> {
 +            return var0x.poiType;
-+         }), Codec.INT.fieldOf("free_tickets").withDefault(0).forGetter((var0x) -> {
++         }), Codec.INT.fieldOf("free_tickets").orElse(0).forGetter((var0x) -> {
 +            return var0x.freeTickets;
 +         }), RecordCodecBuilder.point(var0)).apply(var1, PoiRecord::new);
 +      });

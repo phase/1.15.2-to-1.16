@@ -1,10 +1,14 @@
 --- net/minecraft/world/level/levelgen/feature/ConfiguredStructureFeature.java
 +++ net/minecraft/world/level/levelgen/feature/ConfiguredStructureFeature.java
-@@ -1,0 +1,34 @@
+@@ -1,0 +1,40 @@
 +package net.minecraft.world.level.levelgen.feature;
 +
 +import com.mojang.serialization.Codec;
++import com.mojang.serialization.MapCodec;
++import java.util.function.Supplier;
 +import net.minecraft.core.Registry;
++import net.minecraft.core.RegistryAccess;
++import net.minecraft.resources.RegistryFileCodec;
 +import net.minecraft.world.level.ChunkPos;
 +import net.minecraft.world.level.biome.Biome;
 +import net.minecraft.world.level.biome.BiomeSource;
@@ -16,7 +20,8 @@
 +import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 +
 +public class ConfiguredStructureFeature<FC extends FeatureConfiguration, F extends StructureFeature<FC>> {
-+   public static final Codec<ConfiguredStructureFeature<?, ?>> CODEC;
++   public static final MapCodec<ConfiguredStructureFeature<?, ?>> DIRECT_CODEC;
++   public static final Codec<Supplier<ConfiguredStructureFeature<?, ?>>> CODEC;
 +   public final F feature;
 +   public final FC config;
 +
@@ -25,13 +30,14 @@
 +      this.config = var2;
 +   }
 +
-+   public StructureStart<?> generate(ChunkGenerator var1, BiomeSource var2, StructureManager var3, long var4, ChunkPos var6, Biome var7, int var8, StructureFeatureConfiguration var9) {
-+      return this.feature.generate(var1, var2, var3, var4, var6, var7, var8, new WorldgenRandom(), var9, this.config);
++   public StructureStart<?> generate(RegistryAccess var1, ChunkGenerator var2, BiomeSource var3, StructureManager var4, long var5, ChunkPos var7, Biome var8, int var9, StructureFeatureConfiguration var10) {
++      return this.feature.generate(var1, var2, var3, var4, var5, var7, var8, var9, new WorldgenRandom(), var10, this.config);
 +   }
 +
 +   static {
-+      CODEC = Registry.STRUCTURE_FEATURE.dispatch("name", (var0) -> {
++      DIRECT_CODEC = Registry.STRUCTURE_FEATURE.dispatchMap("name", (var0) -> {
 +         return var0.feature;
 +      }, StructureFeature::configuredStructureCodec);
++      CODEC = RegistryFileCodec.create(Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY, DIRECT_CODEC);
 +   }
 +}

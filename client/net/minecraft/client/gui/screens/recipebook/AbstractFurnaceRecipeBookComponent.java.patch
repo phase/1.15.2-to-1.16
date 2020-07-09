@@ -20,8 +20,39 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.crafting.Ingredient;
  import net.minecraft.world.item.crafting.Recipe;
-@@ -54,15 +56,15 @@
+@@ -23,46 +25,19 @@
+    private float time;
  
+    public AbstractFurnaceRecipeBookComponent() {
+    }
+ 
+-   protected boolean updateFiltering() {
+-      boolean var1 = !this.getFilteringCraftable();
+-      this.setFilteringCraftable(var1);
+-      return var1;
+-   }
+-
+-   protected abstract boolean getFilteringCraftable();
+-
+-   protected abstract void setFilteringCraftable(boolean var1);
+-
+-   public boolean isVisible() {
+-      return this.isGuiOpen();
+-   }
+-
+-   protected abstract boolean isGuiOpen();
+-
+-   protected void setVisible(boolean var1) {
+-      this.setGuiOpen(var1);
+-      if (!var1) {
+-         this.recipeBookPage.setInvisible();
+-      }
+-
+-      this.sendUpdateSettings();
+-   }
+-
+-   protected abstract void setGuiOpen(boolean var1);
+-
     protected void initFilterButtonTextures() {
        this.filterButton.initTextureValues(152, 182, 28, 18, RECIPE_BOOK_LOCATION);
     }
@@ -39,7 +70,7 @@
        super.slotClicked(var1);
        if (var1 != null && var1.index < this.menu.getSize()) {
           this.fuelSlot = null;
-@@ -98,23 +100,23 @@
+@@ -98,23 +73,23 @@
  
     }
  

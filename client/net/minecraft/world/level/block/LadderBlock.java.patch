@@ -1,7 +1,13 @@
 --- net/minecraft/world/level/block/LadderBlock.java
 +++ net/minecraft/world/level/block/LadderBlock.java
-@@ -6,10 +6,11 @@
- import net.minecraft.world.item.BlockPlaceContext;
+@@ -1,15 +1,16 @@
+ package net.minecraft.world.level.block;
+ 
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+-import net.minecraft.world.item.BlockPlaceContext;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;

@@ -1,6 +1,6 @@
 --- net/minecraft/client/multiplayer/ClientSuggestionProvider.java
 +++ net/minecraft/client/multiplayer/ClientSuggestionProvider.java
-@@ -7,19 +7,22 @@
+@@ -7,19 +7,23 @@
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.Collections;
@@ -13,6 +13,7 @@
  import net.minecraft.client.player.LocalPlayer;
  import net.minecraft.commands.SharedSuggestionProvider;
  import net.minecraft.core.BlockPos;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.network.protocol.Packet;
  import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket;
 +import net.minecraft.resources.ResourceKey;
@@ -23,7 +24,7 @@
  import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
  
-@@ -104,10 +107,14 @@
+@@ -104,10 +108,18 @@
        } else {
           return SharedSuggestionProvider.super.getAbsoluteCoordinates();
        }
@@ -31,6 +32,10 @@
  
 +   public Set<ResourceKey<Level>> levels() {
 +      return this.connection.levels();
++   }
++
++   public RegistryAccess registryAccess() {
++      return this.connection.registryAccess();
 +   }
 +
     public void completeCustomSuggestions(int var1, Suggestions var2) {

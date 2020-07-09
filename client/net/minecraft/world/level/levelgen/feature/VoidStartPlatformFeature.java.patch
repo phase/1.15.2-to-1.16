@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/VoidStartPlatformFeature.java
 +++ net/minecraft/world/level/levelgen/feature/VoidStartPlatformFeature.java
-@@ -1,45 +1,44 @@
+@@ -1,31 +1,29 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -10,7 +10,6 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.world.level.ChunkPos;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -31,33 +30,9 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
--      ChunkPos var6 = new ChunkPos(var4);
--      if (checkerboardDistance(var6.x, var6.z, PLATFORM_ORIGIN_CHUNK.x, PLATFORM_ORIGIN_CHUNK.z) > 1) {
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      ChunkPos var7 = new ChunkPos(var5);
-+      if (checkerboardDistance(var7.x, var7.z, PLATFORM_ORIGIN_CHUNK.x, PLATFORM_ORIGIN_CHUNK.z) > 1) {
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
+       ChunkPos var6 = new ChunkPos(var4);
+       if (checkerboardDistance(var6.x, var6.z, PLATFORM_ORIGIN_CHUNK.x, PLATFORM_ORIGIN_CHUNK.z) > 1) {
           return true;
        } else {
--         BlockPos.MutableBlockPos var7 = new BlockPos.MutableBlockPos();
-+         BlockPos.MutableBlockPos var8 = new BlockPos.MutableBlockPos();
- 
--         for(int var8 = var6.getMinBlockZ(); var8 <= var6.getMaxBlockZ(); ++var8) {
--            for(int var9 = var6.getMinBlockX(); var9 <= var6.getMaxBlockX(); ++var9) {
--               if (checkerboardDistance(PLATFORM_ORIGIN.getX(), PLATFORM_ORIGIN.getZ(), var9, var8) <= 16) {
--                  var7.set(var9, PLATFORM_ORIGIN.getY(), var8);
--                  if (var7.equals(PLATFORM_ORIGIN)) {
--                     var1.setBlock(var7, Blocks.COBBLESTONE.defaultBlockState(), 2);
-+         for(int var9 = var7.getMinBlockZ(); var9 <= var7.getMaxBlockZ(); ++var9) {
-+            for(int var10 = var7.getMinBlockX(); var10 <= var7.getMaxBlockX(); ++var10) {
-+               if (checkerboardDistance(PLATFORM_ORIGIN.getX(), PLATFORM_ORIGIN.getZ(), var10, var9) <= 16) {
-+                  var8.set(var10, PLATFORM_ORIGIN.getY(), var9);
-+                  if (var8.equals(PLATFORM_ORIGIN)) {
-+                     var1.setBlock(var8, Blocks.COBBLESTONE.defaultBlockState(), 2);
-                   } else {
--                     var1.setBlock(var7, Blocks.STONE.defaultBlockState(), 2);
-+                     var1.setBlock(var8, Blocks.STONE.defaultBlockState(), 2);
-                   }
-                }
-             }
-          }
- 
+          BlockPos.MutableBlockPos var7 = new BlockPos.MutableBlockPos();

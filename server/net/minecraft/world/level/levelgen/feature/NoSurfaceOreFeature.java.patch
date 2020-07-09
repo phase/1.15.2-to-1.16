@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/NoSurfaceOreFeature.java
 +++ net/minecraft/world/level/levelgen/feature/NoSurfaceOreFeature.java
-@@ -1,0 +1,58 @@
+@@ -1,0 +1,57 @@
 +package net.minecraft.world.level.levelgen.feature;
 +
 +import com.mojang.serialization.Codec;
@@ -8,7 +8,6 @@
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.core.Direction;
 +import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
 +import net.minecraft.world.level.chunk.ChunkGenerator;
 +import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
@@ -18,14 +17,14 @@
 +      super(var1);
 +   }
 +
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, OreConfiguration var6) {
-+      int var7 = var4.nextInt(var6.size + 1);
-+      BlockPos.MutableBlockPos var8 = new BlockPos.MutableBlockPos();
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, OreConfiguration var5) {
++      int var6 = var3.nextInt(var5.size + 1);
++      BlockPos.MutableBlockPos var7 = new BlockPos.MutableBlockPos();
 +
-+      for(int var9 = 0; var9 < var7; ++var9) {
-+         this.offsetTargetPos(var8, var4, var5, Math.min(var9, 7));
-+         if (var6.target.getPredicate().test(var1.getBlockState(var8)) && !this.isFacingAir(var1, var8)) {
-+            var1.setBlock(var8, var6.state, 2);
++      for(int var8 = 0; var8 < var6; ++var8) {
++         this.offsetTargetPos(var7, var3, var4, Math.min(var8, 7));
++         if (var5.target.test(var1.getBlockState(var7), var3) && !this.isFacingAir(var1, var7)) {
++            var1.setBlock(var7, var5.state, 2);
 +         }
 +      }
 +

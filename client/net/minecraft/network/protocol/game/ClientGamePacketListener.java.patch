@@ -13,6 +13,19 @@
     void handleAddObjective(ClientboundSetObjectivePacket var1);
  
     void handleAddPainting(ClientboundAddPaintingPacket var1);
+@@ -33,11 +31,11 @@
+ 
+    void handleBlockUpdate(ClientboundBlockUpdatePacket var1);
+ 
+    void handleChat(ClientboundChatPacket var1);
+ 
+-   void handleChunkBlocksUpdate(ClientboundChunkBlocksUpdatePacket var1);
++   void handleChunkBlocksUpdate(ClientboundSectionBlocksUpdatePacket var1);
+ 
+    void handleMapItemData(ClientboundMapItemDataPacket var1);
+ 
+    void handleContainerAck(ClientboundContainerAckPacket var1);
+ 
 @@ -99,21 +97,21 @@
  
     void handleSetEntityData(ClientboundSetEntityDataPacket var1);

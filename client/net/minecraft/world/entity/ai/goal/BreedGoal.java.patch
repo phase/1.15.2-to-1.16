@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/ai/goal/BreedGoal.java
 +++ net/minecraft/world/entity/ai/goal/BreedGoal.java
-@@ -2,19 +2,13 @@
+@@ -2,19 +2,14 @@
  
  import java.util.EnumSet;
  import java.util.Iterator;
@@ -10,6 +10,7 @@
 -import net.minecraft.server.level.ServerPlayer;
 -import net.minecraft.stats.Stats;
 -import net.minecraft.world.entity.AgableMob;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.Entity;
 -import net.minecraft.world.entity.ExperienceOrb;
  import net.minecraft.world.entity.ai.targeting.TargetingConditions;
@@ -20,7 +21,7 @@
  public class BreedGoal extends Goal {
     private static final TargetingConditions PARTNER_TARGETING = (new TargetingConditions()).range(8.0D).allowInvulnerable().allowSameTeam().allowUnseeable();
     protected final Animal animal;
-@@ -81,32 +75,8 @@
+@@ -81,32 +76,8 @@
  
        return var4;
     }
@@ -51,6 +52,6 @@
 -         }
 -
 -      }
-+      this.animal.spawnChildFromBreeding(this.level, this.partner);
++      this.animal.spawnChildFromBreeding((ServerLevel)this.level, this.partner);
     }
  }

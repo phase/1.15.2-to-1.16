@@ -8,5 +8,5 @@
  
  public interface RepositorySource {
 -   <T extends UnopenedPack> void loadPacks(Map<String, T> var1, UnopenedPack.UnopenedPackConstructor<T> var2);
-+   <T extends Pack> void loadPacks(Consumer<T> var1, Pack.PackConstructor<T> var2);
++   void loadPacks(Consumer<Pack> var1, Pack.PackConstructor var2);
  }

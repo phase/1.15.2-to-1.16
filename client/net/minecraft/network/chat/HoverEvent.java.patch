@@ -78,7 +78,7 @@
        }
     }
  
-@@ -52,34 +62,279 @@
+@@ -52,34 +62,281 @@
        int var1 = this.action.hashCode();
        var1 = 31 * var1 + (this.value != null ? this.value.hashCode() : 0);
        return var1;
@@ -165,14 +165,16 @@
 +         return var1;
 +      }
 +
++      @Nullable
 +      public HoverEvent deserialize(JsonElement var1) {
 +         Object var2 = this.argDeserializer.apply(var1);
-+         return new HoverEvent(this, var2);
++         return var2 == null ? null : new HoverEvent(this, var2);
 +      }
 +
++      @Nullable
 +      public HoverEvent deserializeFromLegacy(Component var1) {
 +         Object var2 = this.legacyArgDeserializer.apply(var1);
-+         return new HoverEvent(this, var2);
++         return var2 == null ? null : new HoverEvent(this, var2);
 +      }
 +
 +      public JsonElement serializeArg(Object var1) {

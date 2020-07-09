@@ -31,11 +31,11 @@
 +   protected final int heightRandB;
 +
 +   protected static <P extends TrunkPlacer> P3<Mu<P>, Integer, Integer, Integer> trunkPlacerParts(Instance<P> var0) {
-+      return var0.group(Codec.INT.fieldOf("base_height").forGetter((var0x) -> {
++      return var0.group(Codec.intRange(0, 32).fieldOf("base_height").forGetter((var0x) -> {
 +         return var0x.baseHeight;
-+      }), Codec.INT.fieldOf("height_rand_a").forGetter((var0x) -> {
++      }), Codec.intRange(0, 24).fieldOf("height_rand_a").forGetter((var0x) -> {
 +         return var0x.heightRandA;
-+      }), Codec.INT.fieldOf("height_rand_b").forGetter((var0x) -> {
++      }), Codec.intRange(0, 24).fieldOf("height_rand_b").forGetter((var0x) -> {
 +         return var0x.heightRandB;
 +      }));
 +   }

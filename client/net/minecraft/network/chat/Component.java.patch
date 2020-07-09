@@ -1,6 +1,6 @@
 --- net/minecraft/network/chat/Component.java
 +++ net/minecraft/network/chat/Component.java
-@@ -17,167 +17,99 @@
+@@ -17,167 +17,103 @@
  import java.io.StringReader;
  import java.lang.reflect.Field;
  import java.lang.reflect.Type;
@@ -69,7 +69,8 @@
 -      StringBuilder var1 = new StringBuilder();
 -      String var2 = "";
 -      Iterator var3 = this.stream().iterator();
--
++   List<Component> getSiblings();
+ 
 -      while(var3.hasNext()) {
 -         Component var4 = (Component)var3.next();
 -         String var5 = var4.getContents();
@@ -79,35 +80,12 @@
 -               if (!var2.isEmpty()) {
 -                  var1.append(ChatFormatting.RESET);
 -               }
--
--               var1.append(var6);
--               var2 = var6;
--            }
--
--            var1.append(var5);
--         }
--      }
--
--      if (!var2.isEmpty()) {
--         var1.append(ChatFormatting.RESET);
--      }
--
--      return var1.toString();
--   }
--
-    List<Component> getSiblings();
- 
--   Stream<Component> stream();
 +   MutableComponent plainCopy();
  
--   default Stream<Component> flatStream() {
--      return this.stream().map(Component::flattenStyle);
--   }
+-               var1.append(var6);
+-               var2 = var6;
 +   MutableComponent copy();
- 
--   default Iterator<Component> iterator() {
--      return this.flatStream().iterator();
--   }
++
 +   default <T> Optional<T> visit(FormattedText.StyledContentConsumer<T> var1, Style var2) {
 +      Style var3 = this.getStyle().applyTo(var2);
 +      Optional var4 = this.visitSelf(var1, var3);
@@ -115,26 +93,65 @@
 +         return var4;
 +      } else {
 +         Iterator var5 = this.getSiblings().iterator();
- 
--   Component copy();
++
 +         Optional var7;
 +         do {
 +            if (!var5.hasNext()) {
 +               return Optional.empty();
-+            }
+             }
  
--   default Component deepCopy() {
--      Component var1 = this.copy();
--      var1.setStyle(this.getStyle().copy());
--      Iterator var2 = this.getSiblings().iterator();
+-            var1.append(var5);
+-         }
+-      }
 +            Component var6 = (Component)var5.next();
 +            var7 = var6.visit(var1, var3);
 +         } while(!var7.isPresent());
  
+-      if (!var2.isEmpty()) {
+-         var1.append(ChatFormatting.RESET);
++         return var7;
+       }
+-
+-      return var1.toString();
+    }
+ 
+-   List<Component> getSiblings();
++   default <T> Optional<T> visit(FormattedText.ContentConsumer<T> var1) {
++      Optional var2 = this.visitSelf(var1);
++      if (var2.isPresent()) {
++         return var2;
++      } else {
++         Iterator var3 = this.getSiblings().iterator();
+ 
+-   Stream<Component> stream();
++         Optional var5;
++         do {
++            if (!var3.hasNext()) {
++               return Optional.empty();
++            }
+ 
+-   default Stream<Component> flatStream() {
+-      return this.stream().map(Component::flattenStyle);
+-   }
++            Component var4 = (Component)var3.next();
++            var5 = var4.visit(var1);
++         } while(!var5.isPresent());
+ 
+-   default Iterator<Component> iterator() {
+-      return this.flatStream().iterator();
+-   }
+-
+-   Component copy();
+-
+-   default Component deepCopy() {
+-      Component var1 = this.copy();
+-      var1.setStyle(this.getStyle().copy());
+-      Iterator var2 = this.getSiblings().iterator();
+-
 -      while(var2.hasNext()) {
 -         Component var3 = (Component)var2.next();
 -         var1.append(var3.deepCopy());
-+         return var7;
++         return var5;
        }
 -
 -      return var1;
@@ -143,34 +160,22 @@
 -   default Component withStyle(Consumer<Style> var1) {
 -      var1.accept(this.getStyle());
 -      return this;
--   }
-+   default <T> Optional<T> visit(FormattedText.ContentConsumer<T> var1) {
-+      Optional var2 = this.visitSelf(var1);
-+      if (var2.isPresent()) {
-+         return var2;
-+      } else {
-+         Iterator var3 = this.getSiblings().iterator();
++   default <T> Optional<T> visitSelf(FormattedText.StyledContentConsumer<T> var1, Style var2) {
++      return var1.accept(var2, this.getContents());
+    }
  
 -   default Component withStyle(ChatFormatting... var1) {
 -      ChatFormatting[] var2 = var1;
 -      int var3 = var1.length;
-+         Optional var5;
-+         do {
-+            if (!var3.hasNext()) {
-+               return Optional.empty();
-+            }
- 
+-
 -      for(int var4 = 0; var4 < var3; ++var4) {
 -         ChatFormatting var5 = var2[var4];
 -         this.withStyle(var5);
 -      }
-+            Component var4 = (Component)var3.next();
-+            var5 = var4.visit(var1);
-+         } while(!var5.isPresent());
- 
+-
 -      return this;
-+         return var5;
-+      }
++   default <T> Optional<T> visitSelf(FormattedText.ContentConsumer<T> var1) {
++      return var1.accept(this.getContents());
     }
  
 -   default Component withStyle(ChatFormatting var1) {
@@ -199,18 +204,16 @@
 -      }
 -
 -      return this;
-+   default <T> Optional<T> visitSelf(FormattedText.StyledContentConsumer<T> var1, Style var2) {
-+      return var1.accept(var2, this.getContents());
++   static Component nullToEmpty(@Nullable String var0) {
++      return (Component)(var0 != null ? new TextComponent(var0) : TextComponent.EMPTY);
     }
  
 -   static Component flattenStyle(Component var0) {
 -      Component var1 = var0.copy();
 -      var1.setStyle(var0.getStyle().flatCopy());
 -      return var1;
-+   default <T> Optional<T> visitSelf(FormattedText.ContentConsumer<T> var1) {
-+      return var1.accept(this.getContents());
-    }
- 
+-   }
+-
 -   public static class Serializer implements JsonDeserializer<Component>, JsonSerializer<Component> {
 +   public static class Serializer implements JsonDeserializer<MutableComponent>, JsonSerializer<Component> {
        private static final Gson GSON = (Gson)Util.make(() -> {
@@ -218,7 +221,7 @@
           var0.disableHtmlEscaping();
           var0.registerTypeHierarchyAdapter(Component.class, new Component.Serializer());
           var0.registerTypeHierarchyAdapter(Style.class, new Style.Serializer());
-@@ -206,26 +138,26 @@
+@@ -206,26 +142,26 @@
        });
  
        public Serializer() {
@@ -249,7 +252,7 @@
  
                 return var19;
              } else {
-@@ -239,58 +171,55 @@
+@@ -239,58 +175,55 @@
              } else {
                 String var6;
                 if (var4.has("translate")) {
@@ -316,7 +319,7 @@
              }
  
              if (var4.has("extra")) {
-@@ -298,16 +227,16 @@
+@@ -298,16 +231,16 @@
                 if (var13.size() <= 0) {
                    throw new JsonParseException("Unexpected empty array of components");
                 }
@@ -336,7 +339,7 @@
  
        private void serializeStyle(Style var1, JsonObject var2, JsonSerializationContext var3) {
           JsonElement var4 = var3.serialize(var1);
-@@ -365,11 +294,10 @@
+@@ -365,11 +298,10 @@
           } else if (var1 instanceof ScoreComponent) {
              ScoreComponent var12 = (ScoreComponent)var1;
              JsonObject var16 = new JsonObject();
@@ -348,7 +351,7 @@
              SelectorComponent var13 = (SelectorComponent)var1;
              var4.addProperty("selector", var13.getPattern());
           } else if (var1 instanceof KeybindComponent) {
-@@ -409,29 +337,29 @@
+@@ -409,29 +341,29 @@
        public static JsonElement toJsonTree(Component var0) {
           return GSON.toJsonTree(var0);
        }

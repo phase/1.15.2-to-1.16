@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/BlockPileFeature.java
 +++ net/minecraft/world/level/levelgen/feature/BlockPileFeature.java
-@@ -1,52 +1,52 @@
+@@ -1,26 +1,25 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -11,7 +11,6 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.state.BlockState;
@@ -26,39 +25,13 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, BlockPileConfiguration var5) {
--      if (var4.getY() < 5) {
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, BlockPileConfiguration var6) {
-+      if (var5.getY() < 5) {
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, BlockPileConfiguration var5) {
+       if (var4.getY() < 5) {
           return false;
        } else {
--         int var6 = 2 + var3.nextInt(2);
--         int var7 = 2 + var3.nextInt(2);
--         Iterator var8 = BlockPos.betweenClosed(var4.offset(-var6, 0, -var7), var4.offset(var6, 1, var7)).iterator();
-+         int var7 = 2 + var4.nextInt(2);
-+         int var8 = 2 + var4.nextInt(2);
-+         Iterator var9 = BlockPos.betweenClosed(var5.offset(-var7, 0, -var8), var5.offset(var7, 1, var8)).iterator();
- 
--         while(var8.hasNext()) {
--            BlockPos var9 = (BlockPos)var8.next();
--            int var10 = var4.getX() - var9.getX();
--            int var11 = var4.getZ() - var9.getZ();
--            if ((float)(var10 * var10 + var11 * var11) <= var3.nextFloat() * 10.0F - var3.nextFloat() * 6.0F) {
--               this.tryPlaceBlock(var1, var9, var3, var5);
--            } else if ((double)var3.nextFloat() < 0.031D) {
--               this.tryPlaceBlock(var1, var9, var3, var5);
-+         while(var9.hasNext()) {
-+            BlockPos var10 = (BlockPos)var9.next();
-+            int var11 = var5.getX() - var10.getX();
-+            int var12 = var5.getZ() - var10.getZ();
-+            if ((float)(var11 * var11 + var12 * var12) <= var4.nextFloat() * 10.0F - var4.nextFloat() * 6.0F) {
-+               this.tryPlaceBlock(var1, var10, var4, var6);
-+            } else if ((double)var4.nextFloat() < 0.031D) {
-+               this.tryPlaceBlock(var1, var10, var4, var6);
-             }
-          }
- 
-          return true;
-       }
+          int var6 = 2 + var3.nextInt(2);
+          int var7 = 2 + var3.nextInt(2);
+@@ -42,11 +41,11 @@
     }
  
     private boolean mayPlaceOn(LevelAccessor var1, BlockPos var2, Random var3) {

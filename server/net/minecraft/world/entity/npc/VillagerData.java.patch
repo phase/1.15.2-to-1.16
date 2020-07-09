@@ -15,15 +15,15 @@
  public class VillagerData {
     private static final int[] NEXT_LEVEL_XP_THRESHOLDS = new int[]{0, 10, 70, 150, 250};
 +   public static final Codec<VillagerData> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(Registry.VILLAGER_TYPE.fieldOf("type").withDefault(() -> {
++      return var0.group(Registry.VILLAGER_TYPE.fieldOf("type").orElseGet(() -> {
 +         return VillagerType.PLAINS;
 +      }).forGetter((var0x) -> {
 +         return var0x.type;
-+      }), Registry.VILLAGER_PROFESSION.fieldOf("profession").withDefault(() -> {
++      }), Registry.VILLAGER_PROFESSION.fieldOf("profession").orElseGet(() -> {
 +         return VillagerProfession.NONE;
 +      }).forGetter((var0x) -> {
 +         return var0x.profession;
-+      }), Codec.INT.fieldOf("level").withDefault((int)1).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("level").orElse(1).forGetter((var0x) -> {
 +         return var0x.level;
 +      })).apply(var0, (Function3)(VillagerData::new));
 +   });

@@ -1,6 +1,6 @@
 --- com/mojang/realmsclient/gui/screens/RealmsResetNormalWorldScreen.java
 +++ com/mojang/realmsclient/gui/screens/RealmsResetNormalWorldScreen.java
-@@ -1,113 +1,86 @@
+@@ -1,113 +1,85 @@
  package com.mojang.realmsclient.gui.screens;
  
 -import com.mojang.realmsclient.gui.RealmsConstants;
@@ -151,8 +151,7 @@
 -      String var1 = getLocalizedString("selectWorld.mapType");
 -      return var1 + " " + this.levelTypes[this.levelTypeIndex];
 +   private Component generateStructuresTitle() {
-+      String var1 = this.generateStructures ? "mco.configure.world.on" : "mco.configure.world.off";
-+      return (new TranslatableComponent("selectWorld.mapFeatures")).append(" ").append((Component)(new TranslatableComponent(var1)));
++      return CommonComponents.optionStatus(new TranslatableComponent("selectWorld.mapFeatures"), this.generateStructures);
     }
 -
 -   private String generateStructuresTitle() {

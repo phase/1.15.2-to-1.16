@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/ai/behavior/AcquirePoi.java
 +++ net/minecraft/world/entity/ai/behavior/AcquirePoi.java
-@@ -1,12 +1,16 @@
+@@ -1,12 +1,17 @@
  package net.minecraft.world.entity.ai.behavior;
  
  import com.google.common.collect.ImmutableMap;
@@ -10,6 +10,7 @@
 +import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 +import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 +import java.util.Iterator;
++import java.util.Optional;
 +import java.util.Random;
 +import java.util.Set;
  import java.util.function.Predicate;
@@ -20,7 +21,7 @@
  import net.minecraft.network.protocol.game.DebugPackets;
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.world.entity.PathfinderMob;
-@@ -16,60 +20,116 @@
+@@ -16,60 +21,121 @@
  import net.minecraft.world.entity.ai.village.poi.PoiType;
  import net.minecraft.world.level.pathfinder.Path;
  
@@ -32,12 +33,13 @@
 -   private long lastUpdate;
 -   private final Long2LongMap batchCache = new Long2LongOpenHashMap();
 -   private int triedCount;
++   private final Optional<Byte> onPoiAcquisitionEvent;
 +   private long nextScheduledStart;
 +   private final Long2ObjectMap<AcquirePoi.JitteredLinearRetry> batchCache;
  
 -   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, boolean var3) {
 -      super(ImmutableMap.of(var2, MemoryStatus.VALUE_ABSENT));
-+   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, MemoryModuleType<GlobalPos> var3, boolean var4) {
++   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, MemoryModuleType<GlobalPos> var3, boolean var4, Optional<Byte> var5) {
 +      super(constructEntryConditionMap(var2, var3));
 +      this.batchCache = new Long2ObjectOpenHashMap();
        this.poiType = var1;
@@ -45,10 +47,11 @@
 -      this.onlyIfAdult = var3;
 +      this.memoryToAcquire = var3;
 +      this.onlyIfAdult = var4;
++      this.onPoiAcquisitionEvent = var5;
     }
  
-+   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, boolean var3) {
-+      this(var1, var2, var2, var3);
++   public AcquirePoi(PoiType var1, MemoryModuleType<GlobalPos> var2, boolean var3, Optional<Byte> var4) {
++      this(var1, var2, var2, var3, var4);
 +   }
 +
 +   private static ImmutableMap<MemoryModuleType<?>, MemoryStatus> constructEntryConditionMap(MemoryModuleType<GlobalPos> var0, MemoryModuleType<GlobalPos> var1) {
@@ -114,6 +117,9 @@
 +               return var1x.equals(var11);
 +            }, var11, 1);
 +            var2.getBrain().setMemory(this.memoryToAcquire, (Object)GlobalPos.of(var1.dimension(), var11));
++            this.onPoiAcquisitionEvent.ifPresent((var2x) -> {
++               var1.broadcastEntityEvent(var2, var2x);
++            });
 +            this.batchCache.clear();
 +            DebugPackets.sendPoiTicketCountPacket(var1, var11);
           });

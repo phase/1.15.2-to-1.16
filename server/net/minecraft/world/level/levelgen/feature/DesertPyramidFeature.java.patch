@@ -1,11 +1,12 @@
 --- net/minecraft/world/level/levelgen/feature/DesertPyramidFeature.java
 +++ net/minecraft/world/level/levelgen/feature/DesertPyramidFeature.java
-@@ -1,45 +1,32 @@
+@@ -1,45 +1,33 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
 -import java.util.function.Function;
 +import com.mojang.serialization.Codec;
++import net.minecraft.core.RegistryAccess;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.chunk.ChunkGenerator;
  import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -48,9 +49,9 @@
 -      public void generatePieces(ChunkGenerator<?> var1, StructureManager var2, int var3, int var4, Biome var5) {
 -         DesertPyramidPiece var6 = new DesertPyramidPiece(this.random, var3 * 16, var4 * 16);
 -         this.pieces.add(var6);
-+      public void generatePieces(ChunkGenerator var1, StructureManager var2, int var3, int var4, Biome var5, NoneFeatureConfiguration var6) {
-+         DesertPyramidPiece var7 = new DesertPyramidPiece(this.random, var3 * 16, var4 * 16);
-+         this.pieces.add(var7);
++      public void generatePieces(RegistryAccess var1, ChunkGenerator var2, StructureManager var3, int var4, int var5, Biome var6, NoneFeatureConfiguration var7) {
++         DesertPyramidPiece var8 = new DesertPyramidPiece(this.random, var4 * 16, var5 * 16);
++         this.pieces.add(var8);
           this.calculateBoundingBox();
        }
     }

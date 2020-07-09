@@ -1,13 +1,15 @@
 --- net/minecraft/world/level/block/CarvedPumpkinBlock.java
 +++ net/minecraft/world/level/block/CarvedPumpkinBlock.java
-@@ -9,24 +9,25 @@
+@@ -8,25 +8,26 @@
+ import net.minecraft.core.Direction;
  import net.minecraft.server.level.ServerPlayer;
  import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.entity.animal.IronGolem;
  import net.minecraft.world.entity.animal.SnowGolem;
- import net.minecraft.world.item.BlockPlaceContext;
+-import net.minecraft.world.item.BlockPlaceContext;
 -import net.minecraft.world.level.BlockGetter;
 +import net.minecraft.world.item.Wearable;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelReader;
 +import net.minecraft.world.level.block.state.BlockBehaviour;

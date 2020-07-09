@@ -1,6 +1,15 @@
 --- net/minecraft/world/item/AxeItem.java
 +++ net/minecraft/world/item/AxeItem.java
-@@ -15,20 +15,21 @@
+@@ -7,28 +7,30 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.RotatedPillarBlock;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.material.Material;
@@ -25,7 +34,7 @@
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();
        BlockPos var3 = var1.getClickedPos();
-@@ -44,16 +45,17 @@
+@@ -44,16 +46,17 @@
                    var1x.broadcastBreakEvent(var1.getHand());
                 });
              }

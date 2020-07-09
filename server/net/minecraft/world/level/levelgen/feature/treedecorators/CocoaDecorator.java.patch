@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/treedecorators/CocoaDecorator.java
 +++ net/minecraft/world/level/levelgen/feature/treedecorators/CocoaDecorator.java
-@@ -1,34 +1,31 @@
+@@ -1,37 +1,36 @@
  package net.minecraft.world.level.levelgen.feature.treedecorators;
  
 -import com.google.common.collect.ImmutableMap;
@@ -14,7 +14,8 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
 -import net.minecraft.core.Registry;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.CocoaBlock;
  import net.minecraft.world.level.block.state.BlockState;
@@ -23,7 +24,9 @@
  import net.minecraft.world.level.levelgen.structure.BoundingBox;
  
  public class CocoaDecorator extends TreeDecorator {
-+   public static final Codec<CocoaDecorator> CODEC;
++   public static final Codec<CocoaDecorator> CODEC = Codec.floatRange(0.0F, 1.0F).fieldOf("probability").xmap(CocoaDecorator::new, (var0) -> {
++      return var0.probability;
++   }).codec();
     private final float probability;
  
     public CocoaDecorator(float var1) {
@@ -37,10 +40,14 @@
 +      return TreeDecoratorType.COCOA;
     }
  
-    public void place(LevelAccessor var1, Random var2, List<BlockPos> var3, List<BlockPos> var4, Set<BlockPos> var5, BoundingBox var6) {
+-   public void place(LevelAccessor var1, Random var2, List<BlockPos> var3, List<BlockPos> var4, Set<BlockPos> var5, BoundingBox var6) {
++   public void place(WorldGenLevel var1, Random var2, List<BlockPos> var3, List<BlockPos> var4, Set<BlockPos> var5, BoundingBox var6) {
        if (var2.nextFloat() < this.probability) {
           int var7 = ((BlockPos)var3.get(0)).getY();
-@@ -40,20 +37,22 @@
+          var3.stream().filter((var1x) -> {
+             return var1x.getY() - var7 <= 2;
+          }).forEach((var5x) -> {
+@@ -40,20 +39,16 @@
              while(var6x.hasNext()) {
                 Direction var7 = (Direction)var6x.next();
                 if (var2.nextFloat() <= 0.25F) {
@@ -57,12 +64,8 @@
           });
        }
     }
- 
+-
 -   public <T> T serialize(DynamicOps<T> var1) {
 -      return (new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("type"), var1.createString(Registry.TREE_DECORATOR_TYPES.getKey(this.type).toString()), var1.createString("probability"), var1.createFloat(this.probability))))).getValue();
-+   static {
-+      CODEC = Codec.FLOAT.fieldOf("probability").xmap(CocoaDecorator::new, (var0) -> {
-+         return var0.probability;
-+      }).codec();
-    }
+-   }
  }

@@ -1,7 +1,12 @@
 --- net/minecraft/world/level/block/LiquidBlock.java
 +++ net/minecraft/world/level/block/LiquidBlock.java
-@@ -11,31 +11,33 @@
- import net.minecraft.world.entity.Entity;
+@@ -6,16 +6,15 @@
+ import java.util.Random;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.tags.FluidTags;
+-import net.minecraft.world.entity.Entity;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
@@ -13,15 +18,7 @@
  import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  import net.minecraft.world.level.block.state.properties.IntegerProperty;
  import net.minecraft.world.level.material.FlowingFluid;
- import net.minecraft.world.level.material.Fluid;
- import net.minecraft.world.level.material.FluidState;
- import net.minecraft.world.level.material.Fluids;
- import net.minecraft.world.level.pathfinder.PathComputationType;
- import net.minecraft.world.level.storage.loot.LootContext;
-+import net.minecraft.world.phys.AABB;
- import net.minecraft.world.phys.shapes.CollisionContext;
- import net.minecraft.world.phys.shapes.Shapes;
- import net.minecraft.world.phys.shapes.VoxelShape;
+@@ -30,12 +29,13 @@
  
  public class LiquidBlock extends Block implements BucketPickup {
     public static final IntegerProperty LEVEL;
@@ -36,7 +33,7 @@
        this.stateCache = Lists.newArrayList();
        this.stateCache.add(var1.getSource(false));
  
-@@ -45,12 +47,20 @@
+@@ -45,12 +45,20 @@
  
        this.stateCache.add(var1.getFlowing(8, true));
        this.registerDefaultState((BlockState)((BlockState)this.stateDefinition.any()).setValue(LEVEL, 0));
@@ -58,7 +55,7 @@
     public boolean propagatesSkylightDown(BlockState var1, BlockGetter var2, BlockPos var3) {
        return false;
     }
-@@ -78,63 +88,55 @@
+@@ -78,63 +86,55 @@
  
     public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
        return Shapes.empty();
@@ -140,22 +137,19 @@
  
        return true;
     }
-@@ -156,14 +158,19 @@
+@@ -154,16 +154,10 @@
+       } else {
+          return Fluids.EMPTY;
        }
     }
  
-    public void entityInside(BlockState var1, Level var2, BlockPos var3, Entity var4) {
-       if (this.fluid.is(FluidTags.LAVA)) {
+-   public void entityInside(BlockState var1, Level var2, BlockPos var3, Entity var4) {
+-      if (this.fluid.is(FluidTags.LAVA)) {
 -         var4.setInLava();
-+         float var5 = (float)var3.getY() + var1.getFluidState().getHeight(var2, var3);
-+         AABB var6 = var4.getBoundingBox();
-+         if (var6.minY < (double)var5 || (double)var5 > var6.maxY) {
-+            var4.setInLava();
-+         }
-       }
- 
-    }
- 
+-      }
+-
+-   }
+-
     static {
        LEVEL = BlockStateProperties.LEVEL;
 +      STABLE_SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D);

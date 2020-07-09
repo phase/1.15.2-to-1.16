@@ -1,0 +1,21 @@
+--- net/minecraft/world/level/newbiome/layer/RiverLayer.java
++++ net/minecraft/world/level/newbiome/layer/RiverLayer.java
+@@ -1,16 +1,16 @@
+ package net.minecraft.world.level.newbiome.layer;
+ 
+-import net.minecraft.core.Registry;
++import net.minecraft.data.BuiltinRegistries;
+ import net.minecraft.world.level.biome.Biomes;
+ import net.minecraft.world.level.newbiome.context.Context;
+ import net.minecraft.world.level.newbiome.layer.traits.CastleTransformer;
+ 
+ public enum RiverLayer implements CastleTransformer {
+    INSTANCE;
+ 
+-   public static final int RIVER = Registry.BIOME.getId(Biomes.RIVER);
++   public static final int RIVER = BuiltinRegistries.BIOME.getId(Biomes.RIVER);
+ 
+    private RiverLayer() {
+    }
+ 
+    public int apply(Context var1, int var2, int var3, int var4, int var5, int var6) {

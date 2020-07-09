@@ -89,3 +89,16 @@
     public HumanoidArm getMainArm() {
        return HumanoidArm.RIGHT;
     }
+@@ -739,11 +738,11 @@
+    @Nullable
+    protected SoundEvent getDeathSound() {
+       return SoundEvents.ARMOR_STAND_BREAK;
+    }
+ 
+-   public void thunderHit(LightningBolt var1) {
++   public void thunderHit(ServerLevel var1, LightningBolt var2) {
+    }
+ 
+    public boolean isAffectedByPotions() {
+       return false;
+    }

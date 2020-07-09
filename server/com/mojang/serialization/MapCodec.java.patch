@@ -1,6 +1,6 @@
 --- com/mojang/serialization/MapCodec.java
 +++ com/mojang/serialization/MapCodec.java
-@@ -1,0 +1,261 @@
+@@ -1,0 +1,283 @@
 +package com.mojang.serialization;
 +
 +import com.mojang.datafixers.DataFixUtils;
@@ -22,10 +22,12 @@
 +   }
 +
 +   public static <A> MapCodec<A> of(MapEncoder<A> var0, MapDecoder<A> var1) {
-+      return of(var0, var1, "MapCodec[" + var0 + " " + var1 + "]");
++      return of(var0, var1, () -> {
++         return "MapCodec[" + var0 + " " + var1 + "]";
++      });
 +   }
 +
-+   public static <A> MapCodec<A> of(final MapEncoder<A> var0, final MapDecoder<A> var1, final String var2) {
++   public static <A> MapCodec<A> of(final MapEncoder<A> var0, final MapDecoder<A> var1, final Supplier<String> var2) {
 +      return new MapCodec<A>() {
 +         public <T> Stream<T> keys(DynamicOps<T> var1x) {
 +            return Stream.concat(var0.keys(var1x), var1.keys(var1x));
@@ -40,7 +42,7 @@
 +         }
 +
 +         public String toString() {
-+            return var2;
++            return (String)var2.get();
 +         }
 +      };
 +   }
@@ -82,11 +84,15 @@
 +   }
 +
 +   public <S> MapCodec<S> xmap(Function<? super A, ? extends S> var1, Function<? super S, ? extends A> var2) {
-+      return of(this.comap(var2), this.map(var1), this.toString() + "[xmapped]");
++      return of(this.comap(var2), this.map(var1), () -> {
++         return this.toString() + "[xmapped]";
++      });
 +   }
 +
 +   public <S> MapCodec<S> flatXmap(Function<? super A, ? extends DataResult<? extends S>> var1, Function<? super S, ? extends DataResult<? extends A>> var2) {
-+      return Codec.of(this.flatComap(var2), this.flatMap(var1), this.toString() + "[flatXmapped]");
++      return Codec.of(this.flatComap(var2), this.flatMap(var1), () -> {
++         return this.toString() + "[flatXmapped]";
++      });
 +   }
 +
 +   public <E> MapCodec<A> dependent(MapCodec<E> var1, Function<A, Pair<E, MapCodec<E>>> var2, BiFunction<A, E, A> var3) {
@@ -95,7 +101,7 @@
 +
 +   public abstract <T> Stream<T> keys(DynamicOps<T> var1);
 +
-+   private MapCodec<A> mapResult(final MapCodec.ResultFunction<A> var1) {
++   public MapCodec<A> mapResult(final MapCodec.ResultFunction<A> var1) {
 +      return new MapCodec<A>() {
 +         public <T> Stream<T> keys(DynamicOps<T> var1x) {
 +            return MapCodec.this.keys(var1x);
@@ -115,11 +121,11 @@
 +      };
 +   }
 +
-+   public MapCodec<A> withDefault(Consumer<String> var1, A var2) {
-+      return this.withDefault(DataFixUtils.consumerToFunction(var1), var2);
++   public MapCodec<A> orElse(Consumer<String> var1, A var2) {
++      return this.orElse(DataFixUtils.consumerToFunction(var1), var2);
 +   }
 +
-+   public MapCodec<A> withDefault(final UnaryOperator<String> var1, final A var2) {
++   public MapCodec<A> orElse(final UnaryOperator<String> var1, final A var2) {
 +      return this.mapResult(new MapCodec.ResultFunction<A>() {
 +         public <T> DataResult<A> apply(DynamicOps<T> var1x, MapLike<T> var2x, DataResult<A> var3) {
 +            return DataResult.success(var3.mapError(var1).result().orElse(var2));
@@ -130,16 +136,16 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1 + " " + var2 + "]";
++            return "OrElse[" + var1 + " " + var2 + "]";
 +         }
 +      });
 +   }
 +
-+   public MapCodec<A> withDefault(Consumer<String> var1, Supplier<? extends A> var2) {
-+      return this.withDefault(DataFixUtils.consumerToFunction(var1), var2);
++   public MapCodec<A> orElseGet(Consumer<String> var1, Supplier<? extends A> var2) {
++      return this.orElseGet(DataFixUtils.consumerToFunction(var1), var2);
 +   }
 +
-+   public MapCodec<A> withDefault(final UnaryOperator<String> var1, final Supplier<? extends A> var2) {
++   public MapCodec<A> orElseGet(final UnaryOperator<String> var1, final Supplier<? extends A> var2) {
 +      return this.mapResult(new MapCodec.ResultFunction<A>() {
 +         public <T> DataResult<A> apply(DynamicOps<T> var1x, MapLike<T> var2x, DataResult<A> var3) {
 +            return DataResult.success(var3.mapError(var1).result().orElseGet(var2));
@@ -150,12 +156,12 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1 + " " + var2.get() + "]";
++            return "OrElseGet[" + var1 + " " + var2.get() + "]";
 +         }
 +      });
 +   }
 +
-+   public MapCodec<A> withDefault(final A var1) {
++   public MapCodec<A> orElse(final A var1) {
 +      return this.mapResult(new MapCodec.ResultFunction<A>() {
 +         public <T> DataResult<A> apply(DynamicOps<T> var1x, MapLike<T> var2, DataResult<A> var3) {
 +            return DataResult.success(var3.result().orElse(var1));
@@ -166,12 +172,12 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1 + "]";
++            return "OrElse[" + var1 + "]";
 +         }
 +      });
 +   }
 +
-+   public MapCodec<A> withDefault(final Supplier<? extends A> var1) {
++   public MapCodec<A> orElseGet(final Supplier<? extends A> var1) {
 +      return this.mapResult(new MapCodec.ResultFunction<A>() {
 +         public <T> DataResult<A> apply(DynamicOps<T> var1x, MapLike<T> var2, DataResult<A> var3) {
 +            return DataResult.success(var3.result().orElseGet(var1));
@@ -182,22 +188,38 @@
 +         }
 +
 +         public String toString() {
-+            return "WithDefault[" + var1.get() + "]";
++            return "OrElseGet[" + var1.get() + "]";
 +         }
 +      });
 +   }
 +
-+   static <A> MapCodec<A> unit(A var0) {
++   public MapCodec<A> setPartial(final Supplier<A> var1) {
++      return this.mapResult(new MapCodec.ResultFunction<A>() {
++         public <T> DataResult<A> apply(DynamicOps<T> var1x, MapLike<T> var2, DataResult<A> var3) {
++            return var3.setPartial(var1);
++         }
++
++         public <T> RecordBuilder<T> coApply(DynamicOps<T> var1x, A var2, RecordBuilder<T> var3) {
++            return var3;
++         }
++
++         public String toString() {
++            return "SetPartial[" + var1 + "]";
++         }
++      });
++   }
++
++   public static <A> MapCodec<A> unit(A var0) {
 +      return unit(() -> {
 +         return var0;
 +      });
 +   }
 +
-+   static <A> MapCodec<A> unit(Supplier<A> var0) {
++   public static <A> MapCodec<A> unit(Supplier<A> var0) {
 +      return of(Encoder.empty(), Decoder.unit(var0));
 +   }
 +
-+   interface ResultFunction<A> {
++   public interface ResultFunction<A> {
 +      <T> DataResult<A> apply(DynamicOps<T> var1, MapLike<T> var2, DataResult<A> var3);
 +
 +      <T> RecordBuilder<T> coApply(DynamicOps<T> var1, A var2, RecordBuilder<T> var3);

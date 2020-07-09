@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/ScaffoldingBlockItem.java
 +++ net/minecraft/world/item/ScaffoldingBlockItem.java
-@@ -1,9 +1,10 @@
+@@ -1,16 +1,18 @@
  package net.minecraft.world.item;
  
  import javax.annotation.Nullable;
@@ -11,7 +11,15 @@
  import net.minecraft.network.chat.ChatType;
  import net.minecraft.network.chat.TranslatableComponent;
  import net.minecraft.network.protocol.game.ClientboundChatPacket;
-@@ -23,36 +24,36 @@
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.BlockPlaceContext;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.ScaffoldingBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+@@ -23,36 +25,36 @@
     public BlockPlaceContext updatePlacementContext(BlockPlaceContext var1) {
        BlockPos var2 = var1.getClickedPos();
        Level var3 = var1.getLevel();

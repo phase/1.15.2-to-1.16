@@ -1,6 +1,14 @@
 --- net/minecraft/world/item/EnderEyeItem.java
 +++ net/minecraft/world/item/EnderEyeItem.java
-@@ -17,10 +17,11 @@
+@@ -10,17 +10,19 @@
+ import net.minecraft.world.InteractionHand;
+ import net.minecraft.world.InteractionResult;
+ import net.minecraft.world.InteractionResultHolder;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.entity.projectile.EyeOfEnder;
++import net.minecraft.world.item.context.UseOnContext;
+ import net.minecraft.world.level.ClipContext;
+ import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.EndPortalFrameBlock;
@@ -12,7 +20,7 @@
  
  public class EnderEyeItem extends Item {
     public EnderEyeItem(Item.Properties var1) {
-@@ -29,11 +30,11 @@
+@@ -29,11 +31,11 @@
  
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();
@@ -25,7 +33,7 @@
           } else {
              BlockState var5 = (BlockState)var4.setValue(EndPortalFrameBlock.HAS_EYE, true);
              Block.pushEntitiesUp(var4, var5, var2, var3);
-@@ -52,37 +53,37 @@
+@@ -52,37 +54,37 @@
                 }
  
                 var2.globalLevelEvent(1038, var7.offset(1, 0, 1), 0);

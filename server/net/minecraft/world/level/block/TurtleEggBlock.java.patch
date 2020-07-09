@@ -14,8 +14,9 @@
  import net.minecraft.world.entity.animal.Turtle;
  import net.minecraft.world.entity.monster.Zombie;
  import net.minecraft.world.entity.player.Player;
- import net.minecraft.world.item.BlockPlaceContext;
+-import net.minecraft.world.item.BlockPlaceContext;
  import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
@@ -39,7 +40,7 @@
     }
  
     public void stepOn(Level var1, BlockPos var2, Entity var3) {
-@@ -48,13 +51,11 @@
+@@ -48,15 +51,16 @@
  
        super.fallOn(var1, var2, var3, var4);
     }
@@ -50,11 +51,17 @@
 -      } else {
 +      if (this.canDestroyEgg(var1, var3)) {
           if (!var1.isClientSide && var1.random.nextInt(var4) == 0) {
-             this.decreaseEggs(var1, var2, var1.getBlockState(var2));
+-            this.decreaseEggs(var1, var2, var1.getBlockState(var2));
++            BlockState var5 = var1.getBlockState(var2);
++            if (var5.is(Blocks.TURTLE_EGG)) {
++               this.decreaseEggs(var1, var2, var5);
++            }
           }
  
        }
-@@ -70,12 +71,12 @@
+    }
+ 
+@@ -70,12 +74,12 @@
           var1.levelEvent(2001, var2, Block.getId(var3));
        }
  
@@ -69,7 +76,7 @@
              var2.playSound((Player)null, var3, SoundEvents.TURTLE_EGG_CRACK, SoundSource.BLOCKS, 0.7F, 0.9F + var4.nextFloat() * 0.2F);
              var2.setBlock(var3, (BlockState)var1.setValue(HATCH, var5 + 1), 2);
           } else {
-@@ -93,16 +94,20 @@
+@@ -93,16 +97,20 @@
           }
        }
  
@@ -93,7 +100,7 @@
  
     }
  
-@@ -125,11 +130,11 @@
+@@ -125,11 +133,11 @@
     }
  
     @Nullable
@@ -106,7 +113,7 @@
     public VoxelShape getShape(BlockState var1, BlockGetter var2, BlockPos var3, CollisionContext var4) {
        return (Integer)var1.getValue(EGGS) > 1 ? MULTIPLE_EGGS_AABB : ONE_EGG_AABB;
     }
-@@ -137,14 +142,18 @@
+@@ -137,14 +145,18 @@
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> var1) {
        var1.add(HATCH, EGGS);
     }

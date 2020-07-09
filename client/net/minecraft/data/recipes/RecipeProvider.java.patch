@@ -1214,7 +1214,7 @@
 +      ShapedRecipeBuilder.shaped(Items.BOW).define('#', (ItemLike)Items.STICK).define('X', (ItemLike)Items.STRING).pattern(" #X").pattern("# X").pattern(" #X").unlockedBy("has_string", has((ItemLike)Items.STRING)).save(var0);
 +      ShapedRecipeBuilder.shaped(Items.BOWL, 4).define('#', (Tag)ItemTags.PLANKS).pattern("# #").pattern(" # ").unlockedBy("has_brown_mushroom", has((ItemLike)Blocks.BROWN_MUSHROOM)).unlockedBy("has_red_mushroom", has((ItemLike)Blocks.RED_MUSHROOM)).unlockedBy("has_mushroom_stew", has((ItemLike)Items.MUSHROOM_STEW)).save(var0);
 +      ShapedRecipeBuilder.shaped(Items.BREAD).define('#', (ItemLike)Items.WHEAT).pattern("###").unlockedBy("has_wheat", has((ItemLike)Items.WHEAT)).save(var0);
-+      ShapedRecipeBuilder.shaped(Blocks.BREWING_STAND).define('B', (ItemLike)Items.BLAZE_ROD).define('#', (ItemLike)Blocks.COBBLESTONE).pattern(" B ").pattern("###").unlockedBy("has_blaze_rod", has((ItemLike)Items.BLAZE_ROD)).save(var0);
++      ShapedRecipeBuilder.shaped(Blocks.BREWING_STAND).define('B', (ItemLike)Items.BLAZE_ROD).define('#', (Tag)ItemTags.STONE_CRAFTING_MATERIALS).pattern(" B ").pattern("###").unlockedBy("has_blaze_rod", has((ItemLike)Items.BLAZE_ROD)).save(var0);
 +      ShapedRecipeBuilder.shaped(Blocks.BRICKS).define('#', (ItemLike)Items.BRICK).pattern("##").pattern("##").unlockedBy("has_brick", has((ItemLike)Items.BRICK)).save(var0);
 +      ShapedRecipeBuilder.shaped(Blocks.BRICK_SLAB, 6).define('#', (ItemLike)Blocks.BRICKS).pattern("###").unlockedBy("has_brick_block", has((ItemLike)Blocks.BRICKS)).save(var0);
 +      ShapedRecipeBuilder.shaped(Blocks.BRICK_STAIRS, 4).define('#', (ItemLike)Blocks.BRICKS).pattern("#  ").pattern("## ").pattern("###").unlockedBy("has_brick_block", has((ItemLike)Blocks.BRICKS)).save(var0);
@@ -1280,7 +1280,7 @@
 +      ShapedRecipeBuilder.shaped(Items.FISHING_ROD).define('#', (ItemLike)Items.STICK).define('X', (ItemLike)Items.STRING).pattern("  #").pattern(" #X").pattern("# X").unlockedBy("has_string", has((ItemLike)Items.STRING)).save(var0);
 +      ShapelessRecipeBuilder.shapeless(Items.FLINT_AND_STEEL).requires((ItemLike)Items.IRON_INGOT).requires((ItemLike)Items.FLINT).unlockedBy("has_flint", has((ItemLike)Items.FLINT)).unlockedBy("has_obsidian", has((ItemLike)Blocks.OBSIDIAN)).save(var0);
 +      ShapedRecipeBuilder.shaped(Blocks.FLOWER_POT).define('#', (ItemLike)Items.BRICK).pattern("# #").pattern(" # ").unlockedBy("has_brick", has((ItemLike)Items.BRICK)).save(var0);
-+      ShapedRecipeBuilder.shaped(Blocks.FURNACE).define('#', (Tag)ItemTags.FURNACE_MATERIALS).pattern("###").pattern("# #").pattern("###").unlockedBy("has_cobblestone", has((Tag)ItemTags.FURNACE_MATERIALS)).save(var0);
++      ShapedRecipeBuilder.shaped(Blocks.FURNACE).define('#', (Tag)ItemTags.STONE_CRAFTING_MATERIALS).pattern("###").pattern("# #").pattern("###").unlockedBy("has_cobblestone", has((Tag)ItemTags.STONE_CRAFTING_MATERIALS)).save(var0);
 +      ShapedRecipeBuilder.shaped(Items.FURNACE_MINECART).define('A', (ItemLike)Blocks.FURNACE).define('B', (ItemLike)Items.MINECART).pattern("A").pattern("B").unlockedBy("has_minecart", has((ItemLike)Items.MINECART)).save(var0);
 +      ShapedRecipeBuilder.shaped(Items.GLASS_BOTTLE, 3).define('#', (ItemLike)Blocks.GLASS).pattern("# #").pattern(" # ").unlockedBy("has_glass", has((ItemLike)Blocks.GLASS)).save(var0);
 +      ShapedRecipeBuilder.shaped(Blocks.GLASS_PANE, 16).define('#', (ItemLike)Blocks.GLASS).pattern("###").pattern("###").unlockedBy("has_glass", has((ItemLike)Blocks.GLASS)).save(var0);

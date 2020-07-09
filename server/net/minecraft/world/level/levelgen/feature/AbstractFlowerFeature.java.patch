@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/AbstractFlowerFeature.java
 +++ net/minecraft/world/level/levelgen/feature/AbstractFlowerFeature.java
-@@ -1,35 +1,35 @@
+@@ -1,23 +1,22 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -9,7 +9,6 @@
 -import java.util.function.Function;
  import net.minecraft.core.BlockPos;
  import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -23,29 +22,9 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, U var5) {
--      BlockState var6 = this.getRandomFlower(var3, var4, var5);
--      int var7 = 0;
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, U var6) {
-+      BlockState var7 = this.getRandomFlower(var4, var5, var6);
-+      int var8 = 0;
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, U var5) {
+       BlockState var6 = this.getRandomFlower(var3, var4, var5);
+       int var7 = 0;
  
--      for(int var8 = 0; var8 < this.getCount(var5); ++var8) {
--         BlockPos var9 = this.getPos(var3, var4, var5);
--         if (var1.isEmptyBlock(var9) && var9.getY() < 255 && var6.canSurvive(var1, var9) && this.isValid(var1, var9, var5)) {
--            var1.setBlock(var9, var6, 2);
--            ++var7;
-+      for(int var9 = 0; var9 < this.getCount(var6); ++var9) {
-+         BlockPos var10 = this.getPos(var4, var5, var6);
-+         if (var1.isEmptyBlock(var10) && var10.getY() < 255 && var7.canSurvive(var1, var10) && this.isValid(var1, var10, var6)) {
-+            var1.setBlock(var10, var7, 2);
-+            ++var8;
-          }
-       }
- 
--      return var7 > 0;
-+      return var8 > 0;
-    }
- 
-    public abstract boolean isValid(LevelAccessor var1, BlockPos var2, U var3);
- 
-    public abstract int getCount(U var1);
+       for(int var8 = 0; var8 < this.getCount(var5); ++var8) {
+          BlockPos var9 = this.getPos(var3, var4, var5);

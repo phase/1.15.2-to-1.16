@@ -1,11 +1,13 @@
 --- net/minecraft/world/level/levelgen/structure/TemplateStructurePiece.java
 +++ net/minecraft/world/level/levelgen/structure/TemplateStructurePiece.java
-@@ -9,10 +9,12 @@
+@@ -8,11 +8,13 @@
+ import net.minecraft.commands.arguments.blocks.BlockStateParser;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.world.level.ChunkPos;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
 +import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
@@ -13,7 +15,7 @@
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.block.state.properties.StructureMode;
  import net.minecraft.world.level.chunk.ChunkGenerator;
-@@ -49,50 +51,50 @@
+@@ -49,58 +51,58 @@
        var1.putInt("TPX", this.templatePosition.getX());
        var1.putInt("TPY", this.templatePosition.getY());
        var1.putInt("TPZ", this.templatePosition.getZ());
@@ -91,3 +93,12 @@
        }
  
        return true;
+    }
+ 
+-   protected abstract void handleDataMarker(String var1, BlockPos var2, LevelAccessor var3, Random var4, BoundingBox var5);
++   protected abstract void handleDataMarker(String var1, BlockPos var2, ServerLevelAccessor var3, Random var4, BoundingBox var5);
+ 
+    public void move(int var1, int var2, int var3) {
+       super.move(var1, var2, var3);
+       this.templatePosition = this.templatePosition.offset(var1, var2, var3);
+    }

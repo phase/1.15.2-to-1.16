@@ -1,6 +1,6 @@
 --- net/minecraft/network/protocol/game/ClientboundLoginPacket.java
 +++ net/minecraft/network/protocol/game/ClientboundLoginPacket.java
-@@ -1,76 +1,111 @@
+@@ -1,76 +1,105 @@
  package net.minecraft.network.protocol.game;
  
 +import com.google.common.collect.Sets;
@@ -68,8 +68,8 @@
  
     public void read(FriendlyByteBuf var1) throws IOException {
        this.playerId = var1.readInt();
-       short var2 = var1.readUnsignedByte();
-       this.hardcore = (var2 & 8) == 8;
+-      short var2 = var1.readUnsignedByte();
+-      this.hardcore = (var2 & 8) == 8;
 -      int var3 = var2 & -9;
 -      this.gameType = GameType.byId(var3);
 -      this.dimension = DimensionType.getById(var1.readInt());
@@ -78,21 +78,21 @@
 -      this.levelType = LevelType.getLevelType(var1.readUtf(16));
 -      if (this.levelType == null) {
 -         this.levelType = LevelType.NORMAL;
-+      int var5 = var2 & -9;
-+      this.gameType = GameType.byId(var5);
-+      this.previousGameType = GameType.byId(var1.readUnsignedByte());
-+      int var3 = var1.readVarInt();
++      this.hardcore = var1.readBoolean();
++      this.gameType = GameType.byId(var1.readByte());
++      this.previousGameType = GameType.byId(var1.readByte());
++      int var2 = var1.readVarInt();
 +      this.levels = Sets.newHashSet();
 +
-+      for(int var4 = 0; var4 < var3; ++var4) {
++      for(int var3 = 0; var3 < var2; ++var3) {
 +         this.levels.add(ResourceKey.create(Registry.DIMENSION_REGISTRY, var1.readResourceLocation()));
        }
  
-+      this.registryHolder = (RegistryAccess.RegistryHolder)var1.readWithCodec(RegistryAccess.RegistryHolder.CODEC);
++      this.registryHolder = (RegistryAccess.RegistryHolder)var1.readWithCodec(RegistryAccess.RegistryHolder.NETWORK_CODEC);
 +      this.dimensionType = ResourceKey.create(Registry.DIMENSION_TYPE_REGISTRY, var1.readResourceLocation());
 +      this.dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, var1.readResourceLocation());
 +      this.seed = var1.readLong();
-+      this.maxPlayers = var1.readUnsignedByte();
++      this.maxPlayers = var1.readVarInt();
        this.chunkRadius = var1.readVarInt();
        this.reducedDebugInfo = var1.readBoolean();
        this.showDeathScreen = var1.readBoolean();
@@ -102,28 +102,29 @@
  
     public void write(FriendlyByteBuf var1) throws IOException {
        var1.writeInt(this.playerId);
-       int var2 = this.gameType.getId();
-       if (this.hardcore) {
-          var2 |= 8;
-       }
- 
-       var1.writeByte(var2);
--      var1.writeInt(this.dimension.getId());
+-      int var2 = this.gameType.getId();
+-      if (this.hardcore) {
+-         var2 |= 8;
++      var1.writeBoolean(this.hardcore);
++      var1.writeByte(this.gameType.getId());
 +      var1.writeByte(this.previousGameType.getId());
 +      var1.writeVarInt(this.levels.size());
-+      Iterator var3 = this.levels.iterator();
++      Iterator var2 = this.levels.iterator();
 +
-+      while(var3.hasNext()) {
-+         ResourceKey var4 = (ResourceKey)var3.next();
-+         var1.writeResourceLocation(var4.location());
-+      }
-+
-+      var1.writeWithCodec(RegistryAccess.RegistryHolder.CODEC, this.registryHolder);
++      while(var2.hasNext()) {
++         ResourceKey var3 = (ResourceKey)var2.next();
++         var1.writeResourceLocation(var3.location());
+       }
+ 
+-      var1.writeByte(var2);
+-      var1.writeInt(this.dimension.getId());
++      var1.writeWithCodec(RegistryAccess.RegistryHolder.NETWORK_CODEC, this.registryHolder);
 +      var1.writeResourceLocation(this.dimensionType.location());
 +      var1.writeResourceLocation(this.dimension.location());
        var1.writeLong(this.seed);
-       var1.writeByte(this.maxPlayers);
+-      var1.writeByte(this.maxPlayers);
 -      var1.writeUtf(this.levelType.getName());
++      var1.writeVarInt(this.maxPlayers);
        var1.writeVarInt(this.chunkRadius);
        var1.writeBoolean(this.reducedDebugInfo);
        var1.writeBoolean(this.showDeathScreen);
@@ -134,7 +135,7 @@
     public void handle(ClientGamePacketListener var1) {
        var1.handleLogin(this);
     }
-@@ -89,18 +124,30 @@
+@@ -89,18 +118,30 @@
  
     public GameType getGameType() {
        return this.gameType;
@@ -169,7 +170,7 @@
     }
  
     public boolean isReducedDebugInfo() {
-@@ -108,6 +155,14 @@
+@@ -108,6 +149,14 @@
     }
  
     public boolean shouldShowDeathScreen() {

@@ -1,6 +1,6 @@
 --- com/mojang/realmsclient/gui/screens/RealmsBrokenWorldScreen.java
 +++ com/mojang/realmsclient/gui/screens/RealmsBrokenWorldScreen.java
-@@ -1,151 +1,171 @@
+@@ -1,151 +1,170 @@
  package com.mojang.realmsclient.gui.screens;
  
  import com.google.common.collect.Lists;
@@ -35,7 +35,6 @@
 +import net.minecraft.client.resources.language.I18n;
 +import net.minecraft.network.chat.CommonComponents;
 +import net.minecraft.network.chat.Component;
-+import net.minecraft.network.chat.TextComponent;
 +import net.minecraft.network.chat.TranslatableComponent;
 +import net.minecraft.realms.NarrationHelper;
  import net.minecraft.realms.RealmsScreen;
@@ -236,7 +235,7 @@
     public boolean keyPressed(int var1, int var2, int var3) {
        if (var1 == 256) {
           this.backButtonClicked();
-@@ -154,155 +174,105 @@
+@@ -154,155 +173,105 @@
           return super.keyPressed(var1, var2, var3);
        }
     }
@@ -259,7 +258,7 @@
 -            Realms.setScreen(new RealmsGenericErrorScreen(var5.getMessage(), this.lastScreen));
 -         } catch (IOException var6) {
 -            LOGGER.error("Couldn't parse response getting own world");
-+            this.minecraft.setScreen(new RealmsGenericErrorScreen(new TextComponent(var5.getMessage()), this.lastScreen));
++            this.minecraft.setScreen(new RealmsGenericErrorScreen(Component.nullToEmpty(var5.getMessage()), this.lastScreen));
           }
  
        })).start();

@@ -20,6 +20,19 @@
  import net.minecraft.util.Mth;
  import net.minecraft.world.inventory.AbstractFurnaceMenu;
  import net.minecraft.world.inventory.RecipeBookMenu;
+@@ -39,11 +41,11 @@
+       this.collection = var2;
+       if (var1.player.containerMenu instanceof AbstractFurnaceMenu) {
+          this.isFurnaceMenu = true;
+       }
+ 
+-      boolean var8 = var1.player.getRecipeBook().isFilteringCraftable((RecipeBookMenu)var1.player.containerMenu);
++      boolean var8 = var1.player.getRecipeBook().isFiltering((RecipeBookMenu)var1.player.containerMenu);
+       List var9 = var2.getDisplayRecipes(true);
+       List var10 = var8 ? Collections.emptyList() : var2.getDisplayRecipes(false);
+       int var11 = var9.size();
+       int var12 = var11 + var10.size();
+       int var13 = var12 <= 16 ? 4 : 5;
 @@ -121,66 +123,66 @@
  
     public boolean isMouseOver(double var1, double var3) {

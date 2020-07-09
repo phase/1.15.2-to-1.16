@@ -65,20 +65,17 @@
        super(var1, var2);
        this.maxUpStep = 1.0F;
        this.setPathfindingMalus(BlockPathTypes.WATER, -1.0F);
-@@ -73,36 +84,34 @@
+@@ -73,36 +84,33 @@
        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0D, 0.0F));
        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
        this.goalSelector.addGoal(10, new EnderMan.EndermanLeaveBlockGoal(this));
        this.goalSelector.addGoal(11, new EnderMan.EndermanTakeBlockGoal(this));
 -      this.targetSelector.addGoal(1, new EnderMan.EndermanLookForPlayerGoal(this));
--      this.targetSelector.addGoal(2, new HurtByTargetGoal(this, new Class[0]));
--      this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Endermite.class, 10, true, false, ENDERMITE_SELECTOR));
-+      this.targetSelector.addGoal(1, new NearestAttackableTargetGoal(this, Player.class, 10, true, false, this::isAngryAt));
-+      this.targetSelector.addGoal(2, new EnderMan.EndermanLookForPlayerGoal(this));
-+      this.targetSelector.addGoal(3, new HurtByTargetGoal(this, new Class[0]));
-+      this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Endermite.class, 10, true, false, ENDERMITE_SELECTOR));
-+      this.targetSelector.addGoal(5, new ResetUniversalAngerTargetGoal(this, false));
++      this.targetSelector.addGoal(1, new EnderMan.EndermanLookForPlayerGoal(this, this::isAngryAt));
+       this.targetSelector.addGoal(2, new HurtByTargetGoal(this, new Class[0]));
+       this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Endermite.class, 10, true, false, ENDERMITE_SELECTOR));
++      this.targetSelector.addGoal(4, new ResetUniversalAngerTargetGoal(this, false));
     }
  
 -   protected void registerAttributes() {
@@ -111,7 +108,7 @@
  
     }
  
-@@ -111,10 +120,30 @@
+@@ -111,10 +119,30 @@
        this.entityData.define(DATA_CARRY_STATE, Optional.empty());
        this.entityData.define(DATA_CREEPY, false);
        this.entityData.define(DATA_STARED_AT, false);
@@ -142,7 +139,7 @@
           this.lastStareSound = this.tickCount;
           if (!this.isSilent()) {
              this.level.playLocalSound(this.getX(), this.getEyeY(), this.getZ(), SoundEvents.ENDERMAN_STARE, this.getSoundSource(), 2.5F, 1.0F, false);
-@@ -136,10 +165,11 @@
+@@ -136,10 +164,11 @@
        BlockState var2 = this.getCarriedBlock();
        if (var2 != null) {
           var1.put("carriedBlockState", NbtUtils.writeBlockState(var2));
@@ -154,7 +151,7 @@
     public void readAdditionalSaveData(CompoundTag var1) {
        super.readAdditionalSaveData(var1);
        BlockState var2 = null;
-@@ -149,10 +179,11 @@
+@@ -149,10 +178,11 @@
              var2 = null;
           }
        }
@@ -166,7 +163,7 @@
     private boolean isLookingAtMe(Player var1) {
        ItemStack var2 = (ItemStack)var1.inventory.armor.get(3);
        if (var2.getItem() == Blocks.CARVED_PUMPKIN.asItem()) {
-@@ -177,21 +208,25 @@
+@@ -177,21 +207,25 @@
              this.level.addParticle(ParticleTypes.PORTAL, this.getRandomX(0.5D), this.getRandomY() - 0.25D, this.getRandomZ(0.5D), (this.random.nextDouble() - 0.5D) * 2.0D, -this.random.nextDouble(), (this.random.nextDouble() - 0.5D) * 2.0D);
           }
        }
@@ -197,7 +194,7 @@
           }
        }
  
-@@ -229,11 +264,11 @@
+@@ -229,11 +263,11 @@
        BlockState var8 = this.level.getBlockState(var7);
        boolean var9 = var8.getMaterial().blocksMotion();
        boolean var10 = var8.getFluidState().is(FluidTags.WATER);
@@ -210,7 +207,7 @@
           }
  
           return var11;
-@@ -273,25 +308,25 @@
+@@ -273,25 +307,25 @@
     }
  
     public boolean hurt(DamageSource var1, float var2) {
@@ -235,7 +232,7 @@
           return false;
 +      } else {
 +         boolean var3 = super.hurt(var1, var2);
-+         if (!this.level.isClientSide() && this.random.nextInt(10) != 0) {
++         if (!this.level.isClientSide() && !(var1.getEntity() instanceof LivingEntity) && this.random.nextInt(10) != 0) {
 +            this.teleport();
 +         }
 +
@@ -245,7 +242,7 @@
  
     public boolean isCreepy() {
        return (Boolean)this.entityData.get(DATA_CREEPY);
-@@ -303,18 +338,23 @@
+@@ -303,18 +337,23 @@
  
     public void setBeingStaredAt() {
        this.entityData.set(DATA_STARED_AT, true);
@@ -270,7 +267,7 @@
     static class EndermanTakeBlockGoal extends Goal {
        private final EnderMan enderman;
  
-@@ -343,11 +383,11 @@
+@@ -343,11 +382,11 @@
           Block var8 = var7.getBlock();
           Vec3 var9 = new Vec3((double)Mth.floor(this.enderman.getX()) + 0.5D, (double)var4 + 0.5D, (double)Mth.floor(this.enderman.getZ()) + 0.5D);
           Vec3 var10 = new Vec3((double)var3 + 0.5D, (double)var4 + 0.5D, (double)var5 + 0.5D);
@@ -283,7 +280,22 @@
           }
  
        }
-@@ -465,10 +505,14 @@
+@@ -427,12 +466,12 @@
+       private int aggroTime;
+       private int teleportTime;
+       private final TargetingConditions startAggroTargetConditions;
+       private final TargetingConditions continueAggroTargetConditions = (new TargetingConditions()).allowUnseeable();
+ 
+-      public EndermanLookForPlayerGoal(EnderMan var1) {
+-         super(var1, Player.class, false);
++      public EndermanLookForPlayerGoal(EnderMan var1, @Nullable Predicate<LivingEntity> var2) {
++         super(var1, Player.class, 10, false, false, var2);
+          this.enderman = var1;
+          this.startAggroTargetConditions = (new TargetingConditions()).range(this.getFollowDistance()).selector((var1x) -> {
+             return var1.isLookingAtMe((Player)var1x);
+          });
+       }
+@@ -465,10 +504,14 @@
              return this.target != null && this.continueAggroTargetConditions.test(this.enderman, this.target) ? true : super.canContinueToUse();
           }
        }

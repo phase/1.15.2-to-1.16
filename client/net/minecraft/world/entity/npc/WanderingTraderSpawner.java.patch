@@ -136,7 +136,7 @@
 +            WanderingTrader var9 = (WanderingTrader)EntityType.WANDERING_TRADER.spawn(var1, (CompoundTag)null, (Component)null, (Player)null, var8, MobSpawnType.EVENT, false, false);
 +            if (var9 != null) {
 +               for(int var10 = 0; var10 < 2; ++var10) {
-+                  this.tryToSpawnLlamaFor(var9, 4);
++                  this.tryToSpawnLlamaFor(var1, var9, 4);
                 }
  
 -               this.level.getLevelData().setWanderingTraderId(var8.getUUID());
@@ -155,14 +155,18 @@
        }
     }
  
-    private void tryToSpawnLlamaFor(WanderingTrader var1, int var2) {
+-   private void tryToSpawnLlamaFor(WanderingTrader var1, int var2) {
 -      BlockPos var3 = this.findSpawnPositionNear(new BlockPos(var1), var2);
-+      BlockPos var3 = this.findSpawnPositionNear(var1.level, var1.blockPosition(), var2);
-       if (var3 != null) {
+-      if (var3 != null) {
 -         TraderLlama var4 = (TraderLlama)EntityType.TRADER_LLAMA.spawn(this.level, (CompoundTag)null, (Component)null, (Player)null, var3, MobSpawnType.EVENT, false, false);
-+         TraderLlama var4 = (TraderLlama)EntityType.TRADER_LLAMA.spawn(var1.level, (CompoundTag)null, (Component)null, (Player)null, var3, MobSpawnType.EVENT, false, false);
-          if (var4 != null) {
-             var4.setLeashedTo(var1, true);
+-         if (var4 != null) {
+-            var4.setLeashedTo(var1, true);
++   private void tryToSpawnLlamaFor(ServerLevel var1, WanderingTrader var2, int var3) {
++      BlockPos var4 = this.findSpawnPositionNear(var1, var2.blockPosition(), var3);
++      if (var4 != null) {
++         TraderLlama var5 = (TraderLlama)EntityType.TRADER_LLAMA.spawn(var1, (CompoundTag)null, (Component)null, (Player)null, var4, MobSpawnType.EVENT, false, false);
++         if (var5 != null) {
++            var5.setLeashedTo(var2, true);
           }
        }
     }

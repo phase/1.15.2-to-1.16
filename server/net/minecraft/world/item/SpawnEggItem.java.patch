@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/SpawnEggItem.java
 +++ net/minecraft/world/item/SpawnEggItem.java
-@@ -2,32 +2,36 @@
+@@ -2,32 +2,38 @@
  
  import com.google.common.collect.Iterables;
  import com.google.common.collect.Maps;
@@ -11,6 +11,7 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.nbt.CompoundTag;
++import net.minecraft.server.level.ServerLevel;
  import net.minecraft.stats.Stats;
  import net.minecraft.world.InteractionHand;
  import net.minecraft.world.InteractionResult;
@@ -21,6 +22,7 @@
 +import net.minecraft.world.entity.Mob;
  import net.minecraft.world.entity.MobSpawnType;
  import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.BaseSpawner;
  import net.minecraft.world.level.ClipContext;
  import net.minecraft.world.level.Level;
@@ -38,7 +40,15 @@
     private static final Map<EntityType<?>, SpawnEggItem> BY_ID = Maps.newIdentityHashMap();
     private final int color1;
     private final int color2;
-@@ -48,43 +52,42 @@
+@@ -41,70 +47,69 @@
+       BY_ID.put(var1, this);
+    }
+ 
+    public InteractionResult useOn(UseOnContext var1) {
+       Level var2 = var1.getLevel();
+-      if (var2.isClientSide) {
++      if (!(var2 instanceof ServerLevel)) {
+          return InteractionResult.SUCCESS;
        } else {
           ItemStack var3 = var1.getItemInHand();
           BlockPos var4 = var1.getClickedPos();
@@ -79,7 +89,7 @@
 -         EntityType var9 = this.getType(var3.getTag());
 -         if (var9.spawn(var2, var3, var1.getPlayer(), var11, MobSpawnType.SPAWN_EGG, true, !Objects.equals(var4, var11) && var5 == Direction.UP) != null) {
 +         EntityType var8 = this.getType(var3.getTag());
-+         if (var8.spawn(var2, var3, var1.getPlayer(), var10, MobSpawnType.SPAWN_EGG, true, !Objects.equals(var4, var10) && var5 == Direction.UP) != null) {
++         if (var8.spawn((ServerLevel)var2, var3, var1.getPlayer(), var10, MobSpawnType.SPAWN_EGG, true, !Objects.equals(var4, var10) && var5 == Direction.UP) != null) {
              var3.shrink(1);
           }
  
@@ -94,10 +104,20 @@
 +      BlockHitResult var5 = getPlayerPOVHitResult(var1, var2, ClipContext.Fluid.SOURCE_ONLY);
        if (var5.getType() != HitResult.Type.BLOCK) {
           return InteractionResultHolder.pass(var4);
-       } else if (var1.isClientSide) {
+-      } else if (var1.isClientSide) {
++      } else if (!(var1 instanceof ServerLevel)) {
           return InteractionResultHolder.success(var4);
        } else {
-@@ -100,11 +103,11 @@
+          BlockHitResult var6 = (BlockHitResult)var5;
+          BlockPos var7 = var6.getBlockPos();
+          if (!(var1.getBlockState(var7).getBlock() instanceof LiquidBlock)) {
+             return InteractionResultHolder.pass(var4);
+          } else if (var1.mayInteract(var2, var7) && var2.mayUseItemAt(var7, var6.getDirection(), var4)) {
+             EntityType var8 = this.getType(var4.getTag());
+-            if (var8.spawn(var1, var4, var2, var7, MobSpawnType.SPAWN_EGG, false, false) == null) {
++            if (var8.spawn((ServerLevel)var1, var4, var2, var7, MobSpawnType.SPAWN_EGG, false, false) == null) {
+                return InteractionResultHolder.pass(var4);
+             } else {
                 if (!var2.abilities.instabuild) {
                    var4.shrink(1);
                 }
@@ -110,20 +130,20 @@
              return InteractionResultHolder.fail(var4);
           }
        }
-@@ -126,6 +129,40 @@
+@@ -126,6 +131,40 @@
           }
        }
  
        return this.defaultType;
     }
 +
-+   public Optional<Mob> spawnOffspringFromSpawnEgg(Player var1, Mob var2, EntityType<? extends Mob> var3, Level var4, Vec3 var5, ItemStack var6) {
++   public Optional<Mob> spawnOffspringFromSpawnEgg(Player var1, Mob var2, EntityType<? extends Mob> var3, ServerLevel var4, Vec3 var5, ItemStack var6) {
 +      if (!this.spawnsEntity(var6.getTag(), var3)) {
 +         return Optional.empty();
 +      } else {
 +         Object var7;
 +         if (var2 instanceof AgableMob) {
-+            var7 = ((AgableMob)var2).getBreedOffspring((AgableMob)var2);
++            var7 = ((AgableMob)var2).getBreedOffspring(var4, (AgableMob)var2);
 +         } else {
 +            var7 = (Mob)var3.create(var4);
 +         }

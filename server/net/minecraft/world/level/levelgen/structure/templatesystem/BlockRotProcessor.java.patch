@@ -41,7 +41,7 @@
 -   protected <T> Dynamic<T> getDynamic(DynamicOps<T> var1) {
 -      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("integrity"), var1.createFloat(this.integrity))));
 +   static {
-+      CODEC = Codec.FLOAT.fieldOf("integrity").withDefault((Object)1.0F).xmap(BlockRotProcessor::new, (var0) -> {
++      CODEC = Codec.FLOAT.fieldOf("integrity").orElse(1.0F).xmap(BlockRotProcessor::new, (var0) -> {
 +         return var0.integrity;
 +      }).codec();
     }

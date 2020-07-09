@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/foliageplacers/MegaPineFoliagePlacer.java
 +++ net/minecraft/world/level/levelgen/feature/foliageplacers/MegaPineFoliagePlacer.java
-@@ -1,0 +1,65 @@
+@@ -1,0 +1,62 @@
 +package net.minecraft.world.level.levelgen.feature.foliageplacers;
 +
 +import com.mojang.serialization.Codec;
@@ -9,25 +9,22 @@
 +import java.util.Set;
 +import net.minecraft.core.BlockPos;
 +import net.minecraft.util.Mth;
++import net.minecraft.util.UniformInt;
 +import net.minecraft.world.level.LevelSimulatedRW;
 +import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
 +import net.minecraft.world.level.levelgen.structure.BoundingBox;
 +
 +public class MegaPineFoliagePlacer extends FoliagePlacer {
 +   public static final Codec<MegaPineFoliagePlacer> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return foliagePlacerParts(var0).and(var0.group(Codec.INT.fieldOf("height_random").forGetter((var0x) -> {
-+         return var0x.heightRand;
-+      }), Codec.INT.fieldOf("crown_height").forGetter((var0x) -> {
++      return foliagePlacerParts(var0).and(UniformInt.codec(0, 16, 8).fieldOf("crown_height").forGetter((var0x) -> {
 +         return var0x.crownHeight;
-+      }))).apply(var0, MegaPineFoliagePlacer::new);
++      })).apply(var0, MegaPineFoliagePlacer::new);
 +   });
-+   private final int heightRand;
-+   private final int crownHeight;
++   private final UniformInt crownHeight;
 +
-+   public MegaPineFoliagePlacer(int var1, int var2, int var3, int var4, int var5, int var6) {
-+      super(var1, var2, var3, var4);
-+      this.heightRand = var5;
-+      this.crownHeight = var6;
++   public MegaPineFoliagePlacer(UniformInt var1, UniformInt var2, UniformInt var3) {
++      super(var1, var2);
++      this.crownHeight = var3;
 +   }
 +
 +   protected FoliagePlacerType<?> type() {
@@ -55,7 +52,7 @@
 +   }
 +
 +   public int foliageHeight(Random var1, int var2, TreeConfiguration var3) {
-+      return var1.nextInt(this.heightRand + 1) + this.crownHeight;
++      return this.crownHeight.sample(var1);
 +   }
 +
 +   protected boolean shouldSkipLocation(Random var1, int var2, int var3, int var4, int var5, boolean var6) {

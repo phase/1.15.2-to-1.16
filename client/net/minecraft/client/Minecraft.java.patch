@@ -88,7 +88,7 @@
  import net.minecraft.client.renderer.RenderBuffers;
  import net.minecraft.client.renderer.VirtualScreen;
  import net.minecraft.client.renderer.block.BlockModelShaper;
-@@ -98,17 +108,17 @@
+@@ -98,17 +108,16 @@
  import net.minecraft.client.renderer.texture.TextureAtlasSprite;
  import net.minecraft.client.renderer.texture.TextureManager;
  import net.minecraft.client.resources.ClientPackSource;
@@ -100,7 +100,6 @@
 -import net.minecraft.client.resources.PackAdapterV4;
 +import net.minecraft.client.resources.PackResourcesAdapterV4;
  import net.minecraft.client.resources.PaintingTextureManager;
-+import net.minecraft.client.resources.ResourcePack;
  import net.minecraft.client.resources.SkinManager;
  import net.minecraft.client.resources.SplashManager;
 -import net.minecraft.client.resources.UnopenedResourcePack;
@@ -109,7 +108,7 @@
  import net.minecraft.client.resources.model.BakedModel;
  import net.minecraft.client.resources.model.ModelManager;
  import net.minecraft.client.searchtree.MutableSearchTree;
-@@ -117,58 +127,72 @@
+@@ -117,58 +126,72 @@
  import net.minecraft.client.searchtree.SearchRegistry;
  import net.minecraft.client.server.IntegratedServer;
  import net.minecraft.client.sounds.MusicManager;
@@ -186,7 +185,7 @@
  import net.minecraft.world.entity.decoration.ItemFrame;
  import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
  import net.minecraft.world.entity.decoration.Painting;
-@@ -182,22 +206,25 @@
+@@ -182,22 +205,25 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.item.PlayerHeadItem;
@@ -216,7 +215,7 @@
  import net.minecraft.world.phys.HitResult;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
-@@ -205,10 +232,11 @@
+@@ -205,10 +231,11 @@
  public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements SnooperPopulator, WindowEventHandler {
     private static Minecraft instance;
     private static final Logger LOGGER = LogManager.getLogger();
@@ -228,7 +227,7 @@
     private final File resourcePackDirectory;
     private final PropertyMap profileProperties;
     private final TextureManager textureManager;
-@@ -240,24 +268,24 @@
+@@ -240,24 +267,24 @@
     private final Proxy proxy;
     private final LevelStorageSource levelSource;
     public final FrameTimer frameTimer = new FrameTimer();
@@ -242,7 +241,7 @@
     private final ReloadableResourceManager resourceManager;
     private final ClientPackSource clientPackSource;
 -   private final PackRepository<UnopenedResourcePack> resourcePackRepository;
-+   private final PackRepository<ResourcePack> resourcePackRepository;
++   private final PackRepository resourcePackRepository;
     private final LanguageManager languageManager;
     private final BlockColors blockColors;
     private final ItemColors itemColors;
@@ -257,7 +256,7 @@
     private final ModelManager modelManager;
     private final BlockRenderDispatcher blockRenderer;
     private final PaintingTextureManager paintingTextures;
-@@ -309,53 +337,60 @@
+@@ -309,53 +336,60 @@
     public boolean smartCull = true;
     private boolean windowActive;
     private final Queue<Runnable> progressTasks = Queues.newConcurrentLinkedQueue();
@@ -327,7 +326,7 @@
        if (this.options.overrideHeight > 0 && this.options.overrideWidth > 0) {
           var5 = new DisplayData(this.options.overrideWidth, this.options.overrideHeight, var1.display.fullscreenWidth, var1.display.fullscreenHeight, var1.display.isFullscreen);
        } else {
-@@ -381,13 +416,13 @@
+@@ -381,13 +415,13 @@
        this.keyboardHandler = new KeyboardHandler(this);
        this.keyboardHandler.setup(this.window.getWindow());
        RenderSystem.initRenderer(this.options.glDebugVerbosity, false);
@@ -343,7 +342,7 @@
        this.textureManager = new TextureManager(this.resourceManager);
        this.resourceManager.registerReloadListener(this.textureManager);
        this.skinManager = new SkinManager(this.textureManager, new File(var2, "skins"), this.minecraftSessionService);
-@@ -395,76 +430,72 @@
+@@ -395,76 +429,72 @@
        this.soundManager = new SoundManager(this.resourceManager, this.options);
        this.resourceManager.registerReloadListener(this.soundManager);
        this.splashManager = new SplashManager(this.user);
@@ -478,7 +477,7 @@
     public void updateTitle() {
        this.window.setTitle(this.createTitle());
     }
-@@ -497,11 +528,11 @@
+@@ -497,11 +527,11 @@
     public boolean isProbablyModded() {
        return !"vanilla".equals(ClientBrandRetriever.getClientModName()) || Minecraft.class.getSigners() == null;
     }
@@ -491,7 +490,7 @@
              var2 = new TextComponent(((SimpleReloadableResourceManager.ResourcePackLoadingFailure)var1).getPack().getName());
           } else {
              var2 = null;
-@@ -512,11 +543,11 @@
+@@ -512,11 +542,11 @@
           this.options.resourcePacks.clear();
           this.options.incompatibleResourcePacks.clear();
           this.options.save();
@@ -504,7 +503,7 @@
           Util.throwAsRuntime(var1);
        }
  
-@@ -533,37 +564,47 @@
+@@ -533,37 +563,47 @@
                 crash(this.delayedCrash);
                 return;
              }
@@ -562,7 +561,7 @@
           return var0.getTooltipLines((Player)null, TooltipFlag.Default.NORMAL).stream().map((var0x) -> {
              return ChatFormatting.stripFormatting(var0x.getString()).trim();
           }).filter((var0x) -> {
-@@ -636,27 +677,10 @@
+@@ -636,27 +676,10 @@
  
     public String getVersionType() {
        return this.versionType;
@@ -590,7 +589,7 @@
     }
  
     public static void crash(CrashReport var0) {
-@@ -688,14 +712,13 @@
+@@ -688,14 +711,13 @@
           if (this.overlay instanceof LoadingOverlay) {
              this.pendingReload = var1;
              return var1;
@@ -608,7 +607,7 @@
                 });
              }, true));
              return var1;
-@@ -752,11 +775,11 @@
+@@ -752,11 +774,11 @@
           Iterator var20 = var14.iterator();
  
           while(var20.hasNext()) {
@@ -621,7 +620,7 @@
              }
           }
        }
-@@ -769,18 +792,29 @@
+@@ -769,18 +791,29 @@
  
     public LevelStorageSource getLevelSource() {
        return this.levelSource;
@@ -652,7 +651,7 @@
           } else {
              this.player.respawn();
           }
-@@ -853,11 +887,12 @@
+@@ -853,11 +886,12 @@
           this.resourcePackRepository.close();
           this.particleEngine.close();
           this.mobEffectTextures.close();
@@ -666,7 +665,7 @@
           throw var5;
        } finally {
           this.virtualScreen.close();
-@@ -867,11 +902,10 @@
+@@ -867,11 +901,10 @@
     }
  
     private void runTick(boolean var1) {
@@ -678,7 +677,7 @@
        }
  
        if (this.pendingReload != null && !(this.overlay instanceof LoadingOverlay)) {
-@@ -885,61 +919,61 @@
+@@ -885,61 +918,61 @@
        Runnable var9;
        while((var9 = (Runnable)this.progressTasks.poll()) != null) {
           var9.run();
@@ -756,7 +755,7 @@
        if ((double)var5 < Option.FRAMERATE_LIMIT.getMaxValue()) {
           RenderSystem.limitDisplayFPS(var5);
        }
-@@ -947,39 +981,73 @@
+@@ -947,39 +980,73 @@
        this.profiler.popPush("yield");
        Thread.yield();
        this.profiler.pop();
@@ -835,7 +834,7 @@
        this.window.setGuiScale((double)var1);
        if (this.screen != null) {
           this.screen.resize(this, this.window.getGuiScaledWidth(), this.window.getGuiScaledHeight());
-@@ -989,10 +1057,14 @@
+@@ -989,10 +1056,14 @@
        var2.resize(this.window.getWidth(), this.window.getHeight(), ON_OSX);
        this.gameRenderer.resize(this.window.getWidth(), this.window.getHeight());
        this.mouseHandler.setIgnoreFirstMove();
@@ -850,7 +849,7 @@
     }
  
     public void emergencySave() {
-@@ -1006,149 +1078,147 @@
+@@ -1006,149 +1077,147 @@
           System.gc();
           if (this.isLocalServer && this.singleplayerServer != null) {
              this.singleplayerServer.halt(true);
@@ -1109,7 +1108,7 @@
     public void stop() {
        this.running = false;
     }
-@@ -1322,11 +1392,11 @@
+@@ -1322,11 +1391,11 @@
        if (this.level != null) {
           this.textureManager.tick();
        }
@@ -1122,7 +1121,7 @@
              this.setScreen(new InBedChatScreen());
           }
        } else if (this.screen != null && this.screen instanceof InBedChatScreen && !this.player.isSleeping()) {
-@@ -1383,11 +1453,10 @@
+@@ -1383,11 +1452,10 @@
        }
  
        this.soundManager.tick(this.pause);
@@ -1134,7 +1133,7 @@
              try {
                 this.level.tick(() -> {
                    return true;
-@@ -1467,13 +1536,13 @@
+@@ -1467,13 +1535,13 @@
  
        while(this.options.keyAdvancements.consumeClick()) {
           this.setScreen(new AdvancementsScreen(this.player.connection.getAdvancements()));
@@ -1150,7 +1149,7 @@
  
        while(this.options.keyDrop.consumeClick()) {
           if (!this.player.isSpectator() && this.player.drop(Screen.hasControlDown())) {
-@@ -1482,15 +1551,15 @@
+@@ -1482,15 +1550,15 @@
        }
  
        boolean var4 = this.options.chatVisibility != ChatVisiblity.HIDDEN;
@@ -1168,7 +1167,7 @@
  
        if (this.player.isUsingItem()) {
           if (!this.options.keyUse.isDown()) {
-@@ -1530,85 +1599,238 @@
+@@ -1530,85 +1598,238 @@
        }
  
        this.continueAttack(this.screen == null && this.options.keyAttack.isDown() && this.mouseHandler.isMouseGrabbed());
@@ -1436,7 +1435,7 @@
  
 +   public Minecraft.ServerStem makeServerStem(RegistryAccess.RegistryHolder var1, Function<LevelStorageSource.LevelStorageAccess, DataPackConfig> var2, Function4<LevelStorageSource.LevelStorageAccess, RegistryAccess.RegistryHolder, ResourceManager, DataPackConfig, WorldData> var3, boolean var4, LevelStorageSource.LevelStorageAccess var5) throws InterruptedException, ExecutionException {
 +      DataPackConfig var6 = (DataPackConfig)var2.apply(var5);
-+      PackRepository var7 = new PackRepository(Pack::new, new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var5.getLevelPath(LevelResource.DATAPACK_DIR).toFile(), PackSource.WORLD)});
++      PackRepository var7 = new PackRepository(new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var5.getLevelPath(LevelResource.DATAPACK_DIR).toFile(), PackSource.WORLD)});
 +
 +      try {
 +         DataPackConfig var8 = MinecraftServer.configurePackRepository(var7, var6, var4);
@@ -1460,7 +1459,7 @@
        this.updateLevelInEngines(var1);
        if (!this.isLocalServer) {
           YggdrasilAuthenticationService var3 = new YggdrasilAuthenticationService(this.proxy, UUID.randomUUID().toString());
-@@ -1639,13 +1861,17 @@
+@@ -1639,13 +1860,17 @@
        this.gameMode = null;
        NarratorChatListener.INSTANCE.clear();
        this.updateScreenAndTick(var1);
@@ -1478,7 +1477,7 @@
           this.clientPackSource.clearServerPack();
           this.gui.onDisconnected();
           this.currentServer = null;
-@@ -1657,25 +1883,49 @@
+@@ -1657,25 +1882,49 @@
        this.updateLevelInEngines((ClientLevel)null);
        this.player = null;
     }
@@ -1529,7 +1528,7 @@
     }
  
     @Nullable
-@@ -1686,13 +1936,17 @@
+@@ -1686,13 +1935,17 @@
     public static boolean renderNames() {
        return !instance.options.hideGui;
     }
@@ -1548,7 +1547,7 @@
     }
  
     private void pickBlock() {
-@@ -1807,12 +2061,12 @@
+@@ -1807,12 +2060,12 @@
     }
  
     private ItemStack addCustomNbtData(ItemStack var1, BlockEntity var2) {
@@ -1563,7 +1562,7 @@
        } else {
           var1.addTagElement("BlockEntityTag", var3);
           var4 = new CompoundTag();
-@@ -1904,14 +2158,14 @@
+@@ -1904,14 +2157,14 @@
        String var2 = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ? "little" : "big";
        var1.setDynamicData("endianness", var2);
        var1.setDynamicData("subtitles", this.options.showSubtitles);
@@ -1574,26 +1573,26 @@
  
        while(var4.hasNext()) {
 -         UnopenedResourcePack var5 = (UnopenedResourcePack)var4.next();
-+         ResourcePack var5 = (ResourcePack)var4.next();
++         Pack var5 = (Pack)var4.next();
           if (!var5.isRequired() && !var5.isFixedPosition()) {
              var1.setDynamicData("resource_pack[" + var3++ + "]", var5.getId());
           }
        }
  
-@@ -1981,11 +2235,11 @@
+@@ -1981,11 +2234,11 @@
  
     public ResourceManager getResourceManager() {
        return this.resourceManager;
     }
  
 -   public PackRepository<UnopenedResourcePack> getResourcePackRepository() {
-+   public PackRepository<ResourcePack> getResourcePackRepository() {
++   public PackRepository getResourcePackRepository() {
        return this.resourcePackRepository;
     }
  
     public ClientPackSource getClientPackSource() {
        return this.clientPackSource;
-@@ -2010,30 +2264,34 @@
+@@ -2010,30 +2263,34 @@
  
     public boolean isPaused() {
        return this.pause;
@@ -1641,7 +1640,7 @@
  
     public MinecraftSessionService getMinecraftSessionService() {
        return this.minecraftSessionService;
-@@ -2051,10 +2309,14 @@
+@@ -2051,10 +2308,14 @@
     public void setCameraEntity(Entity var1) {
        this.cameraEntity = var1;
        this.gameRenderer.checkEntityPostEffect(var1);
@@ -1656,7 +1655,7 @@
     }
  
     protected Runnable wrapRunnable(Runnable var1) {
-@@ -2135,14 +2397,10 @@
+@@ -2135,14 +2396,10 @@
  
     public ModelManager getModelManager() {
        return this.modelManager;
@@ -1671,7 +1670,7 @@
     }
  
     public MobEffectTextureManager getMobEffectTextures() {
-@@ -2180,43 +2438,82 @@
+@@ -2180,43 +2437,82 @@
  
     public RenderBuffers renderBuffers() {
        return this.renderBuffers;
@@ -1682,7 +1681,7 @@
 -      Supplier var7 = var2;
 -      if (var6 <= 3) {
 -         var7 = adaptV3(var2);
-+   private static ResourcePack createClientPackAdapter(String var0, boolean var1, Supplier<PackResources> var2, PackResources var3, PackMetadataSection var4, Pack.Position var5, PackSource var6) {
++   private static Pack createClientPackAdapter(String var0, boolean var1, Supplier<PackResources> var2, PackResources var3, PackMetadataSection var4, Pack.Position var5, PackSource var6) {
 +      int var7 = var4.getPackFormat();
 +      Supplier var8 = var2;
 +      if (var7 <= 3) {
@@ -1696,7 +1695,7 @@
        }
  
 -      return new UnopenedResourcePack(var0, var1, var7, var3, var4, var5);
-+      return new ResourcePack(var0, var1, var8, var3, var4, var5, var6);
++      return new Pack(var0, var1, var8, var3, var4, var5, var6);
     }
  
 -   private static Supplier<Pack> adaptV3(Supplier<Pack> var0) {
@@ -1729,17 +1728,17 @@
     }
 +
 +   public static final class ServerStem implements AutoCloseable {
-+      private final PackRepository<Pack> packRepository;
++      private final PackRepository packRepository;
 +      private final ServerResources serverResources;
 +      private final WorldData worldData;
 +
-+      private ServerStem(PackRepository<Pack> var1, ServerResources var2, WorldData var3) {
++      private ServerStem(PackRepository var1, ServerResources var2, WorldData var3) {
 +         this.packRepository = var1;
 +         this.serverResources = var2;
 +         this.worldData = var3;
 +      }
 +
-+      public PackRepository<Pack> packRepository() {
++      public PackRepository packRepository() {
 +         return this.packRepository;
 +      }
 +

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/configurations/RandomBooleanFeatureConfiguration.java
 +++ net/minecraft/world/level/levelgen/feature/configurations/RandomBooleanFeatureConfiguration.java
-@@ -1,26 +1,23 @@
+@@ -1,26 +1,24 @@
  package net.minecraft.world.level.levelgen.feature.configurations;
  
 -import com.google.common.collect.ImmutableMap;
@@ -9,9 +9,12 @@
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
 +import java.util.function.BiFunction;
++import java.util.function.Supplier;
  import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
  
  public class RandomBooleanFeatureConfiguration implements FeatureConfiguration {
+-   public final ConfiguredFeature<?, ?> featureTrue;
+-   public final ConfiguredFeature<?, ?> featureFalse;
 +   public static final Codec<RandomBooleanFeatureConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
 +      return var0.group(ConfiguredFeature.CODEC.fieldOf("feature_true").forGetter((var0x) -> {
 +         return var0x.featureTrue;
@@ -19,10 +22,11 @@
 +         return var0x.featureFalse;
 +      })).apply(var0, (BiFunction)(RandomBooleanFeatureConfiguration::new));
 +   });
-    public final ConfiguredFeature<?, ?> featureTrue;
-    public final ConfiguredFeature<?, ?> featureFalse;
++   public final Supplier<ConfiguredFeature<?, ?>> featureTrue;
++   public final Supplier<ConfiguredFeature<?, ?>> featureFalse;
  
-    public RandomBooleanFeatureConfiguration(ConfiguredFeature<?, ?> var1, ConfiguredFeature<?, ?> var2) {
+-   public RandomBooleanFeatureConfiguration(ConfiguredFeature<?, ?> var1, ConfiguredFeature<?, ?> var2) {
++   public RandomBooleanFeatureConfiguration(Supplier<ConfiguredFeature<?, ?>> var1, Supplier<ConfiguredFeature<?, ?>> var2) {
        this.featureTrue = var1;
        this.featureFalse = var2;
     }

@@ -36,7 +36,21 @@
  import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
  import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
  import net.minecraft.network.protocol.game.ServerboundPaddleBoatPacket;
-@@ -113,28 +116,36 @@
+@@ -71,11 +74,12 @@
+ import net.minecraft.network.protocol.game.ServerboundPlaceRecipePacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerAbilitiesPacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+-import net.minecraft.network.protocol.game.ServerboundRecipeBookUpdatePacket;
++import net.minecraft.network.protocol.game.ServerboundRecipeBookChangeSettingsPacket;
++import net.minecraft.network.protocol.game.ServerboundRecipeBookSeenRecipePacket;
+ import net.minecraft.network.protocol.game.ServerboundRenameItemPacket;
+ import net.minecraft.network.protocol.game.ServerboundResourcePackPacket;
+ import net.minecraft.network.protocol.game.ServerboundSeenAdvancementsPacket;
+ import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
+ import net.minecraft.network.protocol.game.ServerboundSetBeaconPacket;
+@@ -113,28 +117,36 @@
  import net.minecraft.world.inventory.AnvilMenu;
  import net.minecraft.world.inventory.BeaconMenu;
  import net.minecraft.world.inventory.MerchantMenu;
@@ -74,7 +88,7 @@
  import org.apache.logging.log4j.Logger;
  
  public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
-@@ -187,14 +198,14 @@
+@@ -187,14 +199,14 @@
        this.player.zo = this.player.getZ();
        this.player.doTick();
        this.player.absMoveTo(this.firstGoodX, this.firstGoodY, this.firstGoodZ, this.player.yRot, this.player.xRot);
@@ -91,7 +105,7 @@
        } else {
           this.clientIsFloating = false;
           this.aboveGroundTickCount = 0;
-@@ -209,11 +220,11 @@
+@@ -209,11 +221,11 @@
           this.vehicleLastGoodY = this.lastVehicle.getY();
           this.vehicleLastGoodZ = this.lastVehicle.getZ();
           if (this.clientVehicleIsFloating && this.player.getRootVehicle().getControllingPassenger() == this.player) {
@@ -104,7 +118,7 @@
           } else {
              this.clientVehicleIsFloating = false;
              this.aboveGroundVehicleTickCount = 0;
-@@ -226,11 +237,11 @@
+@@ -226,11 +238,11 @@
  
        this.server.getProfiler().push("keepAlive");
        long var1 = Util.getMillis();
@@ -117,7 +131,7 @@
              this.keepAliveTime = var1;
              this.keepAliveChallenge = var1;
              this.send(new ClientboundKeepAlivePacket(this.keepAliveChallenge));
-@@ -245,11 +256,11 @@
+@@ -245,11 +257,11 @@
        if (this.dropSpamTickCount > 0) {
           --this.dropSpamTickCount;
        }
@@ -130,7 +144,7 @@
     }
  
     public void resetPosition() {
-@@ -296,11 +307,11 @@
+@@ -296,11 +308,11 @@
     }
  
     public void handleMoveVehicle(ServerboundMoveVehiclePacket var1) {
@@ -143,7 +157,7 @@
           if (var2 != this.player && var2.getControllingPassenger() == this.player && var2 == this.lastVehicle) {
              ServerLevel var3 = this.player.getLevel();
              double var4 = var2.getX();
-@@ -337,11 +348,11 @@
+@@ -337,11 +349,11 @@
              var22 = var14 - var2.getZ();
              var26 = var18 * var18 + var20 * var20 + var22 * var22;
              boolean var31 = false;
@@ -156,7 +170,7 @@
              var2.absMoveTo(var10, var12, var14, var16, var17);
              boolean var32 = var3.noCollision(var2, var2.getBoundingBox().deflate(0.0625D));
              if (var28 && (var31 || !var32)) {
-@@ -350,19 +361,23 @@
+@@ -350,19 +362,23 @@
                 return;
              }
  
@@ -181,7 +195,43 @@
        if (var1.getId() == this.awaitingTeleport) {
           this.player.absMoveTo(this.awaitingPositionFromClient.x, this.awaitingPositionFromClient.y, this.awaitingPositionFromClient.z, this.player.yRot, this.player.xRot);
           this.lastGoodX = this.awaitingPositionFromClient.x;
-@@ -422,13 +437,13 @@
+@@ -375,27 +391,20 @@
+          this.awaitingPositionFromClient = null;
+       }
+ 
+    }
+ 
+-   public void handleRecipeBookUpdatePacket(ServerboundRecipeBookUpdatePacket var1) {
++   public void handleRecipeBookSeenRecipePacket(ServerboundRecipeBookSeenRecipePacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+-      if (var1.getPurpose() == ServerboundRecipeBookUpdatePacket.Purpose.SHOWN) {
+-         Optional var10000 = this.server.getRecipeManager().byKey(var1.getRecipe());
+-         ServerRecipeBook var10001 = this.player.getRecipeBook();
+-         var10000.ifPresent(var10001::removeHighlight);
+-      } else if (var1.getPurpose() == ServerboundRecipeBookUpdatePacket.Purpose.SETTINGS) {
+-         this.player.getRecipeBook().setGuiOpen(var1.isGuiOpen());
+-         this.player.getRecipeBook().setFilteringCraftable(var1.isFilteringCraftable());
+-         this.player.getRecipeBook().setFurnaceGuiOpen(var1.isFurnaceGuiOpen());
+-         this.player.getRecipeBook().setFurnaceFilteringCraftable(var1.isFurnaceFilteringCraftable());
+-         this.player.getRecipeBook().setBlastingFurnaceGuiOpen(var1.isBlastFurnaceGuiOpen());
+-         this.player.getRecipeBook().setBlastingFurnaceFilteringCraftable(var1.isBlastFurnaceFilteringCraftable());
+-         this.player.getRecipeBook().setSmokerGuiOpen(var1.isSmokerGuiOpen());
+-         this.player.getRecipeBook().setSmokerFilteringCraftable(var1.isSmokerFilteringCraftable());
+-      }
++      Optional var10000 = this.server.getRecipeManager().byKey(var1.getRecipe());
++      ServerRecipeBook var10001 = this.player.getRecipeBook();
++      var10000.ifPresent(var10001::removeHighlight);
++   }
+ 
++   public void handleRecipeBookChangeSettingsPacket(ServerboundRecipeBookChangeSettingsPacket var1) {
++      PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
++      this.player.getRecipeBook().setBookSetting(var1.getBookType(), var1.isOpen(), var1.isFiltering());
+    }
+ 
+    public void handleSeenAdvancements(ServerboundSeenAdvancementsPacket var1) {
+       PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
+       if (var1.getAction() == ServerboundSeenAdvancementsPacket.Action.OPENED_TAB) {
+@@ -422,13 +431,13 @@
     }
  
     public void handleSetCommandBlock(ServerboundSetCommandBlockPacket var1) {
@@ -197,7 +247,7 @@
           CommandBlockEntity var3 = null;
           BlockPos var4 = var1.getPos();
           BlockEntity var5 = this.player.level.getBlockEntity(var4);
-@@ -471,34 +486,34 @@
+@@ -471,34 +480,34 @@
                 var3.onModeSwitch();
              }
  
@@ -236,7 +286,17 @@
        }
     }
  
-@@ -568,11 +583,11 @@
+@@ -559,20 +568,20 @@
+                      this.player.displayClientMessage(new TranslatableComponent("structure_block.save_failure", new Object[]{var6}), false);
+                   }
+                } else if (var1.getUpdateType() == StructureBlockEntity.UpdateType.LOAD_AREA) {
+                   if (!var5.isStructureLoadable()) {
+                      this.player.displayClientMessage(new TranslatableComponent("structure_block.load_not_found", new Object[]{var6}), false);
+-                  } else if (var5.loadStructure()) {
++                  } else if (var5.loadStructure(this.player.getLevel())) {
+                      this.player.displayClientMessage(new TranslatableComponent("structure_block.load_success", new Object[]{var6}), false);
+                   } else {
+                      this.player.displayClientMessage(new TranslatableComponent("structure_block.load_prepare", new Object[]{var6}), false);
                    }
                 } else if (var1.getUpdateType() == StructureBlockEntity.UpdateType.SCAN_AREA) {
                    if (var5.detectSize()) {
@@ -249,7 +309,7 @@
              } else {
                 this.player.displayClientMessage(new TranslatableComponent("structure_block.invalid_structure_name", new Object[]{var1.getName()}), false);
              }
-@@ -590,20 +605,35 @@
+@@ -590,20 +599,35 @@
           BlockPos var2 = var1.getPos();
           BlockState var3 = this.player.level.getBlockState(var2);
           BlockEntity var4 = this.player.level.getBlockEntity(var2);
@@ -287,7 +347,7 @@
        int var2 = var1.getItem();
        AbstractContainerMenu var3 = this.player.containerMenu;
        if (var3 instanceof MerchantMenu) {
-@@ -672,13 +702,13 @@
+@@ -672,13 +696,13 @@
     }
  
     public void handleMovePlayer(ServerboundMovePlayerPacket var1) {
@@ -303,7 +363,7 @@
                 this.resetPosition();
              }
  
-@@ -728,65 +758,67 @@
+@@ -728,65 +752,67 @@
                             this.teleport(this.player.getX(), this.player.getY(), this.player.getZ(), this.player.yRot, this.player.xRot);
                             return;
                          }
@@ -397,7 +457,7 @@
     public void teleport(double var1, double var3, double var5, float var7, float var8) {
        this.teleport(var1, var3, var5, var7, var8, Collections.emptySet());
     }
-@@ -811,15 +843,16 @@
+@@ -811,15 +837,16 @@
        PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
        BlockPos var2 = var1.getPos();
        this.player.resetLastActionTime();
@@ -415,7 +475,7 @@
           return;
        case DROP_ITEM:
           if (!this.player.isSpectator()) {
-@@ -844,41 +877,59 @@
+@@ -844,41 +871,59 @@
        default:
           throw new IllegalArgumentException("Invalid player action");
        }
@@ -485,7 +545,7 @@
  
     public void handleTeleportToEntityPacket(ServerboundTeleportToEntityPacket var1) {
        PacketUtils.ensureRunningOnSameThread(var1, this, (ServerLevel)this.player.getLevel());
-@@ -910,11 +961,11 @@
+@@ -910,11 +955,11 @@
     }
  
     public void onDisconnect(Component var1) {
@@ -498,7 +558,7 @@
        if (this.isSingleplayerOwner()) {
           LOGGER.info("Stopping singleplayer server as player logged out");
           this.server.halt(false);
-@@ -952,43 +1003,46 @@
+@@ -952,43 +997,46 @@
     }
  
     public void handleSetCarriedItem(ServerboundSetCarriedItemPacket var1) {
@@ -551,7 +611,7 @@
        }
     }
  
-@@ -1056,40 +1110,39 @@
+@@ -1056,40 +1104,40 @@
  
     }
  
@@ -574,18 +634,19 @@
 +         double var4 = 36.0D;
 +         if (this.player.distanceToSqr(var3) < 36.0D) {
 +            InteractionHand var6 = var1.getHand();
-+            Optional var7 = Optional.empty();
++            ItemStack var7 = var6 != null ? this.player.getItemInHand(var6).copy() : ItemStack.EMPTY;
++            Optional var8 = Optional.empty();
              if (var1.getAction() == ServerboundInteractPacket.Action.INTERACT) {
 -               var7 = var1.getHand();
 -               this.player.interactOn(var3, var7);
-+               var7 = Optional.of(this.player.interactOn(var3, var6));
++               var8 = Optional.of(this.player.interactOn(var3, var6));
              } else if (var1.getAction() == ServerboundInteractPacket.Action.INTERACT_AT) {
 -               var7 = var1.getHand();
 -               InteractionResult var8 = var3.interactAt(this.player, var1.getLocation(), var7);
 -               if (var8.shouldSwing()) {
 -                  this.player.swing(var7, true);
 -               }
-+               var7 = Optional.of(var3.interactAt(this.player, var1.getLocation(), var6));
++               var8 = Optional.of(var3.interactAt(this.player, var1.getLocation(), var6));
              } else if (var1.getAction() == ServerboundInteractPacket.Action.ATTACK) {
                 if (var3 instanceof ItemEntity || var3 instanceof ExperienceOrb || var3 instanceof AbstractArrow || var3 == this.player) {
 -                  this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_entity_attacked", new Object[0]));
@@ -598,9 +659,9 @@
                 this.player.attack(var3);
              }
 +
-+            if (var7.isPresent() && ((InteractionResult)var7.get()).consumesAction()) {
-+               CriteriaTriggers.PLAYER_INTERACTED_WITH_ENTITY.trigger(this.player, this.player.getItemInHand(var6), var3);
-+               if (((InteractionResult)var7.get()).shouldSwing()) {
++            if (var8.isPresent() && ((InteractionResult)var8.get()).consumesAction()) {
++               CriteriaTriggers.PLAYER_INTERACTED_WITH_ENTITY.trigger(this.player, var7, var3);
++               if (((InteractionResult)var8.get()).shouldSwing()) {
 +                  this.player.swing(var6, true);
 +               }
 +            }
@@ -609,7 +670,7 @@
  
     }
  
-@@ -1099,18 +1152,18 @@
+@@ -1099,18 +1147,18 @@
        ServerboundClientCommandPacket.Action var2 = var1.getAction();
        switch(var2) {
        case PERFORM_RESPAWN:
@@ -631,7 +692,7 @@
                 ((GameRules.BooleanValue)this.player.getLevel().getGameRules().getRule(GameRules.RULE_SPECTATORSGENERATECHUNKS)).set(false, this.server);
              }
           }
-@@ -1231,22 +1284,22 @@
+@@ -1231,22 +1279,22 @@
     }
  
     public void handleSignUpdate(ServerboundSignUpdatePacket var1) {
@@ -656,7 +717,7 @@
  
           String[] var7 = var1.getLines();
  
-@@ -1264,11 +1317,11 @@
+@@ -1264,11 +1312,11 @@
        if (this.keepAlivePending && var1.getId() == this.keepAliveChallenge) {
           int var2 = (int)(Util.getMillis() - this.keepAliveTime);
           this.player.latency = (this.player.latency * 3 + var2) / 4;

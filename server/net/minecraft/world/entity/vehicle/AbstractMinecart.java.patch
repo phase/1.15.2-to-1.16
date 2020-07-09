@@ -12,7 +12,7 @@
  import java.util.List;
  import java.util.Map;
  import javax.annotation.Nullable;
-@@ -19,23 +22,27 @@
+@@ -19,13 +22,16 @@
  import net.minecraft.network.syncher.SynchedEntityData;
  import net.minecraft.tags.BlockTags;
  import net.minecraft.util.Mth;
@@ -29,18 +29,7 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.level.GameRules;
- import net.minecraft.world.level.Level;
- import net.minecraft.world.level.block.BaseRailBlock;
- import net.minecraft.world.level.block.Block;
- import net.minecraft.world.level.block.Blocks;
- import net.minecraft.world.level.block.PoweredRailBlock;
-+import net.minecraft.world.level.block.TrapDoorBlock;
- import net.minecraft.world.level.block.state.BlockState;
- import net.minecraft.world.level.block.state.properties.RailShape;
- import net.minecraft.world.phys.AABB;
- import net.minecraft.world.phys.Vec3;
- 
-@@ -44,10 +51,11 @@
+@@ -44,10 +50,11 @@
     private static final EntityDataAccessor<Integer> DATA_ID_HURTDIR;
     private static final EntityDataAccessor<Float> DATA_ID_DAMAGE;
     private static final EntityDataAccessor<Integer> DATA_ID_DISPLAY_BLOCK;
@@ -52,7 +41,7 @@
     private int lSteps;
     private double lx;
     private double ly;
-@@ -105,14 +113,76 @@
+@@ -105,14 +112,75 @@
  
     public boolean isPushable() {
        return true;
@@ -88,15 +77,11 @@
 +               for(int var15 = 0; var15 < var14; ++var15) {
 +                  int[] var16 = var13[var15];
 +                  var5.set(var4.getX() + var16[0], var4.getY() + var12, var4.getZ() + var16[1]);
-+                  double var17 = this.level.getRelativeFloorHeight(var5, (var0) -> {
-+                     if (var0.is(BlockTags.CLIMBABLE)) {
-+                        return true;
-+                     } else {
-+                        return var0.getBlock() instanceof TrapDoorBlock && (Boolean)var0.getValue(TrapDoorBlock.OPEN);
-+                     }
++                  double var17 = this.level.getBlockFloorHeight(DismountHelper.nonClimbableShape(this.level, var5), () -> {
++                     return DismountHelper.nonClimbableShape(this.level, var5.below());
 +                  });
-+                  if (DismountHelper.isFloorValid(var17)) {
-+                     AABB var19 = new AABB((double)(-var10), var17, (double)(-var10), (double)var10, var17 + (double)var9.height, (double)var10);
++                  if (DismountHelper.isBlockFloorValid(var17)) {
++                     AABB var19 = new AABB((double)(-var10), 0.0D, (double)(-var10), (double)var10, (double)var9.height, (double)var10);
 +                     Vec3 var20 = Vec3.upFromBottomCenterOf(var5, var17);
 +                     if (DismountHelper.canDismountTo(this.level, var1, var19.move(var20))) {
 +                        var1.setPose(var8);
@@ -114,8 +99,11 @@
 +         while(var22.hasNext()) {
 +            Pose var23 = (Pose)var22.next();
 +            double var24 = (double)var1.getDimensions(var23).height;
-+            double var25 = (double)var5.getY() + this.level.getRelativeCeilingHeight(var5, var21 - (double)var5.getY() + var24);
-+            if (var21 + var24 <= var25) {
++            int var25 = Mth.ceil(var21 - (double)var5.getY() + var24);
++            double var26 = DismountHelper.findCeilingFrom(var5, var25, (var1x) -> {
++               return this.level.getBlockState(var1x).getCollisionShape(this.level, var1x);
++            });
++            if (var21 + var24 <= var26) {
 +               var1.setPose(var23);
 +               break;
 +            }
@@ -130,7 +118,7 @@
           if (this.isInvulnerableTo(var1)) {
              return false;
           } else {
-@@ -135,10 +205,15 @@
+@@ -135,10 +203,15 @@
        } else {
           return true;
        }
@@ -146,7 +134,7 @@
        if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
           ItemStack var2 = new ItemStack(Items.MINECART);
           if (this.hasCustomName()) {
-@@ -204,13 +279,13 @@
+@@ -204,13 +277,13 @@
              --var2;
           }
  
@@ -162,7 +150,7 @@
           } else {
              this.comeOffTrack();
           }
-@@ -254,11 +329,11 @@
+@@ -254,11 +327,17 @@
                    var13.push(this);
                 }
              }
@@ -170,12 +158,18 @@
  
 -         this.updateInWaterState();
 +         this.updateInWaterStateAndDoFluidPushing();
++         if (this.isInLava()) {
++            this.lavaHurt();
++            this.fallDistance *= 0.5F;
++         }
++
++         this.firstTick = false;
        }
     }
  
     protected double getMaxSpeed() {
        return 0.4D;
-@@ -461,11 +536,11 @@
+@@ -461,11 +540,11 @@
        if (this.level.getBlockState(new BlockPos(var7, var8 - 1, var9)).is(BlockTags.RAILS)) {
           --var8;
        }
@@ -188,7 +182,7 @@
           Vec3i var13 = (Vec3i)var12.getFirst();
           Vec3i var14 = (Vec3i)var12.getSecond();
           double var15 = (double)var7 + 0.5D + (double)var13.getX() * 0.5D;
-@@ -652,10 +727,11 @@
+@@ -652,10 +731,11 @@
        DATA_ID_HURTDIR = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.INT);
        DATA_ID_DAMAGE = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.FLOAT);
        DATA_ID_DISPLAY_BLOCK = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.INT);

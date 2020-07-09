@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/worldselection/WorldGenSettingsComponent.java
 +++ net/minecraft/client/gui/screens/worldselection/WorldGenSettingsComponent.java
-@@ -1,0 +1,324 @@
+@@ -1,0 +1,330 @@
 +package net.minecraft.client.gui.screens.worldselection;
 +
 +import com.google.gson.JsonElement;
@@ -44,7 +44,6 @@
 +import net.minecraft.server.MinecraftServer;
 +import net.minecraft.server.ServerResources;
 +import net.minecraft.server.packs.repository.FolderRepositorySource;
-+import net.minecraft.server.packs.repository.Pack;
 +import net.minecraft.server.packs.repository.PackRepository;
 +import net.minecraft.server.packs.repository.PackSource;
 +import net.minecraft.server.packs.repository.RepositorySource;
@@ -71,29 +70,22 @@
 +   private RegistryAccess.RegistryHolder registryHolder;
 +   private WorldGenSettings settings;
 +   private Optional<WorldPreset> preset;
-+   private String initSeed;
++   private OptionalLong seed;
 +
-+   public WorldGenSettingsComponent() {
-+      this.registryHolder = RegistryAccess.builtin();
-+      this.settings = WorldGenSettings.makeDefault();
-+      this.preset = Optional.of(WorldPreset.NORMAL);
-+      this.initSeed = "";
-+   }
-+
-+   public WorldGenSettingsComponent(RegistryAccess.RegistryHolder var1, WorldGenSettings var2) {
++   public WorldGenSettingsComponent(RegistryAccess.RegistryHolder var1, WorldGenSettings var2, Optional<WorldPreset> var3, OptionalLong var4) {
 +      this.registryHolder = var1;
 +      this.settings = var2;
-+      this.preset = WorldPreset.of(var2);
-+      this.initSeed = Long.toString(var2.seed());
++      this.preset = var3;
++      this.seed = var4;
 +   }
 +
 +   public void init(final CreateWorldScreen var1, Minecraft var2, Font var3) {
 +      this.font = var3;
 +      this.width = var1.width;
 +      this.seedEdit = new EditBox(this.font, this.width / 2 - 100, 60, 200, 20, new TranslatableComponent("selectWorld.enterSeed"));
-+      this.seedEdit.setValue(this.initSeed);
++      this.seedEdit.setValue(toString(this.seed));
 +      this.seedEdit.setResponder((var1x) -> {
-+         this.initSeed = this.seedEdit.getValue();
++         this.seed = this.parseSeed();
 +      });
 +      var1.addWidget(this.seedEdit);
 +      int var4 = this.width / 2 - 155;
@@ -103,7 +95,7 @@
 +         var1x.queueNarration(250);
 +      }) {
 +         public Component getMessage() {
-+            return super.getMessage().copy().append(" ").append(CommonComponents.optionStatus(WorldGenSettingsComponent.this.settings.generateFeatures()));
++            return CommonComponents.optionStatus(super.getMessage(), WorldGenSettingsComponent.this.settings.generateFeatures());
 +         }
 +
 +         protected MutableComponent createNarrationMessage() {
@@ -155,7 +147,7 @@
 +         var1x.queueNarration(250);
 +      }) {
 +         public Component getMessage() {
-+            return super.getMessage().copy().append(" ").append(CommonComponents.optionStatus(WorldGenSettingsComponent.this.settings.generateBonusChest() && !var1.hardCore));
++            return CommonComponents.optionStatus(super.getMessage(), WorldGenSettingsComponent.this.settings.generateBonusChest() && !var1.hardCore);
 +         }
 +      });
 +      this.bonusItemsButton.visible = false;
@@ -164,7 +156,7 @@
 +         String var5 = TinyFileDialogs.tinyfd_openFileDialog(var4.getString(), (CharSequence)null, (PointerBuffer)null, (CharSequence)null, false);
 +         if (var5 != null) {
 +            RegistryAccess.RegistryHolder var6 = RegistryAccess.builtin();
-+            PackRepository var7 = new PackRepository(Pack::new, new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var1.getTempDataPackDir().toFile(), PackSource.WORLD)});
++            PackRepository var7 = new PackRepository(new RepositorySource[]{new ServerPacksSource(), new FolderRepositorySource(var1.getTempDataPackDir().toFile(), PackSource.WORLD)});
 +
 +            ServerResources var8;
 +            try {
@@ -221,6 +213,7 @@
 +               var2.getToasts().addToast(SystemToast.multiline(var2, SystemToast.SystemToastIds.WORLD_GEN_SETTINGS_TRANSFER, var31, var34));
 +            }
 +
++            var8.close();
 +            Lifecycle var32 = var30.lifecycle();
 +            Logger var10001 = LOGGER;
 +            var10001.getClass();
@@ -247,11 +240,11 @@
 +   }
 +
 +   private void importSettings(RegistryAccess.RegistryHolder var1, WorldGenSettings var2) {
-+      this.registryHolder = var1;
++      this.setRegistryHolder(var1);
 +      this.settings = var2;
 +      this.preset = WorldPreset.of(var2);
-+      this.initSeed = Long.toString(var2.seed());
-+      this.seedEdit.setValue(this.initSeed);
++      this.seed = OptionalLong.of(var2.seed());
++      this.seedEdit.setValue(toString(this.seed));
 +      this.typeButton.active = this.preset.isPresent();
 +   }
 +
@@ -275,6 +268,10 @@
 +      this.settings = var1;
 +   }
 +
++   private static String toString(OptionalLong var0) {
++      return var0.isPresent() ? Long.toString(var0.getAsLong()) : "";
++   }
++
 +   private static OptionalLong parseLong(String var0) {
 +      try {
 +         return OptionalLong.of(Long.parseLong(var0));
@@ -284,20 +281,25 @@
 +   }
 +
 +   public WorldGenSettings makeSettings(boolean var1) {
-+      String var2 = this.seedEdit.getValue();
-+      OptionalLong var3;
-+      if (StringUtils.isEmpty(var2)) {
-+         var3 = OptionalLong.empty();
++      OptionalLong var2 = this.parseSeed();
++      return this.settings.withSeed(var1, var2);
++   }
++
++   private OptionalLong parseSeed() {
++      String var1 = this.seedEdit.getValue();
++      OptionalLong var2;
++      if (StringUtils.isEmpty(var1)) {
++         var2 = OptionalLong.empty();
 +      } else {
-+         OptionalLong var4 = parseLong(var2);
-+         if (var4.isPresent() && var4.getAsLong() != 0L) {
-+            var3 = var4;
++         OptionalLong var3 = parseLong(var1);
++         if (var3.isPresent() && var3.getAsLong() != 0L) {
++            var2 = var3;
 +         } else {
-+            var3 = OptionalLong.of((long)var2.hashCode());
++            var2 = OptionalLong.of((long)var1.hashCode());
 +         }
 +      }
 +
-+      return this.settings.withSeed(var1, var3);
++      return var2;
 +   }
 +
 +   public boolean isDebug() {
@@ -323,5 +325,9 @@
 +
 +   public RegistryAccess.RegistryHolder registryHolder() {
 +      return this.registryHolder;
++   }
++
++   protected void setRegistryHolder(RegistryAccess.RegistryHolder var1) {
++      this.registryHolder = var1;
 +   }
 +}

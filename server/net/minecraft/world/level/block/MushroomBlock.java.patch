@@ -1,15 +1,22 @@
 --- net/minecraft/world/level/block/MushroomBlock.java
 +++ net/minecraft/world/level/block/MushroomBlock.java
-@@ -6,36 +6,37 @@
+@@ -1,41 +1,42 @@
+ package net.minecraft.world.level.block;
+ 
+ import java.util.Iterator;
+ import java.util.Random;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.data.worldgen.Features;
  import net.minecraft.server.level.ServerLevel;
++import net.minecraft.tags.BlockTags;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelReader;
- import net.minecraft.world.level.biome.BiomeDefaultFeatures;
+-import net.minecraft.world.level.biome.BiomeDefaultFeatures;
 +import net.minecraft.world.level.block.state.BlockBehaviour;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
- import net.minecraft.world.level.levelgen.feature.Feature;
+-import net.minecraft.world.level.levelgen.feature.Feature;
  import net.minecraft.world.phys.shapes.CollisionContext;
  import net.minecraft.world.phys.shapes.VoxelShape;
  
@@ -41,7 +48,7 @@
                    return;
                 }
              }
-@@ -63,12 +64,11 @@
+@@ -63,30 +64,29 @@
     }
  
     public boolean canSurvive(BlockState var1, LevelReader var2, BlockPos var3) {
@@ -49,25 +56,34 @@
        BlockState var5 = var2.getBlockState(var4);
 -      Block var6 = var5.getBlock();
 -      if (var6 != Blocks.MYCELIUM && var6 != Blocks.PODZOL) {
-+      if (!var5.is(Blocks.MYCELIUM) && !var5.is(Blocks.PODZOL)) {
-          return var2.getRawBrightness(var3, 0) < 13 && this.mayPlaceOn(var5, var2, var4);
-       } else {
+-         return var2.getRawBrightness(var3, 0) < 13 && this.mayPlaceOn(var5, var2, var4);
+-      } else {
++      if (var5.is(BlockTags.MUSHROOM_GROW_BLOCK)) {
           return true;
++      } else {
++         return var2.getRawBrightness(var3, 0) < 13 && this.mayPlaceOn(var5, var2, var4);
        }
     }
-@@ -85,11 +85,11 @@
+ 
+    public boolean growMushroom(ServerLevel var1, BlockPos var2, BlockState var3, Random var4) {
+       var1.removeBlock(var2, false);
+       ConfiguredFeature var5;
+       if (this == Blocks.BROWN_MUSHROOM) {
+-         var5 = Feature.HUGE_BROWN_MUSHROOM.configured(BiomeDefaultFeatures.HUGE_BROWN_MUSHROOM_CONFIG);
++         var5 = Features.HUGE_BROWN_MUSHROOM;
+       } else {
+          if (this != Blocks.RED_MUSHROOM) {
+             var1.setBlock(var2, var3, 3);
+             return false;
           }
  
-          var5 = Feature.HUGE_RED_MUSHROOM.configured(BiomeDefaultFeatures.HUGE_RED_MUSHROOM_CONFIG);
+-         var5 = Feature.HUGE_RED_MUSHROOM.configured(BiomeDefaultFeatures.HUGE_RED_MUSHROOM_CONFIG);
++         var5 = Features.HUGE_RED_MUSHROOM;
        }
  
--      if (var5.place(var1, var1.getChunkSource().getGenerator(), var4, var2)) {
-+      if (var5.place(var1, var1.structureFeatureManager(), var1.getChunkSource().getGenerator(), var4, var2)) {
+       if (var5.place(var1, var1.getChunkSource().getGenerator(), var4, var2)) {
           return true;
        } else {
-          var1.setBlock(var2, var3, 3);
-          return false;
-       }
 @@ -104,10 +104,6 @@
     }
  

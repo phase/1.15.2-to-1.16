@@ -1,6 +1,6 @@
 --- net/minecraft/core/MappedRegistry.java
 +++ net/minecraft/core/MappedRegistry.java
-@@ -1,62 +1,87 @@
+@@ -1,62 +1,90 @@
  package net.minecraft.core;
  
  import com.google.common.collect.BiMap;
@@ -23,7 +23,6 @@
 +import net.minecraft.resources.RegistryDataPackCodec;
 +import net.minecraft.resources.ResourceKey;
  import net.minecraft.resources.ResourceLocation;
-+import net.minecraft.util.Codecs;
  import net.minecraft.util.CrudeIncrementalIntIdentityHashBiMap;
  import org.apache.commons.lang3.Validate;
  import org.apache.logging.log4j.LogManager;
@@ -39,11 +38,15 @@
     private int nextId;
  
 -   public MappedRegistry() {
-+   public MappedRegistry(ResourceKey<Registry<T>> var1, Lifecycle var2) {
++   public MappedRegistry(ResourceKey<? extends Registry<T>> var1, Lifecycle var2) {
 +      super(var1, var2);
     }
  
 -   public <V extends T> V registerMapping(int var1, ResourceLocation var2, V var3) {
++   public static <T> MapCodec<Pair<ResourceKey<T>, T>> withName(ResourceKey<? extends Registry<T>> var0, MapCodec<T> var1) {
++      return Codec.mapPair(ResourceLocation.CODEC.xmap(ResourceKey.elementKey(var0), ResourceKey::location).fieldOf("name"), var1);
++   }
++
 +   public <V extends T> V registerMapping(int var1, ResourceKey<T> var2, V var3) {
        this.map.addMapping(var3, var1);
        Validate.notNull(var2);
@@ -93,8 +96,16 @@
     }
  
     public Iterator<T> iterator() {
-@@ -74,12 +99,12 @@
+@@ -66,20 +94,16 @@
+    @Nullable
+    public T get(@Nullable ResourceLocation var1) {
+       return this.storage.get(var1);
+    }
  
+-   public Optional<T> getOptional(@Nullable ResourceLocation var1) {
+-      return Optional.ofNullable(this.storage.get(var1));
+-   }
+-
     public Set<ResourceLocation> keySet() {
        return Collections.unmodifiableSet(this.storage.keySet());
     }
@@ -108,7 +119,7 @@
     @Nullable
     public T getRandom(Random var1) {
        if (this.randomCache == null) {
-@@ -89,8 +114,69 @@
+@@ -89,8 +113,69 @@
           }
  
           this.randomCache = var2.toArray(new Object[var2.size()]);
@@ -134,8 +145,8 @@
 +      this.persistent.add(var1);
 +   }
 +
-+   public static <T> Codec<MappedRegistry<T>> networkCodec(ResourceKey<Registry<T>> var0, Lifecycle var1, MapCodec<T> var2) {
-+      return Codecs.withName(var0, var2).codec().listOf().xmap((var2x) -> {
++   public static <T> Codec<MappedRegistry<T>> networkCodec(ResourceKey<? extends Registry<T>> var0, Lifecycle var1, MapCodec<T> var2) {
++      return withName(var0, var2).codec().listOf().xmap((var2x) -> {
 +         MappedRegistry var3 = new MappedRegistry(var0, var1);
 +         Iterator var4 = var2x.iterator();
 +
@@ -158,11 +169,11 @@
 +      });
 +   }
 +
-+   public static <T> Codec<MappedRegistry<T>> dataPackCodec(ResourceKey<Registry<T>> var0, Lifecycle var1, MapCodec<T> var2) {
++   public static <T> Codec<MappedRegistry<T>> dataPackCodec(ResourceKey<? extends Registry<T>> var0, Lifecycle var1, MapCodec<T> var2) {
 +      return RegistryDataPackCodec.create(var0, var1, var2);
 +   }
 +
-+   public static <T> Codec<MappedRegistry<T>> directCodec(ResourceKey<Registry<T>> var0, Lifecycle var1, MapCodec<T> var2) {
++   public static <T> Codec<MappedRegistry<T>> directCodec(ResourceKey<? extends Registry<T>> var0, Lifecycle var1, MapCodec<T> var2) {
 +      return Codec.unboundedMap(ResourceLocation.CODEC.xmap(ResourceKey.elementKey(var0), ResourceKey::location), var2.codec()).xmap((var2x) -> {
 +         MappedRegistry var3 = new MappedRegistry(var0, var1);
 +         var2x.forEach((var1x, var2) -> {

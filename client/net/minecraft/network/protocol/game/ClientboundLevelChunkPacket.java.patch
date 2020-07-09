@@ -1,8 +1,13 @@
 --- net/minecraft/network/protocol/game/ClientboundLevelChunkPacket.java
 +++ net/minecraft/network/protocol/game/ClientboundLevelChunkPacket.java
-@@ -28,62 +28,65 @@
+@@ -24,70 +24,73 @@
+    private int x;
+    private int z;
+    private int availableSections;
+    private CompoundTag heightmaps;
     @Nullable
-    private ChunkBiomeContainer biomes;
+-   private ChunkBiomeContainer biomes;
++   private int[] biomes;
     private byte[] buffer;
     private List<CompoundTag> blockEntitiesTags;
     private boolean fullChunk;
@@ -39,7 +44,8 @@
        }
  
        if (this.fullChunk) {
-          this.biomes = var1.getBiomes().copy();
+-         this.biomes = var1.getBiomes().copy();
++         this.biomes = var1.getBiomes().writeBiomes();
        }
  
        this.buffer = new byte[this.calculateChunkSize(var1, var2)];
@@ -85,9 +91,14 @@
        this.availableSections = var1.readVarInt();
        this.heightmaps = var1.readNbt();
        if (this.fullChunk) {
-          this.biomes = new ChunkBiomeContainer(var1);
+-         this.biomes = new ChunkBiomeContainer(var1);
++         this.biomes = var1.readVarIntArray(ChunkBiomeContainer.BIOMES_SIZE);
        }
-@@ -106,10 +109,11 @@
+ 
+       int var2 = var1.readVarInt();
+       if (var2 > 2097152) {
+          throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
+@@ -106,14 +109,15 @@
  
     public void write(FriendlyByteBuf var1) throws IOException {
        var1.writeInt(this.x);
@@ -97,9 +108,14 @@
        var1.writeVarInt(this.availableSections);
        var1.writeNbt(this.heightmaps);
        if (this.biomes != null) {
-          this.biomes.write(var1);
+-         this.biomes.write(var1);
++         var1.writeVarIntArray(this.biomes);
        }
-@@ -185,10 +189,14 @@
+ 
+       var1.writeVarInt(this.buffer.length);
+       var1.writeBytes(this.buffer);
+       var1.writeVarInt(this.blockEntitiesTags.size());
+@@ -185,18 +189,22 @@
  
     public boolean isFullChunk() {
        return this.fullChunk;
@@ -114,3 +130,13 @@
     }
  
     public List<CompoundTag> getBlockEntitiesTags() {
+       return this.blockEntitiesTags;
+    }
+ 
+    @Nullable
+-   public ChunkBiomeContainer getBiomes() {
+-      return this.biomes == null ? null : this.biomes.copy();
++   public int[] getBiomes() {
++      return this.biomes;
+    }
+ }

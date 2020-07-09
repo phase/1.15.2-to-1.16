@@ -1,0 +1,11 @@
+--- net/minecraft/world/inventory/RecipeBookMenu.java
++++ net/minecraft/world/inventory/RecipeBookMenu.java
+@@ -26,6 +26,8 @@
+    public abstract int getGridWidth();
+ 
+    public abstract int getGridHeight();
+ 
+    public abstract int getSize();
++
++   public abstract RecipeBookType getRecipeBookType();
+ }

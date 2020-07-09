@@ -34,7 +34,7 @@
 +   }
 +
 +   private static int locateBiome(CommandSourceStack var0, ResourceLocation var1) throws CommandSyntaxException {
-+      Biome var2 = (Biome)Registry.BIOME.getOptional(var1).orElseThrow(() -> {
++      Biome var2 = (Biome)var0.getServer().registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getOptional(var1).orElseThrow(() -> {
 +         return ERROR_INVALID_BIOME.create(var1);
 +      });
 +      BlockPos var3 = new BlockPos(var0.getPosition());

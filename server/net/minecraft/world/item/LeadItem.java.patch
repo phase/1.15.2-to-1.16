@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/LeadItem.java
 +++ net/minecraft/world/item/LeadItem.java
-@@ -2,10 +2,11 @@
+@@ -2,14 +2,16 @@
  
  import java.util.Iterator;
  import java.util.List;
@@ -11,8 +11,13 @@
  import net.minecraft.world.entity.Mob;
  import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
  import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.Level;
-@@ -19,17 +20,17 @@
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.phys.AABB;
+ 
+ public class LeadItem extends Item {
+@@ -19,17 +21,17 @@
  
     public InteractionResult useOn(UseOnContext var1) {
        Level var2 = var1.getLevel();

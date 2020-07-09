@@ -45,7 +45,7 @@
     }
  
     public void prepare(PathNavigationRegion var1, Mob var2) {
-@@ -37,273 +44,325 @@
+@@ -37,273 +44,311 @@
        this.oldWaterCost = var2.getPathfindingMalus(BlockPathTypes.WATER);
     }
  
@@ -362,59 +362,49 @@
 -            if (var12 == BlockPathTypes.OPEN) {
 -               AABB var21 = new AABB((double)var1 - var14 + 0.5D, (double)var2 + 0.001D, (double)var3 - var14 + 0.5D, (double)var1 + var14 + 0.5D, (double)((float)var2 + this.mob.getBbHeight()), (double)var3 + var14 + 0.5D);
 -               if (!this.level.noCollision(this.mob, var21)) {
-+            if (var13 == BlockPathTypes.OPEN) {
-+               AABB var22 = new AABB((double)var1 - var15 + 0.5D, (double)var2 + 0.001D, (double)var3 - var15 + 0.5D, (double)var1 + var15 + 0.5D, (double)((float)var2 + this.mob.getBbHeight()), (double)var3 + var15 + 0.5D);
-+               if (this.hasCollisions(var22)) {
-                   return null;
-                }
- 
-                if (this.mob.getBbWidth() >= 1.0F) {
+-                  return null;
+-               }
+-
+-               if (this.mob.getBbWidth() >= 1.0F) {
 -                  BlockPathTypes var17 = this.getBlockPathType(this.mob, var1, var2 - 1, var3);
 -                  if (var17 == BlockPathTypes.BLOCKED) {
 -                     var8 = this.getNode(var1, var2, var3);
 -                     var8.type = BlockPathTypes.WALKABLE;
 -                     var8.costMalus = Math.max(var8.costMalus, var13);
 -                     return var8;
-+                  BlockPathTypes var18 = this.getCachedBlockType(this.mob, var1, var2 - 1, var3);
-+                  if (var18 == BlockPathTypes.BLOCKED) {
-+                     var9 = this.getNode(var1, var2, var3);
-+                     var9.type = BlockPathTypes.WALKABLE;
-+                     var9.costMalus = Math.max(var9.costMalus, var14);
-+                     return var9;
-                   }
-                }
- 
--               int var22 = 0;
+-                  }
+-               }
+-
++            if (var13 == BlockPathTypes.OPEN) {
+                int var22 = 0;
 -               int var23 = var2;
-+               int var23 = 0;
-+               int var24 = var2;
++               int var18 = var2;
  
 -               while(var12 == BlockPathTypes.OPEN) {
 +               while(var13 == BlockPathTypes.OPEN) {
                    --var2;
 -                  Node var19;
-+                  Node var20;
++                  Node var23;
                    if (var2 < 0) {
 -                     var19 = this.getNode(var1, var23, var3);
 -                     var19.type = BlockPathTypes.BLOCKED;
 -                     var19.costMalus = -1.0F;
 -                     return var19;
-+                     var20 = this.getNode(var1, var24, var3);
-+                     var20.type = BlockPathTypes.BLOCKED;
-+                     var20.costMalus = -1.0F;
-+                     return var20;
++                     var23 = this.getNode(var1, var18, var3);
++                     var23.type = BlockPathTypes.BLOCKED;
++                     var23.costMalus = -1.0F;
++                     return var23;
                    }
  
 -                  var19 = this.getNode(var1, var2, var3);
--                  if (var22++ >= this.mob.getMaxFallDistance()) {
+                   if (var22++ >= this.mob.getMaxFallDistance()) {
 -                     var19.type = BlockPathTypes.BLOCKED;
 -                     var19.costMalus = -1.0F;
 -                     return var19;
-+                  var20 = this.getNode(var1, var2, var3);
-+                  if (var23++ >= this.mob.getMaxFallDistance()) {
-+                     var20.type = BlockPathTypes.BLOCKED;
-+                     var20.costMalus = -1.0F;
-+                     return var20;
++                     var23 = this.getNode(var1, var2, var3);
++                     var23.type = BlockPathTypes.BLOCKED;
++                     var23.costMalus = -1.0F;
++                     return var23;
                    }
  
 -                  var12 = this.getBlockPathType(this.mob, var1, var2, var3);
@@ -426,9 +416,9 @@
 +                  var13 = this.getCachedBlockType(this.mob, var1, var2, var3);
 +                  var14 = this.mob.getPathfindingMalus(var13);
 +                  if (var13 != BlockPathTypes.OPEN && var14 >= 0.0F) {
-+                     var9 = var20;
-+                     var20.type = var13;
-+                     var20.costMalus = Math.max(var20.costMalus, var14);
++                     var9 = this.getNode(var1, var2, var3);
++                     var9.type = var13;
++                     var9.costMalus = Math.max(var9.costMalus, var14);
                       break;
                    }
  
@@ -437,9 +427,10 @@
 -                     var19.costMalus = -1.0F;
 -                     return var19;
 +                  if (var14 < 0.0F) {
-+                     var20.type = BlockPathTypes.BLOCKED;
-+                     var20.costMalus = -1.0F;
-+                     return var20;
++                     var23 = this.getNode(var1, var2, var3);
++                     var23.type = BlockPathTypes.BLOCKED;
++                     var23.costMalus = -1.0F;
++                     return var23;
                    }
                 }
              }
@@ -499,7 +490,7 @@
           }
  
 -         if (var12 == BlockPathTypes.OPEN && var5.getPathfindingMalus(var16) == 0.0F) {
-+         if (var12 == BlockPathTypes.OPEN && var5.getPathfindingMalus(var14) == 0.0F) {
++         if (var12 == BlockPathTypes.OPEN && var5.getPathfindingMalus(var14) == 0.0F && var6 <= 1) {
              return BlockPathTypes.OPEN;
           } else {
 -            return var16;
@@ -509,7 +500,7 @@
     }
  
     public BlockPathTypes getBlockPathTypes(BlockGetter var1, int var2, int var3, int var4, int var5, int var6, int var7, boolean var8, boolean var9, EnumSet<BlockPathTypes> var10, BlockPathTypes var11, BlockPos var12) {
-@@ -335,146 +394,148 @@
+@@ -335,146 +380,150 @@
        if (var5 == BlockPathTypes.DOOR_OPEN && !var3) {
           var5 = BlockPathTypes.BLOCKED;
        }
@@ -710,22 +701,23 @@
 -         } else if (!var6.is(BlockTags.FENCES) && !var6.is(BlockTags.WALLS) && (!(var6 instanceof FenceGateBlock) || (Boolean)var5.getValue(FenceGateBlock.OPEN))) {
 -            FluidState var8 = var0.getFluidState(var4);
 -            if (var8.is(FluidTags.WATER)) {
-+         } else if (var3.is((Tag)BlockTags.FENCES) || var3.is((Tag)BlockTags.WALLS) || var3 instanceof FenceGateBlock && !(Boolean)var2.getValue(FenceGateBlock.OPEN)) {
-+            return BlockPathTypes.FENCE;
-+         } else if (!var2.isPathfindable(var0, var1, PathComputationType.LAND)) {
-+            return BlockPathTypes.BLOCKED;
-+         } else {
-+            FluidState var5 = var0.getFluidState(var1);
-+            if (var5.is(FluidTags.WATER)) {
-                return BlockPathTypes.WATER;
+-               return BlockPathTypes.WATER;
 -            } else if (var8.is(FluidTags.LAVA)) {
 -               return BlockPathTypes.LAVA;
++         } else if (!var3.is((Tag)BlockTags.FENCES) && !var3.is((Tag)BlockTags.WALLS) && (!(var3 instanceof FenceGateBlock) || (Boolean)var2.getValue(FenceGateBlock.OPEN))) {
++            if (!var2.isPathfindable(var0, var1, PathComputationType.LAND)) {
++               return BlockPathTypes.BLOCKED;
              } else {
 -               return var5.isPathfindable(var0, var4, PathComputationType.LAND) ? BlockPathTypes.OPEN : BlockPathTypes.BLOCKED;
-+               return var5.is(FluidTags.LAVA) ? BlockPathTypes.LAVA : BlockPathTypes.OPEN;
++               FluidState var5 = var0.getFluidState(var1);
++               if (var5.is(FluidTags.WATER)) {
++                  return BlockPathTypes.WATER;
++               } else {
++                  return var5.is(FluidTags.LAVA) ? BlockPathTypes.LAVA : BlockPathTypes.OPEN;
++               }
              }
--         } else {
--            return BlockPathTypes.FENCE;
+          } else {
+             return BlockPathTypes.FENCE;
           }
        } else {
           return BlockPathTypes.TRAPDOOR;

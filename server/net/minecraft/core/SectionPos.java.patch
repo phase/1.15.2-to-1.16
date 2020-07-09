@@ -1,0 +1,45 @@
+--- net/minecraft/core/SectionPos.java
++++ net/minecraft/core/SectionPos.java
+@@ -51,13 +51,41 @@
+ 
+    public static short sectionRelativePos(BlockPos var0) {
+       int var1 = sectionRelative(var0.getX());
+       int var2 = sectionRelative(var0.getY());
+       int var3 = sectionRelative(var0.getZ());
+-      return (short)(var1 << 8 | var3 << 4 | var2);
++      return (short)(var1 << 8 | var3 << 4 | var2 << 0);
+    }
+ 
++   public static int sectionRelativeX(short var0) {
++      return var0 >>> 8 & 15;
++   }
++
++   public static int sectionRelativeY(short var0) {
++      return var0 >>> 0 & 15;
++   }
++
++   public static int sectionRelativeZ(short var0) {
++      return var0 >>> 4 & 15;
++   }
++
++   public int relativeToBlockX(short var1) {
++      return this.minBlockX() + sectionRelativeX(var1);
++   }
++
++   public int relativeToBlockY(short var1) {
++      return this.minBlockY() + sectionRelativeY(var1);
++   }
++
++   public int relativeToBlockZ(short var1) {
++      return this.minBlockZ() + sectionRelativeZ(var1);
++   }
++
++   public BlockPos relativeToBlockPos(short var1) {
++      return new BlockPos(this.relativeToBlockX(var1), this.relativeToBlockY(var1), this.relativeToBlockZ(var1));
++   }
++
+    public static int sectionToBlockCoord(int var0) {
+       return var0 << 4;
+    }
+ 
+    public static int x(long var0) {

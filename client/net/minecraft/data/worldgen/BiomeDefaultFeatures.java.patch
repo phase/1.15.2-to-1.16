@@ -1,0 +1,408 @@
+--- net/minecraft/data/worldgen/BiomeDefaultFeatures.java
++++ net/minecraft/data/worldgen/BiomeDefaultFeatures.java
+@@ -1,0 +1,405 @@
++package net.minecraft.data.worldgen;
++
++import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.entity.MobCategory;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.levelgen.GenerationStep;
++
++public class BiomeDefaultFeatures {
++   public static void addDefaultOverworldLandMesaStructures(Biome var0) {
++      var0.addStructureStart(StructureFeatures.MINESHAFT_MESA);
++      var0.addStructureStart(StructureFeatures.STRONGHOLD);
++   }
++
++   public static void addDefaultOverworldLandStructures(Biome var0) {
++      var0.addStructureStart(StructureFeatures.MINESHAFT);
++      var0.addStructureStart(StructureFeatures.STRONGHOLD);
++   }
++
++   public static void addDefaultOverworldOceanStructures(Biome var0) {
++      var0.addStructureStart(StructureFeatures.MINESHAFT);
++      var0.addStructureStart(StructureFeatures.SHIPWRECK);
++   }
++
++   public static void addDefaultCarvers(Biome var0) {
++      var0.addCarver(GenerationStep.Carving.AIR, Carvers.CAVE);
++      var0.addCarver(GenerationStep.Carving.AIR, Carvers.CANYON);
++   }
++
++   public static void addOceanCarvers(Biome var0) {
++      var0.addCarver(GenerationStep.Carving.AIR, Carvers.OCEAN_CAVE);
++      var0.addCarver(GenerationStep.Carving.AIR, Carvers.CANYON);
++      var0.addCarver(GenerationStep.Carving.LIQUID, Carvers.UNDERWATER_CANYON);
++      var0.addCarver(GenerationStep.Carving.LIQUID, Carvers.UNDERWATER_CAVE);
++   }
++
++   public static void addDefaultLakes(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.LAKES, Features.LAKE_WATER);
++      var0.addFeature(GenerationStep.Decoration.LAKES, Features.LAKE_LAVA);
++   }
++
++   public static void addDesertLakes(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.LAKES, Features.LAKE_LAVA);
++   }
++
++   public static void addDefaultMonsterRoom(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_STRUCTURES, Features.MONSTER_ROOM);
++   }
++
++   public static void addDefaultUndergroundVariety(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_DIRT);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_GRAVEL);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_GRANITE);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_DIORITE);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_ANDESITE);
++   }
++
++   public static void addDefaultOres(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_COAL);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_IRON);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_GOLD);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_REDSTONE);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_DIAMOND);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_LAPIS);
++   }
++
++   public static void addExtraGold(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_GOLD_EXTRA);
++   }
++
++   public static void addExtraEmeralds(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.ORE_EMERALD);
++   }
++
++   public static void addInfestedStone(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_DECORATION, Features.ORE_INFESTED);
++   }
++
++   public static void addDefaultSoftDisks(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.DISK_SAND);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.DISK_CLAY);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.DISK_GRAVEL);
++   }
++
++   public static void addSwampClayDisk(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, Features.DISK_CLAY);
++   }
++
++   public static void addMossyStoneBlock(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.LOCAL_MODIFICATIONS, Features.FOREST_ROCK);
++   }
++
++   public static void addFerns(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_LARGE_FERN);
++   }
++
++   public static void addBerryBushes(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_BERRY_DECORATED);
++   }
++
++   public static void addSparseBerryBushes(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_BERRY_SPARSE);
++   }
++
++   public static void addLightBambooVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BAMBOO_LIGHT);
++   }
++
++   public static void addBambooVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BAMBOO);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BAMBOO_VEGETATION);
++   }
++
++   public static void addTaigaTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TAIGA_VEGETATION);
++   }
++
++   public static void addWaterTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_WATER);
++   }
++
++   public static void addBirchTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BIRCH_BEES_0002);
++   }
++
++   public static void addOtherBirchTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BIRCH_OTHER);
++   }
++
++   public static void addTallBirchTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BIRCH_TALL);
++   }
++
++   public static void addSavannaTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_SAVANNA);
++   }
++
++   public static void addShatteredSavannaTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_SHATTERED_SAVANNA);
++   }
++
++   public static void addMountainTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_MOUNTAIN);
++   }
++
++   public static void addMountainEdgeTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_MOUNTAIN_EDGE);
++   }
++
++   public static void addJungleTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_JUNGLE);
++   }
++
++   public static void addJungleEdgeTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_JUNGLE_EDGE);
++   }
++
++   public static void addBadlandsTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.OAK_BADLANDS);
++   }
++
++   public static void addSnowyTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.SPRUCE_SNOWY);
++   }
++
++   public static void addGiantSpruceTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_GIANT_SPRUCE);
++   }
++
++   public static void addGiantTrees(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.TREES_GIANT);
++   }
++
++   public static void addJungleGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_JUNGLE);
++   }
++
++   public static void addSavannaGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_TALL_GRASS);
++   }
++
++   public static void addShatteredSavannaGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_NORMAL);
++   }
++
++   public static void addSavannaExtraGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_SAVANNA);
++   }
++
++   public static void addBadlandGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_BADLANDS);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_DEAD_BUSH_BADLANDS);
++   }
++
++   public static void addForestFlowers(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.FOREST_FLOWER_VEGETATION);
++   }
++
++   public static void addForestGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_FOREST);
++   }
++
++   public static void addSwampVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.SWAMP_TREE);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.FLOWER_SWAMP);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_NORMAL);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_DEAD_BUSH);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_WATERLILLY);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BROWN_MUSHROOM_SWAMP);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.RED_MUSHROOM_SWAMP);
++   }
++
++   public static void addMushroomFieldVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.MUSHROOM_FIELD_VEGETATION);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BROWN_MUSHROOM_TAIGA);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.RED_MUSHROOM_TAIGA);
++   }
++
++   public static void addPlainVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PLAIN_VEGETATION);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.FLOWER_PLAIN_DECORATED);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_PLAIN);
++   }
++
++   public static void addDesertVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_DEAD_BUSH_2);
++   }
++
++   public static void addGiantTaigaVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_TAIGA);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_DEAD_BUSH);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BROWN_MUSHROOM_GIANT);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.RED_MUSHROOM_GIANT);
++   }
++
++   public static void addDefaultFlowers(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.FLOWER_DEFAULT);
++   }
++
++   public static void addWarmFlowers(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.FLOWER_WARM);
++   }
++
++   public static void addDefaultGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_BADLANDS);
++   }
++
++   public static void addTaigaGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_GRASS_TAIGA_2);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BROWN_MUSHROOM_TAIGA);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.RED_MUSHROOM_TAIGA);
++   }
++
++   public static void addPlainGrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_TALL_GRASS_2);
++   }
++
++   public static void addDefaultMushrooms(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.BROWN_MUSHROOM_NORMAL);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.RED_MUSHROOM_NORMAL);
++   }
++
++   public static void addDefaultExtraVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_SUGAR_CANE);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_PUMPKIN);
++   }
++
++   public static void addBadlandExtraVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_SUGAR_CANE_BADLANDS);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_PUMPKIN);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_CACTUS_DECORATED);
++   }
++
++   public static void addJungleExtraVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_MELON);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.VINES);
++   }
++
++   public static void addDesertExtraVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_SUGAR_CANE_DESERT);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_PUMPKIN);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_CACTUS_DESERT);
++   }
++
++   public static void addSwampExtraVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_SUGAR_CANE_SWAMP);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.PATCH_PUMPKIN);
++   }
++
++   public static void addDesertExtraDecoration(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.SURFACE_STRUCTURES, Features.WELL);
++   }
++
++   public static void addFossilDecoration(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_STRUCTURES, Features.FOSSIL);
++   }
++
++   public static void addColdOceanExtraVegetation(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.KELP_COLD);
++   }
++
++   public static void addDefaultSeagrass(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.SEAGRASS_SIMPLE);
++   }
++
++   public static void addLukeWarmKelp(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.KELP_WARM);
++   }
++
++   public static void addDefaultSprings(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.SPRING_WATER);
++      var0.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, Features.SPRING_LAVA);
++   }
++
++   public static void addIcebergs(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.LOCAL_MODIFICATIONS, Features.ICEBERG_PACKED);
++      var0.addFeature(GenerationStep.Decoration.LOCAL_MODIFICATIONS, Features.ICEBERG_BLUE);
++   }
++
++   public static void addBlueIce(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.SURFACE_STRUCTURES, Features.BLUE_ICE);
++   }
++
++   public static void addSurfaceFreezing(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.TOP_LAYER_MODIFICATION, Features.FREEZE_TOP_LAYER);
++   }
++
++   public static void addNetherDefaultOres(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_DECORATION, Features.ORE_GRAVEL_NETHER);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_DECORATION, Features.ORE_BLACKSTONE);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_DECORATION, Features.ORE_GOLD_NETHER);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_DECORATION, Features.ORE_QUARTZ_NETHER);
++      addAncientDebris(var0);
++   }
++
++   public static void addAncientDebris(Biome var0) {
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_DECORATION, Features.ORE_DEBRIS_LARGE);
++      var0.addFeature(GenerationStep.Decoration.UNDERGROUND_DECORATION, Features.ORE_DEBRIS_SMALL);
++   }
++
++   public static void farmAnimals(Biome var0) {
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.SHEEP, 12, 4, 4));
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.PIG, 10, 4, 4));
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.CHICKEN, 10, 4, 4));
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.COW, 8, 4, 4));
++   }
++
++   private static void ambientSpawns(Biome var0) {
++      var0.addSpawn(MobCategory.AMBIENT, new Biome.SpawnerData(EntityType.BAT, 10, 8, 8));
++   }
++
++   public static void commonSpawns(Biome var0) {
++      ambientSpawns(var0);
++      monsters(var0, 95, 5, 100);
++   }
++
++   public static void snowySpawns(Biome var0) {
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.RABBIT, 10, 2, 3));
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.POLAR_BEAR, 1, 1, 2));
++      ambientSpawns(var0);
++      monsters(var0, 95, 5, 20);
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.STRAY, 80, 4, 4));
++   }
++
++   public static void desertSpawns(Biome var0) {
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.RABBIT, 4, 2, 3));
++      ambientSpawns(var0);
++      monsters(var0, 19, 1, 100);
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.HUSK, 80, 4, 4));
++   }
++
++   public static void giantTaigaSpawns(Biome var0) {
++      farmAnimals(var0);
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.WOLF, 8, 4, 4));
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.RABBIT, 4, 2, 3));
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.FOX, 8, 2, 4));
++      ambientSpawns(var0);
++      monsters(var0, 100, 25, 100);
++   }
++
++   private static void monsters(Biome var0, int var1, int var2, int var3) {
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.SPIDER, 100, 4, 4));
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.ZOMBIE, var1, 4, 4));
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.ZOMBIE_VILLAGER, var2, 1, 1));
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.SKELETON, var3, 4, 4));
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.CREEPER, 100, 4, 4));
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.SLIME, 100, 4, 4));
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.ENDERMAN, 10, 1, 4));
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.WITCH, 5, 1, 1));
++   }
++
++   public static void mooshroomSpawns(Biome var0) {
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.MOOSHROOM, 8, 4, 8));
++      ambientSpawns(var0);
++   }
++
++   public static void baseJungleSpawns(Biome var0) {
++      farmAnimals(var0);
++      var0.addSpawn(MobCategory.CREATURE, new Biome.SpawnerData(EntityType.CHICKEN, 10, 4, 4));
++      commonSpawns(var0);
++   }
++
++   public static void endSpawns(Biome var0) {
++      var0.addSpawn(MobCategory.MONSTER, new Biome.SpawnerData(EntityType.ENDERMAN, 10, 4, 4));
++   }
++}

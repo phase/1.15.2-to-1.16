@@ -1,6 +1,16 @@
 --- net/minecraft/core/dispenser/DispenseItemBehavior.java
 +++ net/minecraft/core/dispenser/DispenseItemBehavior.java
-@@ -15,11 +15,13 @@
+@@ -6,20 +6,23 @@
+ import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.BlockSource;
+ import net.minecraft.core.Direction;
+ import net.minecraft.core.Position;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.tags.BlockTags;
  import net.minecraft.tags.FluidTags;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
@@ -15,7 +25,7 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.entity.projectile.AbstractArrow;
  import net.minecraft.world.entity.projectile.Arrow;
-@@ -34,24 +36,26 @@
+@@ -34,24 +37,26 @@
  import net.minecraft.world.entity.vehicle.Boat;
  import net.minecraft.world.item.ArmorItem;
  import net.minecraft.world.item.BoneMealItem;
@@ -43,7 +53,17 @@
  import net.minecraft.world.level.block.TntBlock;
  import net.minecraft.world.level.block.WitherSkullBlock;
  import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
-@@ -189,22 +193,102 @@
+@@ -180,31 +185,111 @@
+ 
+       DispenserBlock.registerBehavior(Items.ARMOR_STAND, new DefaultDispenseItemBehavior() {
+          public ItemStack execute(BlockSource var1, ItemStack var2) {
+             Direction var3 = (Direction)var1.getBlockState().getValue(DispenserBlock.FACING);
+             BlockPos var4 = var1.getPos().relative(var3);
+-            Level var5 = var1.getLevel();
++            ServerLevel var5 = var1.getLevel();
+             ArmorStand var6 = new ArmorStand(var5, (double)var4.getX() + 0.5D, (double)var4.getY(), (double)var4.getZ() + 0.5D);
+             EntityType.updateCustomEntityTag(var5, (Player)null, var6, var2.getTag());
+             var6.yRot = var3.toYRot();
              var5.addFreshEntity(var6);
              var2.shrink(1);
              return var2;
@@ -155,7 +175,20 @@
           }
  
           protected void playSound(BlockSource var1) {
-@@ -238,11 +322,11 @@
+@@ -216,11 +301,11 @@
+             Direction var3 = (Direction)var1.getBlockState().getValue(DispenserBlock.FACING);
+             Position var4 = DispenserBlock.getDispensePosition(var1);
+             double var5 = var4.x() + (double)((float)var3.getStepX() * 0.3F);
+             double var7 = var4.y() + (double)((float)var3.getStepY() * 0.3F);
+             double var9 = var4.z() + (double)((float)var3.getStepZ() * 0.3F);
+-            Level var11 = var1.getLevel();
++            ServerLevel var11 = var1.getLevel();
+             Random var12 = var11.random;
+             double var13 = var12.nextGaussian() * 0.05D + (double)var3.getStepX();
+             double var15 = var12.nextGaussian() * 0.05D + (double)var3.getStepY();
+             double var17 = var12.nextGaussian() * 0.05D + (double)var3.getStepZ();
+             var11.addFreshEntity((Entity)Util.make(new SmallFireball(var11, var5, var7, var9, var13, var15, var17), (var1x) -> {
+@@ -238,36 +323,36 @@
        DispenserBlock.registerBehavior(Items.SPRUCE_BOAT, new BoatDispenseItemBehavior(Boat.Type.SPRUCE));
        DispenserBlock.registerBehavior(Items.BIRCH_BOAT, new BoatDispenseItemBehavior(Boat.Type.BIRCH));
        DispenserBlock.registerBehavior(Items.JUNGLE_BOAT, new BoatDispenseItemBehavior(Boat.Type.JUNGLE));
@@ -168,7 +201,11 @@
           public ItemStack execute(BlockSource var1, ItemStack var2) {
              BucketItem var3 = (BucketItem)var2.getItem();
              BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
-@@ -253,16 +337,16 @@
+-            Level var5 = var1.getLevel();
++            ServerLevel var5 = var1.getLevel();
+             if (var3.emptyBucket((Player)null, var5, var4, (BlockHitResult)null)) {
+                var3.checkExtraContent(var5, var2, var4);
+                return new ItemStack(Items.BUCKET);
              } else {
                 return this.defaultDispenseItemBehavior.dispense(var1, var2);
              }
@@ -190,27 +227,42 @@
           private final DefaultDispenseItemBehavior defaultDispenseItemBehavior = new DefaultDispenseItemBehavior();
  
           public ItemStack execute(BlockSource var1, ItemStack var2) {
-             Level var3 = var1.getLevel();
-@@ -292,38 +376,38 @@
+-            Level var3 = var1.getLevel();
++            ServerLevel var3 = var1.getLevel();
+             BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
+             BlockState var5 = var3.getBlockState(var4);
+             Block var6 = var5.getBlock();
+             if (var6 instanceof BucketPickup) {
+                Fluid var8 = ((BucketPickup)var6).takeLiquid(var3, var4, var5);
+@@ -291,115 +376,116 @@
+             }
           }
        });
        DispenserBlock.registerBehavior(Items.FLINT_AND_STEEL, new OptionalDispenseItemBehavior() {
           protected ItemStack execute(BlockSource var1, ItemStack var2) {
-             Level var3 = var1.getLevel();
+-            Level var3 = var1.getLevel();
 -            this.success = true;
-+            this.setSuccess(true);
-             BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
-             BlockState var5 = var3.getBlockState(var4);
+-            BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
+-            BlockState var5 = var3.getBlockState(var4);
 -            if (FlintAndSteelItem.canUse(var5, var3, var4)) {
 -               var3.setBlockAndUpdate(var4, Blocks.FIRE.defaultBlockState());
 -            } else if (FlintAndSteelItem.canLightCampFire(var5)) {
-+            if (BaseFireBlock.canBePlacedAt(var3, var4)) {
-+               var3.setBlockAndUpdate(var4, BaseFireBlock.getState(var3, var4));
-+            } else if (CampfireBlock.canLight(var5)) {
-                var3.setBlockAndUpdate(var4, (BlockState)var5.setValue(BlockStateProperties.LIT, true));
-             } else if (var5.getBlock() instanceof TntBlock) {
-                TntBlock.explode(var3, var4);
-                var3.removeBlock(var4, false);
+-               var3.setBlockAndUpdate(var4, (BlockState)var5.setValue(BlockStateProperties.LIT, true));
+-            } else if (var5.getBlock() instanceof TntBlock) {
+-               TntBlock.explode(var3, var4);
+-               var3.removeBlock(var4, false);
++            ServerLevel var3 = var1.getLevel();
++            this.setSuccess(true);
++            Direction var4 = (Direction)var1.getBlockState().getValue(DispenserBlock.FACING);
++            BlockPos var5 = var1.getPos().relative(var4);
++            BlockState var6 = var3.getBlockState(var5);
++            if (BaseFireBlock.canBePlacedAt(var3, var5, var4)) {
++               var3.setBlockAndUpdate(var5, BaseFireBlock.getState(var3, var5));
++            } else if (CampfireBlock.canLight(var6)) {
++               var3.setBlockAndUpdate(var5, (BlockState)var6.setValue(BlockStateProperties.LIT, true));
++            } else if (var6.getBlock() instanceof TntBlock) {
++               TntBlock.explode(var3, var5);
++               var3.removeBlock(var5, false);
              } else {
 -               this.success = false;
 +               this.setSuccess(false);
@@ -227,8 +279,9 @@
        DispenserBlock.registerBehavior(Items.BONE_MEAL, new OptionalDispenseItemBehavior() {
           protected ItemStack execute(BlockSource var1, ItemStack var2) {
 -            this.success = true;
+-            Level var3 = var1.getLevel();
 +            this.setSuccess(true);
-             Level var3 = var1.getLevel();
++            ServerLevel var3 = var1.getLevel();
              BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
              if (!BoneMealItem.growCrop(var2, var3, var4) && !BoneMealItem.growWaterPlant(var2, var3, var4, (Direction)null)) {
 -               this.success = false;
@@ -238,7 +291,15 @@
              }
  
              return var2;
-@@ -338,21 +422,21 @@
+          }
+       });
+       DispenserBlock.registerBehavior(Blocks.TNT, new DefaultDispenseItemBehavior() {
+          protected ItemStack execute(BlockSource var1, ItemStack var2) {
+-            Level var3 = var1.getLevel();
++            ServerLevel var3 = var1.getLevel();
+             BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
+             PrimedTnt var5 = new PrimedTnt(var3, (double)var4.getX() + 0.5D, (double)var4.getY(), (double)var4.getZ() + 0.5D, (LivingEntity)null);
+             var3.addFreshEntity(var5);
              var3.playSound((Player)null, var5.getX(), var5.getY(), var5.getZ(), SoundEvents.TNT_PRIMED, SoundSource.BLOCKS, 1.0F, 1.0F);
              var2.shrink(1);
              return var2;
@@ -264,10 +325,13 @@
 +      DispenserBlock.registerBehavior(Items.PLAYER_HEAD, var3);
        DispenserBlock.registerBehavior(Items.WITHER_SKELETON_SKULL, new OptionalDispenseItemBehavior() {
           protected ItemStack execute(BlockSource var1, ItemStack var2) {
-             Level var3 = var1.getLevel();
+-            Level var3 = var1.getLevel();
++            ServerLevel var3 = var1.getLevel();
              Direction var4 = (Direction)var1.getBlockState().getValue(DispenserBlock.FACING);
              BlockPos var5 = var1.getPos().relative(var4);
-@@ -362,13 +446,13 @@
+             if (var3.isEmptyBlock(var5) && WitherSkullBlock.canSpawnMob(var3, var5, var2)) {
+                var3.setBlock(var5, (BlockState)Blocks.WITHER_SKELETON_SKULL.defaultBlockState().setValue(SkullBlock.ROTATION, var4.getAxis() == Direction.Axis.Y ? 0 : var4.getOpposite().get2DDataValue() * 4), 3);
+                BlockEntity var6 = var3.getBlockEntity(var5);
                 if (var6 instanceof SkullBlockEntity) {
                    WitherSkullBlock.checkSpawn(var3, var5, (SkullBlockEntity)var6);
                 }
@@ -283,7 +347,13 @@
              return var2;
           }
        });
-@@ -381,25 +465,25 @@
+       DispenserBlock.registerBehavior(Blocks.CARVED_PUMPKIN, new OptionalDispenseItemBehavior() {
+          protected ItemStack execute(BlockSource var1, ItemStack var2) {
+-            Level var3 = var1.getLevel();
++            ServerLevel var3 = var1.getLevel();
+             BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
+             CarvedPumpkinBlock var5 = (CarvedPumpkinBlock)Blocks.CARVED_PUMPKIN;
+             if (var3.isEmptyBlock(var4) && var5.canSpawnGolem(var3, var4)) {
                 if (!var3.isClientSide) {
                    var3.setBlock(var4, var5.defaultBlockState(), 3);
                 }
@@ -316,24 +386,26 @@
        DispenserBlock.registerBehavior(Items.GLASS_BOTTLE.asItem(), new OptionalDispenseItemBehavior() {
           private final DefaultDispenseItemBehavior defaultDispenseItemBehavior = new DefaultDispenseItemBehavior();
  
-@@ -415,66 +499,51 @@
+@@ -415,66 +501,51 @@
                 return var2;
              }
           }
  
           public ItemStack execute(BlockSource var1, ItemStack var2) {
 -            this.success = false;
+-            Level var3 = var1.getLevel();
 +            this.setSuccess(false);
-             Level var3 = var1.getLevel();
++            ServerLevel var3 = var1.getLevel();
              BlockPos var4 = var1.getPos().relative((Direction)var1.getBlockState().getValue(DispenserBlock.FACING));
              BlockState var5 = var3.getBlockState(var4);
 -            Block var6 = var5.getBlock();
 -            if (var6.is(BlockTags.BEEHIVES) && (Integer)var5.getValue(BeehiveBlock.HONEY_LEVEL) >= 5) {
+-               ((BeehiveBlock)var5.getBlock()).releaseBeesAndResetHoneyLevel(var3.getLevel(), var5, var4, (Player)null, BeehiveBlockEntity.BeeReleaseStatus.BEE_RELEASED);
+-               this.success = true;
 +            if (var5.is(BlockTags.BEEHIVES, (var0) -> {
 +               return var0.hasProperty(BeehiveBlock.HONEY_LEVEL);
 +            }) && (Integer)var5.getValue(BeehiveBlock.HONEY_LEVEL) >= 5) {
-                ((BeehiveBlock)var5.getBlock()).releaseBeesAndResetHoneyLevel(var3.getLevel(), var5, var4, (Player)null, BeehiveBlockEntity.BeeReleaseStatus.BEE_RELEASED);
--               this.success = true;
++               ((BeehiveBlock)var5.getBlock()).releaseBeesAndResetHoneyLevel(var3, var5, var4, (Player)null, BeehiveBlockEntity.BeeReleaseStatus.BEE_RELEASED);
 +               this.setSuccess(true);
                 return this.takeLiquid(var1, var2, new ItemStack(Items.HONEY_BOTTLE));
              } else if (var3.getFluidState(var4).is(FluidTags.WATER)) {
@@ -369,7 +441,7 @@
 +         public ItemStack execute(BlockSource var1, ItemStack var2) {
 +            Direction var3 = (Direction)var1.getBlockState().getValue(DispenserBlock.FACING);
 +            BlockPos var4 = var1.getPos().relative(var3);
-+            Level var5 = var1.getLevel();
++            ServerLevel var5 = var1.getLevel();
 +            BlockState var6 = var5.getBlockState(var4);
 +            this.setSuccess(true);
 +            if (var6.is(Blocks.RESPAWN_ANCHOR)) {

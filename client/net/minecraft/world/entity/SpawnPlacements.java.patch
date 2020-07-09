@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/SpawnPlacements.java
 +++ net/minecraft/world/entity/SpawnPlacements.java
-@@ -23,14 +23,17 @@
+@@ -23,15 +23,18 @@
  import net.minecraft.world.entity.monster.Guardian;
  import net.minecraft.world.entity.monster.Husk;
  import net.minecraft.world.entity.monster.MagmaCube;
@@ -10,15 +10,30 @@
  import net.minecraft.world.entity.monster.Silverfish;
  import net.minecraft.world.entity.monster.Slime;
  import net.minecraft.world.entity.monster.Stray;
+-import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.entity.monster.Strider;
 +import net.minecraft.world.entity.monster.ZombifiedPiglin;
 +import net.minecraft.world.entity.monster.hoglin.Hoglin;
 +import net.minecraft.world.entity.monster.piglin.Piglin;
- import net.minecraft.world.level.LevelAccessor;
++import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.levelgen.Heightmap;
  
  public class SpawnPlacements {
     private static final Map<EntityType<?>, SpawnPlacements.Data> DATA_BY_TYPE = Maps.newHashMap();
+ 
+@@ -50,11 +53,11 @@
+    public static Heightmap.Types getHeightmapType(@Nullable EntityType<?> var0) {
+       SpawnPlacements.Data var1 = (SpawnPlacements.Data)DATA_BY_TYPE.get(var0);
+       return var1 == null ? Heightmap.Types.MOTION_BLOCKING_NO_LEAVES : var1.heightMap;
+    }
+ 
+-   public static <T extends Entity> boolean checkSpawnRules(EntityType<T> var0, LevelAccessor var1, MobSpawnType var2, BlockPos var3, Random var4) {
++   public static <T extends Entity> boolean checkSpawnRules(EntityType<T> var0, ServerLevelAccessor var1, MobSpawnType var2, BlockPos var3, Random var4) {
+       SpawnPlacements.Data var5 = (SpawnPlacements.Data)DATA_BY_TYPE.get(var0);
+       return var5 == null || var5.predicate.test(var0, var1, var2, var3, var4);
+    }
+ 
+    static {
 @@ -86,10 +89,12 @@
        register(EntityType.MOOSHROOM, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, MushroomCow::checkMushroomSpawnRules);
        register(EntityType.MULE, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Animal::checkAnimalSpawnRules);
@@ -68,3 +83,13 @@
        }
     }
  
+@@ -145,8 +152,8 @@
+       }
+    }
+ 
+    @FunctionalInterface
+    public interface SpawnPredicate<T extends Entity> {
+-      boolean test(EntityType<T> var1, LevelAccessor var2, MobSpawnType var3, BlockPos var4, Random var5);
++      boolean test(EntityType<T> var1, ServerLevelAccessor var2, MobSpawnType var3, BlockPos var4, Random var5);
+    }
+ }

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/TwistingVinesFeature.java
 +++ net/minecraft/world/level/levelgen/feature/TwistingVinesFeature.java
-@@ -1,0 +1,95 @@
+@@ -1,0 +1,94 @@
 +package net.minecraft.world.level.levelgen.feature;
 +
 +import com.mojang.serialization.Codec;
@@ -10,7 +10,6 @@
 +import net.minecraft.util.Mth;
 +import net.minecraft.world.level.Level;
 +import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
 +import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.block.GrowingPlantHeadBlock;
@@ -23,8 +22,8 @@
 +      super(var1);
 +   }
 +
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, NoneFeatureConfiguration var6) {
-+      return place(var1, var4, var5, 8, 4, 8);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, NoneFeatureConfiguration var5) {
++      return place(var1, var3, var4, 8, 4, 8);
 +   }
 +
 +   public static boolean place(LevelAccessor var0, Random var1, BlockPos var2, int var3, int var4, int var5) {

@@ -25,6 +25,19 @@
  import net.minecraft.client.resources.sounds.RidingMinecartSoundInstance;
  import net.minecraft.client.resources.sounds.SimpleSoundInstance;
  import net.minecraft.client.resources.sounds.UnderwaterAmbientSoundHandler;
+@@ -36,11 +37,11 @@
+ import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerAbilitiesPacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+ import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+-import net.minecraft.network.protocol.game.ServerboundRecipeBookUpdatePacket;
++import net.minecraft.network.protocol.game.ServerboundRecipeBookSeenRecipePacket;
+ import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+ import net.minecraft.network.syncher.EntityDataAccessor;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
 @@ -68,11 +69,10 @@
  import net.minecraft.world.level.block.entity.CommandBlockEntity;
  import net.minecraft.world.level.block.entity.JigsawBlockEntity;
@@ -144,6 +157,19 @@
     }
  
     public void sendOpenInventory() {
+@@ -340,11 +366,11 @@
+    }
+ 
+    public void removeRecipeHighlight(Recipe<?> var1) {
+       if (this.recipeBook.willHighlight(var1)) {
+          this.recipeBook.removeHighlight(var1);
+-         this.connection.send((Packet)(new ServerboundRecipeBookUpdatePacket(var1)));
++         this.connection.send((Packet)(new ServerboundRecipeBookSeenRecipePacket(var1)));
+       }
+ 
+    }
+ 
+    protected int getPermissionLevel() {
 @@ -411,11 +437,11 @@
  
     }
@@ -260,6 +286,19 @@
           this.portalTime += 0.0125F;
           if (this.portalTime >= 1.0F) {
              this.portalTime = 1.0F;
+@@ -774,11 +801,11 @@
+          if (this.portalTime < 0.0F) {
+             this.portalTime = 0.0F;
+          }
+       }
+ 
+-      this.processDimensionDelay();
++      this.processPortalCooldown();
+    }
+ 
+    public void rideTick() {
+       super.rideTick();
+       this.handsBusy = false;
 @@ -865,11 +892,13 @@
                    Vec3 var25 = var24.scale((double)(var21 * 0.5F));
                    Vec3 var26 = var19.subtract(var25);

@@ -594,7 +594,7 @@
                                }
  
                                this.checkPoseStack(var1);
-@@ -1027,108 +1061,148 @@
+@@ -1027,108 +1061,152 @@
                                   this.entityEffect.process(var2);
                                   this.minecraft.getMainRenderTarget().bindWrite(false);
                                }
@@ -668,16 +668,20 @@
 +                              var38.endBatch(RenderType.armorGlint());
 +                              var38.endBatch(RenderType.armorEntityGlint());
                                var38.endBatch(RenderType.glint());
++                              var38.endBatch(RenderType.glintDirect());
                                var38.endBatch(RenderType.entityGlint());
++                              var38.endBatch(RenderType.entityGlintDirect());
                                var38.endBatch(RenderType.waterMask());
                                this.renderBuffers.crumblingBufferSource().endBatch();
-                               var38.endBatch(RenderType.lines());
-                               var38.endBatch();
+-                              var38.endBatch(RenderType.lines());
+-                              var38.endBatch();
 -                              var10.popPush("translucent");
 -                              this.renderChunkLayer(RenderType.translucent(), var1, var12, var14, var16);
 -                              var10.popPush("particles");
 -                              this.minecraft.particleEngine.render(var1, var38, var8, var6, var2);
 +                              if (this.transparencyChain != null) {
++                                 var38.endBatch(RenderType.lines());
++                                 var38.endBatch();
 +                                 this.translucentTarget.clear(Minecraft.ON_OSX);
 +                                 this.translucentTarget.copyDepthFrom(this.minecraft.getMainRenderTarget());
 +                                 var10.popPush("translucent");
@@ -697,6 +701,8 @@
 +                                 this.renderChunkLayer(RenderType.tripwire(), var1, var12, var14, var16);
 +                                 var10.popPush("particles");
 +                                 this.minecraft.particleEngine.render(var1, var38, var8, var6, var2);
++                                 var38.endBatch(RenderType.lines());
++                                 var38.endBatch();
 +                              }
 +
                                RenderSystem.pushMatrix();
@@ -793,7 +799,7 @@
                       }
                    }
  
-@@ -1143,11 +1217,11 @@
+@@ -1143,11 +1221,11 @@
              var40.yOld = var40.getY();
              var40.zOld = var40.getZ();
           }
@@ -806,7 +812,7 @@
              var41 = var42;
              int var43 = var40.getTeamColor();
              boolean var44 = true;
-@@ -1281,16 +1355,16 @@
+@@ -1281,16 +1359,16 @@
  
              if (this.minecraft.chunkVisibility && !var12.getCompiledChunk().hasNoRenderableLayers()) {
                 var3.begin(1, DefaultVertexFormat.POSITION_COLOR);
@@ -825,7 +831,7 @@
                    for(int var21 = 0; var21 < var20; ++var21) {
                       Direction var22 = var19[var21];
                       boolean var23 = var12.getCompiledChunk().facesCanSeeEachother(var18, var22);
-@@ -1483,13 +1557,13 @@
+@@ -1483,13 +1561,13 @@
        RenderSystem.disableBlend();
        RenderSystem.enableAlphaTest();
     }
@@ -841,7 +847,7 @@
           float var4 = (float)var3.x;
           float var5 = (float)var3.y;
           float var6 = (float)var3.z;
-@@ -1505,11 +1579,11 @@
+@@ -1505,11 +1583,11 @@
           this.skyFormat.clearBufferState();
           RenderSystem.disableFog();
           RenderSystem.disableAlphaTest();
@@ -854,7 +860,7 @@
           float var16;
           float var17;
           float var18;
-@@ -1591,11 +1665,11 @@
+@@ -1591,11 +1669,11 @@
           RenderSystem.enableAlphaTest();
           RenderSystem.enableFog();
           var1.popPose();
@@ -867,7 +873,7 @@
              var1.translate(0.0D, 12.0D, 0.0D);
              this.darkBuffer.bind();
              this.skyFormat.setupBufferState(0L);
-@@ -1603,11 +1677,11 @@
+@@ -1603,11 +1681,11 @@
              VertexBuffer.unbind();
              this.skyFormat.clearBufferState();
              var1.popPose();
@@ -880,7 +886,7 @@
              RenderSystem.color3f(var4, var5, var6);
           }
  
-@@ -1616,67 +1690,69 @@
+@@ -1616,67 +1694,69 @@
           RenderSystem.disableFog();
        }
     }
@@ -981,7 +987,7 @@
                    RenderSystem.colorMask(true, true, true, true);
                 }
  
-@@ -1833,11 +1909,11 @@
+@@ -1833,11 +1913,11 @@
           double var12 = var1.getPosition().z;
           RenderSystem.enableBlend();
           RenderSystem.enableDepthTest();
@@ -994,7 +1000,7 @@
           float var15 = (float)(var14 >> 16 & 255) / 255.0F;
           float var16 = (float)(var14 >> 8 & 255) / 255.0F;
           float var17 = (float)(var14 & 255) / 255.0F;
-@@ -1959,14 +2035,10 @@
+@@ -1959,14 +2039,10 @@
           var1.vertex(var13, (float)(var12x + var3), (float)(var14 + var5), (float)(var16 + var7)).color(var9, var10, var11, var12).endVertex();
           var1.vertex(var13, (float)(var18 + var3), (float)(var20 + var5), (float)(var22 + var7)).color(var9, var10, var11, var12).endVertex();
        });
@@ -1009,7 +1015,7 @@
     }
  
     public static void renderLineBox(PoseStack var0, VertexConsumer var1, double var2, double var4, double var6, double var8, double var10, double var12, float var14, float var15, float var16, float var17) {
-@@ -2100,14 +2172,14 @@
+@@ -2100,14 +2176,14 @@
        }
  
        if (var1 != null) {
@@ -1026,7 +1032,7 @@
        }
  
        this.notifyNearbyEntities(this.level, var2, var1 != null);
-@@ -2217,23 +2289,17 @@
+@@ -2217,23 +2293,17 @@
        }
     }
  
@@ -1053,7 +1059,7 @@
           this.level.playLocalSound(var3, SoundEvents.DISPENSER_DISPENSE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
           break;
        case 1001:
-@@ -2247,20 +2313,20 @@
+@@ -2247,20 +2317,20 @@
           break;
        case 1004:
           this.level.playLocalSound(var3, SoundEvents.FIREWORK_ROCKET_SHOOT, SoundSource.NEUTRAL, 1.0F, 1.2F, false);
@@ -1078,7 +1084,7 @@
           this.level.playLocalSound(var3, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (var5.nextFloat() - var5.nextFloat()) * 0.8F, false);
           break;
        case 1010:
-@@ -2269,20 +2335,20 @@
+@@ -2269,20 +2339,20 @@
           } else {
              this.playStreamingMusic((SoundEvent)null, var3);
           }
@@ -1103,7 +1109,7 @@
           this.level.playLocalSound(var3, SoundEvents.GHAST_WARN, SoundSource.HOSTILE, 10.0F, (var5.nextFloat() - var5.nextFloat()) * 0.2F + 1.0F, false);
           break;
        case 1016:
-@@ -2317,20 +2383,20 @@
+@@ -2317,20 +2387,20 @@
           break;
        case 1027:
           this.level.playLocalSound(var3, SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.NEUTRAL, 2.0F, (var5.nextFloat() - var5.nextFloat()) * 0.2F + 1.0F, false);
@@ -1127,7 +1133,7 @@
           this.level.playLocalSound(var3, SoundEvents.CHORUS_FLOWER_GROW, SoundSource.BLOCKS, 1.0F, 1.0F, false);
           break;
        case 1034:
-@@ -2338,14 +2404,14 @@
+@@ -2338,14 +2408,14 @@
           break;
        case 1035:
           this.level.playLocalSound(var3, SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 1.0F, 1.0F, false);
@@ -1144,7 +1150,7 @@
           this.level.playLocalSound(var3, SoundEvents.PHANTOM_BITE, SoundSource.HOSTILE, 0.3F, this.level.random.nextFloat() * 0.1F + 0.9F, false);
           break;
        case 1040:
-@@ -2358,156 +2424,156 @@
+@@ -2358,156 +2428,156 @@
           this.level.playLocalSound(var3, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 1.0F, this.level.random.nextFloat() * 0.1F + 0.9F, false);
           break;
        case 1043:
@@ -1366,7 +1372,7 @@
           return;
        case 3000:
           this.level.addParticle(ParticleTypes.EXPLOSION_EMITTER, true, (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 0.0D, 0.0D, 0.0D);
-@@ -2565,11 +2631,11 @@
+@@ -2565,11 +2635,11 @@
     public static int getLightColor(BlockAndTintGetter var0, BlockPos var1) {
        return getLightColor(var0, var0.getBlockState(var1), var1);
     }
@@ -1379,7 +1385,7 @@
           int var3 = var0.getBrightness(LightLayer.SKY, var2);
           int var4 = var0.getBrightness(LightLayer.BLOCK, var2);
           int var5 = var1.getLightEmission();
-@@ -2579,14 +2645,46 @@
+@@ -2579,14 +2649,46 @@
  
           return var3 << 20 | var4 << 4;
        }

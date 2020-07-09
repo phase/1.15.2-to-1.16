@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/MapItem.java
 +++ net/minecraft/world/item/MapItem.java
-@@ -6,15 +6,15 @@
+@@ -6,28 +6,28 @@
  import java.util.List;
  import javax.annotation.Nullable;
  import net.minecraft.ChatFormatting;
@@ -17,7 +17,9 @@
  import net.minecraft.util.Mth;
  import net.minecraft.world.InteractionResult;
  import net.minecraft.world.entity.Entity;
-@@ -23,11 +23,10 @@
+ import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
+ import net.minecraft.world.level.ChunkPos;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.biome.Biome;
  import net.minecraft.world.level.block.Blocks;
@@ -29,7 +31,7 @@
  import net.minecraft.world.level.material.MaterialColor;
  import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
  
-@@ -36,11 +35,11 @@
+@@ -36,11 +36,11 @@
        super(var1);
     }
  
@@ -42,7 +44,7 @@
  
     @Nullable
     public static MapItemSavedData getSavedData(ItemStack var0, Level var1) {
-@@ -48,23 +47,23 @@
+@@ -48,23 +48,23 @@
     }
  
     @Nullable
@@ -69,7 +71,7 @@
        var9.setProperties(var2, var3, var4, var5, var6, var7);
        var1.setMapData(var9);
        var0.getOrCreateTag().putInt("map", var8);
-@@ -74,18 +73,18 @@
+@@ -74,18 +74,18 @@
     public static String makeKey(int var0) {
        return "map_" + var0;
     }
@@ -90,7 +92,7 @@
  
           MapItemSavedData.HoldingPlayer var10 = var3.getHoldingPlayer((Player)var2);
           ++var10.step;
-@@ -109,11 +108,11 @@
+@@ -109,11 +109,11 @@
                          ChunkPos var23 = var22.getPos();
                          int var24 = var19 & 15;
                          int var25 = var20 & 15;
@@ -103,7 +105,7 @@
                             if ((var29 >> 20 & 1) == 0) {
                                var21.add(Blocks.DIRT.defaultBlockState().getMapColor(var1, BlockPos.ZERO), 10);
                             } else {
-@@ -138,11 +137,11 @@
+@@ -138,11 +138,11 @@
                                         var34 = var22.getBlockState(var37);
                                      } while(var34.getMapColor(var1, var37) == MaterialColor.NONE && var33 > 0);
  
@@ -116,7 +118,7 @@
                                         do {
                                            var30.setY(var35--);
                                            var36 = var22.getBlockState(var30);
-@@ -213,11 +212,11 @@
+@@ -213,11 +213,11 @@
     }
  
     public static void renderBiomePreviewMap(ServerLevel var0, ItemStack var1) {
@@ -129,6 +131,46 @@
              int var5 = var2.z;
              Biome[] var6 = new Biome[128 * var3 * 128 * var3];
  
+@@ -332,10 +332,13 @@
+    public void onCraftedBy(ItemStack var1, Level var2, Player var3) {
+       CompoundTag var4 = var1.getTag();
+       if (var4 != null && var4.contains("map_scale_direction", 99)) {
+          scaleMap(var1, var2, var4.getInt("map_scale_direction"));
+          var4.remove("map_scale_direction");
++      } else if (var4 != null && var4.contains("map_to_lock", 1) && var4.getBoolean("map_to_lock")) {
++         lockMap(var2, var1);
++         var4.remove("map_to_lock");
+       }
+ 
+    }
+ 
+    protected static void scaleMap(ItemStack var0, Level var1, int var2) {
+@@ -344,21 +347,17 @@
+          createAndStoreSavedData(var0, var1, var3.x, var3.z, Mth.clamp(var3.scale + var2, 0, 4), var3.trackingPosition, var3.unlimitedTracking, var3.dimension);
+       }
+ 
+    }
+ 
+-   @Nullable
+-   public static ItemStack lockMap(Level var0, ItemStack var1) {
++   public static void lockMap(Level var0, ItemStack var1) {
+       MapItemSavedData var2 = getOrCreateSavedData(var1, var0);
+       if (var2 != null) {
+-         ItemStack var3 = var1.copy();
+-         MapItemSavedData var4 = createAndStoreSavedData(var3, var0, 0, 0, var2.scale, var2.trackingPosition, var2.unlimitedTracking, var2.dimension);
+-         var4.lockData(var2);
+-         return var3;
+-      } else {
+-         return null;
++         MapItemSavedData var3 = createAndStoreSavedData(var1, var0, 0, 0, var2.scale, var2.trackingPosition, var2.unlimitedTracking, var2.dimension);
++         var3.lockData(var2);
+       }
++
+    }
+ 
+    public void appendHoverText(ItemStack var1, @Nullable Level var2, List<Component> var3, TooltipFlag var4) {
+       MapItemSavedData var5 = var2 == null ? null : getOrCreateSavedData(var1, var2);
+       if (var5 != null && var5.locked) {
 @@ -369,11 +368,11 @@
           if (var5 != null) {
              var3.add((new TranslatableComponent("filled_map.id", new Object[]{getMapId(var1)})).withStyle(ChatFormatting.GRAY));
@@ -142,14 +184,20 @@
  
     }
  
-@@ -393,11 +392,11 @@
-          if (!var1.level.isClientSide) {
+@@ -388,16 +387,16 @@
+    }
+ 
+    public InteractionResult useOn(UseOnContext var1) {
+       BlockState var2 = var1.getLevel().getBlockState(var1.getClickedPos());
+       if (var2.is(BlockTags.BANNERS)) {
+-         if (!var1.level.isClientSide) {
++         if (!var1.getLevel().isClientSide) {
              MapItemSavedData var3 = getOrCreateSavedData(var1.getItemInHand(), var1.getLevel());
              var3.toggleBanner(var1.getLevel(), var1.getClickedPos());
           }
  
 -         return InteractionResult.SUCCESS;
-+         return InteractionResult.sidedSuccess(var1.level.isClientSide);
++         return InteractionResult.sidedSuccess(var1.getLevel().isClientSide);
        } else {
           return super.useOn(var1);
        }

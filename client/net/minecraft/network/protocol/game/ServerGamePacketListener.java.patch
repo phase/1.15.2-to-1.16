@@ -1,6 +1,22 @@
 --- net/minecraft/network/protocol/game/ServerGamePacketListener.java
 +++ net/minecraft/network/protocol/game/ServerGamePacketListener.java
-@@ -83,9 +83,11 @@
+@@ -55,12 +55,14 @@
+ 
+    void handleMoveVehicle(ServerboundMoveVehiclePacket var1);
+ 
+    void handleAcceptTeleportPacket(ServerboundAcceptTeleportationPacket var1);
+ 
+-   void handleRecipeBookUpdatePacket(ServerboundRecipeBookUpdatePacket var1);
++   void handleRecipeBookSeenRecipePacket(ServerboundRecipeBookSeenRecipePacket var1);
+ 
++   void handleRecipeBookChangeSettingsPacket(ServerboundRecipeBookChangeSettingsPacket var1);
++
+    void handleSeenAdvancements(ServerboundSeenAdvancementsPacket var1);
+ 
+    void handleCustomCommandSuggestions(ServerboundCommandSuggestionPacket var1);
+ 
+    void handleSetCommandBlock(ServerboundSetCommandBlockPacket var1);
+@@ -83,9 +85,11 @@
  
     void handleBlockEntityTagQuery(ServerboundBlockEntityTagQuery var1);
  

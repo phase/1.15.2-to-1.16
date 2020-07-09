@@ -1,11 +1,12 @@
 --- net/minecraft/world/level/levelgen/structure/StrongholdPieces.java
 +++ net/minecraft/world/level/levelgen/structure/StrongholdPieces.java
-@@ -9,10 +9,12 @@
+@@ -8,11 +8,12 @@
+ import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.level.ChunkPos;
- import net.minecraft.world.level.LevelAccessor;
+-import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.Blocks;
@@ -13,7 +14,7 @@
  import net.minecraft.world.level.block.DoorBlock;
  import net.minecraft.world.level.block.EndPortalFrameBlock;
  import net.minecraft.world.level.block.FenceBlock;
-@@ -222,94 +224,94 @@
+@@ -222,94 +223,94 @@
        public static StrongholdPieces.PortalRoom createPiece(List<StructurePiece> var0, int var1, int var2, int var3, Direction var4, int var5) {
           BoundingBox var6 = BoundingBox.orientBox(var1, var2, var3, -4, -1, 0, 11, 8, 16, var4);
           return isOkBox(var6) && StructurePiece.findCollisionPiece(var0, var6) == null ? new StrongholdPieces.PortalRoom(var5, var6, var4) : null;
@@ -177,7 +178,7 @@
           }
  
           return true;
-@@ -380,44 +382,44 @@
+@@ -380,44 +381,44 @@
        public static StrongholdPieces.FiveCrossing createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -4, -3, 0, 10, 9, 11, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.FiveCrossing(var6, var1, var7, var5) : null;
@@ -244,7 +245,7 @@
     }
  
     public static class Library extends StrongholdPieces.StrongholdPiece {
-@@ -451,112 +453,112 @@
+@@ -451,112 +452,112 @@
           }
  
           return new StrongholdPieces.Library(var6, var1, var7, var5);
@@ -437,7 +438,7 @@
           return true;
        }
     }
-@@ -580,36 +582,36 @@
+@@ -580,36 +581,36 @@
        public static StrongholdPieces.PrisonHall createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -1, -1, 0, 9, 5, 11, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.PrisonHall(var6, var1, var7, var5) : null;
@@ -497,7 +498,7 @@
     }
  
     public static class RoomCrossing extends StrongholdPieces.StrongholdPiece {
-@@ -642,95 +644,95 @@
+@@ -642,95 +643,95 @@
        public static StrongholdPieces.RoomCrossing createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -4, -1, 0, 11, 7, 11, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.RoomCrossing(var6, var1, var7, var5) : null;
@@ -658,7 +659,7 @@
           return true;
        }
     }
-@@ -760,18 +762,18 @@
+@@ -760,18 +761,18 @@
        public static StrongholdPieces.RightTurn createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -1, -1, 0, 5, 5, 5, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.RightTurn(var6, var1, var7, var5) : null;
@@ -684,7 +685,7 @@
           return true;
        }
     }
-@@ -801,18 +803,18 @@
+@@ -801,18 +802,18 @@
        public static StrongholdPieces.LeftTurn createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -1, -1, 0, 5, 5, 5, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.LeftTurn(var6, var1, var7, var5) : null;
@@ -710,7 +711,7 @@
           return true;
        }
     }
-@@ -846,24 +848,24 @@
+@@ -846,24 +847,24 @@
        public static StrongholdPieces.StraightStairsDown createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -1, -7, 0, 5, 11, 8, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.StraightStairsDown(var6, var1, var7, var5) : null;
@@ -748,7 +749,7 @@
  
           return true;
        }
-@@ -896,27 +898,27 @@
+@@ -896,27 +897,27 @@
        public static StrongholdPieces.ChestCorridor createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -1, -1, 0, 5, 5, 7, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.ChestCorridor(var6, var1, var7, var5) : null;
@@ -789,7 +790,7 @@
           return true;
        }
     }
-@@ -961,26 +963,26 @@
+@@ -961,26 +962,26 @@
        public static StrongholdPieces.Straight createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -1, -1, 0, 5, 5, 7, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.Straight(var6, var1, var7, var5) : null;
@@ -828,7 +829,7 @@
           return true;
        }
     }
-@@ -1049,31 +1051,31 @@
+@@ -1049,31 +1050,31 @@
        public static StrongholdPieces.StairsDown createPiece(List<StructurePiece> var0, Random var1, int var2, int var3, int var4, Direction var5, int var6) {
           BoundingBox var7 = BoundingBox.orientBox(var2, var3, var4, -1, -7, 0, 5, 11, 5, var5);
           return isOkBox(var7) && StructurePiece.findCollisionPiece(var0, var7) == null ? new StrongholdPieces.StairsDown(var6, var1, var7, var5) : null;
@@ -881,7 +882,7 @@
     }
  
     public static class FillerCorridor extends StrongholdPieces.StrongholdPiece {
-@@ -1114,31 +1116,31 @@
+@@ -1114,31 +1115,31 @@
  
              return null;
           }
@@ -931,3 +932,16 @@
           return true;
        }
     }
+@@ -1159,11 +1160,11 @@
+ 
+       protected void addAdditionalSaveData(CompoundTag var1) {
+          var1.putString("EntryDoor", this.entryDoor.name());
+       }
+ 
+-      protected void generateSmallDoor(LevelAccessor var1, Random var2, BoundingBox var3, StrongholdPieces.StrongholdPiece.SmallDoorType var4, int var5, int var6, int var7) {
++      protected void generateSmallDoor(WorldGenLevel var1, Random var2, BoundingBox var3, StrongholdPieces.StrongholdPiece.SmallDoorType var4, int var5, int var6, int var7) {
+          switch(var4) {
+          case OPENING:
+             this.generateBox(var1, var3, var5, var6, var7, var5 + 3 - 1, var6 + 3 - 1, var7, CAVE_AIR, CAVE_AIR, false);
+             break;
+          case WOOD_DOOR:

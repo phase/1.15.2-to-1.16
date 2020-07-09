@@ -1,0 +1,22 @@
+--- net/minecraft/world/item/enchantment/ThornsEnchantment.java
++++ net/minecraft/world/item/enchantment/ThornsEnchantment.java
+@@ -37,18 +37,14 @@
+          if (var2 != null) {
+             var2.hurt(DamageSource.thorns(var1), (float)getDamage(var3, var4));
+          }
+ 
+          if (var5 != null) {
+-            ((ItemStack)var5.getValue()).hurtAndBreak(3, var1, (var1x) -> {
++            ((ItemStack)var5.getValue()).hurtAndBreak(2, var1, (var1x) -> {
+                var1x.broadcastBreakEvent((EquipmentSlot)var5.getKey());
+             });
+          }
+-      } else if (var5 != null) {
+-         ((ItemStack)var5.getValue()).hurtAndBreak(1, var1, (var1x) -> {
+-            var1x.broadcastBreakEvent((EquipmentSlot)var5.getKey());
+-         });
+       }
+ 
+    }
+ 
+    public static boolean shouldHit(int var0, Random var1) {

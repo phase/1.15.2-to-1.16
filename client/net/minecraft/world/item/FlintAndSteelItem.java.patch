@@ -1,6 +1,6 @@
 --- net/minecraft/world/item/FlintAndSteelItem.java
 +++ net/minecraft/world/item/FlintAndSteelItem.java
-@@ -1,21 +1,17 @@
+@@ -1,21 +1,18 @@
  package net.minecraft.world.item;
  
 -import java.util.Iterator;
@@ -12,6 +12,7 @@
  import net.minecraft.sounds.SoundSource;
  import net.minecraft.world.InteractionResult;
  import net.minecraft.world.entity.player.Player;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.Level;
 -import net.minecraft.world.level.LevelAccessor;
 -import net.minecraft.world.level.block.Blocks;
@@ -24,7 +25,7 @@
  
  public class FlintAndSteelItem extends Item {
     public FlintAndSteelItem(Item.Properties var1) {
-@@ -25,55 +21,36 @@
+@@ -25,55 +22,36 @@
     public InteractionResult useOn(UseOnContext var1) {
        Player var2 = var1.getPlayer();
        Level var3 = var1.getLevel();
@@ -45,7 +46,7 @@
        } else {
           BlockPos var6 = var4.relative(var1.getClickedFace());
 -         if (canUse(var3.getBlockState(var6), var3, var6)) {
-+         if (BaseFireBlock.canBePlacedAt(var3, var6)) {
++         if (BaseFireBlock.canBePlacedAt(var3, var6, var1.getHorizontalDirection())) {
              var3.playSound(var2, var6, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.4F + 0.8F);
 -            BlockState var7 = ((FireBlock)Blocks.FIRE).getStateForPlacement(var3, var6);
 +            BlockState var7 = BaseFireBlock.getState(var3, var6);

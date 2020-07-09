@@ -1,7 +1,16 @@
 --- net/minecraft/world/level/block/DropperBlock.java
 +++ net/minecraft/world/level/block/DropperBlock.java
-@@ -11,15 +11,16 @@
- import net.minecraft.world.level.Level;
+@@ -3,23 +3,24 @@
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.BlockSourceImpl;
+ import net.minecraft.core.Direction;
+ import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
+ import net.minecraft.core.dispenser.DispenseItemBehavior;
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.Container;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.level.BlockGetter;
+-import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.entity.BlockEntity;
  import net.minecraft.world.level.block.entity.DispenserBlockEntity;
  import net.minecraft.world.level.block.entity.DropperBlockEntity;
@@ -18,3 +27,16 @@
  
     protected DispenseItemBehavior getDispenseMethod(ItemStack var1) {
        return DISPENSE_BEHAVIOUR;
+@@ -27,11 +28,11 @@
+ 
+    public BlockEntity newBlockEntity(BlockGetter var1) {
+       return new DropperBlockEntity();
+    }
+ 
+-   protected void dispenseFrom(Level var1, BlockPos var2) {
++   protected void dispenseFrom(ServerLevel var1, BlockPos var2) {
+       BlockSourceImpl var3 = new BlockSourceImpl(var1, var2);
+       DispenserBlockEntity var4 = (DispenserBlockEntity)var3.getEntity();
+       int var5 = var4.getRandomSlot();
+       if (var5 < 0) {
+          var1.levelEvent(1001, var2, 0);

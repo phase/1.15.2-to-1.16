@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/monster/Strider.java
 +++ net/minecraft/world/entity/monster/Strider.java
-@@ -1,0 +1,493 @@
+@@ -1,0 +1,462 @@
 +package net.minecraft.world.entity.monster;
 +
 +import com.google.common.collect.Sets;
@@ -15,6 +15,7 @@
 +import net.minecraft.network.syncher.EntityDataAccessor;
 +import net.minecraft.network.syncher.EntityDataSerializers;
 +import net.minecraft.network.syncher.SynchedEntityData;
++import net.minecraft.server.level.ServerLevel;
 +import net.minecraft.sounds.SoundEvent;
 +import net.minecraft.sounds.SoundEvents;
 +import net.minecraft.sounds.SoundSource;
@@ -56,6 +57,7 @@
 +import net.minecraft.world.level.Level;
 +import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.LevelReader;
++import net.minecraft.world.level.ServerLevelAccessor;
 +import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.block.LiquidBlock;
 +import net.minecraft.world.level.block.state.BlockState;
@@ -206,12 +208,11 @@
 +      Vec3[] var9 = var2;
 +      int var10 = var2.length;
 +
-+      double var13;
 +      for(int var11 = 0; var11 < var10; ++var11) {
 +         Vec3 var12 = var9[var11];
 +         var8.set(this.getX() + var12.x, var4, this.getZ() + var12.z);
 +
-+         for(var13 = var4; var13 > var6; --var13) {
++         for(double var13 = var4; var13 > var6; --var13) {
 +            var3.add(var8.immutable());
 +            var8.move(Direction.DOWN);
 +         }
@@ -221,26 +222,28 @@
 +
 +      while(true) {
 +         BlockPos var18;
++         double var19;
 +         do {
-+            if (!var17.hasNext()) {
-+               return new Vec3(this.getX(), this.getBoundingBox().maxY, this.getZ());
-+            }
-+
-+            var18 = (BlockPos)var17.next();
-+         } while(this.level.getFluidState(var18).is(FluidTags.LAVA));
-+
-+         UnmodifiableIterator var19 = var1.getDismountPoses().iterator();
-+
-+         while(var19.hasNext()) {
-+            Pose var20 = (Pose)var19.next();
-+            var13 = this.level.getRelativeFloorHeight(var18);
-+            if (DismountHelper.isFloorValid(var13)) {
-+               AABB var15 = var1.getLocalBoundsForPose(var20);
-+               Vec3 var16 = Vec3.upFromBottomCenterOf(var18, var13);
-+               if (DismountHelper.canDismountTo(this.level, var1, var15.move(var16))) {
-+                  var1.setPose(var20);
-+                  return var16;
++            do {
++               if (!var17.hasNext()) {
++                  return new Vec3(this.getX(), this.getBoundingBox().maxY, this.getZ());
 +               }
++
++               var18 = (BlockPos)var17.next();
++            } while(this.level.getFluidState(var18).is(FluidTags.LAVA));
++
++            var19 = this.level.getBlockFloorHeight(var18);
++         } while(!DismountHelper.isBlockFloorValid(var19));
++
++         Vec3 var20 = Vec3.upFromBottomCenterOf(var18, var19);
++         UnmodifiableIterator var14 = var1.getDismountPoses().iterator();
++
++         while(var14.hasNext()) {
++            Pose var15 = (Pose)var14.next();
++            AABB var16 = var1.getLocalBoundsForPose(var15);
++            if (DismountHelper.canDismountTo(this.level, var1, var16.move(var20))) {
++               var1.setPose(var15);
++               return var20;
 +            }
 +         }
 +      }
@@ -360,8 +363,8 @@
 +      return var2.getBlockState(var1).getFluidState().is(FluidTags.LAVA) ? 10.0F : 0.0F;
 +   }
 +
-+   public Strider getBreedOffspring(AgableMob var1) {
-+      return (Strider)EntityType.STRIDER.create(this.level);
++   public Strider getBreedOffspring(ServerLevel var1, AgableMob var2) {
++      return (Strider)EntityType.STRIDER.create(var1);
 +   }
 +
 +   public boolean isFood(ItemStack var1) {
@@ -378,7 +381,7 @@
 +
 +   public InteractionResult mobInteract(Player var1, InteractionHand var2) {
 +      boolean var3 = this.isFood(var1.getItemInHand(var2));
-+      if (!var3 && this.isSaddled() && !this.isVehicle()) {
++      if (!var3 && this.isSaddled() && !this.isVehicle() && !var1.isSecondaryUseActive()) {
 +         if (!this.level.isClientSide) {
 +            var1.startRiding(this);
 +         }
@@ -404,50 +407,33 @@
 +   }
 +
 +   @Nullable
-+   public SpawnGroupData finalizeSpawn(LevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
-+      Zombie.ZombieGroupData var7 = null;
-+      Strider.StriderGroupData.Rider var6;
-+      if (var4 instanceof Strider.StriderGroupData) {
-+         var6 = ((Strider.StriderGroupData)var4).rider;
-+      } else if (!this.isBaby()) {
-+         if (this.random.nextInt(30) == 0) {
-+            var6 = Strider.StriderGroupData.Rider.PIGLIN_RIDER;
-+            var7 = new Zombie.ZombieGroupData(Zombie.getSpawnAsBabyOdds(this.random), false);
-+         } else if (this.random.nextInt(10) == 0) {
-+            var6 = Strider.StriderGroupData.Rider.BABY_RIDER;
-+         } else {
-+            var6 = Strider.StriderGroupData.Rider.NO_RIDER;
-+         }
-+
-+         var4 = new Strider.StriderGroupData(var6);
-+         ((AgableMob.AgableMobGroupData)var4).setBabySpawnChance(var6 == Strider.StriderGroupData.Rider.NO_RIDER ? 0.5F : 0.0F);
++   public SpawnGroupData finalizeSpawn(ServerLevelAccessor var1, DifficultyInstance var2, MobSpawnType var3, @Nullable SpawnGroupData var4, @Nullable CompoundTag var5) {
++      if (this.isBaby()) {
++         return super.finalizeSpawn(var1, var2, var3, var4, var5);
 +      } else {
-+         var6 = Strider.StriderGroupData.Rider.NO_RIDER;
-+      }
-+
-+      Object var8 = null;
-+      if (var6 == Strider.StriderGroupData.Rider.BABY_RIDER) {
-+         Strider var9 = (Strider)EntityType.STRIDER.create(var1.getLevel());
-+         if (var9 != null) {
-+            var8 = var9;
-+            var9.setAge(-24000);
-+         }
-+      } else if (var6 == Strider.StriderGroupData.Rider.PIGLIN_RIDER) {
-+         ZombifiedPiglin var10 = (ZombifiedPiglin)EntityType.ZOMBIFIED_PIGLIN.create(var1.getLevel());
-+         if (var10 != null) {
-+            var8 = var10;
++         Object var7;
++         if (this.random.nextInt(30) == 0) {
++            Mob var6 = (Mob)EntityType.ZOMBIFIED_PIGLIN.create(var1.getLevel());
++            var7 = this.spawnJockey(var1, var2, var6, new Zombie.ZombieGroupData(Zombie.getSpawnAsBabyOdds(this.random), false));
 +            this.equipSaddle((SoundSource)null);
++         } else if (this.random.nextInt(10) == 0) {
++            AgableMob var8 = (AgableMob)EntityType.STRIDER.create(var1.getLevel());
++            var8.setAge(-24000);
++            var7 = this.spawnJockey(var1, var2, var8, (SpawnGroupData)null);
++         } else {
++            var7 = new AgableMob.AgableMobGroupData(0.5F);
 +         }
-+      }
 +
-+      if (var8 != null) {
-+         ((Mob)var8).moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, 0.0F);
-+         ((Mob)var8).finalizeSpawn(var1, var2, MobSpawnType.JOCKEY, var7, (CompoundTag)null);
-+         ((Mob)var8).startRiding(this, true);
-+         var1.addFreshEntity((Entity)var8);
++         return super.finalizeSpawn(var1, var2, var3, (SpawnGroupData)var7, var5);
 +      }
++   }
 +
-+      return super.finalizeSpawn(var1, var2, var3, (SpawnGroupData)var4, var5);
++   private SpawnGroupData spawnJockey(ServerLevelAccessor var1, DifficultyInstance var2, Mob var3, @Nullable SpawnGroupData var4) {
++      var3.moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, 0.0F);
++      var3.finalizeSpawn(var1, var2, MobSpawnType.JOCKEY, var4, (CompoundTag)null);
++      var3.startRiding(this, true);
++      var1.addFreshEntity(var3);
++      return new AgableMob.AgableMobGroupData(0.0F);
 +   }
 +
 +   static {
@@ -474,23 +460,6 @@
 +
 +      public boolean isStableDestination(BlockPos var1) {
 +         return this.level.getBlockState(var1).is(Blocks.LAVA) || super.isStableDestination(var1);
-+      }
-+   }
-+
-+   public static class StriderGroupData extends AgableMob.AgableMobGroupData {
-+      public final Strider.StriderGroupData.Rider rider;
-+
-+      public StriderGroupData(Strider.StriderGroupData.Rider var1) {
-+         this.rider = var1;
-+      }
-+
-+      public static enum Rider {
-+         NO_RIDER,
-+         BABY_RIDER,
-+         PIGLIN_RIDER;
-+
-+         private Rider() {
-+         }
 +      }
 +   }
 +}

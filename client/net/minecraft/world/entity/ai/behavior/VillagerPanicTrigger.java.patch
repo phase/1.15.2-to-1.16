@@ -1,6 +1,6 @@
 --- net/minecraft/world/entity/ai/behavior/VillagerPanicTrigger.java
 +++ net/minecraft/world/entity/ai/behavior/VillagerPanicTrigger.java
-@@ -26,11 +26,11 @@
+@@ -26,18 +26,18 @@
              var5.eraseMemory(MemoryModuleType.LOOK_TARGET);
              var5.eraseMemory(MemoryModuleType.BREED_TARGET);
              var5.eraseMemory(MemoryModuleType.INTERACTION_TARGET);
@@ -13,3 +13,11 @@
     }
  
     protected void tick(ServerLevel var1, Villager var2, long var3) {
+       if (var3 % 100L == 0L) {
+-         var2.spawnGolemIfNeeded(var3, 3);
++         var2.spawnGolemIfNeeded(var1, var3, 3);
+       }
+ 
+    }
+ 
+    public static boolean hasHostile(LivingEntity var0) {

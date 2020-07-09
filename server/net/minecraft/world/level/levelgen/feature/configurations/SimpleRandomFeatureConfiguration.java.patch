@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/configurations/SimpleRandomFeatureConfiguration.java
 +++ net/minecraft/world/level/levelgen/feature/configurations/SimpleRandomFeatureConfiguration.java
-@@ -1,26 +1,20 @@
+@@ -1,26 +1,21 @@
  package net.minecraft.world.level.levelgen.feature.configurations;
  
 -import com.google.common.collect.ImmutableMap;
@@ -8,13 +8,16 @@
 -import com.mojang.datafixers.types.DynamicOps;
 +import com.mojang.serialization.Codec;
  import java.util.List;
++import java.util.function.Supplier;
  import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
  
  public class SimpleRandomFeatureConfiguration implements FeatureConfiguration {
+-   public final List<ConfiguredFeature<?, ?>> features;
 +   public static final Codec<SimpleRandomFeatureConfiguration> CODEC;
-    public final List<ConfiguredFeature<?, ?>> features;
++   public final List<Supplier<ConfiguredFeature<?, ?>>> features;
  
-    public SimpleRandomFeatureConfiguration(List<ConfiguredFeature<?, ?>> var1) {
+-   public SimpleRandomFeatureConfiguration(List<ConfiguredFeature<?, ?>> var1) {
++   public SimpleRandomFeatureConfiguration(List<Supplier<ConfiguredFeature<?, ?>>> var1) {
        this.features = var1;
     }
  

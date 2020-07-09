@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/RandomPatchFeature.java
 +++ net/minecraft/world/level/levelgen/feature/RandomPatchFeature.java
-@@ -1,45 +1,43 @@
+@@ -1,26 +1,23 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -11,7 +11,6 @@
 -import net.minecraft.core.Vec3i;
  import net.minecraft.tags.FluidTags;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
 +import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -26,43 +25,22 @@
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, RandomPatchConfiguration var5) {
--      BlockState var6 = var5.stateProvider.getState(var3, var4);
--      BlockPos var7;
--      if (var5.project) {
--         var7 = var1.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, var4);
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, RandomPatchConfiguration var6) {
-+      BlockState var7 = var6.stateProvider.getState(var4, var5);
-+      BlockPos var8;
-+      if (var6.project) {
-+         var8 = var1.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, var5);
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, RandomPatchConfiguration var5) {
+       BlockState var6 = var5.stateProvider.getState(var3, var4);
+       BlockPos var7;
+       if (var5.project) {
+          var7 = var1.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, var4);
        } else {
--         var7 = var4;
-+         var8 = var5;
-       }
+@@ -29,11 +26,11 @@
  
--      int var8 = 0;
--      BlockPos.MutableBlockPos var9 = new BlockPos.MutableBlockPos();
-+      int var9 = 0;
-+      BlockPos.MutableBlockPos var10 = new BlockPos.MutableBlockPos();
+       int var8 = 0;
+       BlockPos.MutableBlockPos var9 = new BlockPos.MutableBlockPos();
  
--      for(int var10 = 0; var10 < var5.tries; ++var10) {
+       for(int var10 = 0; var10 < var5.tries; ++var10) {
 -         var9.set((Vec3i)var7).move(var3.nextInt(var5.xspread + 1) - var3.nextInt(var5.xspread + 1), var3.nextInt(var5.yspread + 1) - var3.nextInt(var5.yspread + 1), var3.nextInt(var5.zspread + 1) - var3.nextInt(var5.zspread + 1));
--         BlockPos var11 = var9.below();
--         BlockState var12 = var1.getBlockState(var11);
--         if ((var1.isEmptyBlock(var9) || var5.canReplace && var1.getBlockState(var9).getMaterial().isReplaceable()) && var6.canSurvive(var1, var9) && (var5.whitelist.isEmpty() || var5.whitelist.contains(var12.getBlock())) && !var5.blacklist.contains(var12) && (!var5.needWater || var1.getFluidState(var11.west()).is(FluidTags.WATER) || var1.getFluidState(var11.east()).is(FluidTags.WATER) || var1.getFluidState(var11.north()).is(FluidTags.WATER) || var1.getFluidState(var11.south()).is(FluidTags.WATER))) {
--            var5.blockPlacer.place(var1, var9, var6, var3);
--            ++var8;
-+      for(int var11 = 0; var11 < var6.tries; ++var11) {
-+         var10.setWithOffset(var8, var4.nextInt(var6.xspread + 1) - var4.nextInt(var6.xspread + 1), var4.nextInt(var6.yspread + 1) - var4.nextInt(var6.yspread + 1), var4.nextInt(var6.zspread + 1) - var4.nextInt(var6.zspread + 1));
-+         BlockPos var12 = var10.below();
-+         BlockState var13 = var1.getBlockState(var12);
-+         if ((var1.isEmptyBlock(var10) || var6.canReplace && var1.getBlockState(var10).getMaterial().isReplaceable()) && var7.canSurvive(var1, var10) && (var6.whitelist.isEmpty() || var6.whitelist.contains(var13.getBlock())) && !var6.blacklist.contains(var13) && (!var6.needWater || var1.getFluidState(var12.west()).is(FluidTags.WATER) || var1.getFluidState(var12.east()).is(FluidTags.WATER) || var1.getFluidState(var12.north()).is(FluidTags.WATER) || var1.getFluidState(var12.south()).is(FluidTags.WATER))) {
-+            var6.blockPlacer.place(var1, var10, var7, var4);
-+            ++var9;
-          }
-       }
- 
--      return var8 > 0;
-+      return var9 > 0;
-    }
- }
++         var9.setWithOffset(var7, var3.nextInt(var5.xspread + 1) - var3.nextInt(var5.xspread + 1), var3.nextInt(var5.yspread + 1) - var3.nextInt(var5.yspread + 1), var3.nextInt(var5.zspread + 1) - var3.nextInt(var5.zspread + 1));
+          BlockPos var11 = var9.below();
+          BlockState var12 = var1.getBlockState(var11);
+          if ((var1.isEmptyBlock(var9) || var5.canReplace && var1.getBlockState(var9).getMaterial().isReplaceable()) && var6.canSurvive(var1, var9) && (var5.whitelist.isEmpty() || var5.whitelist.contains(var12.getBlock())) && !var5.blacklist.contains(var12) && (!var5.needWater || var1.getFluidState(var11.west()).is(FluidTags.WATER) || var1.getFluidState(var11.east()).is(FluidTags.WATER) || var1.getFluidState(var11.north()).is(FluidTags.WATER) || var1.getFluidState(var11.south()).is(FluidTags.WATER))) {
+             var5.blockPlacer.place(var1, var9, var6, var3);
+             ++var8;

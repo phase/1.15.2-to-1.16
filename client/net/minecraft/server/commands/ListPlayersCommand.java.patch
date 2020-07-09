@@ -12,7 +12,16 @@
  import net.minecraft.server.players.PlayerList;
  import net.minecraft.world.entity.player.Player;
  
-@@ -31,10 +32,10 @@
+@@ -25,16 +26,18 @@
+    private static int listPlayers(CommandSourceStack var0) {
+       return format(var0, Player::getDisplayName);
+    }
+ 
+    private static int listPlayersWithUuids(CommandSourceStack var0) {
+-      return format(var0, Player::getDisplayNameWithUuid);
++      return format(var0, (var0x) -> {
++         return new TranslatableComponent("commands.list.nameAndId", new Object[]{var0x.getName(), var0x.getGameProfile().getId()});
++      });
     }
  
     private static int format(CommandSourceStack var0, Function<ServerPlayer, Component> var1) {

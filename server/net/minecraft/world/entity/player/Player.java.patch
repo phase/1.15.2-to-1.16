@@ -430,7 +430,7 @@
  
     public void openMinecartCommandBlock(BaseCommandBlock var1) {
     }
-@@ -893,49 +876,55 @@
+@@ -893,51 +876,57 @@
  
           return InteractionResult.PASS;
        } else {
@@ -489,13 +489,23 @@
 +   }
 +
     protected Vec3 maybeBackOffFromEdge(Vec3 var1, MoverType var2) {
-       if ((var2 == MoverType.SELF || var2 == MoverType.PLAYER) && this.onGround && this.isStayingOnGroundSurface()) {
+-      if ((var2 == MoverType.SELF || var2 == MoverType.PLAYER) && this.onGround && this.isStayingOnGroundSurface()) {
++      if ((var2 == MoverType.SELF || var2 == MoverType.PLAYER) && this.isStayingOnGroundSurface() && this.isAboveGround()) {
           double var3 = var1.x;
           double var5 = var1.z;
           double var7 = 0.05D;
-@@ -992,11 +981,11 @@
+ 
+          while(true) {
+@@ -989,14 +978,18 @@
+       } else {
+          return var1;
+       }
     }
  
++   private boolean isAboveGround() {
++      return this.onGround || this.fallDistance < this.maxUpStep && !this.level.noCollision(this, this.getBoundingBox().move(0.0D, (double)(this.fallDistance - this.maxUpStep), 0.0D));
++   }
++
     public void attack(Entity var1) {
        if (var1.isAttackable()) {
           if (!var1.skipAttackInteraction(this)) {
@@ -506,7 +516,7 @@
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), ((LivingEntity)var1).getMobType());
              } else {
                 var3 = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), MobType.UNDEFINED);
-@@ -1015,11 +1004,11 @@
+@@ -1015,11 +1008,11 @@
                    this.level.playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
                    ++var21;
                    var6 = true;
@@ -519,7 +529,7 @@
                    var2 *= 1.5F;
                 }
  
-@@ -1047,11 +1036,11 @@
+@@ -1047,11 +1040,11 @@
                 Vec3 var15 = var1.getDeltaMovement();
                 boolean var16 = var1.hurt(DamageSource.playerAttack(this), var2);
                 if (var16) {
@@ -532,7 +542,7 @@
                       }
  
                       this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
-@@ -1081,11 +1070,11 @@
+@@ -1081,11 +1074,11 @@
                                } while(var20 == var1);
                             } while(this.isAlliedTo(var20));
                          } while(var20 instanceof ArmorStand && ((ArmorStand)var20).isMarker());
@@ -545,7 +555,7 @@
                       }
                    }
  
-@@ -1206,75 +1195,15 @@
+@@ -1206,75 +1199,15 @@
     public GameProfile getGameProfile() {
        return this.gameProfile;
     }
@@ -621,7 +631,7 @@
        if (this.level instanceof ServerLevel && var2) {
           ((ServerLevel)this.level).updateSleepingPlayerList();
        }
-@@ -1284,22 +1213,28 @@
+@@ -1284,22 +1217,28 @@
  
     public void stopSleeping() {
        this.stopSleepInBed(true, true);
@@ -660,7 +670,7 @@
  
     public boolean isSleepingLongEnough() {
        return this.isSleeping() && this.sleepCounter >= 100;
-@@ -1310,33 +1245,10 @@
+@@ -1310,33 +1249,10 @@
     }
  
     public void displayClientMessage(Component var1, boolean var2) {
@@ -694,7 +704,7 @@
     }
  
     public void awardStat(ResourceLocation var1, int var2) {
-@@ -1418,11 +1330,11 @@
+@@ -1418,11 +1334,11 @@
     protected boolean freeAt(BlockPos var1) {
        return !this.level.getBlockState(var1).isSuffocating(this.level, var1);
     }
@@ -707,7 +717,7 @@
     public void checkMovementStatistics(double var1, double var3, double var5) {
        if (!this.isPassenger()) {
           int var7;
-@@ -1430,11 +1342,11 @@
+@@ -1430,11 +1346,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var3 * var3 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.SWIM_ONE_CM, var7);
@@ -720,7 +730,7 @@
                 this.awardStat(Stats.WALK_UNDER_WATER_ONE_CM, var7);
                 this.causeFoodExhaustion(0.01F * (float)var7 * 0.01F);
              }
-@@ -1442,11 +1354,11 @@
+@@ -1442,11 +1358,11 @@
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
              if (var7 > 0) {
                 this.awardStat(Stats.WALK_ON_WATER_ONE_CM, var7);
@@ -733,7 +743,7 @@
              }
           } else if (this.onGround) {
              var7 = Math.round(Mth.sqrt(var1 * var1 + var5 * var5) * 100.0F);
-@@ -1473,22 +1385,25 @@
+@@ -1473,22 +1389,25 @@
           }
  
        }
@@ -764,7 +774,7 @@
        }
  
     }
-@@ -1504,11 +1419,11 @@
+@@ -1504,11 +1423,11 @@
           return super.causeFallDamage(var1, var2);
        }
     }
@@ -777,7 +787,22 @@
              this.startFallFlying();
              return true;
           }
-@@ -1762,31 +1677,31 @@
+@@ -1535,12 +1454,12 @@
+ 
+    protected SoundEvent getFallDamageSound(int var1) {
+       return var1 > 4 ? SoundEvents.PLAYER_BIG_FALL : SoundEvents.PLAYER_SMALL_FALL;
+    }
+ 
+-   public void killed(LivingEntity var1) {
+-      this.awardStat(Stats.ENTITY_KILLED.get(var1.getType()));
++   public void killed(ServerLevel var1, LivingEntity var2) {
++      this.awardStat(Stats.ENTITY_KILLED.get(var2.getType()));
+    }
+ 
+    public void makeStuckInBlock(BlockState var1, Vec3 var2) {
+       if (!this.abilities.flying) {
+          super.makeStuckInBlock(var1, var2);
+@@ -1762,31 +1681,27 @@
        return !this.abilities.flying && !this.isSpectator() && super.isSwimming();
     }
  
@@ -798,10 +823,10 @@
        return this.decorateDisplayNameComponent(var1);
     }
  
-    public Component getDisplayNameWithUuid() {
-       return (new TextComponent("")).append(this.getName()).append(" (").append(this.gameProfile.getId().toString()).append(")");
-    }
- 
+-   public Component getDisplayNameWithUuid() {
+-      return (new TextComponent("")).append(this.getName()).append(" (").append(this.gameProfile.getId().toString()).append(")");
+-   }
+-
 -   private Component decorateDisplayNameComponent(Component var1) {
 +   private MutableComponent decorateDisplayNameComponent(MutableComponent var1) {
        String var2 = this.getGameProfile().getName();

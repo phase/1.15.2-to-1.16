@@ -1,15 +1,14 @@
 --- net/minecraft/world/level/levelgen/NoiseSamplingSettings.java
 +++ net/minecraft/world/level/levelgen/NoiseSamplingSettings.java
-@@ -1,0 +1,40 @@
+@@ -1,0 +1,39 @@
 +package net.minecraft.world.level.levelgen;
 +
 +import com.mojang.datafixers.util.Function4;
 +import com.mojang.serialization.Codec;
 +import com.mojang.serialization.codecs.RecordCodecBuilder;
-+import net.minecraft.util.Codecs;
 +
 +public class NoiseSamplingSettings {
-+   private static final Codec<Double> SCALE_RANGE = Codecs.doubleRange(0.001D, 1000.0D);
++   private static final Codec<Double> SCALE_RANGE = Codec.doubleRange(0.001D, 1000.0D);
 +   public static final Codec<NoiseSamplingSettings> CODEC = RecordCodecBuilder.create((var0) -> {
 +      return var0.group(SCALE_RANGE.fieldOf("xz_scale").forGetter(NoiseSamplingSettings::xzScale), SCALE_RANGE.fieldOf("y_scale").forGetter(NoiseSamplingSettings::yScale), SCALE_RANGE.fieldOf("xz_factor").forGetter(NoiseSamplingSettings::xzFactor), SCALE_RANGE.fieldOf("y_factor").forGetter(NoiseSamplingSettings::yFactor)).apply(var0, (Function4)(NoiseSamplingSettings::new));
 +   });

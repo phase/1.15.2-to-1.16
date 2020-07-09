@@ -302,7 +302,45 @@
     }
  
     private static int importTestStructure(CommandSourceStack var0, String var1) {
-@@ -283,11 +353,11 @@
+@@ -269,25 +339,46 @@
+       try {
+          BufferedReader var5 = Files.newBufferedReader(var2);
+          String var6 = IOUtils.toString(var5);
+          Files.createDirectories(var4.getParent());
+          OutputStream var7 = Files.newOutputStream(var4);
+-         NbtIo.writeCompressed(TagParser.parseTag(var6), var7);
++         Throwable var8 = null;
++
++         try {
++            NbtIo.writeCompressed(TagParser.parseTag(var6), var7);
++         } catch (Throwable var18) {
++            var8 = var18;
++            throw var18;
++         } finally {
++            if (var7 != null) {
++               if (var8 != null) {
++                  try {
++                     var7.close();
++                  } catch (Throwable var17) {
++                     var8.addSuppressed(var17);
++                  }
++               } else {
++                  var7.close();
++               }
++            }
++
++         }
++
+          say(var0, "Imported to " + var4.toAbsolutePath());
+          return 0;
+-      } catch (CommandSyntaxException | IOException var8) {
++      } catch (CommandSyntaxException | IOException var20) {
+          System.err.println("Failed to load structure " + var1);
+-         var8.printStackTrace();
++         var20.printStackTrace();
+          return 1;
+       }
+    }
  
     private static void say(ServerLevel var0, String var1, ChatFormatting var2) {
        var0.getPlayers((var0x) -> {

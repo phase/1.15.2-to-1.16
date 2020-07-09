@@ -360,7 +360,7 @@
     }
  
 -   public static boolean isValidEmptySpawnBlock(BlockGetter var0, BlockPos var1, BlockState var2, FluidState var3) {
-+   public static boolean isValidEmptySpawnBlock(BlockGetter var0, BlockPos var1, BlockState var2, FluidState var3, EntityType var4) {
++   public static boolean isValidEmptySpawnBlock(BlockGetter var0, BlockPos var1, BlockState var2, FluidState var3, EntityType<?> var4) {
        if (var2.isCollisionShapeFullBlock(var0, var1)) {
           return false;
        } else if (var2.isSignalSource()) {
@@ -377,7 +377,7 @@
  
     public static boolean isSpawnPositionOk(SpawnPlacements.Type var0, LevelReader var1, BlockPos var2, @Nullable EntityType<?> var3) {
        if (var0 == SpawnPlacements.Type.NO_RESTRICTIONS) {
-@@ -189,17 +292,19 @@
+@@ -189,25 +292,27 @@
           BlockPos var6 = var2.above();
           BlockPos var7 = var2.below();
           switch(var0) {
@@ -398,6 +398,15 @@
        } else {
           return false;
        }
+    }
+ 
+-   public static void spawnMobsForChunkGeneration(LevelAccessor var0, Biome var1, int var2, int var3, Random var4) {
++   public static void spawnMobsForChunkGeneration(ServerLevelAccessor var0, Biome var1, int var2, int var3, Random var4) {
+       List var5 = var1.getMobs(MobCategory.CREATURE);
+       if (!var5.isEmpty()) {
+          int var6 = var2 << 4;
+          int var7 = var3 << 4;
+ 
 @@ -223,11 +328,11 @@
              for(int var15 = 0; var15 < var9; ++var15) {
                 boolean var16 = false;

@@ -1,52 +1,59 @@
 --- net/minecraft/world/level/LevelAccessor.java
 +++ net/minecraft/world/level/LevelAccessor.java
-@@ -1,9 +1,9 @@
+@@ -1,49 +1,30 @@
  package net.minecraft.world.level;
  
  import java.util.Random;
 -import java.util.Set;
-+import java.util.function.Predicate;
- import java.util.stream.Stream;
+-import java.util.stream.Stream;
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.particles.ParticleOptions;
  import net.minecraft.sounds.SoundEvent;
-@@ -12,30 +12,28 @@
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.world.Difficulty;
  import net.minecraft.world.DifficultyInstance;
- import net.minecraft.world.entity.Entity;
+-import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.chunk.ChunkSource;
 -import net.minecraft.world.level.dimension.Dimension;
-+import net.minecraft.world.level.dimension.DimensionType;
- import net.minecraft.world.level.levelgen.Heightmap;
+-import net.minecraft.world.level.levelgen.Heightmap;
  import net.minecraft.world.level.material.Fluid;
  import net.minecraft.world.level.storage.LevelData;
- import net.minecraft.world.phys.AABB;
- import net.minecraft.world.phys.shapes.VoxelShape;
+-import net.minecraft.world.phys.AABB;
+-import net.minecraft.world.phys.shapes.VoxelShape;
  
- public interface LevelAccessor extends EntityGetter, LevelReader, LevelSimulatedRW {
+-public interface LevelAccessor extends EntityGetter, LevelReader, LevelSimulatedRW {
 -   long getSeed();
 -
-    default float getMoonBrightness() {
+-   default float getMoonBrightness() {
 -      return Dimension.MOON_BRIGHTNESS_PER_PHASE[this.getDimension().getMoonPhase(this.getLevelData().getDayTime())];
-+      return DimensionType.MOON_BRIGHTNESS_PER_PHASE[this.dimensionType().moonPhase(this.getLevelData().getDayTime())];
++public interface LevelAccessor extends CommonLevelAccessor, LevelTimeAccess {
++   default long dayTime() {
++      return this.getLevelData().getDayTime();
     }
  
-    default float getTimeOfDay(float var1) {
+-   default float getTimeOfDay(float var1) {
 -      return this.getDimension().getTimeOfDay(this.getLevelData().getDayTime(), var1);
-+      return this.dimensionType().timeOfDay(this.getLevelData().getDayTime());
-    }
- 
-    default int getMoonPhase() {
+-   }
+-
+-   default int getMoonPhase() {
 -      return this.getDimension().getMoonPhase(this.getLevelData().getDayTime());
-+      return this.dimensionType().moonPhase(this.getLevelData().getDayTime());
-    }
- 
+-   }
+-
     TickList<Block> getBlockTicks();
  
     TickList<Fluid> getLiquidTicks();
-@@ -56,25 +54,28 @@
+ 
+-   Level getLevel();
+-
+    LevelData getLevelData();
+ 
+    DifficultyInstance getCurrentDifficultyAt(BlockPos var1);
+ 
+    default Difficulty getDifficulty() {
+@@ -56,31 +37,22 @@
        return this.getChunkSource().hasChunk(var1, var2);
     }
  
@@ -71,11 +78,16 @@
     default void levelEvent(int var1, BlockPos var2, int var3) {
        this.levelEvent((Player)null, var1, var2, var3);
     }
- 
+-
 -   default Stream<VoxelShape> getEntityCollisions(@Nullable Entity var1, AABB var2, Set<Entity> var3) {
-+   default Stream<VoxelShape> getEntityCollisions(@Nullable Entity var1, AABB var2, Predicate<Entity> var3) {
-       return EntityGetter.super.getEntityCollisions(var1, var2, var3);
-    }
- 
-    default boolean isUnobstructed(@Nullable Entity var1, VoxelShape var2) {
-       return EntityGetter.super.isUnobstructed(var1, var2);
+-      return EntityGetter.super.getEntityCollisions(var1, var2, var3);
+-   }
+-
+-   default boolean isUnobstructed(@Nullable Entity var1, VoxelShape var2) {
+-      return EntityGetter.super.isUnobstructed(var1, var2);
+-   }
+-
+-   default BlockPos getHeightmapPos(Heightmap.Types var1, BlockPos var2) {
+-      return LevelReader.super.getHeightmapPos(var1, var2);
+-   }
+ }

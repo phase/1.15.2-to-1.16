@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/chunk/ChunkGenerator.java
 +++ net/minecraft/world/level/chunk/ChunkGenerator.java
-@@ -1,222 +1,320 @@
+@@ -1,222 +1,316 @@
  package net.minecraft.world.level.chunk;
  
 +import com.google.common.collect.Lists;
@@ -14,13 +14,16 @@
 -import java.util.Map.Entry;
 +import java.util.Random;
 +import java.util.function.Function;
++import java.util.function.Supplier;
  import javax.annotation.Nullable;
  import net.minecraft.CrashReport;
 +import net.minecraft.CrashReportCategory;
  import net.minecraft.ReportedException;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Registry;
++import net.minecraft.core.RegistryAccess;
 +import net.minecraft.core.SectionPos;
++import net.minecraft.data.worldgen.StructureFeatures;
  import net.minecraft.network.protocol.game.DebugPackets;
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.WorldGenRegion;
@@ -30,8 +33,8 @@
 -import net.minecraft.world.level.Level;
  import net.minecraft.world.level.LevelAccessor;
 +import net.minecraft.world.level.StructureFeatureManager;
++import net.minecraft.world.level.WorldGenLevel;
  import net.minecraft.world.level.biome.Biome;
-+import net.minecraft.world.level.biome.BiomeDefaultFeatures;
  import net.minecraft.world.level.biome.BiomeManager;
  import net.minecraft.world.level.biome.BiomeSource;
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
@@ -80,6 +83,9 @@
 +      this.strongholdSeed = var4;
     }
  
+-   public void createBiomes(ChunkAccess var1) {
+-      ChunkPos var2 = var1.getPos();
+-      ((ProtoChunk)var1).setBiomes(new ChunkBiomeContainer(var2, this.biomeSource));
 +   private void generateStrongholds() {
 +      if (this.strongholdPositions.isEmpty()) {
 +         StrongholdConfiguration var1 = this.settings.stronghold();
@@ -127,19 +133,25 @@
 +
 +         }
 +      }
-+   }
-+
-+   protected abstract Codec<? extends ChunkGenerator> codec();
-+
-    public void createBiomes(ChunkAccess var1) {
-       ChunkPos var2 = var1.getPos();
--      ((ProtoChunk)var1).setBiomes(new ChunkBiomeContainer(var2, this.biomeSource));
-+      ((ProtoChunk)var1).setBiomes(new ChunkBiomeContainer(var2, this.runtimeBiomeSource));
     }
  
 -   protected Biome getCarvingOrDecorationBiome(BiomeManager var1, BlockPos var2) {
 -      return var1.getBiome(var2);
--   }
++   protected abstract Codec<? extends ChunkGenerator> codec();
++
++   public void createBiomes(Registry<Biome> var1, ChunkAccess var2) {
++      ChunkPos var3 = var2.getPos();
++      ((ProtoChunk)var2).setBiomes(new ChunkBiomeContainer(var1, var3, this.runtimeBiomeSource));
+    }
+ 
+-   public void applyCarvers(BiomeManager var1, ChunkAccess var2, GenerationStep.Carving var3) {
+-      WorldgenRandom var4 = new WorldgenRandom();
+-      boolean var5 = true;
+-      ChunkPos var6 = var2.getPos();
+-      int var7 = var6.x;
+-      int var8 = var6.z;
+-      Biome var9 = this.getCarvingOrDecorationBiome(var1, var6.getWorldPosition());
+-      BitSet var10 = var2.getCarvingMask(var3);
 +   public void applyCarvers(long var1, BiomeManager var3, ChunkAccess var4, GenerationStep.Carving var5) {
 +      BiomeManager var6 = var3.withDifferentSource(this.biomeSource);
 +      WorldgenRandom var7 = new WorldgenRandom();
@@ -150,24 +162,15 @@
 +      Biome var12 = this.biomeSource.getNoiseBiome(var9.x << 2, 0, var9.z << 2);
 +      BitSet var13 = ((ProtoChunk)var4).getOrCreateCarvingMask(var5);
  
--   public void applyCarvers(BiomeManager var1, ChunkAccess var2, GenerationStep.Carving var3) {
--      WorldgenRandom var4 = new WorldgenRandom();
--      boolean var5 = true;
--      ChunkPos var6 = var2.getPos();
--      int var7 = var6.x;
--      int var8 = var6.z;
--      Biome var9 = this.getCarvingOrDecorationBiome(var1, var6.getWorldPosition());
--      BitSet var10 = var2.getCarvingMask(var3);
+-      for(int var11 = var7 - 8; var11 <= var7 + 8; ++var11) {
+-         for(int var12 = var8 - 8; var12 <= var8 + 8; ++var12) {
+-            List var13 = var9.getCarvers(var3);
+-            ListIterator var14 = var13.listIterator();
 +      for(int var14 = var10 - 8; var14 <= var10 + 8; ++var14) {
 +         for(int var15 = var11 - 8; var15 <= var11 + 8; ++var15) {
 +            List var16 = var12.getCarvers(var5);
 +            ListIterator var17 = var16.listIterator();
  
--      for(int var11 = var7 - 8; var11 <= var7 + 8; ++var11) {
--         for(int var12 = var8 - 8; var12 <= var8 + 8; ++var12) {
--            List var13 = var9.getCarvers(var3);
--            ListIterator var14 = var13.listIterator();
--
 -            while(var14.hasNext()) {
 -               int var15 = var14.nextIndex();
 -               ConfiguredWorldCarver var16 = (ConfiguredWorldCarver)var14.next();
@@ -178,7 +181,7 @@
 -                  }, var4, this.getSeaLevel(), var11, var12, var7, var8, var10);
 +            while(var17.hasNext()) {
 +               int var18 = var17.nextIndex();
-+               ConfiguredWorldCarver var19 = (ConfiguredWorldCarver)var17.next();
++               ConfiguredWorldCarver var19 = (ConfiguredWorldCarver)((Supplier)var17.next()).get();
 +               var7.setLargeFeatureSeed(var1 + (long)var18, var14, var15);
 +               if (var19.isStartChunk(var7, var14, var15)) {
 +                  var19.carve(var4, var6::getBiome, var7, this.getSeaLevel(), var14, var15, var10, var11, var13);
@@ -241,28 +244,25 @@
 +      Biome var8 = this.biomeSource.getNoiseBiome((var3 << 2) + 2, 2, (var4 << 2) + 2);
 +      WorldgenRandom var9 = new WorldgenRandom();
 +      long var10 = var9.setDecorationSeed(var1.getSeed(), var5, var6);
-+      GenerationStep.Decoration[] var12 = GenerationStep.Decoration.values();
-+      int var13 = var12.length;
  
 -      for(int var13 = 0; var13 < var12; ++var13) {
 -         GenerationStep.Decoration var14 = var11[var13];
-+      for(int var14 = 0; var14 < var13; ++var14) {
-+         GenerationStep.Decoration var15 = var12[var14];
- 
-          try {
+-
+-         try {
 -            var7.generate(var14, this, var1, var9, var8, var6);
 -         } catch (Exception var17) {
 -            CrashReport var16 = CrashReport.forThrowable(var17, "Biome decoration");
 -            var16.addCategory("Generation").setDetail("CenterX", (Object)var2).setDetail("CenterZ", (Object)var3).setDetail("Step", (Object)var14).setDetail("Seed", (Object)var9).setDetail("Biome", (Object)Registry.BIOME.getKey(var7));
 -            throw new ReportedException(var16);
-+            var8.generate(var15, var2, this, var1, var10, var9, var7);
-+         } catch (Exception var18) {
-+            CrashReport var17 = CrashReport.forThrowable(var18, "Biome decoration");
-+            var17.addCategory("Generation").setDetail("CenterX", (Object)var3).setDetail("CenterZ", (Object)var4).setDetail("Step", (Object)var15).setDetail("Seed", (Object)var10).setDetail("Biome", (Object)Registry.BIOME.getKey(var8));
-+            throw new ReportedException(var17);
-          }
+-         }
++      try {
++         var8.generate(var2, this, var1, var10, var9, var7);
++      } catch (Exception var14) {
++         CrashReport var13 = CrashReport.forThrowable(var14, "Biome decoration");
++         var13.addCategory("Generation").setDetail("CenterX", (Object)var3).setDetail("CenterZ", (Object)var4).setDetail("Seed", (Object)var10).setDetail("Biome", (Object)var8);
++         throw new ReportedException(var13);
        }
- 
+-
     }
  
     public abstract void buildSurfaceAndBedrock(WorldGenRegion var1, ChunkAccess var2);
@@ -312,11 +312,11 @@
  
 -   public void createStructures(BiomeManager var1, ChunkAccess var2, ChunkGenerator<?> var3, StructureManager var4) {
 -      Iterator var5 = Feature.STRUCTURES_REGISTRY.values().iterator();
-+   public void createStructures(StructureFeatureManager var1, ChunkAccess var2, StructureManager var3, long var4) {
-+      ChunkPos var6 = var2.getPos();
-+      Biome var7 = this.biomeSource.getNoiseBiome((var6.x << 2) + 2, 0, (var6.z << 2) + 2);
-+      this.createStructure(BiomeDefaultFeatures.STRONGHOLD, var1, var2, var3, var4, var6, var7);
-+      Iterator var8 = var7.structures().iterator();
++   public void createStructures(RegistryAccess var1, StructureFeatureManager var2, ChunkAccess var3, StructureManager var4, long var5) {
++      ChunkPos var7 = var3.getPos();
++      Biome var8 = this.biomeSource.getNoiseBiome((var7.x << 2) + 2, 0, (var7.z << 2) + 2);
++      this.createStructure(StructureFeatures.STRONGHOLD, var1, var2, var3, var4, var5, var7, var8);
++      Iterator var9 = var8.structures().iterator();
  
 -      while(var5.hasNext()) {
 -         StructureFeature var6 = (StructureFeature)var5.next();
@@ -335,9 +335,9 @@
 -
 -            var2.setStartForFeature(var6.getFeatureName(), var11);
 -         }
-+      while(var8.hasNext()) {
-+         ConfiguredStructureFeature var9 = (ConfiguredStructureFeature)var8.next();
-+         this.createStructure(var9, var1, var2, var3, var4, var6, var7);
++      while(var9.hasNext()) {
++         Supplier var10 = (Supplier)var9.next();
++         this.createStructure((ConfiguredStructureFeature)var10.get(), var1, var2, var3, var4, var5, var7, var8);
        }
  
     }
@@ -347,14 +347,14 @@
 -      int var4 = var2.getPos().x;
 -      int var5 = var2.getPos().z;
 -      int var6 = var4 << 4;
-+   private void createStructure(ConfiguredStructureFeature<?, ?> var1, StructureFeatureManager var2, ChunkAccess var3, StructureManager var4, long var5, ChunkPos var7, Biome var8) {
-+      StructureStart var9 = var2.getStartForFeature(SectionPos.of(var3.getPos(), 0), var1.feature, var3);
-+      int var10 = var9 != null ? var9.getReferences() : 0;
-+      StructureStart var11 = var1.generate(this, this.biomeSource, var4, var5, var7, var8, var10, this.settings.getConfig(var1.feature));
-+      var2.setStartForFeature(SectionPos.of(var3.getPos(), 0), var1.feature, var11, var3);
++   private void createStructure(ConfiguredStructureFeature<?, ?> var1, RegistryAccess var2, StructureFeatureManager var3, ChunkAccess var4, StructureManager var5, long var6, ChunkPos var8, Biome var9) {
++      StructureStart var10 = var3.getStartForFeature(SectionPos.of(var4.getPos(), 0), var1.feature, var4);
++      int var11 = var10 != null ? var10.getReferences() : 0;
++      StructureStart var12 = var1.generate(var2, this, this.biomeSource, var5, var6, var8, var9, var11, this.settings.getConfig(var1.feature));
++      var3.setStartForFeature(SectionPos.of(var4.getPos(), 0), var1.feature, var12, var4);
 +   }
 +
-+   public void createReferences(LevelAccessor var1, StructureFeatureManager var2, ChunkAccess var3) {
++   public void createReferences(WorldGenLevel var1, StructureFeatureManager var2, ChunkAccess var3) {
 +      boolean var4 = true;
 +      int var5 = var3.getPos().x;
 +      int var6 = var3.getPos().z;

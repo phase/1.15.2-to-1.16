@@ -1,31 +1,32 @@
 --- net/minecraft/world/level/levelgen/feature/VillageFeature.java
 +++ net/minecraft/world/level/levelgen/feature/VillageFeature.java
-@@ -1,67 +1,31 @@
+@@ -1,68 +1,10 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
 -import java.util.Random;
 -import java.util.function.Function;
-+import com.mojang.serialization.Codec;
- import net.minecraft.core.BlockPos;
+-import net.minecraft.core.BlockPos;
 -import net.minecraft.world.level.ChunkPos;
- import net.minecraft.world.level.biome.Biome;
+-import net.minecraft.world.level.biome.Biome;
 -import net.minecraft.world.level.biome.BiomeManager;
- import net.minecraft.world.level.chunk.ChunkGenerator;
+-import net.minecraft.world.level.chunk.ChunkGenerator;
 -import net.minecraft.world.level.levelgen.WorldgenRandom;
 -import net.minecraft.world.level.levelgen.feature.configurations.VillageConfiguration;
+-import net.minecraft.world.level.levelgen.structure.BeardedStructureStart;
+-import net.minecraft.world.level.levelgen.structure.BoundingBox;
+-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
++import com.mojang.serialization.Codec;
 +import net.minecraft.world.level.levelgen.feature.configurations.JigsawConfiguration;
- import net.minecraft.world.level.levelgen.structure.BeardedStructureStart;
- import net.minecraft.world.level.levelgen.structure.BoundingBox;
- import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
  
 -public class VillageFeature extends StructureFeature<VillageConfiguration> {
 -   public VillageFeature(Function<Dynamic<?>, ? extends VillageConfiguration> var1) {
-+public class VillageFeature extends StructureFeature<JigsawConfiguration> {
+-      super(var1);
++public class VillageFeature extends JigsawFeature {
 +   public VillageFeature(Codec<JigsawConfiguration> var1) {
-       super(var1);
++      super(var1, 0, true, true);
     }
- 
+-
 -   protected ChunkPos getPotentialFeatureChunkFromLocationWithOffset(ChunkGenerator<?> var1, Random var2, int var3, int var4, int var5, int var6) {
 -      int var7 = var1.getSettings().getVillagesSpacing();
 -      int var8 = var1.getSettings().getVillagesSeparation();
@@ -49,10 +50,9 @@
 -   }
 -
 -   public StructureFeature.StructureStartFactory getStartFactory() {
-+   public StructureFeature.StructureStartFactory<JigsawConfiguration> getStartFactory() {
-       return VillageFeature.FeatureStart::new;
-    }
- 
+-      return VillageFeature.FeatureStart::new;
+-   }
+-
 -   public String getFeatureName() {
 -      return "Village";
 -   }
@@ -63,16 +63,14 @@
 -
 -   public static class FeatureStart extends BeardedStructureStart {
 -      public FeatureStart(StructureFeature<?> var1, int var2, int var3, BoundingBox var4, int var5, long var6) {
-+   public static class FeatureStart extends BeardedStructureStart<JigsawConfiguration> {
-+      public FeatureStart(StructureFeature<JigsawConfiguration> var1, int var2, int var3, BoundingBox var4, int var5, long var6) {
-          super(var1, var2, var3, var4, var5, var6);
-       }
- 
+-         super(var1, var2, var3, var4, var5, var6);
+-      }
+-
 -      public void generatePieces(ChunkGenerator<?> var1, StructureManager var2, int var3, int var4, Biome var5) {
 -         VillageConfiguration var6 = (VillageConfiguration)var1.getStructureConfiguration(var5, Feature.VILLAGE);
-+      public void generatePieces(ChunkGenerator var1, StructureManager var2, int var3, int var4, Biome var5, JigsawConfiguration var6) {
-          BlockPos var7 = new BlockPos(var3 * 16, 0, var4 * 16);
-          VillagePieces.addPieces(var1, var2, var7, this.pieces, this.random, var6);
-          this.calculateBoundingBox();
-       }
-    }
+-         BlockPos var7 = new BlockPos(var3 * 16, 0, var4 * 16);
+-         VillagePieces.addPieces(var1, var2, var7, this.pieces, this.random, var6);
+-         this.calculateBoundingBox();
+-      }
+-   }
+ }

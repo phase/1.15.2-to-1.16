@@ -50,7 +50,7 @@
 +      });
 +      Logger var10002 = LOGGER;
 +      var10002.getClass();
-+      return var10000.withDefault(Util.prefix("Failed to read POI section: ", var10002::error), () -> {
++      return var10000.orElseGet(Util.prefix("Failed to read POI section: ", var10002::error), () -> {
 +         return new PoiSection(var0, false, ImmutableList.of());
 +      });
 +   }

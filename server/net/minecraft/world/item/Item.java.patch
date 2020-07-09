@@ -10,7 +10,7 @@
  import java.util.Map;
  import java.util.Random;
  import java.util.UUID;
-@@ -12,58 +12,43 @@
+@@ -12,58 +12,44 @@
  import net.minecraft.core.NonNullList;
  import net.minecraft.core.Registry;
  import net.minecraft.nbt.CompoundTag;
@@ -33,6 +33,7 @@
  import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.food.FoodProperties;
++import net.minecraft.world.item.context.UseOnContext;
  import net.minecraft.world.level.ClipContext;
  import net.minecraft.world.level.ItemLike;
  import net.minecraft.world.level.Level;
@@ -73,7 +74,7 @@
     private String descriptionId;
     @Nullable
     private final FoodProperties foodProperties;
-@@ -80,24 +65,17 @@
+@@ -80,24 +66,17 @@
     public static Item byBlock(Block var0) {
        return (Item)BY_BLOCK.getOrDefault(var0, Items.AIR);
     }
@@ -99,7 +100,7 @@
     public void onUseTick(Level var1, LivingEntity var2, ItemStack var3, int var4) {
     }
  
-@@ -111,14 +89,10 @@
+@@ -111,14 +90,10 @@
  
     public Item asItem() {
        return this;
@@ -114,7 +115,7 @@
     }
  
     public float getDestroySpeed(ItemStack var1, BlockState var2) {
-@@ -161,16 +135,16 @@
+@@ -161,16 +136,16 @@
  
     public boolean mineBlock(ItemStack var1, Level var2, BlockState var3, BlockPos var4, LivingEntity var5) {
        return false;
@@ -134,7 +135,7 @@
     public String toString() {
        return Registry.ITEM.getKey(this).getPath();
     }
-@@ -228,11 +202,11 @@
+@@ -228,11 +203,11 @@
  
     public void releaseUsing(ItemStack var1, Level var2, LivingEntity var3, int var4) {
     }
@@ -147,7 +148,7 @@
     public boolean isFoil(ItemStack var1) {
        return var1.isEnchanted();
     }
-@@ -256,11 +230,11 @@
+@@ -256,11 +231,11 @@
  
     public boolean isEnchantable(ItemStack var1) {
        return this.getMaxStackSize() == 1 && this.canBeDepleted();
@@ -160,7 +161,7 @@
        Vec3 var5 = var1.getEyePosition(1.0F);
        float var6 = Mth.cos(-var4 * 0.017453292F - 3.1415927F);
        float var7 = Mth.sin(-var4 * 0.017453292F - 3.1415927F);
-@@ -296,18 +270,22 @@
+@@ -296,18 +271,22 @@
  
     public boolean isValidRepairItem(ItemStack var1, ItemStack var2) {
        return false;
@@ -185,7 +186,7 @@
     }
  
     public boolean isEdible() {
-@@ -325,17 +303,26 @@
+@@ -325,17 +304,26 @@
  
     public SoundEvent getEatingSound() {
        return SoundEvents.GENERIC_EAT;
@@ -212,7 +213,7 @@
           this.rarity = Rarity.COMMON;
        }
  
-@@ -375,7 +362,12 @@
+@@ -375,7 +363,12 @@
  
        public Item.Properties rarity(Rarity var1) {
           this.rarity = var1;

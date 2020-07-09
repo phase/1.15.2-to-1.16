@@ -1,6 +1,6 @@
 --- net/minecraft/Util.java
 +++ net/minecraft/Util.java
-@@ -2,58 +2,70 @@
+@@ -2,58 +2,72 @@
  
  import com.google.common.collect.Iterators;
  import com.google.common.collect.Lists;
@@ -20,6 +20,7 @@
  import java.net.URISyntaxException;
  import java.net.URL;
 +import java.nio.file.Files;
++import java.nio.file.LinkOption;
 +import java.nio.file.Path;
  import java.security.AccessController;
  import java.security.PrivilegedActionException;
@@ -43,6 +44,7 @@
  import java.util.concurrent.ForkJoinWorkerThread;
  import java.util.concurrent.TimeUnit;
  import java.util.concurrent.atomic.AtomicInteger;
++import java.util.function.BooleanSupplier;
  import java.util.function.Consumer;
  import java.util.function.LongSupplier;
  import java.util.function.Supplier;
@@ -73,7 +75,7 @@
     public static <K, V> Collector<Entry<? extends K, ? extends V>, ?, Map<K, V>> toMap() {
        return Collectors.toMap(Entry::getKey, Entry::getValue);
     }
-@@ -76,78 +88,123 @@
+@@ -76,78 +90,123 @@
  
     public static long getEpochMillis() {
        return Instant.now().toEpochMilli();
@@ -228,7 +230,7 @@
        if (var0.contains("win")) {
           return Util.OS.WINDOWS;
        } else if (var0.contains("mac")) {
-@@ -262,22 +319,10 @@
+@@ -262,22 +321,10 @@
  
     public static Runnable name(Runnable var0, Supplier<String> var1) {
        return var0;
@@ -251,7 +253,7 @@
           LOGGER.error("Trying to throw a fatal exception, pausing in IDE", var0);
  
           while(true) {
-@@ -299,10 +344,96 @@
+@@ -299,10 +346,189 @@
        } else {
           return var0.getMessage() != null ? var0.getMessage() : var0.toString();
        }
@@ -265,21 +267,108 @@
 +      return var0[var1.nextInt(var0.length)];
 +   }
 +
++   private static BooleanSupplier createRenamer(final Path var0, final Path var1) {
++      return new BooleanSupplier() {
++         public boolean getAsBoolean() {
++            try {
++               Files.move(var0, var1);
++               return true;
++            } catch (IOException var2) {
++               Util.LOGGER.error("Failed to rename", var2);
++               return false;
++            }
++         }
++
++         public String toString() {
++            return "rename " + var0 + " to " + var1;
++         }
++      };
++   }
++
++   private static BooleanSupplier createDeleter(final Path var0) {
++      return new BooleanSupplier() {
++         public boolean getAsBoolean() {
++            try {
++               Files.deleteIfExists(var0);
++               return true;
++            } catch (IOException var2) {
++               Util.LOGGER.warn("Failed to delete", var2);
++               return false;
++            }
++         }
++
++         public String toString() {
++            return "delete old " + var0;
++         }
++      };
++   }
++
++   private static BooleanSupplier createFileDeletedCheck(final Path var0) {
++      return new BooleanSupplier() {
++         public boolean getAsBoolean() {
++            return !Files.exists(var0, new LinkOption[0]);
++         }
++
++         public String toString() {
++            return "verify that " + var0 + " is deleted";
++         }
++      };
++   }
++
++   private static BooleanSupplier createFileCreatedCheck(final Path var0) {
++      return new BooleanSupplier() {
++         public boolean getAsBoolean() {
++            return Files.isRegularFile(var0, new LinkOption[0]);
++         }
++
++         public String toString() {
++            return "verify that " + var0 + " is present";
++         }
++      };
++   }
++
++   private static boolean executeInSequence(BooleanSupplier... var0) {
++      BooleanSupplier[] var1 = var0;
++      int var2 = var0.length;
++
++      for(int var3 = 0; var3 < var2; ++var3) {
++         BooleanSupplier var4 = var1[var3];
++         if (!var4.getAsBoolean()) {
++            LOGGER.warn("Failed to execute {}", var4);
++            return false;
++         }
++      }
++
++      return true;
++   }
++
++   private static boolean runWithRetries(int var0, String var1, BooleanSupplier... var2) {
++      for(int var3 = 0; var3 < var0; ++var3) {
++         if (executeInSequence(var2)) {
++            return true;
++         }
++
++         LOGGER.error("Failed to {}, retrying {}/{}", var1, var3, var0);
++      }
++
++      LOGGER.error("Failed to {}, aborting, progress might be lost", var1);
++      return false;
++   }
++
 +   public static void safeReplaceFile(File var0, File var1, File var2) {
-+      if (var2.exists()) {
-+         var2.delete();
-+      }
++      safeReplaceFile(var0.toPath(), var1.toPath(), var2.toPath());
++   }
 +
-+      var0.renameTo(var2);
-+      if (var0.exists()) {
-+         var0.delete();
-+      }
++   public static void safeReplaceFile(Path var0, Path var1, Path var2) {
++      boolean var3 = true;
++      if (!Files.exists(var0, new LinkOption[0]) || runWithRetries(10, "create backup " + var2, createDeleter(var2), createRenamer(var0, var2), createFileCreatedCheck(var2))) {
++         if (runWithRetries(10, "remove old " + var0, createDeleter(var0), createFileDeletedCheck(var0))) {
++            if (!runWithRetries(10, "replace " + var0 + " with " + var1, createRenamer(var1, var0), createFileCreatedCheck(var0))) {
++               runWithRetries(10, "restore " + var0 + " from " + var2, createRenamer(var2, var0), createFileCreatedCheck(var0));
++            }
 +
-+      var1.renameTo(var0);
-+      if (var1.exists()) {
-+         var1.delete();
++         }
 +      }
-+
 +   }
 +
 +   public static int offsetByCodepoints(String var0, int var1, int var2) {
@@ -341,6 +430,12 @@
 +      Path var3 = var0.relativize(var2);
 +      Path var4 = var1.resolve(var3);
 +      Files.copy(var2, var4);
++   }
++
++   public static String sanitizeName(String var0, CharPredicate var1) {
++      return (String)var0.toLowerCase(Locale.ROOT).chars().mapToObj((var1x) -> {
++         return var1.test((char)var1x) ? Character.toString((char)var1x) : "_";
++      }).collect(Collectors.joining());
 +   }
 +
     static enum IdentityStrategy implements Strategy<Object> {

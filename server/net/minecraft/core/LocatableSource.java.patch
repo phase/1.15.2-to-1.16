@@ -1,0 +1,7 @@
+--- net/minecraft/core/LocatableSource.java
++++ net/minecraft/core/LocatableSource.java
+@@ -1,4 +1,0 @@
+-package net.minecraft.core;
+-
+-public interface LocatableSource extends Location {
+-}

@@ -14,7 +14,7 @@
  import java.net.InetAddress;
  import java.util.ArrayList;
  import java.util.Iterator;
-@@ -16,90 +14,60 @@
+@@ -16,90 +14,59 @@
  import java.util.function.BooleanSupplier;
  import net.minecraft.CrashReport;
  import net.minecraft.SharedConstants;
@@ -27,7 +27,6 @@
  import net.minecraft.server.level.ServerPlayer;
 -import net.minecraft.server.level.progress.ChunkProgressListener;
  import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
-+import net.minecraft.server.packs.repository.Pack;
 +import net.minecraft.server.packs.repository.PackRepository;
  import net.minecraft.server.players.GameProfileCache;
  import net.minecraft.util.Crypt;
@@ -61,7 +60,7 @@
 -      this.setLevelName(var3);
 -      this.setDemo(var1.isDemo());
 -      this.setBonusChest(var4.hasStartingBonusItems());
-+   public IntegratedServer(Thread var1, Minecraft var2, RegistryAccess.RegistryHolder var3, LevelStorageSource.LevelStorageAccess var4, PackRepository<Pack> var5, ServerResources var6, WorldData var7, MinecraftSessionService var8, GameProfileRepository var9, GameProfileCache var10, ChunkProgressListenerFactory var11) {
++   public IntegratedServer(Thread var1, Minecraft var2, RegistryAccess.RegistryHolder var3, LevelStorageSource.LevelStorageAccess var4, PackRepository var5, ServerResources var6, WorldData var7, MinecraftSessionService var8, GameProfileRepository var9, GameProfileCache var10, ChunkProgressListenerFactory var11) {
 +      super(var1, var3, var4, var7, var5, var2.getProxy(), var2.getFixerUpper(), var6, var8, var9, var10, var11);
 +      this.setSingleplayerName(var2.getUser().getName());
 +      this.setDemo(var2.isDemo());
@@ -122,7 +121,7 @@
           LOGGER.info("Saving and pausing game...");
           this.getPlayerList().saveAll();
           this.saveAllChunks(false, false, false);
-@@ -115,26 +83,10 @@
+@@ -115,26 +82,10 @@
           }
  
        }
@@ -149,7 +148,22 @@
     }
  
     public boolean shouldInformAdmins() {
-@@ -245,12 +197,12 @@
+@@ -147,10 +98,14 @@
+ 
+    public boolean isDedicatedServer() {
+       return false;
+    }
+ 
++   public int getRateLimitPacketsPerSecond() {
++      return 0;
++   }
++
+    public boolean isEpollEnabled() {
+       return false;
+    }
+ 
+    public void onServerCrash(CrashReport var1) {
+@@ -245,12 +200,12 @@
  
     public int getPort() {
        return this.publishedPort;
@@ -164,7 +178,7 @@
  
     public boolean isCommandBlockEnabled() {
        return true;
-@@ -269,6 +221,14 @@
+@@ -269,6 +224,14 @@
     }
  
     public boolean isSingleplayerOwner(GameProfile var1) {

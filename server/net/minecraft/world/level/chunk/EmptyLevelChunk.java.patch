@@ -1,0 +1,27 @@
+--- net/minecraft/world/level/chunk/EmptyLevelChunk.java
++++ net/minecraft/world/level/chunk/EmptyLevelChunk.java
+@@ -4,10 +4,11 @@
+ import java.util.List;
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.Registry;
+ import net.minecraft.server.level.ChunkHolder;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.biome.Biome;
+@@ -22,11 +23,11 @@
+ 
+ public class EmptyLevelChunk extends LevelChunk {
+    private static final Biome[] BIOMES;
+ 
+    public EmptyLevelChunk(Level var1, ChunkPos var2) {
+-      super(var1, var2, new ChunkBiomeContainer(BIOMES));
++      super(var1, var2, new ChunkBiomeContainer(var1.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), BIOMES));
+    }
+ 
+    public BlockState getBlockState(BlockPos var1) {
+       return Blocks.VOID_AIR.defaultBlockState();
+    }

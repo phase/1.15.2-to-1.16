@@ -1,0 +1,10 @@
+--- net/minecraft/core/Location.java
++++ net/minecraft/core/Location.java
+@@ -1,7 +1,0 @@
+-package net.minecraft.core;
+-
+-import net.minecraft.world.level.Level;
+-
+-public interface Location extends Position {
+-   Level getLevel();
+-}

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/Block.java
 +++ net/minecraft/world/level/block/Block.java
-@@ -2,102 +2,67 @@
+@@ -2,106 +2,76 @@
  
  import com.google.common.cache.CacheBuilder;
  import com.google.common.cache.CacheLoader;
@@ -38,11 +38,12 @@
 +import net.minecraft.world.entity.monster.piglin.PiglinAi;
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.BlockItem;
- import net.minecraft.world.item.BlockPlaceContext;
+-import net.minecraft.world.item.BlockPlaceContext;
  import net.minecraft.world.item.CreativeModeTab;
 -import net.minecraft.world.item.DyeColor;
  import net.minecraft.world.item.Item;
  import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.level.BlockGetter;
  import net.minecraft.world.level.Explosion;
  import net.minecraft.world.level.GameRules;
@@ -81,13 +82,8 @@
     public static final IdMapper<BlockState> BLOCK_STATE_REGISTRY = new IdMapper();
 -   private static final Direction[] UPDATE_SHAPE_ORDER;
 -   private static final LoadingCache<VoxelShape, Boolean> SHAPE_FULL_BLOCK_CACHE;
-+   private static final LoadingCache<VoxelShape, Boolean> SHAPE_FULL_BLOCK_CACHE = CacheBuilder.newBuilder().maximumSize(512L).weakKeys().build(new CacheLoader<VoxelShape, Boolean>() {
-+      public Boolean load(VoxelShape var1) {
-+         return !Shapes.joinIsNotEmpty(Shapes.block(), var1, BooleanOp.NOT_SAME);
-+      }
-+   });
-    private static final VoxelShape RIGID_SUPPORT_SHAPE;
-    private static final VoxelShape CENTER_SUPPORT_SHAPE;
+-   private static final VoxelShape RIGID_SUPPORT_SHAPE;
+-   private static final VoxelShape CENTER_SUPPORT_SHAPE;
 -   protected final int lightEmission;
 -   protected final float destroySpeed;
 -   protected final float explosionResistance;
@@ -98,6 +94,11 @@
 -   private final float friction;
 -   private final float speedFactor;
 -   private final float jumpFactor;
++   private static final LoadingCache<VoxelShape, Boolean> SHAPE_FULL_BLOCK_CACHE = CacheBuilder.newBuilder().maximumSize(512L).weakKeys().build(new CacheLoader<VoxelShape, Boolean>() {
++      public Boolean load(VoxelShape var1) {
++         return !Shapes.joinIsNotEmpty(Shapes.block(), var1, BooleanOp.NOT_SAME);
++      }
++   });
     protected final StateDefinition<Block, BlockState> stateDefinition;
     private BlockState defaultBlockState;
 -   protected final boolean hasCollision;
@@ -109,9 +110,21 @@
     private String descriptionId;
     @Nullable
     private Item item;
-    private static final ThreadLocal<Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>> OCCLUSION_CACHE;
+-   private static final ThreadLocal<Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>> OCCLUSION_CACHE;
++   private static final ThreadLocal<Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>> OCCLUSION_CACHE = ThreadLocal.withInitial(() -> {
++      Object2ByteLinkedOpenHashMap var0 = new Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>(2048, 0.25F) {
++         protected void rehash(int var1) {
++         }
++      };
++      var0.defaultReturnValue((byte)127);
++      return var0;
++   });
  
-@@ -135,241 +100,82 @@
+    public static int getId(@Nullable BlockState var0) {
+       if (var0 == null) {
+          return 0;
+       } else {
+@@ -135,351 +105,91 @@
  
     public static VoxelShape box(double var0, double var2, double var4, double var6, double var8, double var10) {
        return Shapes.box(var0 / 16.0D, var2 / 16.0D, var4 / 16.0D, var6 / 16.0D, var8 / 16.0D, var10 / 16.0D);
@@ -353,30 +366,25 @@
 -   }
 -
     public static boolean canSupportRigidBlock(BlockGetter var0, BlockPos var1) {
-       BlockState var2 = var0.getBlockState(var1);
+-      BlockState var2 = var0.getBlockState(var1);
 -      return !var2.is(BlockTags.LEAVES) && !Shapes.joinIsNotEmpty(var2.getCollisionShape(var0, var1).getFaceShape(Direction.UP), RIGID_SUPPORT_SHAPE, BooleanOp.ONLY_SECOND);
-+      return var2.isCollisionShapeFullBlock(var0, var1) && var2.isFaceSturdy(var0, var1, Direction.UP) || !Shapes.joinIsNotEmpty(var2.getBlockSupportShape(var0, var1).getFaceShape(Direction.UP), RIGID_SUPPORT_SHAPE, BooleanOp.ONLY_SECOND);
++      return var0.getBlockState(var1).isFaceSturdy(var0, var1, Direction.UP, SupportType.RIGID);
     }
  
     public static boolean canSupportCenter(LevelReader var0, BlockPos var1, Direction var2) {
        BlockState var3 = var0.getBlockState(var1);
 -      return !var3.is(BlockTags.LEAVES) && !Shapes.joinIsNotEmpty(var3.getCollisionShape(var0, var1).getFaceShape(var2), CENTER_SUPPORT_SHAPE, BooleanOp.ONLY_SECOND);
-+      if (var2 == Direction.DOWN && var3.is(BlockTags.UNSTABLE_BOTTOM_CENTER)) {
-+         return false;
-+      } else {
-+         return !Shapes.joinIsNotEmpty(var3.getBlockSupportShape(var0, var1).getFaceShape(var2), CENTER_SUPPORT_SHAPE, BooleanOp.ONLY_SECOND);
-+      }
++      return var2 == Direction.DOWN && var3.is(BlockTags.UNSTABLE_BOTTOM_CENTER) ? false : var3.isFaceSturdy(var0, var1, var2, SupportType.CENTER);
     }
  
-    public static boolean isFaceSturdy(BlockState var0, BlockGetter var1, BlockPos var2, Direction var3) {
+-   public static boolean isFaceSturdy(BlockState var0, BlockGetter var1, BlockPos var2, Direction var3) {
 -      return !var0.is(BlockTags.LEAVES) && isFaceFull(var0.getCollisionShape(var1, var2), var3);
-+      return isFaceFull(var0.getBlockSupportShape(var1, var2), var3);
-    }
- 
+-   }
+-
     public static boolean isFaceFull(VoxelShape var0, Direction var1) {
        VoxelShape var2 = var0.getFaceShape(var1);
        return isShapeFullBlock(var2);
-@@ -377,109 +183,17 @@
+    }
  
     public static boolean isShapeFullBlock(VoxelShape var0) {
        return (Boolean)SHAPE_FULL_BLOCK_CACHE.getUnchecked(var0);
@@ -486,7 +494,61 @@
        return var0.getDrops(var4);
     }
  
-@@ -546,51 +260,18 @@
+@@ -491,33 +201,33 @@
+    public static void dropResources(BlockState var0, Level var1, BlockPos var2) {
+       if (var1 instanceof ServerLevel) {
+          getDrops(var0, (ServerLevel)var1, var2, (BlockEntity)null).forEach((var2x) -> {
+             popResource(var1, var2, var2x);
+          });
++         var0.spawnAfterBreak((ServerLevel)var1, var2, ItemStack.EMPTY);
+       }
+ 
+-      var0.spawnAfterBreak(var1, var2, ItemStack.EMPTY);
+    }
+ 
+-   public static void dropResources(BlockState var0, Level var1, BlockPos var2, @Nullable BlockEntity var3) {
++   public static void dropResources(BlockState var0, LevelAccessor var1, BlockPos var2, @Nullable BlockEntity var3) {
+       if (var1 instanceof ServerLevel) {
+          getDrops(var0, (ServerLevel)var1, var2, var3).forEach((var2x) -> {
+-            popResource(var1, var2, var2x);
++            popResource((ServerLevel)var1, var2, var2x);
+          });
++         var0.spawnAfterBreak((ServerLevel)var1, var2, ItemStack.EMPTY);
+       }
+ 
+-      var0.spawnAfterBreak(var1, var2, ItemStack.EMPTY);
+    }
+ 
+    public static void dropResources(BlockState var0, Level var1, BlockPos var2, @Nullable BlockEntity var3, Entity var4, ItemStack var5) {
+       if (var1 instanceof ServerLevel) {
+          getDrops(var0, (ServerLevel)var1, var2, var3, var4, var5).forEach((var2x) -> {
+             popResource(var1, var2, var2x);
+          });
++         var0.spawnAfterBreak((ServerLevel)var1, var2, var5);
+       }
+ 
+-      var0.spawnAfterBreak(var1, var2, var5);
+    }
+ 
+    public static void popResource(Level var0, BlockPos var1, ItemStack var2) {
+       if (!var0.isClientSide && !var2.isEmpty() && var0.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
+          float var3 = 0.5F;
+@@ -528,12 +238,12 @@
+          var10.setDefaultPickUpDelay();
+          var0.addFreshEntity(var10);
+       }
+    }
+ 
+-   protected void popExperience(Level var1, BlockPos var2, int var3) {
+-      if (!var1.isClientSide && var1.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
++   protected void popExperience(ServerLevel var1, BlockPos var2, int var3) {
++      if (var1.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
+          while(var3 > 0) {
+             int var4 = ExperienceOrb.getExperienceValue(var3);
+             var3 -= var4;
+             var1.addFreshEntity(new ExperienceOrb(var1, (double)var2.getX() + 0.5D, (double)var2.getY() + 0.5D, (double)var2.getZ() + 0.5D, var4));
+          }
+@@ -546,51 +256,18 @@
     }
  
     public void wasExploded(Level var1, BlockPos var2, Explosion var3) {
@@ -538,7 +600,7 @@
        var2.causeFoodExhaustion(0.005F);
        dropResources(var4, var1, var3, var5, var2, var6);
     }
-@@ -608,20 +289,10 @@
+@@ -608,20 +285,10 @@
        }
  
        return this.descriptionId;
@@ -559,7 +621,7 @@
     }
  
     public void updateEntityAfterFallOn(BlockGetter var1, Entity var2) {
-@@ -630,15 +301,10 @@
+@@ -630,15 +297,10 @@
  
     public void fillItemCategory(CreativeModeTab var1, NonNullList<ItemStack> var2) {
        var2.add(new ItemStack(this));
@@ -575,7 +637,7 @@
     }
  
     public float getSpeedFactor() {
-@@ -647,34 +313,25 @@
+@@ -647,34 +309,25 @@
  
     public float getJumpFactor() {
        return this.jumpFactor;
@@ -614,7 +676,7 @@
  
     public StateDefinition<Block, BlockState> getStateDefinition() {
        return this.stateDefinition;
-@@ -686,25 +343,10 @@
+@@ -686,25 +339,10 @@
  
     public final BlockState defaultBlockState() {
        return this.defaultBlockState;
@@ -640,32 +702,31 @@
     }
  
     public Item asItem() {
-@@ -721,17 +363,15 @@
+@@ -721,165 +359,14 @@
  
     public String toString() {
        return "Block{" + Registry.BLOCK.getKey(this) + "}";
     }
  
-+   protected Block asBlock() {
-+      return this;
-+   }
-+
-    static {
+-   static {
 -      UPDATE_SHAPE_ORDER = new Direction[]{Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH, Direction.DOWN, Direction.UP};
 -      SHAPE_FULL_BLOCK_CACHE = CacheBuilder.newBuilder().maximumSize(512L).weakKeys().build(new CacheLoader<VoxelShape, Boolean>() {
 -         public Boolean load(VoxelShape var1) {
 -            return !Shapes.joinIsNotEmpty(Shapes.block(), var1, BooleanOp.NOT_SAME);
 -         }
 -      });
-       RIGID_SUPPORT_SHAPE = Shapes.join(Shapes.block(), box(2.0D, 0.0D, 2.0D, 14.0D, 16.0D, 14.0D), BooleanOp.ONLY_FIRST);
-       CENTER_SUPPORT_SHAPE = box(7.0D, 0.0D, 7.0D, 9.0D, 10.0D, 9.0D);
-       OCCLUSION_CACHE = ThreadLocal.withInitial(() -> {
-          Object2ByteLinkedOpenHashMap var0 = new Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>(2048, 0.25F) {
-             protected void rehash(int var1) {
-@@ -740,146 +380,10 @@
-          var0.defaultReturnValue((byte)127);
-          return var0;
-       });
+-      RIGID_SUPPORT_SHAPE = Shapes.join(Shapes.block(), box(2.0D, 0.0D, 2.0D, 14.0D, 16.0D, 14.0D), BooleanOp.ONLY_FIRST);
+-      CENTER_SUPPORT_SHAPE = box(7.0D, 0.0D, 7.0D, 9.0D, 10.0D, 9.0D);
+-      OCCLUSION_CACHE = ThreadLocal.withInitial(() -> {
+-         Object2ByteLinkedOpenHashMap var0 = new Object2ByteLinkedOpenHashMap<Block.BlockStatePairKey>(2048, 0.25F) {
+-            protected void rehash(int var1) {
+-            }
+-         };
+-         var0.defaultReturnValue((byte)127);
+-         return var0;
+-      });
++   protected Block asBlock() {
++      return this;
     }
  
 -   public static enum OffsetType {

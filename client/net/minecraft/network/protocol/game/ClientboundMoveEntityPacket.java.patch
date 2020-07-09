@@ -1,0 +1,62 @@
+--- net/minecraft/network/protocol/game/ClientboundMoveEntityPacket.java
++++ net/minecraft/network/protocol/game/ClientboundMoveEntityPacket.java
+@@ -1,8 +1,9 @@
+ package net.minecraft.network.protocol.game;
+ 
+ import java.io.IOException;
++import javax.annotation.Nullable;
+ import net.minecraft.network.FriendlyByteBuf;
+ import net.minecraft.network.protocol.Packet;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.Level;
+@@ -21,10 +22,21 @@
+ 
+    public static long entityToPacket(double var0) {
+       return Mth.lfloor(var0 * 4096.0D);
+    }
+ 
++   public static double packetToEntity(long var0) {
++      return (double)var0 / 4096.0D;
++   }
++
++   public Vec3 updateEntityPosition(Vec3 var1) {
++      double var2 = this.xa == 0 ? var1.x : packetToEntity(entityToPacket(var1.x) + (long)this.xa);
++      double var4 = this.ya == 0 ? var1.y : packetToEntity(entityToPacket(var1.y) + (long)this.ya);
++      double var6 = this.za == 0 ? var1.z : packetToEntity(entityToPacket(var1.z) + (long)this.za);
++      return new Vec3(var2, var4, var6);
++   }
++
+    public static Vec3 packetToEntity(long var0, long var2, long var4) {
+       return (new Vec3((double)var0, (double)var2, (double)var4)).scale(2.44140625E-4D);
+    }
+ 
+    public ClientboundMoveEntityPacket() {
+@@ -48,26 +60,15 @@
+ 
+    public String toString() {
+       return "Entity_" + super.toString();
+    }
+ 
++   @Nullable
+    public Entity getEntity(Level var1) {
+       return var1.getEntity(this.entityId);
+    }
+ 
+-   public short getXa() {
+-      return this.xa;
+-   }
+-
+-   public short getYa() {
+-      return this.ya;
+-   }
+-
+-   public short getZa() {
+-      return this.za;
+-   }
+-
+    public byte getyRot() {
+       return this.yRot;
+    }
+ 
+    public byte getxRot() {

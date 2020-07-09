@@ -52,7 +52,18 @@
     }
  
     public Vec3i below(int var1) {
-@@ -117,6 +130,17 @@
+@@ -110,13 +123,28 @@
+       float var3 = (float)Math.abs(var1.getY() - this.getY());
+       float var4 = (float)Math.abs(var1.getZ() - this.getZ());
+       return (int)(var2 + var3 + var4);
+    }
+ 
++   public int get(Direction.Axis var1) {
++      return var1.choose(this.x, this.y, this.z);
++   }
++
+    public String toString() {
+       return MoreObjects.toStringHelper(this).add("x", this.getX()).add("y", this.getY()).add("z", this.getZ()).toString();
     }
  
     public String toShortString() {

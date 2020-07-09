@@ -14,7 +14,19 @@
  import java.util.Iterator;
  import java.util.List;
  import java.util.Locale;
-@@ -65,11 +67,11 @@
+@@ -23,10 +25,11 @@
+ import net.minecraft.client.resources.language.I18n;
+ import net.minecraft.client.searchtree.MutableSearchTree;
+ import net.minecraft.client.searchtree.SearchRegistry;
+ import net.minecraft.core.NonNullList;
+ import net.minecraft.core.Registry;
++import net.minecraft.locale.Language;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.network.chat.TextComponent;
+ import net.minecraft.network.chat.TranslatableComponent;
+ import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.tags.ItemTags;
+@@ -65,11 +68,11 @@
     private boolean ignoreTextInput;
     private boolean hasClickedOutside;
     private final Map<ResourceLocation, Tag<Item>> visibleTags = Maps.newTreeMap();
@@ -27,7 +39,7 @@
        this.imageHeight = 136;
        this.imageWidth = 195;
     }
-@@ -141,11 +143,11 @@
+@@ -141,11 +144,11 @@
                 if (var4 != ClickType.QUICK_CRAFT && var1.container == CONTAINER) {
                    var10 = this.minecraft.player.inventory;
                    var7 = var10.getCarried();
@@ -40,7 +52,7 @@
                          this.minecraft.player.inventory.setItem(var3, var9);
                          this.minecraft.player.inventoryMenu.broadcastChanges();
                       }
-@@ -243,11 +245,11 @@
+@@ -243,11 +246,11 @@
           this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
           Font var10003 = this.font;
           int var10004 = this.leftPos + 82;
@@ -53,7 +65,7 @@
           this.searchBox.setVisible(false);
           this.searchBox.setTextColor(16777215);
           this.children.add(this.searchBox);
-@@ -310,18 +312,19 @@
+@@ -310,18 +313,19 @@
              return true;
           } else {
              return super.keyPressed(var1, var2, var3);
@@ -77,7 +89,19 @@
  
                 return true;
              } else {
-@@ -383,15 +386,15 @@
+@@ -352,10 +356,11 @@
+          if (var1.startsWith("#")) {
+             var1 = var1.substring(1);
+             var4 = this.minecraft.getSearchTree(SearchRegistry.CREATIVE_TAGS);
+             this.updateVisibleTags(var1);
+          } else {
++            var1 = Language.getInstance().reorder(var1, false);
+             var4 = this.minecraft.getSearchTree(SearchRegistry.CREATIVE_NAMES);
+          }
+ 
+          ((CreativeModeInventoryScreen.ItemPickerMenu)this.menu).items.addAll(var4.search(var1.toLowerCase(Locale.ROOT)));
+       }
+@@ -383,15 +388,15 @@
        var6.getAvailableTags().stream().filter(var3).forEach((var2x) -> {
           Tag var10000 = (Tag)this.visibleTags.put(var2x, var6.getTag(var2x));
        });
@@ -97,7 +121,7 @@
     }
  
     public boolean mouseClicked(double var1, double var3, int var5) {
-@@ -456,12 +459,12 @@
+@@ -456,12 +461,12 @@
              if (var5.isEmpty()) {
                 for(var6 = 0; var6 < 9; ++var6) {
                    if (var6 == var4) {
@@ -112,7 +136,7 @@
                    } else {
                       ((CreativeModeInventoryScreen.ItemPickerMenu)this.menu).items.add(ItemStack.EMPTY);
                    }
-@@ -584,116 +587,101 @@
+@@ -584,116 +589,101 @@
        } else {
           return super.mouseDragged(var1, var3, var5, var6, var8);
        }
@@ -281,7 +305,7 @@
     }
  
     protected boolean checkTabClicked(CreativeModeTab var1, double var2, double var4) {
-@@ -714,72 +702,70 @@
+@@ -714,72 +704,70 @@
        }
  
        return var2 >= (double)var7 && var2 <= (double)(var7 + 28) && var4 >= (double)var9 && var4 <= (double)(var9 + 32);
@@ -393,7 +417,7 @@
     public int getSelectedTab() {
        return selectedTab;
     }
-@@ -800,13 +786,13 @@
+@@ -800,13 +788,13 @@
        } else if (var3) {
           for(var7 = 0; var7 < Inventory.getSelectionSize(); ++var7) {
              var6.set(var7, var4.inventory.getItem(var7).copy());

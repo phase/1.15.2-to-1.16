@@ -1,38 +1,24 @@
 --- net/minecraft/world/level/levelgen/feature/configurations/CountRangeDecoratorConfiguration.java
 +++ net/minecraft/world/level/levelgen/feature/configurations/CountRangeDecoratorConfiguration.java
-@@ -1,12 +1,23 @@
- package net.minecraft.world.level.levelgen.feature.configurations;
- 
+@@ -1,31 +1,0 @@
+-package net.minecraft.world.level.levelgen.feature.configurations;
+-
 -import com.google.common.collect.ImmutableMap;
 -import com.mojang.datafixers.Dynamic;
 -import com.mojang.datafixers.types.DynamicOps;
-+import com.mojang.datafixers.util.Function4;
-+import com.mojang.serialization.Codec;
-+import com.mojang.serialization.codecs.RecordCodecBuilder;
- 
- public class CountRangeDecoratorConfiguration implements DecoratorConfiguration {
-+   public static final Codec<CountRangeDecoratorConfiguration> CODEC = RecordCodecBuilder.create((var0) -> {
-+      return var0.group(Codec.INT.fieldOf("count").forGetter((var0x) -> {
-+         return var0x.count;
-+      }), Codec.INT.fieldOf("bottom_offset").withDefault((int)0).forGetter((var0x) -> {
-+         return var0x.bottomOffset;
-+      }), Codec.INT.fieldOf("top_offset").withDefault((int)0).forGetter((var0x) -> {
-+         return var0x.topOffset;
-+      }), Codec.INT.fieldOf("maximum").withDefault((int)0).forGetter((var0x) -> {
-+         return var0x.maximum;
-+      })).apply(var0, (Function4)(CountRangeDecoratorConfiguration::new));
-+   });
-    public final int count;
-    public final int bottomOffset;
-    public final int topOffset;
-    public final int maximum;
- 
-@@ -14,18 +25,6 @@
-       this.count = var1;
-       this.bottomOffset = var2;
-       this.topOffset = var3;
-       this.maximum = var4;
-    }
+-
+-public class CountRangeDecoratorConfiguration implements DecoratorConfiguration {
+-   public final int count;
+-   public final int bottomOffset;
+-   public final int topOffset;
+-   public final int maximum;
+-
+-   public CountRangeDecoratorConfiguration(int var1, int var2, int var3, int var4) {
+-      this.count = var1;
+-      this.bottomOffset = var2;
+-      this.topOffset = var3;
+-      this.maximum = var4;
+-   }
 -
 -   public <T> Dynamic<T> serialize(DynamicOps<T> var1) {
 -      return new Dynamic(var1, var1.createMap(ImmutableMap.of(var1.createString("count"), var1.createInt(this.count), var1.createString("bottom_offset"), var1.createInt(this.bottomOffset), var1.createString("top_offset"), var1.createInt(this.topOffset), var1.createString("maximum"), var1.createInt(this.maximum))));
@@ -45,4 +31,4 @@
 -      int var4 = var0.get("maximum").asInt(0);
 -      return new CountRangeDecoratorConfiguration(var1, var2, var3, var4);
 -   }
- }
+-}

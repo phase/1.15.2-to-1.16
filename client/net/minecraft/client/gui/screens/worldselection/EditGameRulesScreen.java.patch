@@ -1,6 +1,6 @@
 --- net/minecraft/client/gui/screens/worldselection/EditGameRulesScreen.java
 +++ net/minecraft/client/gui/screens/worldselection/EditGameRulesScreen.java
-@@ -1,0 +1,273 @@
+@@ -1,0 +1,269 @@
 +package net.minecraft.client.gui.screens.worldselection;
 +
 +import com.google.common.collect.ImmutableList;
@@ -201,14 +201,10 @@
 +            var1x.setMessage(CommonComponents.optionStatus(var5.get()));
 +         }) {
 +            protected MutableComponent createNarrationMessage() {
-+               return BooleanRuleEntry.this.createFullMessage(var2, var5.get()).copy().append("\n").append(var4);
++               return CommonComponents.optionStatus(var2, var5.get()).append("\n").append(var4);
 +            }
 +         };
 +         this.children.add(this.checkbox);
-+      }
-+
-+      private MutableComponent createFullMessage(Component var1, boolean var2) {
-+         return (new TextComponent("")).append(var1).append(": ").append(CommonComponents.optionStatus(var2));
 +      }
 +
 +      public void render(PoseStack var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, boolean var9, float var10) {

@@ -1,0 +1,13 @@
+--- net/minecraft/core/IdMap.java
++++ net/minecraft/core/IdMap.java
+@@ -1,8 +1,10 @@
+ package net.minecraft.core;
+ 
+ import javax.annotation.Nullable;
+ 
+ public interface IdMap<T> extends Iterable<T> {
++   int getId(T var1);
++
+    @Nullable
+    T byId(int var1);
+ }

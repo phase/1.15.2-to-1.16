@@ -215,6 +215,19 @@
  
     public int getLoadedChunksCount() {
        return this.chunkMap.size();
+@@ -407,11 +402,11 @@
+    public void blockChanged(BlockPos var1) {
+       int var2 = var1.getX() >> 4;
+       int var3 = var1.getZ() >> 4;
+       ChunkHolder var4 = this.getVisibleChunkIfPresent(ChunkPos.asLong(var2, var3));
+       if (var4 != null) {
+-         var4.blockChanged(var1.getX() & 15, var1.getY(), var1.getZ() & 15);
++         var4.blockChanged(var1);
+       }
+ 
+    }
+ 
+    public void onLightUpdate(LightLayer var1, SectionPos var2) {
 @@ -475,13 +470,18 @@
  
     public PoiManager getPoiManager() {

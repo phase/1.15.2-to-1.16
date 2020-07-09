@@ -7,8 +7,8 @@
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.player.Player;
 +import net.minecraft.world.item.BlockItem;
-+import net.minecraft.world.item.BlockPlaceContext;
  import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.context.BlockPlaceContext;
  import net.minecraft.world.item.enchantment.EnchantmentHelper;
  import net.minecraft.world.item.enchantment.Enchantments;
  import net.minecraft.world.level.Level;
@@ -36,7 +36,7 @@
        super.attack(var1, var2, var3, var4);
     }
  
-@@ -41,26 +40,31 @@
+@@ -41,33 +40,38 @@
     }
  
     public InteractionResult use(BlockState var1, Level var2, BlockPos var3, Player var4, InteractionHand var5, BlockHitResult var6) {
@@ -71,3 +71,11 @@
        }
  
     }
+ 
+-   public void spawnAfterBreak(BlockState var1, Level var2, BlockPos var3, ItemStack var4) {
++   public void spawnAfterBreak(BlockState var1, ServerLevel var2, BlockPos var3, ItemStack var4) {
+       super.spawnAfterBreak(var1, var2, var3, var4);
+       if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, var4) == 0) {
+          int var5 = 1 + var2.random.nextInt(5);
+          this.popExperience(var2, var3, var5);
+       }

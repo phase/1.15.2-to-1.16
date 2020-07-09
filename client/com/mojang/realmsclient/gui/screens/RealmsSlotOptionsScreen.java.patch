@@ -1,6 +1,6 @@
 --- com/mojang/realmsclient/gui/screens/RealmsSlotOptionsScreen.java
 +++ com/mojang/realmsclient/gui/screens/RealmsSlotOptionsScreen.java
-@@ -1,45 +1,51 @@
+@@ -1,45 +1,52 @@
  package com.mojang.realmsclient.gui.screens;
  
 +import com.mojang.blaze3d.vertex.PoseStack;
@@ -27,8 +27,9 @@
 -   private RealmsEditBox nameEdit;
 +   public static final Component[] DIFFICULTIES = new Component[]{new TranslatableComponent("options.difficulty.peaceful"), new TranslatableComponent("options.difficulty.easy"), new TranslatableComponent("options.difficulty.normal"), new TranslatableComponent("options.difficulty.hard")};
 +   public static final Component[] GAME_MODES = new Component[]{new TranslatableComponent("selectWorld.gameMode.survival"), new TranslatableComponent("selectWorld.gameMode.creative"), new TranslatableComponent("selectWorld.gameMode.adventure")};
-+   private static final TranslatableComponent TEXT_ON = new TranslatableComponent("mco.configure.world.on");
-+   private static final TranslatableComponent TEXT_OFF = new TranslatableComponent("mco.configure.world.off");
++   private static final Component TEXT_ON = new TranslatableComponent("mco.configure.world.on");
++   private static final Component TEXT_OFF = new TranslatableComponent("mco.configure.world.off");
++   private static final Component GAME_MODE_LABEL = new TranslatableComponent("selectWorld.gameMode");
 +   private EditBox nameEdit;
     protected final RealmsConfigureWorldScreen parent;
 -   private int column1_x;
@@ -73,7 +74,7 @@
  
     public RealmsSlotOptionsScreen(RealmsConfigureWorldScreen var1, RealmsWorldOptions var2, RealmsServer.WorldType var3, int var4) {
        this.parent = var1;
-@@ -47,231 +53,217 @@
+@@ -47,231 +54,217 @@
        this.worldType = var3;
        this.activeSlot = var4;
     }
@@ -307,7 +308,7 @@
 -      String var1 = getLocalizedString("options.difficulty");
 -      return var1 + ": " + this.difficulties[this.difficultyIndex];
 +   private Component gameModeTitle() {
-+      return (new TranslatableComponent("selectWorld.gameMode")).append(": ").append(GAME_MODES[this.gameMode]);
++      return new TranslatableComponent("options.generic_value", new Object[]{GAME_MODE_LABEL, GAME_MODES[this.gameMode]});
     }
  
 -   private String gameModeTitle() {

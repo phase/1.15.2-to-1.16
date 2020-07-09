@@ -244,9 +244,10 @@
 -                  var13.add(var27.toString());
 +                  var13.add(var29.toString());
                    if (var6.getY() >= 0 && var6.getY() < 256) {
-                      var13.add("Biome: " + Registry.BIOME.getKey(this.minecraft.level.getBiome(var6)));
+-                     var13.add("Biome: " + Registry.BIOME.getKey(this.minecraft.level.getBiome(var6)));
 -                     long var28 = 0L;
 -                     float var29 = 0.0F;
++                     var13.add("Biome: " + this.minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getKey(this.minecraft.level.getBiome(var6)));
 +                     long var30 = 0L;
 +                     float var31 = 0.0F;
                       if (var19 != null) {

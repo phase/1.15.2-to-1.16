@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/surfacebuilders/SurfaceBuilder.java
 +++ net/minecraft/world/level/levelgen/surfacebuilders/SurfaceBuilder.java
-@@ -1,10 +1,9 @@
+@@ -1,44 +1,52 @@
  package net.minecraft.world.level.levelgen.surfacebuilders;
  
 -import com.mojang.datafixers.Dynamic;
@@ -12,28 +12,49 @@
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.chunk.ChunkAccess;
-@@ -19,12 +18,20 @@
-    public static final BlockState COARSE_DIRT;
-    public static final BlockState SAND;
-    public static final BlockState RED_SAND;
-    public static final BlockState WHITE_TERRACOTTA;
-    public static final BlockState MYCELIUM;
-+   public static final BlockState SOUL_SAND;
-    public static final BlockState NETHERRACK;
-    public static final BlockState ENDSTONE;
-+   public static final BlockState CRIMSON_NYLIUM;
-+   public static final BlockState WARPED_NYLIUM;
-+   public static final BlockState NETHER_WART_BLOCK;
-+   public static final BlockState WARPED_WART_BLOCK;
-+   public static final BlockState BLACKSTONE;
-+   public static final BlockState BASALT;
-+   public static final BlockState MAGMA;
-    public static final SurfaceBuilderBaseConfiguration CONFIG_EMPTY;
+ 
+ public abstract class SurfaceBuilder<C extends SurfaceBuilderConfiguration> {
+-   public static final BlockState AIR;
+-   public static final BlockState DIRT;
+-   public static final BlockState GRASS_BLOCK;
+-   public static final BlockState PODZOL;
+-   public static final BlockState GRAVEL;
+-   public static final BlockState STONE;
+-   public static final BlockState COARSE_DIRT;
+-   public static final BlockState SAND;
+-   public static final BlockState RED_SAND;
+-   public static final BlockState WHITE_TERRACOTTA;
+-   public static final BlockState MYCELIUM;
+-   public static final BlockState NETHERRACK;
+-   public static final BlockState ENDSTONE;
+-   public static final SurfaceBuilderBaseConfiguration CONFIG_EMPTY;
++   private static final BlockState DIRT;
++   private static final BlockState GRASS_BLOCK;
++   private static final BlockState PODZOL;
++   private static final BlockState GRAVEL;
++   private static final BlockState STONE;
++   private static final BlockState COARSE_DIRT;
++   private static final BlockState SAND;
++   private static final BlockState RED_SAND;
++   private static final BlockState WHITE_TERRACOTTA;
++   private static final BlockState MYCELIUM;
++   private static final BlockState SOUL_SAND;
++   private static final BlockState NETHERRACK;
++   private static final BlockState ENDSTONE;
++   private static final BlockState CRIMSON_NYLIUM;
++   private static final BlockState WARPED_NYLIUM;
++   private static final BlockState NETHER_WART_BLOCK;
++   private static final BlockState WARPED_WART_BLOCK;
++   private static final BlockState BLACKSTONE;
++   private static final BlockState BASALT;
++   private static final BlockState MAGMA;
     public static final SurfaceBuilderBaseConfiguration CONFIG_PODZOL;
     public static final SurfaceBuilderBaseConfiguration CONFIG_GRAVEL;
     public static final SurfaceBuilderBaseConfiguration CONFIG_GRASS;
-    public static final SurfaceBuilderBaseConfiguration CONFIG_DIRT;
-@@ -34,11 +41,15 @@
+-   public static final SurfaceBuilderBaseConfiguration CONFIG_DIRT;
+    public static final SurfaceBuilderBaseConfiguration CONFIG_STONE;
+    public static final SurfaceBuilderBaseConfiguration CONFIG_COARSE_DIRT;
+    public static final SurfaceBuilderBaseConfiguration CONFIG_DESERT;
     public static final SurfaceBuilderBaseConfiguration CONFIG_OCEAN_SAND;
     public static final SurfaceBuilderBaseConfiguration CONFIG_FULL_SAND;
     public static final SurfaceBuilderBaseConfiguration CONFIG_BADLANDS;
@@ -49,7 +70,7 @@
     public static final SurfaceBuilder<SurfaceBuilderBaseConfiguration> SHATTERED_SAVANNA;
     public static final SurfaceBuilder<SurfaceBuilderBaseConfiguration> GRAVELLY_MOUNTAIN;
     public static final SurfaceBuilder<SurfaceBuilderBaseConfiguration> GIANT_TREE_TAIGA;
-@@ -46,21 +57,32 @@
+@@ -46,63 +54,86 @@
     public static final SurfaceBuilder<SurfaceBuilderBaseConfiguration> BADLANDS;
     public static final SurfaceBuilder<SurfaceBuilderBaseConfiguration> WOODED_BADLANDS;
     public static final SurfaceBuilder<SurfaceBuilderBaseConfiguration> ERODED_BADLANDS;
@@ -69,15 +90,15 @@
 -   public SurfaceBuilder(Function<Dynamic<?>, ? extends C> var1) {
 -      this.configurationFactory = var1;
 +   public SurfaceBuilder(Codec<C> var1) {
-+      this.configuredCodec = var1.fieldOf("config").xmap((var1x) -> {
-+         return new ConfiguredSurfaceBuilder(this, var1x);
-+      }, (var0) -> {
-+         return var0.config;
-+      }).codec();
++      this.configuredCodec = var1.fieldOf("config").xmap(this::configured, ConfiguredSurfaceBuilder::config).codec();
     }
  
 +   public Codec<ConfiguredSurfaceBuilder<C>> configuredCodec() {
 +      return this.configuredCodec;
++   }
++
++   public ConfiguredSurfaceBuilder<C> configured(C var1) {
++      return new ConfiguredSurfaceBuilder(this, var1);
 +   }
 +
     public abstract void apply(Random var1, ChunkAccess var2, Biome var3, int var4, int var5, int var6, double var7, BlockState var9, BlockState var10, int var11, long var12, C var14);
@@ -85,7 +106,13 @@
     public void initNoise(long var1) {
     }
  
-@@ -74,12 +96,20 @@
+    static {
+-      AIR = Blocks.AIR.defaultBlockState();
+       DIRT = Blocks.DIRT.defaultBlockState();
+       GRASS_BLOCK = Blocks.GRASS_BLOCK.defaultBlockState();
+       PODZOL = Blocks.PODZOL.defaultBlockState();
+       GRAVEL = Blocks.GRAVEL.defaultBlockState();
+       STONE = Blocks.STONE.defaultBlockState();
        COARSE_DIRT = Blocks.COARSE_DIRT.defaultBlockState();
        SAND = Blocks.SAND.defaultBlockState();
        RED_SAND = Blocks.RED_SAND.defaultBlockState();
@@ -94,6 +121,7 @@
 +      SOUL_SAND = Blocks.SOUL_SAND.defaultBlockState();
        NETHERRACK = Blocks.NETHERRACK.defaultBlockState();
        ENDSTONE = Blocks.END_STONE.defaultBlockState();
+-      CONFIG_EMPTY = new SurfaceBuilderBaseConfiguration(AIR, AIR, AIR);
 +      CRIMSON_NYLIUM = Blocks.CRIMSON_NYLIUM.defaultBlockState();
 +      WARPED_NYLIUM = Blocks.WARPED_NYLIUM.defaultBlockState();
 +      NETHER_WART_BLOCK = Blocks.NETHER_WART_BLOCK.defaultBlockState();
@@ -101,12 +129,13 @@
 +      BLACKSTONE = Blocks.BLACKSTONE.defaultBlockState();
 +      BASALT = Blocks.BASALT.defaultBlockState();
 +      MAGMA = Blocks.MAGMA_BLOCK.defaultBlockState();
-       CONFIG_EMPTY = new SurfaceBuilderBaseConfiguration(AIR, AIR, AIR);
        CONFIG_PODZOL = new SurfaceBuilderBaseConfiguration(PODZOL, DIRT, GRAVEL);
        CONFIG_GRAVEL = new SurfaceBuilderBaseConfiguration(GRAVEL, GRAVEL, GRAVEL);
        CONFIG_GRASS = new SurfaceBuilderBaseConfiguration(GRASS_BLOCK, DIRT, GRAVEL);
-       CONFIG_DIRT = new SurfaceBuilderBaseConfiguration(DIRT, DIRT, GRAVEL);
-@@ -89,20 +119,27 @@
+-      CONFIG_DIRT = new SurfaceBuilderBaseConfiguration(DIRT, DIRT, GRAVEL);
+       CONFIG_STONE = new SurfaceBuilderBaseConfiguration(STONE, STONE, GRAVEL);
+       CONFIG_COARSE_DIRT = new SurfaceBuilderBaseConfiguration(COARSE_DIRT, DIRT, GRAVEL);
+       CONFIG_DESERT = new SurfaceBuilderBaseConfiguration(SAND, SAND, GRAVEL);
        CONFIG_OCEAN_SAND = new SurfaceBuilderBaseConfiguration(GRASS_BLOCK, DIRT, SAND);
        CONFIG_FULL_SAND = new SurfaceBuilderBaseConfiguration(SAND, SAND, SAND);
        CONFIG_BADLANDS = new SurfaceBuilderBaseConfiguration(RED_SAND, WHITE_TERRACOTTA, GRAVEL);

@@ -74,7 +74,7 @@
 +      return true;
     }
  
-+   private static boolean validPathChar(char var0) {
++   public static boolean validPathChar(char var0) {
 +      return var0 == '_' || var0 == '-' || var0 >= 'a' && var0 <= 'z' || var0 >= '0' && var0 <= '9' || var0 == '/' || var0 == '.';
 +   }
 +

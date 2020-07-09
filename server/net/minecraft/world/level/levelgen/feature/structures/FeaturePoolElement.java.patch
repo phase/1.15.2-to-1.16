@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/structures/FeaturePoolElement.java
 +++ net/minecraft/world/level/levelgen/feature/structures/FeaturePoolElement.java
-@@ -1,82 +1,82 @@
+@@ -1,84 +1,80 @@
  package net.minecraft.world.level.levelgen.feature.structures;
  
 -import com.google.common.collect.ImmutableMap;
@@ -13,6 +13,7 @@
  import java.util.List;
  import java.util.Random;
 +import java.util.function.BiFunction;
++import java.util.function.Supplier;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
 +import net.minecraft.core.FrontAndTop;
@@ -33,21 +34,22 @@
  import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
  
  public class FeaturePoolElement extends StructurePoolElement {
+-   private final ConfiguredFeature<?, ?> feature;
 +   public static final Codec<FeaturePoolElement> CODEC = RecordCodecBuilder.create((var0) -> {
 +      return var0.group(ConfiguredFeature.CODEC.fieldOf("feature").forGetter((var0x) -> {
 +         return var0x.feature;
 +      }), projectionCodec()).apply(var0, (BiFunction)(FeaturePoolElement::new));
 +   });
-    private final ConfiguredFeature<?, ?> feature;
++   private final Supplier<ConfiguredFeature<?, ?>> feature;
     private final CompoundTag defaultJigsawNBT;
  
-    @Deprecated
-    public FeaturePoolElement(ConfiguredFeature<?, ?> var1) {
-       this(var1, StructureTemplatePool.Projection.RIGID);
-    }
- 
+-   @Deprecated
+-   public FeaturePoolElement(ConfiguredFeature<?, ?> var1) {
+-      this(var1, StructureTemplatePool.Projection.RIGID);
+-   }
+-
 -   public FeaturePoolElement(ConfiguredFeature<?, ?> var1, StructureTemplatePool.Projection var2) {
-+   private FeaturePoolElement(ConfiguredFeature<?, ?> var1, StructureTemplatePool.Projection var2) {
++   protected FeaturePoolElement(Supplier<ConfiguredFeature<?, ?>> var1, StructureTemplatePool.Projection var2) {
        super(var2);
        this.feature = var1;
        this.defaultJigsawNBT = this.fillDefaultJigsawNBT();
@@ -91,7 +93,7 @@
 -   public boolean place(StructureManager var1, LevelAccessor var2, ChunkGenerator<?> var3, BlockPos var4, Rotation var5, BoundingBox var6, Random var7) {
 -      return this.feature.place(var2, var3, var7, var4);
 +   public boolean place(StructureManager var1, WorldGenLevel var2, StructureFeatureManager var3, ChunkGenerator var4, BlockPos var5, BlockPos var6, Rotation var7, BoundingBox var8, Random var9, boolean var10) {
-+      return this.feature.place(var2, var3, var4, var9, var5);
++      return ((ConfiguredFeature)this.feature.get()).place(var2, var4, var9, var5);
     }
  
 -   public <T> Dynamic<T> getDynamic(DynamicOps<T> var1) {
@@ -104,4 +106,7 @@
     }
  
     public String toString() {
-       return "Feature[" + Registry.FEATURE.getKey(this.feature.feature) + "]";
+-      return "Feature[" + Registry.FEATURE.getKey(this.feature.feature) + "]";
++      return "Feature[" + Registry.FEATURE.getKey(((ConfiguredFeature)this.feature.get()).feature()) + "]";
+    }
+ }

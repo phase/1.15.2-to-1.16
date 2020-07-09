@@ -1,5 +1,20 @@
 --- com/mojang/blaze3d/pipeline/RenderTarget.java
 +++ com/mojang/blaze3d/pipeline/RenderTarget.java
+@@ -14,12 +14,12 @@
+    public int height;
+    public int viewWidth;
+    public int viewHeight;
+    public final boolean useDepth;
+    public int frameBufferId;
+-   public int colorTextureId;
+-   public int depthBufferId;
++   private int colorTextureId;
++   private int depthBufferId;
+    public final float[] clearChannels;
+    public int filterMode;
+ 
+    public RenderTarget(int var1, int var2, boolean var3, boolean var4) {
+       RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 @@ -60,11 +60,11 @@
     public void destroyBuffers() {
        RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
@@ -75,3 +90,18 @@
        this.checkStatus();
        this.clear(var3);
        this.unbindRead();
+@@ -250,6 +276,14 @@
+       }
+ 
+       GlStateManager._clear(var2, var1);
+       this.unbindWrite();
+    }
++
++   public int getColorTextureId() {
++      return this.colorTextureId;
++   }
++
++   public int getDepthTextureId() {
++      return this.depthBufferId;
++   }
+ }

@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/Blocks.java
 +++ net/minecraft/world/level/block/Blocks.java
-@@ -1,24 +1,37 @@
+@@ -1,23 +1,35 @@
  package net.minecraft.world.level.block;
  
  import com.google.common.collect.UnmodifiableIterator;
@@ -10,6 +10,7 @@
 +import net.minecraft.core.Direction;
  import net.minecraft.core.Registry;
 +import net.minecraft.core.particles.ParticleTypes;
++import net.minecraft.data.worldgen.Features;
  import net.minecraft.world.effect.MobEffects;
 +import net.minecraft.world.entity.EntityType;
  import net.minecraft.world.item.DyeColor;
@@ -31,14 +32,11 @@
 +import net.minecraft.world.level.block.state.properties.BedPart;
 +import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  import net.minecraft.world.level.block.state.properties.WoodType;
-+import net.minecraft.world.level.levelgen.feature.Feature;
-+import net.minecraft.world.level.levelgen.feature.HugeFungusConfiguration;
  import net.minecraft.world.level.material.Fluids;
  import net.minecraft.world.level.material.Material;
  import net.minecraft.world.level.material.MaterialColor;
  
- public class Blocks {
-@@ -54,10 +67,11 @@
+@@ -54,10 +66,11 @@
     public static final Block RED_SAND;
     public static final Block GRAVEL;
     public static final Block GOLD_ORE;
@@ -50,7 +48,7 @@
     public static final Block BIRCH_LOG;
     public static final Block JUNGLE_LOG;
     public static final Block ACACIA_LOG;
-@@ -163,10 +177,11 @@
+@@ -163,10 +176,11 @@
     public static final Block MOSSY_COBBLESTONE;
     public static final Block OBSIDIAN;
     public static final Block TORCH;
@@ -62,7 +60,7 @@
     public static final Block CHEST;
     public static final Block REDSTONE_WIRE;
     public static final Block DIAMOND_ORE;
-@@ -213,10 +228,15 @@
+@@ -213,10 +227,15 @@
     public static final Block JUKEBOX;
     public static final Block OAK_FENCE;
     public static final Block PUMPKIN;
@@ -78,7 +76,7 @@
     public static final Block CARVED_PUMPKIN;
     public static final Block JACK_O_LANTERN;
     public static final Block CAKE;
-@@ -255,10 +275,11 @@
+@@ -255,10 +274,11 @@
     public static final Block INFESTED_CHISELED_STONE_BRICKS;
     public static final Block BROWN_MUSHROOM_BLOCK;
     public static final Block RED_MUSHROOM_BLOCK;
@@ -90,7 +88,7 @@
     public static final Block ATTACHED_PUMPKIN_STEM;
     public static final Block ATTACHED_MELON_STEM;
     public static final Block PUMPKIN_STEM;
-@@ -691,716 +712,1015 @@
+@@ -691,716 +711,1015 @@
     public static final Block LECTERN;
     public static final Block SMITHING_TABLE;
     public static final Block STONECUTTER;
@@ -1359,7 +1357,7 @@
 +      DARK_OAK_STAIRS = register("dark_oak_stairs", new StairBlock(DARK_OAK_PLANKS.defaultBlockState(), BlockBehaviour.Properties.copy(DARK_OAK_PLANKS)));
 +      SLIME_BLOCK = register("slime_block", new SlimeBlock(BlockBehaviour.Properties.of(Material.CLAY, MaterialColor.GRASS).friction(0.8F).sound(SoundType.SLIME_BLOCK).noOcclusion()));
 +      BARRIER = register("barrier", new BarrierBlock(BlockBehaviour.Properties.of(Material.BARRIER).strength(-1.0F, 3600000.8F).noDrops().noOcclusion().isValidSpawn(Blocks::never)));
-+      IRON_TRAPDOOR = register("iron_trapdoor", new TrapDoorBlock(BlockBehaviour.Properties.of(Material.METAL).requiresCorrectToolForDrops().strength(5.0F).sound(SoundType.METAL).noOcclusion()));
++      IRON_TRAPDOOR = register("iron_trapdoor", new TrapDoorBlock(BlockBehaviour.Properties.of(Material.METAL).requiresCorrectToolForDrops().strength(5.0F).sound(SoundType.METAL).noOcclusion().isValidSpawn(Blocks::never)));
 +      PRISMARINE = register("prismarine", new Block(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.COLOR_CYAN).requiresCorrectToolForDrops().strength(1.5F, 6.0F)));
 +      PRISMARINE_BRICKS = register("prismarine_bricks", new Block(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.DIAMOND).requiresCorrectToolForDrops().strength(1.5F, 6.0F)));
 +      DARK_PRISMARINE = register("dark_prismarine", new Block(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.DIAMOND).requiresCorrectToolForDrops().strength(1.5F, 6.0F)));
@@ -1689,7 +1687,7 @@
 +      STRIPPED_WARPED_HYPHAE = register("stripped_warped_hyphae", new RotatedPillarBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.WARPED_HYPHAE).strength(2.0F).sound(SoundType.STEM)));
 +      WARPED_NYLIUM = register("warped_nylium", new NyliumBlock(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.WARPED_NYLIUM).requiresCorrectToolForDrops().strength(0.4F).sound(SoundType.NYLIUM).randomTicks()));
 +      WARPED_FUNGUS = register("warped_fungus", new FungusBlock(BlockBehaviour.Properties.of(Material.PLANT, MaterialColor.COLOR_CYAN).instabreak().noCollission().sound(SoundType.FUNGUS), () -> {
-+         return Feature.HUGE_FUNGUS.configured(HugeFungusConfiguration.HUGE_WARPED_FUNGI_PLANTED_CONFIG);
++         return Features.WARPED_FUNGI_PLANTED;
 +      }));
 +      WARPED_WART_BLOCK = register("warped_wart_block", new Block(BlockBehaviour.Properties.of(Material.GRASS, MaterialColor.WARPED_WART_BLOCK).strength(1.0F).sound(SoundType.WART_BLOCK)));
 +      WARPED_ROOTS = register("warped_roots", new RootsBlock(BlockBehaviour.Properties.of(Material.REPLACEABLE_PLANT, MaterialColor.COLOR_CYAN).noCollission().instabreak().sound(SoundType.ROOTS)));
@@ -1700,7 +1698,7 @@
 +      STRIPPED_CRIMSON_HYPHAE = register("stripped_crimson_hyphae", new RotatedPillarBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.CRIMSON_HYPHAE).strength(2.0F).sound(SoundType.STEM)));
 +      CRIMSON_NYLIUM = register("crimson_nylium", new NyliumBlock(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.CRIMSON_NYLIUM).requiresCorrectToolForDrops().strength(0.4F).sound(SoundType.NYLIUM).randomTicks()));
 +      CRIMSON_FUNGUS = register("crimson_fungus", new FungusBlock(BlockBehaviour.Properties.of(Material.PLANT, MaterialColor.NETHER).instabreak().noCollission().sound(SoundType.FUNGUS), () -> {
-+         return Feature.HUGE_FUNGUS.configured(HugeFungusConfiguration.HUGE_CRIMSON_FUNGI_PLANTED_CONFIG);
++         return Features.CRIMSON_FUNGI_PLANTED;
 +      }));
 +      SHROOMLIGHT = register("shroomlight", new Block(BlockBehaviour.Properties.of(Material.GRASS, MaterialColor.COLOR_RED).strength(1.0F).sound(SoundType.SHROOMLIGHT).lightLevel((var0x) -> {
 +         return 15;
@@ -1712,26 +1710,26 @@
 +      CRIMSON_ROOTS = register("crimson_roots", new RootsBlock(BlockBehaviour.Properties.of(Material.REPLACEABLE_PLANT, MaterialColor.NETHER).noCollission().instabreak().sound(SoundType.ROOTS)));
 +      CRIMSON_PLANKS = register("crimson_planks", new Block(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.CRIMSON_STEM).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
 +      WARPED_PLANKS = register("warped_planks", new Block(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.WARPED_STEM).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
-+      CRIMSON_SLAB = register("crimson_slab", new SlabBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.NETHER).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
-+      WARPED_SLAB = register("warped_slab", new SlabBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.COLOR_CYAN).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
-+      CRIMSON_PRESSURE_PLATE = register("crimson_pressure_plate", new PressurePlateBlock(PressurePlateBlock.Sensitivity.EVERYTHING, BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.NETHER).noCollission().strength(0.5F).sound(SoundType.WOOD)));
-+      WARPED_PRESSURE_PLATE = register("warped_pressure_plate", new PressurePlateBlock(PressurePlateBlock.Sensitivity.EVERYTHING, BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.COLOR_CYAN).noCollission().strength(0.5F).sound(SoundType.WOOD)));
-+      CRIMSON_FENCE = register("crimson_fence", new FenceBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.NETHER).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
-+      WARPED_FENCE = register("warped_fence", new FenceBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.COLOR_CYAN).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
-+      CRIMSON_TRAPDOOR = register("crimson_trapdoor", new TrapDoorBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.NETHER).strength(3.0F).sound(SoundType.WOOD).noOcclusion()));
-+      WARPED_TRAPDOOR = register("warped_trapdoor", new TrapDoorBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.COLOR_CYAN).strength(3.0F).sound(SoundType.WOOD).noOcclusion()));
-+      CRIMSON_FENCE_GATE = register("crimson_fence_gate", new FenceGateBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.NETHER).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
-+      WARPED_FENCE_GATE = register("warped_fence_gate", new FenceGateBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.COLOR_CYAN).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
++      CRIMSON_SLAB = register("crimson_slab", new SlabBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
++      WARPED_SLAB = register("warped_slab", new SlabBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
++      CRIMSON_PRESSURE_PLATE = register("crimson_pressure_plate", new PressurePlateBlock(PressurePlateBlock.Sensitivity.EVERYTHING, BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).noCollission().strength(0.5F).sound(SoundType.WOOD)));
++      WARPED_PRESSURE_PLATE = register("warped_pressure_plate", new PressurePlateBlock(PressurePlateBlock.Sensitivity.EVERYTHING, BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).noCollission().strength(0.5F).sound(SoundType.WOOD)));
++      CRIMSON_FENCE = register("crimson_fence", new FenceBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
++      WARPED_FENCE = register("warped_fence", new FenceBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
++      CRIMSON_TRAPDOOR = register("crimson_trapdoor", new TrapDoorBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).strength(3.0F).sound(SoundType.WOOD).noOcclusion().isValidSpawn(Blocks::never)));
++      WARPED_TRAPDOOR = register("warped_trapdoor", new TrapDoorBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).strength(3.0F).sound(SoundType.WOOD).noOcclusion().isValidSpawn(Blocks::never)));
++      CRIMSON_FENCE_GATE = register("crimson_fence_gate", new FenceGateBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
++      WARPED_FENCE_GATE = register("warped_fence_gate", new FenceGateBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).strength(2.0F, 3.0F).sound(SoundType.WOOD)));
 +      CRIMSON_STAIRS = register("crimson_stairs", new StairBlock(CRIMSON_PLANKS.defaultBlockState(), BlockBehaviour.Properties.copy(CRIMSON_PLANKS)));
 +      WARPED_STAIRS = register("warped_stairs", new StairBlock(WARPED_PLANKS.defaultBlockState(), BlockBehaviour.Properties.copy(WARPED_PLANKS)));
 +      CRIMSON_BUTTON = register("crimson_button", new WoodButtonBlock(BlockBehaviour.Properties.of(Material.DECORATION).noCollission().strength(0.5F).sound(SoundType.WOOD)));
 +      WARPED_BUTTON = register("warped_button", new WoodButtonBlock(BlockBehaviour.Properties.of(Material.DECORATION).noCollission().strength(0.5F).sound(SoundType.WOOD)));
 +      CRIMSON_DOOR = register("crimson_door", new DoorBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).strength(3.0F).sound(SoundType.WOOD).noOcclusion()));
 +      WARPED_DOOR = register("warped_door", new DoorBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).strength(3.0F).sound(SoundType.WOOD).noOcclusion()));
-+      CRIMSON_SIGN = register("crimson_sign", new StandingSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.NETHER).noCollission().strength(1.0F).sound(SoundType.WOOD), WoodType.CRIMSON));
-+      WARPED_SIGN = register("warped_sign", new StandingSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, MaterialColor.COLOR_CYAN).noCollission().strength(1.0F).sound(SoundType.WOOD), WoodType.WARPED));
-+      CRIMSON_WALL_SIGN = register("crimson_wall_sign", new WallSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD).noCollission().strength(1.0F).sound(SoundType.WOOD).dropsLike(CRIMSON_SIGN), WoodType.CRIMSON));
-+      WARPED_WALL_SIGN = register("warped_wall_sign", new WallSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD).noCollission().strength(1.0F).sound(SoundType.WOOD).dropsLike(WARPED_SIGN), WoodType.WARPED));
++      CRIMSON_SIGN = register("crimson_sign", new StandingSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).noCollission().strength(1.0F).sound(SoundType.WOOD), WoodType.CRIMSON));
++      WARPED_SIGN = register("warped_sign", new StandingSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).noCollission().strength(1.0F).sound(SoundType.WOOD), WoodType.WARPED));
++      CRIMSON_WALL_SIGN = register("crimson_wall_sign", new WallSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, CRIMSON_PLANKS.defaultMaterialColor()).noCollission().strength(1.0F).sound(SoundType.WOOD).dropsLike(CRIMSON_SIGN), WoodType.CRIMSON));
++      WARPED_WALL_SIGN = register("warped_wall_sign", new WallSignBlock(BlockBehaviour.Properties.of(Material.NETHER_WOOD, WARPED_PLANKS.defaultMaterialColor()).noCollission().strength(1.0F).sound(SoundType.WOOD).dropsLike(WARPED_SIGN), WoodType.WARPED));
 +      STRUCTURE_BLOCK = register("structure_block", new StructureBlock(BlockBehaviour.Properties.of(Material.METAL, MaterialColor.COLOR_LIGHT_GRAY).requiresCorrectToolForDrops().strength(-1.0F, 3600000.0F).noDrops()));
 +      JIGSAW = register("jigsaw", new JigsawBlock(BlockBehaviour.Properties.of(Material.METAL, MaterialColor.COLOR_LIGHT_GRAY).requiresCorrectToolForDrops().strength(-1.0F, 3600000.0F).noDrops()));
 +      COMPOSTER = register("composter", new ComposterBlock(BlockBehaviour.Properties.of(Material.WOOD).strength(0.6F).sound(SoundType.WOOD)));

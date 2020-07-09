@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/block/RespawnAnchorBlock.java
 +++ net/minecraft/world/level/block/RespawnAnchorBlock.java
-@@ -1,0 +1,171 @@
+@@ -1,0 +1,166 @@
 +package net.minecraft.world.level.block;
 +
 +import java.util.Iterator;
@@ -22,7 +22,6 @@
 +import net.minecraft.world.item.ItemStack;
 +import net.minecraft.world.item.Items;
 +import net.minecraft.world.level.BlockGetter;
-+import net.minecraft.world.level.DefaultExplosionDamageCalculator;
 +import net.minecraft.world.level.Explosion;
 +import net.minecraft.world.level.ExplosionDamageCalculator;
 +import net.minecraft.world.level.Level;
@@ -113,11 +112,7 @@
 +      final boolean var5 = var4 || var2.getFluidState(var3.above()).is(FluidTags.WATER);
 +      ExplosionDamageCalculator var6 = new ExplosionDamageCalculator() {
 +         public Optional<Float> getBlockExplosionResistance(Explosion var1, BlockGetter var2, BlockPos var3x, BlockState var4, FluidState var5x) {
-+            return var3x.equals(var3) && var5 ? Optional.of(Blocks.WATER.getExplosionResistance()) : DefaultExplosionDamageCalculator.INSTANCE.getBlockExplosionResistance(var1, var2, var3x, var4, var5x);
-+         }
-+
-+         public boolean shouldBlockExplode(Explosion var1, BlockGetter var2, BlockPos var3x, BlockState var4, float var5x) {
-+            return DefaultExplosionDamageCalculator.INSTANCE.shouldBlockExplode(var1, var2, var3x, var4, var5x);
++            return var3x.equals(var3) && var5 ? Optional.of(Blocks.WATER.getExplosionResistance()) : super.getBlockExplosionResistance(var1, var2, var3x, var4, var5x);
 +         }
 +      };
 +      var2.explode((Entity)null, DamageSource.badRespawnPointExplosion(), var6, (double)var3.getX() + 0.5D, (double)var3.getY() + 0.5D, (double)var3.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.DESTROY);

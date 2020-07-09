@@ -8,10 +8,10 @@
 +import com.mojang.serialization.DynamicOps;
 +import com.mojang.serialization.MapCodec;
 +import java.util.Optional;
++import net.minecraft.core.MappedRegistry;
 +import net.minecraft.core.Registry;
 +import net.minecraft.core.RegistryAccess;
 +import net.minecraft.core.WritableRegistry;
-+import net.minecraft.util.Codecs;
 +
 +public class RegistryWriteOps<T> extends DelegatingOps<T> {
 +   private final RegistryAccess registryHolder;
@@ -25,7 +25,7 @@
 +      this.registryHolder = var2;
 +   }
 +
-+   protected <E> DataResult<T> encode(E var1, T var2, ResourceKey<Registry<E>> var3, MapCodec<E> var4) {
++   protected <E> DataResult<T> encode(E var1, T var2, ResourceKey<? extends Registry<E>> var3, MapCodec<E> var4) {
 +      Optional var5 = this.registryHolder.registry(var3);
 +      if (var5.isPresent()) {
 +         WritableRegistry var6 = (WritableRegistry)var5.get();
@@ -33,13 +33,13 @@
 +         if (var7.isPresent()) {
 +            ResourceKey var8 = (ResourceKey)var7.get();
 +            if (var6.persistent(var8)) {
-+               return Codecs.withName(var3, var4).codec().encode(Pair.of(var8, var1), this.delegate, var2);
++               return MappedRegistry.withName(var3, var4).codec().encode(Pair.of(var8, var1), this.delegate, var2);
 +            }
 +
 +            return ResourceLocation.CODEC.encode(var8.location(), this.delegate, var2);
 +         }
 +      }
 +
-+      return var4.codec().encode(var1, this.delegate, var2);
++      return var4.codec().encode(var1, this, var2);
 +   }
 +}

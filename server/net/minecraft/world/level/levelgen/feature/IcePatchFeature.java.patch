@@ -1,6 +1,6 @@
 --- net/minecraft/world/level/levelgen/feature/IcePatchFeature.java
 +++ net/minecraft/world/level/levelgen/feature/IcePatchFeature.java
-@@ -1,47 +1,46 @@
+@@ -1,52 +1,27 @@
  package net.minecraft.world.level.levelgen.feature;
  
 -import com.mojang.datafixers.Dynamic;
@@ -9,40 +9,37 @@
 -import java.util.function.Function;
  import net.minecraft.core.BlockPos;
 -import net.minecraft.world.level.LevelAccessor;
-+import net.minecraft.world.level.StructureFeatureManager;
+-import net.minecraft.world.level.block.Block;
 +import net.minecraft.world.level.WorldGenLevel;
- import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.chunk.ChunkGenerator;
 -import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
- import net.minecraft.world.level.levelgen.feature.configurations.FeatureRadiusConfiguration;
+-import net.minecraft.world.level.levelgen.feature.configurations.FeatureRadiusConfiguration;
++import net.minecraft.world.level.levelgen.feature.configurations.DiskConfiguration;
  
- public class IcePatchFeature extends Feature<FeatureRadiusConfiguration> {
-    private final Block block;
- 
+-public class IcePatchFeature extends Feature<FeatureRadiusConfiguration> {
+-   private final Block block;
+-
 -   public IcePatchFeature(Function<Dynamic<?>, ? extends FeatureRadiusConfiguration> var1) {
-+   public IcePatchFeature(Codec<FeatureRadiusConfiguration> var1) {
++public class IcePatchFeature extends BaseDiskFeature {
++   public IcePatchFeature(Codec<DiskConfiguration> var1) {
        super(var1);
-       this.block = Blocks.PACKED_ICE;
+-      this.block = Blocks.PACKED_ICE;
     }
  
 -   public boolean place(LevelAccessor var1, ChunkGenerator<? extends ChunkGeneratorSettings> var2, Random var3, BlockPos var4, FeatureRadiusConfiguration var5) {
--      while(var1.isEmptyBlock(var4) && var4.getY() > 2) {
--         var4 = var4.below();
-+   public boolean place(WorldGenLevel var1, StructureFeatureManager var2, ChunkGenerator var3, Random var4, BlockPos var5, FeatureRadiusConfiguration var6) {
-+      while(var1.isEmptyBlock(var5) && var5.getY() > 2) {
-+         var5 = var5.below();
++   public boolean place(WorldGenLevel var1, ChunkGenerator var2, Random var3, BlockPos var4, DiskConfiguration var5) {
+       while(var1.isEmptyBlock(var4) && var4.getY() > 2) {
+          var4 = var4.below();
        }
  
 -      if (var1.getBlockState(var4).getBlock() != Blocks.SNOW_BLOCK) {
-+      if (!var1.getBlockState(var5).is(Blocks.SNOW_BLOCK)) {
++      if (!var1.getBlockState(var4).is(Blocks.SNOW_BLOCK)) {
           return false;
        } else {
 -         int var6 = var3.nextInt(var5.radius) + 2;
 -         boolean var7 = true;
-+         int var7 = var4.nextInt(var6.radius) + 2;
-+         boolean var8 = true;
- 
+-
 -         for(int var8 = var4.getX() - var6; var8 <= var4.getX() + var6; ++var8) {
 -            for(int var9 = var4.getZ() - var6; var9 <= var4.getZ() + var6; ++var9) {
 -               int var10 = var8 - var4.getX();
@@ -53,18 +50,14 @@
 -                     Block var14 = var1.getBlockState(var13).getBlock();
 -                     if (isDirt(var14) || var14 == Blocks.SNOW_BLOCK || var14 == Blocks.ICE) {
 -                        var1.setBlock(var13, this.block.defaultBlockState(), 2);
-+         for(int var9 = var5.getX() - var7; var9 <= var5.getX() + var7; ++var9) {
-+            for(int var10 = var5.getZ() - var7; var10 <= var5.getZ() + var7; ++var10) {
-+               int var11 = var9 - var5.getX();
-+               int var12 = var10 - var5.getZ();
-+               if (var11 * var11 + var12 * var12 <= var7 * var7) {
-+                  for(int var13 = var5.getY() - 1; var13 <= var5.getY() + 1; ++var13) {
-+                     BlockPos var14 = new BlockPos(var9, var13, var10);
-+                     Block var15 = var1.getBlockState(var14).getBlock();
-+                     if (isDirt(var15) || var15 == Blocks.SNOW_BLOCK || var15 == Blocks.ICE) {
-+                        var1.setBlock(var14, this.block.defaultBlockState(), 2);
-                      }
-                   }
-                }
-             }
-          }
+-                     }
+-                  }
+-               }
+-            }
+-         }
+-
+-         return true;
++         return super.place(var1, var2, var3, var4, var5);
+       }
+    }
+ }

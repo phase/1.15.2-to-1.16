@@ -1,8 +1,9 @@
 --- net/minecraft/core/Registry.java
 +++ net/minecraft/core/Registry.java
-@@ -1,28 +1,35 @@
+@@ -1,28 +1,38 @@
  package net.minecraft.core;
  
++import com.google.common.collect.ImmutableList;
  import com.google.common.collect.Maps;
 +import com.mojang.datafixers.util.Pair;
 +import com.mojang.serialization.Codec;
@@ -14,6 +15,7 @@
  import java.util.Optional;
 -import java.util.Random;
  import java.util.Set;
++import java.util.Map.Entry;
  import java.util.function.Supplier;
  import java.util.stream.Stream;
  import java.util.stream.StreamSupport;
@@ -22,6 +24,7 @@
 -import net.minecraft.core.particles.ParticleOptions;
  import net.minecraft.core.particles.ParticleType;
  import net.minecraft.core.particles.ParticleTypes;
++import net.minecraft.data.BuiltinRegistries;
 +import net.minecraft.resources.ResourceKey;
  import net.minecraft.resources.ResourceLocation;
  import net.minecraft.sounds.SoundEvent;
@@ -38,7 +41,7 @@
  import net.minecraft.world.entity.ai.village.poi.PoiType;
  import net.minecraft.world.entity.decoration.Motive;
  import net.minecraft.world.entity.npc.VillagerProfession;
-@@ -36,233 +43,475 @@
+@@ -36,233 +46,497 @@
  import net.minecraft.world.item.alchemy.Potions;
  import net.minecraft.world.item.crafting.RecipeSerializer;
  import net.minecraft.world.item.crafting.RecipeType;
@@ -47,8 +50,8 @@
 +import net.minecraft.world.level.Level;
  import net.minecraft.world.level.biome.Biome;
 -import net.minecraft.world.level.biome.BiomeSourceType;
+-import net.minecraft.world.level.biome.Biomes;
 +import net.minecraft.world.level.biome.BiomeSource;
- import net.minecraft.world.level.biome.Biomes;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -57,7 +60,10 @@
  import net.minecraft.world.level.chunk.ChunkStatus;
  import net.minecraft.world.level.dimension.DimensionType;
 +import net.minecraft.world.level.dimension.LevelStem;
++import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
  import net.minecraft.world.level.levelgen.carver.WorldCarver;
++import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
++import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
  import net.minecraft.world.level.levelgen.feature.Feature;
  import net.minecraft.world.level.levelgen.feature.StructureFeature;
  import net.minecraft.world.level.levelgen.feature.StructurePieceType;
@@ -66,13 +72,16 @@
  import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacerType;
  import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProviderType;
  import net.minecraft.world.level.levelgen.feature.structures.StructurePoolElementType;
++import net.minecraft.world.level.levelgen.feature.structures.StructureTemplatePool;
  import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecoratorType;
 +import net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacerType;
  import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
 -import net.minecraft.world.level.levelgen.structure.StructureFeatureIO;
 +import net.minecraft.world.level.levelgen.structure.templatesystem.PosRuleTestType;
  import net.minecraft.world.level.levelgen.structure.templatesystem.RuleTestType;
++import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
  import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
++import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
  import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
  import net.minecraft.world.level.material.Fluid;
  import net.minecraft.world.level.material.Fluids;
@@ -225,30 +234,13 @@
 +   public static final ResourceKey<Registry<EntityType<?>>> ENTITY_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<Item>> ITEM_REGISTRY;
 +   public static final ResourceKey<Registry<Potion>> POTION_REGISTRY;
-+   public static final ResourceKey<Registry<WorldCarver<?>>> CARVER_REGISTRY;
-+   public static final ResourceKey<Registry<SurfaceBuilder<?>>> SURFACE_BUILDER_REGISTRY;
-+   public static final ResourceKey<Registry<Feature<?>>> FEATURE_REGISTRY;
-+   public static final ResourceKey<Registry<FeatureDecorator<?>>> DECORATOR_REGISTRY;
-+   public static final ResourceKey<Registry<Biome>> BIOME_REGISTRY;
-+   public static final ResourceKey<Registry<BlockStateProviderType<?>>> BLOCK_STATE_PROVIDER_TYPE_REGISTRY;
-+   public static final ResourceKey<Registry<BlockPlacerType<?>>> BLOCK_PLACER_TYPE_REGISTRY;
-+   public static final ResourceKey<Registry<FoliagePlacerType<?>>> FOLIAGE_PLACER_TYPE_REGISTRY;
-+   public static final ResourceKey<Registry<TrunkPlacerType<?>>> TRUNK_PLACER_TYPE_REGISTRY;
-+   public static final ResourceKey<Registry<TreeDecoratorType<?>>> TREE_DECORATOR_TYPE_REGISTRY;
-+   public static final ResourceKey<Registry<FeatureSizeType<?>>> FEATURE_SIZE_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<ParticleType<?>>> PARTICLE_TYPE_REGISTRY;
-+   public static final ResourceKey<Registry<Codec<? extends BiomeSource>>> BIOME_SOURCE_REGISTRY;
-+   public static final ResourceKey<Registry<Codec<? extends ChunkGenerator>>> CHUNK_GENERATOR_REGISTRY;
 +   public static final ResourceKey<Registry<BlockEntityType<?>>> BLOCK_ENTITY_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<Motive>> MOTIVE_REGISTRY;
 +   public static final ResourceKey<Registry<ResourceLocation>> CUSTOM_STAT_REGISTRY;
 +   public static final ResourceKey<Registry<ChunkStatus>> CHUNK_STATUS_REGISTRY;
-+   public static final ResourceKey<Registry<StructureFeature<?>>> STRUCTURE_FEATURE_REGISTRY;
-+   public static final ResourceKey<Registry<StructurePieceType>> STRUCTURE_PIECE_REGISTRY;
 +   public static final ResourceKey<Registry<RuleTestType<?>>> RULE_TEST_REGISTRY;
 +   public static final ResourceKey<Registry<PosRuleTestType<?>>> POS_RULE_TEST_REGISTRY;
-+   public static final ResourceKey<Registry<StructureProcessorType<?>>> STRUCTURE_PROCESSOR_REGISTRY;
-+   public static final ResourceKey<Registry<StructurePoolElementType<?>>> STRUCTURE_POOL_ELEMENT_REGISTRY;
 +   public static final ResourceKey<Registry<MenuType<?>>> MENU_REGISTRY;
 +   public static final ResourceKey<Registry<RecipeType<?>>> RECIPE_TYPE_REGISTRY;
 +   public static final ResourceKey<Registry<RecipeSerializer<?>>> RECIPE_SERIALIZER_REGISTRY;
@@ -275,30 +267,13 @@
 +   public static final DefaultedRegistry<EntityType<?>> ENTITY_TYPE;
 +   public static final DefaultedRegistry<Item> ITEM;
 +   public static final DefaultedRegistry<Potion> POTION;
-+   public static final Registry<WorldCarver<?>> CARVER;
-+   public static final Registry<SurfaceBuilder<?>> SURFACE_BUILDER;
-+   public static final Registry<Feature<?>> FEATURE;
-+   public static final Registry<FeatureDecorator<?>> DECORATOR;
-+   public static final Registry<Biome> BIOME;
-+   public static final Registry<BlockStateProviderType<?>> BLOCKSTATE_PROVIDER_TYPES;
-+   public static final Registry<BlockPlacerType<?>> BLOCK_PLACER_TYPES;
-+   public static final Registry<FoliagePlacerType<?>> FOLIAGE_PLACER_TYPES;
-+   public static final Registry<TrunkPlacerType<?>> TRUNK_PLACER_TYPES;
-+   public static final Registry<TreeDecoratorType<?>> TREE_DECORATOR_TYPES;
-+   public static final Registry<FeatureSizeType<?>> FEATURE_SIZE_TYPES;
 +   public static final Registry<ParticleType<?>> PARTICLE_TYPE;
-+   public static final Registry<Codec<? extends BiomeSource>> BIOME_SOURCE;
-+   public static final Registry<Codec<? extends ChunkGenerator>> CHUNK_GENERATOR;
 +   public static final Registry<BlockEntityType<?>> BLOCK_ENTITY_TYPE;
 +   public static final DefaultedRegistry<Motive> MOTIVE;
 +   public static final Registry<ResourceLocation> CUSTOM_STAT;
 +   public static final DefaultedRegistry<ChunkStatus> CHUNK_STATUS;
-+   public static final Registry<StructureFeature<?>> STRUCTURE_FEATURE;
-+   public static final Registry<StructurePieceType> STRUCTURE_PIECE;
 +   public static final Registry<RuleTestType<?>> RULE_TEST;
 +   public static final Registry<PosRuleTestType<?>> POS_RULE_TEST;
-+   public static final Registry<StructureProcessorType<?>> STRUCTURE_PROCESSOR;
-+   public static final Registry<StructurePoolElementType<?>> STRUCTURE_POOL_ELEMENT;
 +   public static final Registry<MenuType<?>> MENU;
 +   public static final Registry<RecipeType<?>> RECIPE_TYPE;
 +   public static final Registry<RecipeSerializer<?>> RECIPE_SERIALIZER;
@@ -314,7 +289,46 @@
 +   public static final Registry<LootPoolEntryType> LOOT_POOL_ENTRY_TYPE;
 +   public static final Registry<LootItemFunctionType> LOOT_FUNCTION_TYPE;
 +   public static final Registry<LootItemConditionType> LOOT_CONDITION_TYPE;
-+   private final ResourceKey<Registry<T>> key;
++   public static final ResourceKey<Registry<ConfiguredSurfaceBuilder<?>>> CONFIGURED_SURFACE_BUILDER_REGISTRY;
++   public static final ResourceKey<Registry<ConfiguredWorldCarver<?>>> CONFIGURED_CARVER_REGISTRY;
++   public static final ResourceKey<Registry<ConfiguredFeature<?, ?>>> CONFIGURED_FEATURE_REGISTRY;
++   public static final ResourceKey<Registry<ConfiguredStructureFeature<?, ?>>> CONFIGURED_STRUCTURE_FEATURE_REGISTRY;
++   public static final ResourceKey<Registry<ImmutableList<StructureProcessor>>> PROCESSOR_LIST_REGISTRY;
++   public static final ResourceKey<Registry<StructureTemplatePool>> TEMPLATE_POOL_REGISTRY;
++   public static final ResourceKey<Registry<Biome>> BIOME_REGISTRY;
++   public static final ResourceKey<Registry<SurfaceBuilder<?>>> SURFACE_BUILDER_REGISTRY;
++   public static final Registry<SurfaceBuilder<?>> SURFACE_BUILDER;
++   public static final ResourceKey<Registry<WorldCarver<?>>> CARVER_REGISTRY;
++   public static final Registry<WorldCarver<?>> CARVER;
++   public static final ResourceKey<Registry<Feature<?>>> FEATURE_REGISTRY;
++   public static final Registry<Feature<?>> FEATURE;
++   public static final ResourceKey<Registry<StructureFeature<?>>> STRUCTURE_FEATURE_REGISTRY;
++   public static final Registry<StructureFeature<?>> STRUCTURE_FEATURE;
++   public static final ResourceKey<Registry<StructurePieceType>> STRUCTURE_PIECE_REGISTRY;
++   public static final Registry<StructurePieceType> STRUCTURE_PIECE;
++   public static final ResourceKey<Registry<FeatureDecorator<?>>> DECORATOR_REGISTRY;
++   public static final Registry<FeatureDecorator<?>> DECORATOR;
++   public static final ResourceKey<Registry<BlockStateProviderType<?>>> BLOCK_STATE_PROVIDER_TYPE_REGISTRY;
++   public static final ResourceKey<Registry<BlockPlacerType<?>>> BLOCK_PLACER_TYPE_REGISTRY;
++   public static final ResourceKey<Registry<FoliagePlacerType<?>>> FOLIAGE_PLACER_TYPE_REGISTRY;
++   public static final ResourceKey<Registry<TrunkPlacerType<?>>> TRUNK_PLACER_TYPE_REGISTRY;
++   public static final ResourceKey<Registry<TreeDecoratorType<?>>> TREE_DECORATOR_TYPE_REGISTRY;
++   public static final ResourceKey<Registry<FeatureSizeType<?>>> FEATURE_SIZE_TYPE_REGISTRY;
++   public static final ResourceKey<Registry<Codec<? extends BiomeSource>>> BIOME_SOURCE_REGISTRY;
++   public static final ResourceKey<Registry<Codec<? extends ChunkGenerator>>> CHUNK_GENERATOR_REGISTRY;
++   public static final ResourceKey<Registry<StructureProcessorType<?>>> STRUCTURE_PROCESSOR_REGISTRY;
++   public static final ResourceKey<Registry<StructurePoolElementType<?>>> STRUCTURE_POOL_ELEMENT_REGISTRY;
++   public static final Registry<BlockStateProviderType<?>> BLOCKSTATE_PROVIDER_TYPES;
++   public static final Registry<BlockPlacerType<?>> BLOCK_PLACER_TYPES;
++   public static final Registry<FoliagePlacerType<?>> FOLIAGE_PLACER_TYPES;
++   public static final Registry<TrunkPlacerType<?>> TRUNK_PLACER_TYPES;
++   public static final Registry<TreeDecoratorType<?>> TREE_DECORATOR_TYPES;
++   public static final Registry<FeatureSizeType<?>> FEATURE_SIZE_TYPES;
++   public static final Registry<Codec<? extends BiomeSource>> BIOME_SOURCE;
++   public static final Registry<Codec<? extends ChunkGenerator>> CHUNK_GENERATOR;
++   public static final Registry<StructureProcessorType<?>> STRUCTURE_PROCESSOR;
++   public static final Registry<StructurePoolElementType<?>> STRUCTURE_POOL_ELEMENT;
++   private final ResourceKey<? extends Registry<T>> key;
 +   private final Lifecycle lifecycle;
  
 -   public Registry() {
@@ -324,7 +338,7 @@
  
 -   private static <T> Registry<T> registerSimple(String var0, Supplier<T> var1) {
 -      return internalRegister(var0, new MappedRegistry(), var1);
-+   private static <T extends WritableRegistry<?>> void checkRegistry(WritableRegistry<T> var0) {
++   public static <T extends WritableRegistry<?>> void checkRegistry(WritableRegistry<T> var0) {
 +      var0.forEach((var1) -> {
 +         if (var1.keySet().isEmpty()) {
 +            LOGGER.error((String)"Registry '{}' was empty after loading", (Object)var0.getKey(var1));
@@ -343,25 +357,25 @@
  
 -   private static <T> DefaultedRegistry<T> registerDefaulted(String var0, String var1, Supplier<T> var2) {
 -      return (DefaultedRegistry)internalRegister(var0, new DefaultedRegistry(var1), var2);
-+   private static <T> Registry<T> registerSimple(ResourceKey<Registry<T>> var0, Supplier<T> var1) {
++   private static <T> Registry<T> registerSimple(ResourceKey<? extends Registry<T>> var0, Supplier<T> var1) {
 +      return registerSimple(var0, Lifecycle.experimental(), var1);
     }
  
 -   private static <T, R extends WritableRegistry<T>> R internalRegister(String var0, R var1, Supplier<T> var2) {
 -      ResourceLocation var3 = new ResourceLocation(var0);
-+   private static <T> DefaultedRegistry<T> registerDefaulted(ResourceKey<Registry<T>> var0, String var1, Supplier<T> var2) {
++   private static <T> DefaultedRegistry<T> registerDefaulted(ResourceKey<? extends Registry<T>> var0, String var1, Supplier<T> var2) {
 +      return registerDefaulted(var0, var1, Lifecycle.experimental(), var2);
 +   }
 +
-+   private static <T> Registry<T> registerSimple(ResourceKey<Registry<T>> var0, Lifecycle var1, Supplier<T> var2) {
++   private static <T> Registry<T> registerSimple(ResourceKey<? extends Registry<T>> var0, Lifecycle var1, Supplier<T> var2) {
 +      return internalRegister(var0, new MappedRegistry(var0, var1), var2);
 +   }
 +
-+   private static <T> DefaultedRegistry<T> registerDefaulted(ResourceKey<Registry<T>> var0, String var1, Lifecycle var2, Supplier<T> var3) {
++   private static <T> DefaultedRegistry<T> registerDefaulted(ResourceKey<? extends Registry<T>> var0, String var1, Lifecycle var2, Supplier<T> var3) {
 +      return (DefaultedRegistry)internalRegister(var0, new DefaultedRegistry(var1, var0, var2), var3);
 +   }
 +
-+   private static <T, R extends WritableRegistry<T>> R internalRegister(ResourceKey<Registry<T>> var0, R var1, Supplier<T> var2) {
++   private static <T, R extends WritableRegistry<T>> R internalRegister(ResourceKey<? extends Registry<T>> var0, R var1, Supplier<T> var2) {
 +      ResourceLocation var3 = var0.location();
        LOADERS.put(var3, var2);
 -      return (WritableRegistry)REGISTRY.register(var3, var1);
@@ -369,9 +383,13 @@
 +      return (WritableRegistry)var4.register(var0, var1);
     }
  
-+   protected Registry(ResourceKey<Registry<T>> var1, Lifecycle var2) {
++   protected Registry(ResourceKey<? extends Registry<T>> var1, Lifecycle var2) {
 +      this.key = var1;
 +      this.lifecycle = var2;
++   }
++
++   public ResourceKey<? extends Registry<T>> key() {
++      return this.key;
 +   }
 +
 +   public String toString() {
@@ -422,13 +440,17 @@
 +   @Nullable
     public abstract T get(@Nullable ResourceLocation var1);
  
-    public abstract Optional<T> getOptional(@Nullable ResourceLocation var1);
+-   public abstract Optional<T> getOptional(@Nullable ResourceLocation var1);
++   public Optional<T> getOptional(@Nullable ResourceLocation var1) {
++      return Optional.ofNullable(this.get(var1));
++   }
  
     public abstract Set<ResourceLocation> keySet();
  
 -   @Nullable
 -   public abstract T getRandom(Random var1);
--
++   public abstract Set<Entry<ResourceKey<T>, T>> entrySet();
+ 
     public Stream<T> stream() {
        return StreamSupport.stream(this.spliterator(), false);
     }
@@ -470,30 +492,13 @@
 +      ENTITY_TYPE_REGISTRY = createRegistryKey("entity_type");
 +      ITEM_REGISTRY = createRegistryKey("item");
 +      POTION_REGISTRY = createRegistryKey("potion");
-+      CARVER_REGISTRY = createRegistryKey("carver");
-+      SURFACE_BUILDER_REGISTRY = createRegistryKey("surface_builder");
-+      FEATURE_REGISTRY = createRegistryKey("feature");
-+      DECORATOR_REGISTRY = createRegistryKey("decorator");
-+      BIOME_REGISTRY = createRegistryKey("biome");
-+      BLOCK_STATE_PROVIDER_TYPE_REGISTRY = createRegistryKey("block_state_provider_type");
-+      BLOCK_PLACER_TYPE_REGISTRY = createRegistryKey("block_placer_type");
-+      FOLIAGE_PLACER_TYPE_REGISTRY = createRegistryKey("foliage_placer_type");
-+      TRUNK_PLACER_TYPE_REGISTRY = createRegistryKey("trunk_placer_type");
-+      TREE_DECORATOR_TYPE_REGISTRY = createRegistryKey("tree_decorator_type");
-+      FEATURE_SIZE_TYPE_REGISTRY = createRegistryKey("feature_size_type");
 +      PARTICLE_TYPE_REGISTRY = createRegistryKey("particle_type");
-+      BIOME_SOURCE_REGISTRY = createRegistryKey("biome_source");
-+      CHUNK_GENERATOR_REGISTRY = createRegistryKey("chunk_generator");
 +      BLOCK_ENTITY_TYPE_REGISTRY = createRegistryKey("block_entity_type");
 +      MOTIVE_REGISTRY = createRegistryKey("motive");
 +      CUSTOM_STAT_REGISTRY = createRegistryKey("custom_stat");
 +      CHUNK_STATUS_REGISTRY = createRegistryKey("chunk_status");
-+      STRUCTURE_FEATURE_REGISTRY = createRegistryKey("structure_feature");
-+      STRUCTURE_PIECE_REGISTRY = createRegistryKey("structure_piece");
 +      RULE_TEST_REGISTRY = createRegistryKey("rule_test");
 +      POS_RULE_TEST_REGISTRY = createRegistryKey("pos_rule_test");
-+      STRUCTURE_PROCESSOR_REGISTRY = createRegistryKey("structure_processor");
-+      STRUCTURE_POOL_ELEMENT_REGISTRY = createRegistryKey("structure_pool_element");
 +      MENU_REGISTRY = createRegistryKey("menu");
 +      RECIPE_TYPE_REGISTRY = createRegistryKey("recipe_type");
 +      RECIPE_SERIALIZER_REGISTRY = createRegistryKey("recipe_serializer");
@@ -542,47 +547,8 @@
 +      POTION = registerDefaulted(POTION_REGISTRY, "empty", () -> {
 +         return Potions.EMPTY;
 +      });
-+      CARVER = registerSimple(CARVER_REGISTRY, () -> {
-+         return WorldCarver.CAVE;
-+      });
-+      SURFACE_BUILDER = registerSimple(SURFACE_BUILDER_REGISTRY, () -> {
-+         return SurfaceBuilder.DEFAULT;
-+      });
-+      FEATURE = registerSimple(FEATURE_REGISTRY, () -> {
-+         return Feature.ORE;
-+      });
-+      DECORATOR = registerSimple(DECORATOR_REGISTRY, () -> {
-+         return FeatureDecorator.NOPE;
-+      });
-+      BIOME = registerSimple(BIOME_REGISTRY, () -> {
-+         return Biomes.DEFAULT;
-+      });
-+      BLOCKSTATE_PROVIDER_TYPES = registerSimple(BLOCK_STATE_PROVIDER_TYPE_REGISTRY, () -> {
-+         return BlockStateProviderType.SIMPLE_STATE_PROVIDER;
-+      });
-+      BLOCK_PLACER_TYPES = registerSimple(BLOCK_PLACER_TYPE_REGISTRY, () -> {
-+         return BlockPlacerType.SIMPLE_BLOCK_PLACER;
-+      });
-+      FOLIAGE_PLACER_TYPES = registerSimple(FOLIAGE_PLACER_TYPE_REGISTRY, () -> {
-+         return FoliagePlacerType.BLOB_FOLIAGE_PLACER;
-+      });
-+      TRUNK_PLACER_TYPES = registerSimple(TRUNK_PLACER_TYPE_REGISTRY, () -> {
-+         return TrunkPlacerType.STRAIGHT_TRUNK_PLACER;
-+      });
-+      TREE_DECORATOR_TYPES = registerSimple(TREE_DECORATOR_TYPE_REGISTRY, () -> {
-+         return TreeDecoratorType.LEAVE_VINE;
-+      });
-+      FEATURE_SIZE_TYPES = registerSimple(FEATURE_SIZE_TYPE_REGISTRY, () -> {
-+         return FeatureSizeType.TWO_LAYERS_FEATURE_SIZE;
-+      });
 +      PARTICLE_TYPE = registerSimple(PARTICLE_TYPE_REGISTRY, () -> {
 +         return ParticleTypes.BLOCK;
-+      });
-+      BIOME_SOURCE = registerSimple(BIOME_SOURCE_REGISTRY, Lifecycle.stable(), () -> {
-+         return BiomeSource.CODEC;
-+      });
-+      CHUNK_GENERATOR = registerSimple(CHUNK_GENERATOR_REGISTRY, Lifecycle.stable(), () -> {
-+         return ChunkGenerator.CODEC;
 +      });
 +      BLOCK_ENTITY_TYPE = registerSimple(BLOCK_ENTITY_TYPE_REGISTRY, () -> {
 +         return BlockEntityType.FURNACE;
@@ -596,23 +562,11 @@
 +      CHUNK_STATUS = registerDefaulted(CHUNK_STATUS_REGISTRY, "empty", () -> {
 +         return ChunkStatus.EMPTY;
 +      });
-+      STRUCTURE_FEATURE = registerSimple(STRUCTURE_FEATURE_REGISTRY, () -> {
-+         return StructureFeature.MINESHAFT;
-+      });
-+      STRUCTURE_PIECE = registerSimple(STRUCTURE_PIECE_REGISTRY, () -> {
-+         return StructurePieceType.MINE_SHAFT_ROOM;
-+      });
 +      RULE_TEST = registerSimple(RULE_TEST_REGISTRY, () -> {
 +         return RuleTestType.ALWAYS_TRUE_TEST;
 +      });
 +      POS_RULE_TEST = registerSimple(POS_RULE_TEST_REGISTRY, () -> {
 +         return PosRuleTestType.ALWAYS_TRUE_TEST;
-+      });
-+      STRUCTURE_PROCESSOR = registerSimple(STRUCTURE_PROCESSOR_REGISTRY, () -> {
-+         return StructureProcessorType.BLOCK_IGNORE;
-+      });
-+      STRUCTURE_POOL_ELEMENT = registerSimple(STRUCTURE_POOL_ELEMENT_REGISTRY, () -> {
-+         return StructurePoolElementType.EMPTY;
 +      });
 +      MENU = registerSimple(MENU_REGISTRY, () -> {
 +         return MenuType.ANVIL;
@@ -659,6 +613,78 @@
 +      LOOT_CONDITION_TYPE = registerSimple(LOOT_ITEM_REGISTRY, () -> {
 +         return LootItemConditions.INVERTED;
 +      });
++      CONFIGURED_SURFACE_BUILDER_REGISTRY = createRegistryKey("worldgen/configured_surface_builder");
++      CONFIGURED_CARVER_REGISTRY = createRegistryKey("worldgen/configured_carver");
++      CONFIGURED_FEATURE_REGISTRY = createRegistryKey("worldgen/configured_feature");
++      CONFIGURED_STRUCTURE_FEATURE_REGISTRY = createRegistryKey("worldgen/configured_structure_feature");
++      PROCESSOR_LIST_REGISTRY = createRegistryKey("worldgen/processor_list");
++      TEMPLATE_POOL_REGISTRY = createRegistryKey("worldgen/template_pool");
++      BIOME_REGISTRY = createRegistryKey("worldgen/biome");
++      SURFACE_BUILDER_REGISTRY = createRegistryKey("worldgen/surface_builder");
++      SURFACE_BUILDER = registerSimple(SURFACE_BUILDER_REGISTRY, () -> {
++         return SurfaceBuilder.DEFAULT;
++      });
++      CARVER_REGISTRY = createRegistryKey("worldgen/carver");
++      CARVER = registerSimple(CARVER_REGISTRY, () -> {
++         return WorldCarver.CAVE;
++      });
++      FEATURE_REGISTRY = createRegistryKey("worldgen/feature");
++      FEATURE = registerSimple(FEATURE_REGISTRY, () -> {
++         return Feature.ORE;
++      });
++      STRUCTURE_FEATURE_REGISTRY = createRegistryKey("worldgen/structure_feature");
++      STRUCTURE_FEATURE = registerSimple(STRUCTURE_FEATURE_REGISTRY, () -> {
++         return StructureFeature.MINESHAFT;
++      });
++      STRUCTURE_PIECE_REGISTRY = createRegistryKey("worldgen/structure_piece");
++      STRUCTURE_PIECE = registerSimple(STRUCTURE_PIECE_REGISTRY, () -> {
++         return StructurePieceType.MINE_SHAFT_ROOM;
++      });
++      DECORATOR_REGISTRY = createRegistryKey("worldgen/decorator");
++      DECORATOR = registerSimple(DECORATOR_REGISTRY, () -> {
++         return FeatureDecorator.NOPE;
++      });
++      BLOCK_STATE_PROVIDER_TYPE_REGISTRY = createRegistryKey("worldgen/block_state_provider_type");
++      BLOCK_PLACER_TYPE_REGISTRY = createRegistryKey("worldgen/block_placer_type");
++      FOLIAGE_PLACER_TYPE_REGISTRY = createRegistryKey("worldgen/foliage_placer_type");
++      TRUNK_PLACER_TYPE_REGISTRY = createRegistryKey("worldgen/trunk_placer_type");
++      TREE_DECORATOR_TYPE_REGISTRY = createRegistryKey("worldgen/tree_decorator_type");
++      FEATURE_SIZE_TYPE_REGISTRY = createRegistryKey("worldgen/feature_size_type");
++      BIOME_SOURCE_REGISTRY = createRegistryKey("worldgen/biome_source");
++      CHUNK_GENERATOR_REGISTRY = createRegistryKey("worldgen/chunk_generator");
++      STRUCTURE_PROCESSOR_REGISTRY = createRegistryKey("worldgen/structure_processor");
++      STRUCTURE_POOL_ELEMENT_REGISTRY = createRegistryKey("worldgen/structure_pool_element");
++      BLOCKSTATE_PROVIDER_TYPES = registerSimple(BLOCK_STATE_PROVIDER_TYPE_REGISTRY, () -> {
++         return BlockStateProviderType.SIMPLE_STATE_PROVIDER;
++      });
++      BLOCK_PLACER_TYPES = registerSimple(BLOCK_PLACER_TYPE_REGISTRY, () -> {
++         return BlockPlacerType.SIMPLE_BLOCK_PLACER;
++      });
++      FOLIAGE_PLACER_TYPES = registerSimple(FOLIAGE_PLACER_TYPE_REGISTRY, () -> {
++         return FoliagePlacerType.BLOB_FOLIAGE_PLACER;
++      });
++      TRUNK_PLACER_TYPES = registerSimple(TRUNK_PLACER_TYPE_REGISTRY, () -> {
++         return TrunkPlacerType.STRAIGHT_TRUNK_PLACER;
++      });
++      TREE_DECORATOR_TYPES = registerSimple(TREE_DECORATOR_TYPE_REGISTRY, () -> {
++         return TreeDecoratorType.LEAVE_VINE;
++      });
++      FEATURE_SIZE_TYPES = registerSimple(FEATURE_SIZE_TYPE_REGISTRY, () -> {
++         return FeatureSizeType.TWO_LAYERS_FEATURE_SIZE;
++      });
++      BIOME_SOURCE = registerSimple(BIOME_SOURCE_REGISTRY, Lifecycle.stable(), () -> {
++         return BiomeSource.CODEC;
++      });
++      CHUNK_GENERATOR = registerSimple(CHUNK_GENERATOR_REGISTRY, Lifecycle.stable(), () -> {
++         return ChunkGenerator.CODEC;
++      });
++      STRUCTURE_PROCESSOR = registerSimple(STRUCTURE_PROCESSOR_REGISTRY, () -> {
++         return StructureProcessorType.BLOCK_IGNORE;
++      });
++      STRUCTURE_POOL_ELEMENT = registerSimple(STRUCTURE_POOL_ELEMENT_REGISTRY, () -> {
++         return StructurePoolElementType.EMPTY;
++      });
++      BuiltinRegistries.bootstrap();
 +      LOADERS.forEach((var0, var1) -> {
 +         if (var1.get() == null) {
 +            LOGGER.error((String)"Unable to bootstrap registry '{}'", (Object)var0);

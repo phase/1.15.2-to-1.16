@@ -1,6 +1,6 @@
 --- net/minecraft/commands/arguments/blocks/BlockPredicateArgument.java
 +++ net/minecraft/commands/arguments/blocks/BlockPredicateArgument.java
-@@ -19,10 +19,11 @@
+@@ -19,12 +19,13 @@
  import net.minecraft.commands.CommandSourceStack;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtUtils;
@@ -8,10 +8,13 @@
  import net.minecraft.resources.ResourceLocation;
 +import net.minecraft.tags.BlockTags;
  import net.minecraft.tags.Tag;
- import net.minecraft.tags.TagManager;
+-import net.minecraft.tags.TagManager;
++import net.minecraft.tags.TagContainer;
  import net.minecraft.world.level.block.Block;
  import net.minecraft.world.level.block.entity.BlockEntity;
  import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.pattern.BlockInWorld;
+ import net.minecraft.world.level.block.state.properties.Property;
 @@ -74,11 +75,11 @@
        try {
           var4.parse(true);
@@ -38,3 +41,13 @@
              Iterator var3 = this.properties.iterator();
  
              while(var3.hasNext()) {
+@@ -164,8 +165,8 @@
+          }
+       }
+    }
+ 
+    public interface Result {
+-      Predicate<BlockInWorld> create(TagManager var1) throws CommandSyntaxException;
++      Predicate<BlockInWorld> create(TagContainer var1) throws CommandSyntaxException;
+    }
+ }

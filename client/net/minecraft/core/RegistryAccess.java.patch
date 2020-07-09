@@ -1,52 +1,204 @@
 --- net/minecraft/core/RegistryAccess.java
 +++ net/minecraft/core/RegistryAccess.java
-@@ -1,0 +1,49 @@
+@@ -1,0 +1,201 @@
 +package net.minecraft.core;
 +
++import com.google.common.collect.ImmutableMap;
++import com.google.common.collect.ImmutableMap.Builder;
++import com.google.gson.JsonElement;
 +import com.mojang.serialization.Codec;
++import com.mojang.serialization.DataResult;
++import com.mojang.serialization.JsonOps;
 +import com.mojang.serialization.Lifecycle;
-+import java.util.Objects;
++import com.mojang.serialization.MapCodec;
++import com.mojang.serialization.codecs.UnboundedMapCodec;
++import java.util.Iterator;
++import java.util.Map;
 +import java.util.Optional;
++import java.util.Map.Entry;
++import java.util.function.Function;
++import java.util.stream.Collectors;
++import net.minecraft.Util;
++import net.minecraft.data.BuiltinRegistries;
++import net.minecraft.resources.RegistryReadOps;
 +import net.minecraft.resources.ResourceKey;
++import net.minecraft.resources.ResourceLocation;
++import net.minecraft.server.packs.resources.ResourceManager;
++import net.minecraft.world.level.biome.Biome;
 +import net.minecraft.world.level.dimension.DimensionType;
++import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
++import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
++import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
++import net.minecraft.world.level.levelgen.feature.structures.StructureTemplatePool;
++import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
++import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
 +
 +public interface RegistryAccess {
-+   <E> Optional<WritableRegistry<E>> registry(ResourceKey<Registry<E>> var1);
++   Logger LOGGER = LogManager.getLogger();
++   Map<ResourceKey<? extends Registry<?>>, RegistryAccess.RegistryData<?>> REGISTRIES = (Map)Util.make(() -> {
++      Builder var0 = ImmutableMap.builder();
++      put(var0, Registry.DIMENSION_TYPE_REGISTRY, DimensionType.DIRECT_CODEC, true);
++      put(var0, Registry.BIOME_REGISTRY, Biome.DIRECT_CODEC, true);
++      put(var0, Registry.CONFIGURED_SURFACE_BUILDER_REGISTRY, ConfiguredSurfaceBuilder.DIRECT_CODEC, false);
++      put(var0, Registry.CONFIGURED_CARVER_REGISTRY, ConfiguredWorldCarver.DIRECT_CODEC, false);
++      put(var0, Registry.CONFIGURED_FEATURE_REGISTRY, ConfiguredFeature.DIRECT_CODEC, false);
++      put(var0, Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY, ConfiguredStructureFeature.DIRECT_CODEC, false);
++      put(var0, Registry.PROCESSOR_LIST_REGISTRY, StructureProcessorType.DIRECT_CODEC, false);
++      put(var0, Registry.TEMPLATE_POOL_REGISTRY, StructureTemplatePool.DIRECT_CODEC, false);
++      return var0.build();
++   });
 +
-+   Registry<DimensionType> dimensionTypes();
++   <E> Optional<WritableRegistry<E>> registry(ResourceKey<? extends Registry<E>> var1);
++
++   default <E> WritableRegistry<E> registryOrThrow(ResourceKey<? extends Registry<E>> var1) {
++      return (WritableRegistry)this.registry(var1).orElseThrow(() -> {
++         return new IllegalStateException("Missing registry: " + var1);
++      });
++   }
++
++   default Registry<DimensionType> dimensionTypes() {
++      return this.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
++   }
++
++   static <E> Builder<ResourceKey<? extends Registry<?>>, RegistryAccess.RegistryData<?>> put(Builder<ResourceKey<? extends Registry<?>>, RegistryAccess.RegistryData<?>> var0, ResourceKey<? extends Registry<E>> var1, MapCodec<E> var2, boolean var3) {
++      return var0.put(var1, new RegistryAccess.RegistryData(var1, var2, var3));
++   }
 +
 +   static RegistryAccess.RegistryHolder builtin() {
-+      return DimensionType.registerBuiltin(new RegistryAccess.RegistryHolder());
++      RegistryAccess.RegistryHolder var0 = new RegistryAccess.RegistryHolder();
++      DimensionType.registerBuiltin(var0);
++      REGISTRIES.keySet().stream().filter((var0x) -> {
++         return !var0x.equals(Registry.DIMENSION_TYPE_REGISTRY);
++      }).forEach((var1) -> {
++         copyBuiltin(var0, var1);
++      });
++      return var0;
++   }
++
++   static <R extends Registry<?>> void copyBuiltin(RegistryAccess.RegistryHolder var0, ResourceKey<R> var1) {
++      Registry var2 = BuiltinRegistries.REGISTRY;
++      Registry var3 = (Registry)var2.get(var1);
++      if (var3 == null) {
++         throw new IllegalStateException("Missing builtin registry: " + var1);
++      } else {
++         copy(var0, var3);
++      }
++   }
++
++   static <E> void copy(RegistryAccess.RegistryHolder var0, Registry<E> var1) {
++      WritableRegistry var2 = (WritableRegistry)var0.registry(var1.key()).orElseThrow(() -> {
++         return new IllegalStateException("Missing registry: " + var1.key());
++      });
++      Iterator var3 = var1.entrySet().iterator();
++
++      while(var3.hasNext()) {
++         Entry var4 = (Entry)var3.next();
++         var2.register((ResourceKey)var4.getKey(), var4.getValue());
++      }
++
++   }
++
++   static RegistryAccess.RegistryHolder load(ResourceManager var0) {
++      RegistryAccess.RegistryHolder var1 = builtin();
++      RegistryReadOps var2 = RegistryReadOps.create(JsonOps.INSTANCE, var0, var1);
++      Iterator var3 = REGISTRIES.values().iterator();
++
++      while(var3.hasNext()) {
++         RegistryAccess.RegistryData var4 = (RegistryAccess.RegistryData)var3.next();
++         readRegistry(var2, var1, var4);
++      }
++
++      return var1;
++   }
++
++   static <E> void readRegistry(RegistryReadOps<JsonElement> var0, RegistryAccess.RegistryHolder var1, RegistryAccess.RegistryData<E> var2) {
++      ResourceKey var3 = var2.key();
++      MappedRegistry var4 = (MappedRegistry)Optional.ofNullable(var1.registries.get(var3)).map((var0x) -> {
++         return var0x;
++      }).orElseThrow(() -> {
++         return new IllegalStateException("Missing registry: " + var3);
++      });
++      DataResult var5 = var0.decodeElements(var4, var2.key(), var2.codec());
++      var5.error().ifPresent((var0x) -> {
++         LOGGER.error("Error loading registry data: {}", var0x.message());
++      });
 +   }
 +
 +   public static final class RegistryHolder implements RegistryAccess {
-+      public static final Codec<RegistryAccess.RegistryHolder> CODEC;
-+      private final MappedRegistry<DimensionType> dimensionTypes;
++      public static final Codec<RegistryAccess.RegistryHolder> NETWORK_CODEC = makeDirectCodec();
++      private final Map<? extends ResourceKey<? extends Registry<?>>, ? extends MappedRegistry<?>> registries;
++
++      private static <E> Codec<RegistryAccess.RegistryHolder> makeDirectCodec() {
++         Codec var0 = ResourceLocation.CODEC.xmap(ResourceKey::createRegistryKey, ResourceKey::location);
++         Codec var1 = var0.partialDispatch("type", (var0x) -> {
++            return DataResult.success(var0x.key());
++         }, (var0x) -> {
++            return getCodec(var0x).map((var1) -> {
++               return MappedRegistry.networkCodec(var0x, Lifecycle.experimental(), var1);
++            });
++         });
++         UnboundedMapCodec var2 = Codec.unboundedMap(var0, var1);
++         return captureMap(var2);
++      }
++
++      private static <K extends ResourceKey<? extends Registry<?>>, V extends MappedRegistry<?>> Codec<RegistryAccess.RegistryHolder> captureMap(UnboundedMapCodec<K, V> var0) {
++         return var0.xmap(RegistryAccess.RegistryHolder::new, (var0x) -> {
++            return (ImmutableMap)var0x.registries.entrySet().stream().filter((var0) -> {
++               return ((RegistryAccess.RegistryData)REGISTRIES.get(var0.getKey())).sendToClient();
++            }).collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
++         });
++      }
++
++      private static <E> DataResult<? extends MapCodec<E>> getCodec(ResourceKey<? extends Registry<E>> var0) {
++         return (DataResult)Optional.ofNullable(REGISTRIES.get(var0)).map((var0x) -> {
++            return DataResult.success(var0x.codec());
++         }).orElseGet(() -> {
++            return DataResult.error("Unknown registry: " + var0);
++         });
++      }
 +
 +      public RegistryHolder() {
-+         this(new MappedRegistry(Registry.DIMENSION_TYPE_REGISTRY, Lifecycle.experimental()));
++         this((Map)REGISTRIES.keySet().stream().collect(Collectors.toMap(Function.identity(), RegistryAccess.RegistryHolder::createRegistry)));
 +      }
 +
-+      private RegistryHolder(MappedRegistry<DimensionType> var1) {
-+         this.dimensionTypes = var1;
++      private RegistryHolder(Map<? extends ResourceKey<? extends Registry<?>>, ? extends MappedRegistry<?>> var1) {
++         this.registries = var1;
 +      }
 +
-+      public void registerDimension(ResourceKey<DimensionType> var1, DimensionType var2) {
-+         this.dimensionTypes.register(var1, var2);
++      private static <E> MappedRegistry<?> createRegistry(ResourceKey<? extends Registry<?>> var0) {
++         return new MappedRegistry(var0, Lifecycle.experimental());
 +      }
 +
-+      public <E> Optional<WritableRegistry<E>> registry(ResourceKey<Registry<E>> var1) {
-+         return Objects.equals(var1, Registry.DIMENSION_TYPE_REGISTRY) ? Optional.of(this.dimensionTypes) : Optional.empty();
++      public <E> Optional<WritableRegistry<E>> registry(ResourceKey<? extends Registry<E>> var1) {
++         return Optional.ofNullable(this.registries.get(var1)).map((var0) -> {
++            return var0;
++         });
++      }
++   }
++
++   public static final class RegistryData<E> {
++      private final ResourceKey<? extends Registry<E>> key;
++      private final MapCodec<E> codec;
++      private final boolean sendToClient;
++
++      public RegistryData(ResourceKey<? extends Registry<E>> var1, MapCodec<E> var2, boolean var3) {
++         this.key = var1;
++         this.codec = var2;
++         this.sendToClient = var3;
 +      }
 +
-+      public Registry<DimensionType> dimensionTypes() {
-+         return this.dimensionTypes;
++      public ResourceKey<? extends Registry<E>> key() {
++         return this.key;
 +      }
 +
-+      static {
-+         CODEC = MappedRegistry.networkCodec(Registry.DIMENSION_TYPE_REGISTRY, Lifecycle.experimental(), DimensionType.DIRECT_CODEC).xmap(RegistryAccess.RegistryHolder::new, (var0) -> {
-+            return var0.dimensionTypes;
-+         }).fieldOf("dimension").codec();
++      public MapCodec<E> codec() {
++         return this.codec;
++      }
++
++      public boolean sendToClient() {
++         return this.sendToClient;
 +      }
 +   }
 +}

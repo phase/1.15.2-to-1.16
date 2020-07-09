@@ -20,7 +20,7 @@
 +         return var0x.capProvider;
 +      }), BlockStateProvider.CODEC.fieldOf("stem_provider").forGetter((var0x) -> {
 +         return var0x.stemProvider;
-+      }), Codec.INT.fieldOf("foliage_radius").withDefault((int)2).forGetter((var0x) -> {
++      }), Codec.INT.fieldOf("foliage_radius").orElse(2).forGetter((var0x) -> {
 +         return var0x.foliageRadius;
 +      })).apply(var0, (Function3)(HugeMushroomFeatureConfiguration::new));
 +   });

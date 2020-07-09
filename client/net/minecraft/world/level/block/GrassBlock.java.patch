@@ -40,3 +40,16 @@
  
           if (var13.isAir()) {
              BlockState var10;
+@@ -50,11 +51,11 @@
+                List var11 = var1.getBiome(var8).getFlowerFeatures();
+                if (var11.isEmpty()) {
+                   continue;
+                }
+ 
+-               ConfiguredFeature var12 = ((DecoratedFeatureConfiguration)((ConfiguredFeature)var11.get(0)).config).feature;
++               ConfiguredFeature var12 = (ConfiguredFeature)((DecoratedFeatureConfiguration)((ConfiguredFeature)var11.get(0)).config).feature.get();
+                var10 = ((AbstractFlowerFeature)var12.feature).getRandomFlower(var2, var8, var12.config);
+             } else {
+                var10 = var6;
+             }
+ 
